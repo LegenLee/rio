@@ -10,7 +10,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    // 워크스페이스 안에서는 dist 대신 src를 바로 보게 하는 조건
+    // Inside the workspace, resolve packages to src instead of dist
     "customConditions": ["@rio-m3e/source"]
   }
 }

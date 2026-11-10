@@ -6,9 +6,9 @@ import {
   hexFromArgb,
   type MaterialDynamicColors,
 } from '@material/material-color-utilities';
-import { TOKEN_PREFIX } from './prefix';
+import { TOKEN_PREFIX } from '../prefix';
 
-/** M3 색상 역할 목록. 이름은 MCU `MaterialDynamicColors`의 메서드 이름과 같다. */
+/** M3 color roles. The names match the method names on MCU's `MaterialDynamicColors`. */
 export const COLOR_ROLES = [
   'background',
   'onBackground',
@@ -71,17 +71,17 @@ export type ColorVar = `${typeof TOKEN_PREFIX}-color-${string}`;
 
 const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
-/** 역할의 CSS 변수 이름. `onPrimaryContainer` → `--rio-color-on-primary-container` */
+/** CSS variable name for a role. `onPrimaryContainer` → `--rio-color-on-primary-container` */
 export function colorVar(role: ColorRole): ColorVar {
   return `${TOKEN_PREFIX}-color-${kebab(role)}`;
 }
 
-/** 역할별 색상. 값은 `#rrggbb`. */
+/** Colors by role, as `#rrggbb`. */
 export type ColorScheme = Record<ColorRole, string>;
 
 /**
- * M3E(2025 색상 스펙)를 지원하는 변형만 노출한다.
- * MCU는 나머지 변형(monochrome, fidelity 등)을 경고 없이 2021 스펙으로 되돌린다.
+ * Only the variants that support M3E (the 2025 color spec) are exposed.
+ * For the others (monochrome, fidelity, and so on), MCU silently falls back to the 2021 spec.
  */
 export type SchemeVariant = 'tonal-spot' | 'neutral' | 'vibrant' | 'expressive';
 
@@ -93,13 +93,13 @@ const VARIANTS: Record<SchemeVariant, Variant> = {
 };
 
 export interface ColorSchemeOptions {
-  /** 시드 색상. `#rgb` 또는 `#rrggbb`. */
+  /** Source color, as `#rgb` or `#rrggbb`. */
   sourceColor: string;
-  /** 기본값 `'tonal-spot'`. */
+  /** Defaults to `'tonal-spot'`. */
   variant?: SchemeVariant;
-  /** -1(낮음) ~ 0(표준) ~ 1(높음). 기본값 0. */
+  /** From -1 (reduced) through 0 (standard) to 1 (high). Defaults to 0. */
   contrast?: number;
-  /** 기본값 `false`. */
+  /** Defaults to `false`. */
   dark?: boolean;
 }
 
@@ -115,7 +115,7 @@ export function createColorScheme(options: ColorSchemeOptions): ColorScheme {
   const result = {} as ColorScheme;
   for (const role of COLOR_ROLES) {
     const color = scheme.colors[role]();
-    // 2025 스펙에서는 dim 계열까지 전부 정의된다. 비어 있으면 MCU가 스펙을 되돌렸다는 뜻이다.
+    // The 2025 spec defines every role, the dim ones included. A missing role means MCU fell back.
     if (!color)
       throw new Error(`[rio] color role "${role}" is undefined; MCU fell back from the 2025 spec`);
     result[role] = hexFromArgb(scheme.getArgb(color));

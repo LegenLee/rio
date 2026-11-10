@@ -1,9 +1,9 @@
-import { colorVar } from './color';
-import { TOKEN_PREFIX } from './prefix';
+import { colorVar } from '../color/color';
+import { TOKEN_PREFIX } from '../prefix';
 
 export const ELEVATION_LEVELS = [0, 1, 2, 3, 4, 5] as const;
 
-/** 0~3은 쉬는 상태, 4~5는 hover/drag 같은 상호작용 상태 전용. */
+/** 0–3 are resting states. 4–5 are for interaction states only, such as hover and drag. */
 export type ElevationLevel = (typeof ELEVATION_LEVELS)[number];
 
 export type ElevationVar = `${typeof TOKEN_PREFIX}-elevation-level${ElevationLevel}`;
@@ -11,8 +11,8 @@ export type ElevationVar = `${typeof TOKEN_PREFIX}-elevation-level${ElevationLev
 type Layer = readonly [y: number, blur: number, spread: number];
 
 /**
- * M3 Figma 디자인 킷의 `M3/Elevation` 효과 스타일. 라이트/다크 값이 같다.
- * 레벨마다 가까운 그림자(30%)와 먼 그림자(15%) 두 겹.
+ * The `M3/Elevation` effect styles from the M3 Figma Design Kit. Light and dark values are identical.
+ * Each level has two layers: a key shadow (30%) and an ambient shadow (15%).
  */
 const SHADOWS: Record<Exclude<ElevationLevel, 0>, readonly [key: Layer, ambient: Layer]> = {
   1: [
@@ -37,7 +37,7 @@ const SHADOWS: Record<Exclude<ElevationLevel, 0>, readonly [key: Layer, ambient:
   ],
 };
 
-/** 레벨의 CSS 변수 이름. `3` → `--rio-elevation-level3` */
+/** CSS variable name for a level. `3` → `--rio-elevation-level3` */
 export function elevationVar(level: ElevationLevel): ElevationVar {
   return `${TOKEN_PREFIX}-elevation-level${level}`;
 }
@@ -45,7 +45,7 @@ export function elevationVar(level: ElevationLevel): ElevationVar {
 const layer = ([y, blur, spread]: Layer, opacity: number) =>
   `0 ${y}px ${blur}px ${spread}px color-mix(in srgb, var(${colorVar('shadow')}) ${opacity}%, transparent)`;
 
-/** 레벨별 `box-shadow` 값. 그림자 색은 테마의 shadow 역할을 따른다. */
+/** `box-shadow` values by level. The shadow color follows the theme's shadow role. */
 export function createElevationVariables(): Record<ElevationVar, string> {
   const vars = { [elevationVar(0)]: 'none' } as Record<ElevationVar, string>;
   for (const level of ELEVATION_LEVELS) {

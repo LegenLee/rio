@@ -8,18 +8,18 @@ export {
   type ColorSchemeOptions,
   type ColorVar,
   type SchemeVariant,
-} from './color';
+} from './color/color';
 export {
   ELEVATION_LEVELS,
   createElevationVariables,
   elevationVar,
   type ElevationLevel,
   type ElevationVar,
-} from './elevation';
+} from './elevation/elevation';
 export {
   applyTheme,
   createThemeCss,
   createThemeVariables,
   type ThemeOptions,
   type ThemeVar,
-} from './css';
+} from './theme';

@@ -1,4 +1,4 @@
-// 빌드 파이프라인 검증용 샘플. 실제 M3E 스위치 구현으로 갈아엎을 것.
+// Sample for verifying the build pipeline. To be replaced with the real M3E switch.
 
 export interface SwitchProps {
   checked?: boolean;
@@ -11,9 +11,9 @@ export const switchDefaults = {
 } satisfies Required<SwitchProps>;
 
 export interface SwitchOptions {
-  /** 현재 prop 값을 돌려준다. 상태의 주인은 어댑터다. */
+  /** Returns the current prop values. The adapter owns the state. */
   props: () => SwitchProps;
-  /** 값을 바꿔야 할 때 호출된다. 어댑터가 v-model, onChange 등으로 잇는다. */
+  /** Called when the value should change. Adapters wire it to v-model, onChange, and so on. */
   onCheckedChange: (checked: boolean) => void;
 }
 

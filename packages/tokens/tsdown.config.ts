@@ -5,9 +5,9 @@ export default defineConfig({
   platform: 'neutral',
   dts: true,
   deps: {
-    // MCU 0.4.0은 확장자 없는 import 때문에 Node ESM에서 깨진다(upstream #195).
-    // 번들에 넣으면 Rolldown이 경로를 풀어 주므로 SSR/Vitest에서도 돈다.
-    // 라이선스 주석은 번들에 그대로 남고, 출처는 루트 NOTICE에 적었다.
+    // MCU 0.4.0 breaks under Node ESM because of extensionless imports (upstream #195).
+    // Bundling it lets Rolldown resolve those paths, so it also works in SSR and Vitest.
+    // Its license comments stay in the bundle, and the attribution is in the root NOTICE.
     onlyBundle: ['@material/material-color-utilities'],
   },
 });
