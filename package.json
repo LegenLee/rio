@@ -2,13 +2,19 @@
   "name": "rio-m3e-monorepo",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@11.23.0",
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" build",
     "dev": "pnpm --filter @rio-m3e/playground dev",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
     "typescript": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@11.23.0"
 }
