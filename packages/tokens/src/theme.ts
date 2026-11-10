@@ -8,6 +8,7 @@ import {
 import { createElevationVariables, type ElevationVar } from './elevation/elevation';
 import { createMotionVariables, type MotionScheme, type MotionVar } from './motion/motion';
 import { createShapeVariables, type ShapeOverrides, type ShapeVar } from './shape/shape';
+import { createStateVariables, type StateVar } from './state/state';
 import {
   createTypographyVariables,
   type TypefaceOverrides,
@@ -23,7 +24,7 @@ export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
   typefaces?: TypefaceOverrides;
 }
 
-export type ThemeVar = ColorVar | ElevationVar | MotionVar | ShapeVar | TypographyVar;
+export type ThemeVar = ColorVar | ElevationVar | MotionVar | ShapeVar | StateVar | TypographyVar;
 
 /**
  * Every CSS variable in the theme.
@@ -34,6 +35,7 @@ export type ThemeVar = ColorVar | ElevationVar | MotionVar | ShapeVar | Typograp
  *   subtree can switch schemes by overriding them.
  * - Shape: the corner radius scale, with any overrides applied.
  * - Typography: the baseline and emphasized type scales, in rem, on top of two typefaces.
+ * - State: state-layer opacities and focus indicator dimensions. Fixed values.
  */
 export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
   const { motion = 'expressive', shapes, typefaces, ...color } = options;
@@ -49,6 +51,7 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
     createMotionVariables(motion),
     createShapeVariables(shapes),
     createTypographyVariables(typefaces),
+    createStateVariables(),
   );
 }
 

@@ -40,6 +40,16 @@ export {
   type ShapeVar,
 } from './shape/shape';
 export {
+  FOCUS_INDICATOR_PARTS,
+  STATE_LAYER_STATES,
+  createStateVariables,
+  focusIndicatorVar,
+  stateLayerOpacityVar,
+  type FocusIndicatorPart,
+  type StateLayerState,
+  type StateVar,
+} from './state/state';
+export {
   TYPE_STYLES,
   createTypographyVariables,
   getTypeStyle,

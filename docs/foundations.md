@@ -1,6 +1,6 @@
 # Rio Foundations: M3E Core Principles
 
-This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, and typography. Every section separates three kinds of statements:
+This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, typography, and interaction states. Every section separates three kinds of statements:
 
 - **Spec**: token values and normative definitions from Google. This means the token tables on m3.material.io and the tokens generated from the same source for Material Web and Jetpack Compose.
 - **Recommendations**: guidance prose on m3.material.io, such as dos, don'ts, and "should". Rio's components follow it where it applies, but it doesn't change Rio's defaults by itself.
@@ -331,6 +331,54 @@ The token tables still list axis values for every style. The pattern across all 
   2. Emit a `--rio-typescale-<style>-axes` variable per style for `font-variation-settings`, and use `font-optical-sizing: auto` where the font supports `opsz`.
   3. Keep the default typeface stack, which follows the spec. A variable-font theme can follow the fallback recommendation by passing its own stack through `typefaces`.
 
+## 6. Show interaction with states
+
+### Spec
+
+There are six states: enabled, disabled, hover, focused, pressed, and dragged.
+
+> "A state layer is a semi-transparent covering on an element that indicates its state."
+
+- A state layer is an overlay with a fixed opacity per state, in **the same color as the content** (usually the "on" color, for example `on-primary` on a `primary` container).
+- Layer order: container → state layer → content.
+- **Only one state layer** shows at a time, though states can be combined (for example, selected and hovered).
+- A state layer covers the whole element or a circle over part of it. Where it is a circle, it is 40dp, while the interactive target is 48dp.
+- Pressed is shown with a **ripple**. Some components, such as buttons and cards, also rise in elevation when pressed.
+- Disabled components can't be focused, dragged, or pressed, and they don't change state when hovered or tapped. They don't need to meet Material's contrast requirements.
+- Focus from the keyboard shows a ring-like **keyboard focus indicator**.
+
+| Token                                       | Value |
+| ------------------------------------------- | ----- |
+| `md.sys.state.hover.state-layer-opacity`    | 0.08  |
+| `md.sys.state.focus.state-layer-opacity`    | 0.1   |
+| `md.sys.state.pressed.state-layer-opacity`  | 0.1   |
+| `md.sys.state.dragged.state-layer-opacity`  | 0.16  |
+| `md.sys.state.disabled.state-layer-opacity` | 0.38  |
+| `md.sys.state.focus-indicator.thickness`    | 3dp   |
+| `md.sys.state.focus-indicator.outer-offset` | 2dp   |
+| `md.sys.state.focus-indicator.inner-offset` | -3dp  |
+
+- Despite its name, the disabled opacity (0.38) is what components apply to disabled labels and icons. The disabled container opacity is a component token (0.1 on `on-surface` for the filled button).
+- The focus indicator's color is a component token. The button, icon button, and switch tokens all set it to `secondary`.
+- The spec lists which component families inherit each state. For example, buttons get hover, focus, and pressed but not dragged, and dialogs get none.
+
+### Recommendations
+
+- Hover is low-emphasis and fades in and out. Pressed is high-emphasis. Dragged is low-emphasis, so it doesn't distract.
+- Don't show an unavailable FAB disabled; don't show it at all.
+
+### In Rio
+
+- Each token is a CSS variable with the same name: `--rio-state-hover-state-layer-opacity`, `--rio-state-focus-indicator-thickness`, and so on. They are part of the theme variables.
+- **`@rio-m3e/styles/base/state-layer.css`**: the class `rio-state-layer` draws the overlay with `currentColor`, so a component sets its content color and the layer follows. The overlay sits on a `::before` with `z-index: -1` inside an isolated element, which places it between the container and the content. Later rules win, so only one state shows: pressed beats focus, and focus beats hover.
+- Hover applies only under `@media (hover: hover)`, because touch screens keep `:hover` after a tap.
+- The fade uses the `fast-effects` motion token, following the low-emphasis fade recommendation with the spec's token for opacity changes.
+- **`@rio-m3e/styles/base/focus-ring.css`**: the class `rio-focus-ring` draws an `outline` on `:focus-visible`, so only keyboard-style focus shows it. The color defaults to `secondary` and can be changed through `--rio-focus-ring-color`. `data-focus-ring="inner"` uses the inner offset.
+- **Pressed is a flat 10% overlay for now** (`:active` or `data-pressed`). The ripple needs the press position, so it will be a core primitive that sets `data-pressed`.
+- **Open decisions**:
+  - Reduced motion: what Rio does under `prefers-reduced-motion`, for the ripple and for overshooting spatial springs.
+  - Disabled and focus: the spec says disabled components can't be focused, but `aria-disabled` elements stay focusable on purpose, so screen-reader users can find them. Each component decides when it is built.
+
 ## Implementation status
 
 | Item                                               | Package  | Status                                                                                                                                                                  |
@@ -345,6 +393,9 @@ The token tables still list axis values for every style. The pattern across all 
 | Typography: baseline and emphasized type scales    | `tokens` | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
 | Typography: language height                        | `tokens` | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
 | Typography: variable font axes                     | `tokens` | Not yet. See section 5.4.                                                                                                                                               |
+| State layer opacities and focus indicator          | `tokens` | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
+| State layer and focus ring CSS                     | `styles` | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
+| Ripple (pressed)                                   | `core`   | To do. Pressed is a flat overlay until then.                                                                                                                            |
 
 ## Sources
 
@@ -359,10 +410,12 @@ The token tables still list axis values for every style. The pattern across all 
 - [Shape – Shape morph](https://m3.material.io/styles/shape/shape-morph)
 - [Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens) (token tables read in expanded form)
 - [Typography – Fonts](https://m3.material.io/styles/typography/fonts)
+- [States – State layers](https://m3.material.io/foundations/interaction/states/state-layers)
+- [States – Applying states](https://m3.material.io/foundations/interaction/states/applying-states)
 
 ### Spec token values, generated per platform
 
-- [Material Web `tokens/versions/latest` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/tokens/versions/latest/sass): Material 3 v34.0.21, generated for the web. It is the source of Rio's typography values (`_md-sys-typescale.scss`, `_md-sys-typescale-emphasized.scss`, `_md-ref-typeface.scss`), which match the expanded tables on m3.material.io. It also confirms Rio's shape scale (including `full` as `9999px`), the elevation levels, and the standard motion springs (`_md-sys-shape.scss`, `_md-sys-elevation.scss`, `_md-sys-motion.scss`). It ships only the standard motion scheme.
+- [Material Web `tokens/versions/latest` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/tokens/versions/latest/sass): Material 3 v34.0.21, generated for the web. It is the source of Rio's typography values (`_md-sys-typescale.scss`, `_md-sys-typescale-emphasized.scss`, `_md-ref-typeface.scss`), which match the expanded tables on m3.material.io. It also confirms Rio's shape scale (including `full` as `9999px`), the elevation levels, and the standard motion springs (`_md-sys-shape.scss`, `_md-sys-elevation.scss`, `_md-sys-motion.scss`). It ships only the standard motion scheme. The state tokens come from `_md-sys-state.scss` and `_md-sys-state-focus-indicator.scss`, and the focus indicator color and disabled opacities from the component tokens (`_md-comp-button.scss`, `_md-comp-button-filled.scss`, `_md-comp-icon-button.scss`, `_md-comp-switch.scss`). The 177 component token files include the M3E components: buttons in five sizes, button groups, split buttons, icon buttons, and the switch.
 - Jetpack Compose Material3 tokens @ androidx `079e2e3`:
   - [`ExpressiveMotionTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExpressiveMotionTokens.kt) and [`StandardMotionTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMotionTokens.kt) (token version v0_14_0): the source of the raw spring values, the expressive ones in particular.
   - [`ShapeTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ShapeTokens.kt) (14_1_0) and [`ElevationTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevationTokens.kt): agree with the spec and Material Web.

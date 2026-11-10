@@ -88,6 +88,15 @@ watchEffect(() => {
       </div>
     </section>
 
+    <!-- Stand-ins for real buttons, to try the state layer and focus ring (Tab to see the ring) -->
+    <section class="controls">
+      <button type="button" class="demo-button rio-state-layer rio-focus-ring">Filled</button>
+      <button type="button" class="demo-button tonal rio-state-layer rio-focus-ring">Tonal</button>
+      <button type="button" class="demo-button rio-state-layer rio-focus-ring" disabled>
+        Disabled
+      </button>
+    </section>
+
     <section class="controls">
       <RioSwitch v-model:checked="checked" />
       <span>checked: {{ checked }}</span>
@@ -199,6 +208,33 @@ main {
 
 .dot.moved {
   transform: translateX(288px);
+}
+
+.demo-button {
+  block-size: 40px;
+  padding-inline: 16px;
+  border: none;
+  border-radius: var(--rio-shape-corner-full);
+  background: var(--rio-color-primary);
+  color: var(--rio-color-on-primary);
+  font: var(--rio-typescale-label-large);
+  letter-spacing: var(--rio-typescale-label-large-tracking);
+  cursor: pointer;
+}
+
+.demo-button.tonal {
+  background: var(--rio-color-secondary-container);
+  color: var(--rio-color-on-secondary-container);
+}
+
+.demo-button:disabled {
+  background: color-mix(in srgb, var(--rio-color-on-surface) 10%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  cursor: default;
 }
 
 .type-scale {
