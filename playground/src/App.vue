@@ -6,6 +6,8 @@ import {
   colorVar,
   elevationVar,
   motionVar,
+  SHAPE_CORNERS,
+  shapeVar,
   type MotionScheme,
   type MotionToken,
   type SchemeVariant,
@@ -90,6 +92,17 @@ watchEffect(() => {
       <RioSwitch disabled />
     </section>
 
+    <section class="shapes">
+      <div
+        v-for="corner in SHAPE_CORNERS"
+        :key="corner"
+        class="shape"
+        :style="{ borderRadius: `var(${shapeVar(corner)})` }"
+      >
+        {{ corner }}
+      </div>
+    </section>
+
     <section class="elevations">
       <div
         v-for="level in ELEVATION_LEVELS"
@@ -168,6 +181,23 @@ main {
 
 .dot.moved {
   transform: translateX(288px);
+}
+
+.shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.shape {
+  display: grid;
+  place-items: center;
+  inline-size: 112px;
+  block-size: 72px;
+  background: var(--rio-color-primary-container);
+  color: var(--rio-color-on-primary-container);
+  font-size: 11px;
+  text-align: center;
 }
 
 .elevations {

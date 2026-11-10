@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { COLOR_ROLES } from './color/color';
 import { ELEVATION_LEVELS } from './elevation/elevation';
 import { MOTION_TOKENS, createMotionVariables } from './motion/motion';
+import { SHAPE_CORNERS } from './shape/shape';
 import { applyTheme, createThemeCss, createThemeVariables } from './theme';
 
 const options = { sourceColor: '#6750a4' };
@@ -9,10 +10,18 @@ const options = { sourceColor: '#6750a4' };
 describe('createThemeVariables', () => {
   const vars = createThemeVariables(options);
 
-  test('includes every color, elevation, and motion variable', () => {
+  test('includes every color, elevation, motion, and shape variable', () => {
     expect(Object.keys(vars)).toHaveLength(
-      COLOR_ROLES.length + ELEVATION_LEVELS.length + MOTION_TOKENS.length * 3,
+      COLOR_ROLES.length +
+        ELEVATION_LEVELS.length +
+        MOTION_TOKENS.length * 3 +
+        SHAPE_CORNERS.length,
     );
+  });
+
+  test('passes shape overrides through', () => {
+    const custom = createThemeVariables({ ...options, shapes: { medium: 16 } });
+    expect(custom['--rio-shape-corner-medium']).toBe('16px');
   });
 
   test('wraps colors in light-dark()', () => {

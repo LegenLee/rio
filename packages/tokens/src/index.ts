@@ -31,6 +31,15 @@ export {
   type MotionVarPart,
 } from './motion/motion';
 export {
+  SHAPE_CORNERS,
+  createShapeVariables,
+  shapeVar,
+  type CustomizableShapeCorner,
+  type ShapeCorner,
+  type ShapeOverrides,
+  type ShapeVar,
+} from './shape/shape';
+export {
   applyTheme,
   createThemeCss,
   createThemeVariables,

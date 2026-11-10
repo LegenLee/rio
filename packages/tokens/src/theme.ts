@@ -7,13 +7,16 @@ import {
 } from './color/color';
 import { createElevationVariables, type ElevationVar } from './elevation/elevation';
 import { createMotionVariables, type MotionScheme, type MotionVar } from './motion/motion';
+import { createShapeVariables, type ShapeOverrides, type ShapeVar } from './shape/shape';
 
 export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
   /** Defaults to `'expressive'`. */
   motion?: MotionScheme;
+  /** Resizes steps of the corner radius scale, in px: `{ medium: 16 }`. */
+  shapes?: ShapeOverrides;
 }
 
-export type ThemeVar = ColorVar | ElevationVar | MotionVar;
+export type ThemeVar = ColorVar | ElevationVar | MotionVar | ShapeVar;
 
 /**
  * Every CSS variable in the theme.
@@ -22,16 +25,22 @@ export type ThemeVar = ColorVar | ElevationVar | MotionVar;
  * - Elevation: fixed values that don't depend on the options.
  * - Motion: curves for the chosen scheme. The variable names are the same for every scheme, so a
  *   subtree can switch schemes by overriding them.
+ * - Shape: the corner radius scale, with any overrides applied.
  */
 export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
-  const { motion = 'expressive', ...color } = options;
+  const { motion = 'expressive', shapes, ...color } = options;
   const light = createColorScheme({ ...color, dark: false });
   const dark = createColorScheme({ ...color, dark: true });
   const vars = {} as Record<ThemeVar, string>;
   for (const role of COLOR_ROLES) {
     vars[colorVar(role)] = `light-dark(${light[role]}, ${dark[role]})`;
   }
-  return Object.assign(vars, createElevationVariables(), createMotionVariables(motion));
+  return Object.assign(
+    vars,
+    createElevationVariables(),
+    createMotionVariables(motion),
+    createShapeVariables(shapes),
+  );
 }
 
 /** A CSS string for SSR or static stylesheets. Includes `color-scheme: light dark`. */

@@ -1,8 +1,8 @@
 # Rio Foundations: M3E Core Principles
 
-This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows. They rest on three pillars: two ways to express hierarchy, and one for motion. Each section cites Google's official spec and notes how Rio implements it.
+This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, and shape. Each section cites Google's official spec and notes how Rio implements it.
 
-> Last verified: 2026-11-10. Sources are listed at the end. Update this document when the spec changes.
+> Last verified: 2026-11-11. Sources are listed at the end. Update this document when the spec changes.
 
 ## 1. Use contrast for hierarchy within a page
 
@@ -152,6 +152,49 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
 - The raw spring values are available from JavaScript through `getMotionSpring(scheme, token)`, for the spring solver.
 
+## 4. Shape corners with a radius scale
+
+> "Material components use a corner radius scale to define all rectangular shapes, such as buttons, carousels, and dialogs."
+
+### The scale
+
+The scale has ten steps, named for how rounded the corner is. Three of them (`large-increased`, `extra-large-increased`, `extra-extra-large`) are new in M3E.
+
+| Step                  | Radius        | Rio CSS variable                           |
+| --------------------- | ------------- | ------------------------------------------ |
+| none                  | 0dp           | `--rio-shape-corner-none`                  |
+| extra-small           | 4dp           | `--rio-shape-corner-extra-small`           |
+| small                 | 8dp           | `--rio-shape-corner-small`                 |
+| medium                | 12dp          | `--rio-shape-corner-medium`                |
+| large                 | 16dp          | `--rio-shape-corner-large`                 |
+| large-increased       | 20dp          | `--rio-shape-corner-large-increased`       |
+| extra-large           | 28dp          | `--rio-shape-corner-extra-large`           |
+| extra-large-increased | 32dp          | `--rio-shape-corner-extra-large-increased` |
+| extra-extra-large     | 48dp          | `--rio-shape-corner-extra-extra-large`     |
+| full                  | Fully rounded | `--rio-shape-corner-full` (`9999px`)       |
+
+### Asymmetric shapes
+
+- Components can use different values for different corners, from the same scale. Closely grouped items, such as menus and split buttons, use this for their **inner corners**.
+- The spec's partial tokens (`extra-small-top`, `large-start`, `large-end`, `large-top`, `extra-large-top`) need no extra variables in Rio. Set individual corners with logical properties such as `border-start-start-radius`, so the shapes also flip correctly in right-to-left layouts.
+
+### Customizing
+
+The spec allows two levels of customization:
+
+1. **Resize a step.** Every component mapped to that step follows. In Rio: `applyTheme(el, { sourceColor, shapes: { medium: 16 } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
+2. **Remap a component** to a different step, for example buttons from `full` to `small`. In Rio, this will be a component-level variable defined with each component.
+
+### Rules
+
+- **Optical roundness**: when nesting rounded shapes, don't reuse the outer radius. Use _outer radius − padding = inner radius_ (for example, 48dp − 14dp = 34dp).
+- Don't apply large or full corners to information-dense components such as cards.
+- **Animating `full`**: `9999px` works for static shapes but animates badly. A transition from `9999px` to `12px` stays fully round until the very end. Components that morph between `full` and another step must use half their height instead.
+
+### Not covered: the shape library and shape morph
+
+M3 also has a library of expressive shapes that morph into each other, used by the button group and the loading indicator. The spec says "Web is not currently available"; it exists only as a Compose API. It is out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
+
 ## Implementation status
 
 | Item                                               | Package   | Status                                                                                                                                  |
@@ -161,7 +204,8 @@ Each token becomes three CSS variables. The names don't include the scheme.
 | Scrim (32%)                                        | `tokens`  | To do                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`  | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`. |
 | Spring solver (handles interruptions and gestures) | `core`    | To do. The raw values are ready in `getMotionSpring`.                                                                                   |
-| Shape (corner scale, shape morphing)               | Undecided | Spec not yet summarized                                                                                                                 |
+| Shape: corner radius scale                         | `tokens`  | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.           |
+| Shape: shape library and morphing                  | —         | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                      |
 | Typography (including emphasized styles)           | Undecided | Spec not yet summarized                                                                                                                 |
 
 ## Sources
@@ -171,8 +215,12 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - [M3 Motion physics – How it works](https://m3.material.io/styles/motion/overview/how-it-works)
 - [M3 Motion physics – Specs](https://m3.material.io/styles/motion/overview/specs)
 - [M3 Color roles](https://m3.material.io/styles/color/roles)
+- [M3 Shape – Corner radius scale](https://m3.material.io/styles/shape/corner-radius-scale)
+- [M3 Shape – Shape morph](https://m3.material.io/styles/shape/shape-morph)
 - Material 3 Design Kit (Figma Community): the `M3/Elevation Light` and `M3/Elevation Dark` effect styles
 - [Compose Material3 `ElevationTokens.kt`](https://github.com/androidx/androidx/blob/androidx-main/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevationTokens.kt)
 - [Compose Material3 `StandardMotionTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMotionTokens.kt)
 - [Compose Material3 `ExpressiveMotionTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExpressiveMotionTokens.kt)
 - [Compose Material3 `MotionScheme.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MotionScheme.kt): interface only
+- [Compose Material3 `ShapeTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ShapeTokens.kt)
+- [Compose Material3 `Shapes.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Shapes.kt): interface only
