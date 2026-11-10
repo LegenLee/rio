@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { COLOR_ROLES } from './color/color';
 import { ELEVATION_LEVELS } from './elevation/elevation';
+import { MOTION_TOKENS, createMotionVariables } from './motion/motion';
 import { applyTheme, createThemeCss, createThemeVariables } from './theme';
 
 const options = { sourceColor: '#6750a4' };
@@ -8,12 +9,24 @@ const options = { sourceColor: '#6750a4' };
 describe('createThemeVariables', () => {
   const vars = createThemeVariables(options);
 
-  test('includes every color and elevation variable', () => {
-    expect(Object.keys(vars)).toHaveLength(COLOR_ROLES.length + ELEVATION_LEVELS.length);
+  test('includes every color, elevation, and motion variable', () => {
+    expect(Object.keys(vars)).toHaveLength(
+      COLOR_ROLES.length + ELEVATION_LEVELS.length + MOTION_TOKENS.length * 3,
+    );
   });
 
   test('wraps colors in light-dark()', () => {
     expect(vars['--rio-color-primary']).toMatch(/^light-dark\(#[0-9a-f]{6}, #[0-9a-f]{6}\)$/);
+  });
+
+  test('uses the expressive motion scheme by default', () => {
+    expect(vars).toMatchObject(createMotionVariables('expressive'));
+  });
+
+  test('switches the motion scheme without renaming variables', () => {
+    expect(createThemeVariables({ ...options, motion: 'standard' })).toMatchObject(
+      createMotionVariables('standard'),
+    );
   });
 });
 

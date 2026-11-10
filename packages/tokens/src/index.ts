@@ -17,6 +17,20 @@ export {
   type ElevationVar,
 } from './elevation/elevation';
 export {
+  MOTION_SCHEMES,
+  MOTION_TOKENS,
+  createMotionVariables,
+  getMotionCurve,
+  getMotionSpring,
+  motionVar,
+  type MotionCurve,
+  type MotionScheme,
+  type MotionSpring,
+  type MotionToken,
+  type MotionVar,
+  type MotionVarPart,
+} from './motion/motion';
+export {
   applyTheme,
   createThemeCss,
   createThemeVariables,

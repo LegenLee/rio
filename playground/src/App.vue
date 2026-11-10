@@ -5,6 +5,9 @@ import {
   applyTheme,
   colorVar,
   elevationVar,
+  motionVar,
+  type MotionScheme,
+  type MotionToken,
   type SchemeVariant,
 } from '@rio-m3e/tokens';
 import { RioSwitch } from '@rio-m3e/vue';
@@ -14,7 +17,11 @@ const sourceColor = ref('#6750a4');
 const variant = ref<SchemeVariant>('tonal-spot');
 const contrast = ref(0);
 const mode = ref<'light dark' | 'light' | 'dark'>('light dark');
+const motion = ref<MotionScheme>('expressive');
 const checked = ref(false);
+const moved = ref(false);
+
+const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
 
 watchEffect(() => {
   const root = document.documentElement;
@@ -22,6 +29,7 @@ watchEffect(() => {
     sourceColor: sourceColor.value,
     variant: variant.value,
     contrast: contrast.value,
+    motion: motion.value,
   });
   root.style.colorScheme = mode.value;
 });
@@ -55,6 +63,25 @@ watchEffect(() => {
           <option value="dark">다크</option>
         </select>
       </label>
+      <label>
+        모션
+        <select v-model="motion">
+          <option value="expressive">Expressive</option>
+          <option value="standard">Standard</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="motion">
+      <button type="button" @click="moved = !moved">움직이기</button>
+      <div v-for="token in SPATIAL" :key="token" class="track">
+        <span
+          class="dot"
+          :class="{ moved }"
+          :style="{ transition: `transform var(${motionVar(token)})` }"
+        />
+        <code>{{ token }}</code>
+      </div>
     </section>
 
     <section class="controls">
@@ -106,6 +133,41 @@ main {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
+}
+
+.motion {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  inline-size: 320px;
+  block-size: 32px;
+  border-radius: 16px;
+  background: var(--rio-color-surface-container-high);
+}
+
+.track code {
+  margin-inline-start: 40px;
+  font-size: 12px;
+}
+
+.dot {
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-start: 4px;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 50%;
+  background: var(--rio-color-primary);
+}
+
+.dot.moved {
+  transform: translateX(288px);
 }
 
 .elevations {

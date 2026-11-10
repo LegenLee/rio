@@ -6,25 +6,32 @@ import {
   type ColorVar,
 } from './color/color';
 import { createElevationVariables, type ElevationVar } from './elevation/elevation';
+import { createMotionVariables, type MotionScheme, type MotionVar } from './motion/motion';
 
-export type ThemeOptions = Omit<ColorSchemeOptions, 'dark'>;
+export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
+  /** Defaults to `'expressive'`. */
+  motion?: MotionScheme;
+}
 
-export type ThemeVar = ColorVar | ElevationVar;
+export type ThemeVar = ColorVar | ElevationVar | MotionVar;
 
 /**
  * Every CSS variable in the theme.
  * - Colors: light and dark values are combined with `light-dark()`. Which one applies depends on the
  *   `color-scheme` of the element that uses the variable.
  * - Elevation: fixed values that don't depend on the options.
+ * - Motion: curves for the chosen scheme. The variable names are the same for every scheme, so a
+ *   subtree can switch schemes by overriding them.
  */
 export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
-  const light = createColorScheme({ ...options, dark: false });
-  const dark = createColorScheme({ ...options, dark: true });
+  const { motion = 'expressive', ...color } = options;
+  const light = createColorScheme({ ...color, dark: false });
+  const dark = createColorScheme({ ...color, dark: true });
   const vars = {} as Record<ThemeVar, string>;
   for (const role of COLOR_ROLES) {
     vars[colorVar(role)] = `light-dark(${light[role]}, ${dark[role]})`;
   }
-  return Object.assign(vars, createElevationVariables());
+  return Object.assign(vars, createElevationVariables(), createMotionVariables(motion));
 }
 
 /** A CSS string for SSR or static stylesheets. Includes `color-scheme: light dark`. */

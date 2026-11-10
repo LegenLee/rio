@@ -129,26 +129,40 @@ Curves can't imitate animations that get interrupted or are driven by gestures. 
 
 | Spring          | standard (damping / stiffness) | expressive (damping / stiffness) |
 | --------------- | ------------------------------ | -------------------------------- |
-| fast spatial    | 0.9 / 1400                     | Not yet verified                 |
-| default spatial | 0.9 / 700                      | Not yet verified                 |
-| slow spatial    | 0.9 / 300                      | Not yet verified                 |
-| fast effects    | 1.0 / 3800                     | Not yet verified                 |
-| default effects | 1.0 / 1600                     | Not yet verified                 |
-| slow effects    | 1.0 / 800                      | Not yet verified                 |
+| fast spatial    | 0.9 / 1400                     | 0.6 / 800                        |
+| default spatial | 0.9 / 700                      | 0.8 / 380                        |
+| slow spatial    | 0.9 / 300                      | 0.8 / 200                        |
+| fast effects    | 1.0 / 3800                     | 1.0 / 3800                       |
+| default effects | 1.0 / 1600                     | 1.0 / 1600                       |
+| slow effects    | 1.0 / 800                      | 1.0 / 800                        |
 
-The standard values come from `StandardMotionTokens` in Jetpack Compose Material3. The expressive values haven't been read from the token table on the spec page yet.
+Damping is the damping ratio: 1 settles without overshoot, and lower values bounce. The values come from `StandardMotionTokens` and `ExpressiveMotionTokens` in Jetpack Compose Material3 (token version v0_14_0, androidx commit `079e2e3`). Expressive differs from standard only in the spatial springs, which are softer and bouncier. The effects springs are identical.
+
+### In Rio
+
+Each token becomes three CSS variables. The names don't include the scheme.
+
+| Variable                             | Value (expressive)                          | Use                                                                                                     |
+| ------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `--rio-motion-fast-spatial`          | `350ms cubic-bezier(0.42, 1.67, 0.21, 0.9)` | Drops straight into `transition` or `animation`: `transition: transform var(--rio-motion-fast-spatial)` |
+| `--rio-motion-fast-spatial-duration` | `350ms`                                     | When the duration is needed on its own                                                                  |
+| `--rio-motion-fast-spatial-easing`   | `cubic-bezier(0.42, 1.67, 0.21, 0.9)`       | When the easing is needed on its own                                                                    |
+
+- The theme picks the scheme: `applyTheme(el, { sourceColor, motion: 'standard' })`. It defaults to `'expressive'`.
+- Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
+- The raw spring values are available from JavaScript through `getMotionSpring(scheme, token)`, for the spring solver.
 
 ## Implementation status
 
-| Item                                               | Package   | Status                                                                                                                                        |
-| -------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color roles (2025 spec, light and dark)            | `tokens`  | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                     |
-| Elevation levels and web shadows                   | `tokens`  | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                      |
-| Scrim (32%)                                        | `tokens`  | To do                                                                                                                                         |
-| Motion curves (official conversion table)          | `tokens`  | To do. CSS variable names won't include the scheme. The expressive or standard set is swapped in at the root, the same way color themes work. |
-| Spring solver (handles interruptions and gestures) | `core`    | To do. Needs the expressive raw values first.                                                                                                 |
-| Shape (corner scale, shape morphing)               | Undecided | Spec not yet summarized                                                                                                                       |
-| Typography (including emphasized styles)           | Undecided | Spec not yet summarized                                                                                                                       |
+| Item                                               | Package   | Status                                                                                                                                  |
+| -------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Color roles (2025 spec, light and dark)            | `tokens`  | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                               |
+| Elevation levels and web shadows                   | `tokens`  | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                |
+| Scrim (32%)                                        | `tokens`  | To do                                                                                                                                   |
+| Motion curves (official conversion table)          | `tokens`  | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`. |
+| Spring solver (handles interruptions and gestures) | `core`    | To do. The raw values are ready in `getMotionSpring`.                                                                                   |
+| Shape (corner scale, shape morphing)               | Undecided | Spec not yet summarized                                                                                                                 |
+| Typography (including emphasized styles)           | Undecided | Spec not yet summarized                                                                                                                 |
 
 ## Sources
 
@@ -159,4 +173,6 @@ The standard values come from `StandardMotionTokens` in Jetpack Compose Material
 - [M3 Color roles](https://m3.material.io/styles/color/roles)
 - Material 3 Design Kit (Figma Community): the `M3/Elevation Light` and `M3/Elevation Dark` effect styles
 - [Compose Material3 `ElevationTokens.kt`](https://github.com/androidx/androidx/blob/androidx-main/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevationTokens.kt)
-- [Compose Material3 `StandardMotionTokens.kt`](https://github.com/androidx/androidx/blob/androidx-main/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMotionTokens.kt)
+- [Compose Material3 `StandardMotionTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMotionTokens.kt)
+- [Compose Material3 `ExpressiveMotionTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExpressiveMotionTokens.kt)
+- [Compose Material3 `MotionScheme.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MotionScheme.kt): interface only
