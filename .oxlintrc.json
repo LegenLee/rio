@@ -1,3 +1,6 @@
 {
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue"]
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue"],
+  "categories": {
+    "correctness": "error"
+  }
 }
