@@ -1,46 +1,56 @@
 # Rio Foundations: M3E Core Principles
 
-This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, and typography. Each section cites Google's official spec and notes how Rio implements it.
+This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, and typography. Every section separates three kinds of statements:
+
+- **Spec**: token values and normative definitions from Google. This means the token tables on m3.material.io and the tokens generated from the same source for Material Web and Jetpack Compose.
+- **Recommendations**: guidance prose on m3.material.io, such as dos, don'ts, and "should". Rio's components follow it where it applies, but it doesn't change Rio's defaults by itself.
+- **In Rio**: what Rio decides on top, usually because the web needs something the spec leaves to each platform.
+
+**Rio's defaults follow the spec.** Recommendations become options or component-level practice. Where the spec is silent, the "In Rio" part says what Rio chose and why.
 
 > Last verified: 2026-11-11. Sources are listed at the end. Update this document when the spec changes.
 
 ## 1. Use contrast for hierarchy within a page
 
+### Spec
+
 > "By default, Material 3's surfaces use tonal difference to indicate separation."
 
-Within a page, separate regions by the tonal difference between surface colors, not by shadows.
+Regions within a page are separated by the tonal difference between surface colors, not by shadows. The tools are the surface roles:
 
-### Tools: surface roles
+| Role                      | Use                                       |
+| ------------------------- | ----------------------------------------- |
+| surface                   | Backgrounds and large, low-emphasis areas |
+| surface container lowest  | Lowest-emphasis container                 |
+| surface container low     | Low-emphasis container                    |
+| surface container         | Default container                         |
+| surface container high    | High-emphasis container                   |
+| surface container highest | Highest-emphasis container                |
 
-| Role                      | Rio CSS variable                        | Use                                       |
-| ------------------------- | --------------------------------------- | ----------------------------------------- |
-| surface                   | `--rio-color-surface`                   | Backgrounds and large, low-emphasis areas |
-| surface container lowest  | `--rio-color-surface-container-lowest`  | Lowest-emphasis container                 |
-| surface container low     | `--rio-color-surface-container-low`     | Low-emphasis container                    |
-| surface container         | `--rio-color-surface-container`         | Default container                         |
-| surface container high    | `--rio-color-surface-container-high`    | High-emphasis container                   |
-| surface container highest | `--rio-color-surface-container-highest` | Highest-emphasis container                |
+The container role names describe **emphasis, not height**: "These roles are not tied to elevation."
 
-The container role names describe **emphasis, not height**. The spec says so explicitly: "These roles are not tied to elevation."
+### Recommendations
 
-### Rules
-
-- Overlapping regions or components use different roles.
+- Give overlapping regions or components different roles.
 - The most common pairing is `surface` for the body and `surface container` for navigation.
 - Keep each region's role the same across window sizes. Larger screens may add other container roles, as long as they are applied consistently.
-- Edges of interactive elements need at least 3:1 contrast against their background. Use `outline` for those edges. Don't use `outline-variant` to define boundaries or hierarchy.
+- Give the edges of interactive elements at least 3:1 contrast against their background. Use `outline` for those edges, not `outline-variant`.
+- Use a shadow within a page only to **protect** an element on a busy background (a pattern or photo behind cards, chips, or buttons), or to **lift** an element briefly during an interaction such as focus, selection, or swipe.
 
-### Exceptions: shadows within a page
+### In Rio
 
-- **Protection**: when a busy background, such as a pattern or a photo, would swallow cards, chips, or buttons.
-- **Interaction**: to lift an element briefly during focus, selection, swipe, or similar interactions. All buttons rise one elevation level on hover.
-- **FAB**: separated from body content by a shadow even at rest (level 3, level 4 on hover).
+- Every color role is a CSS variable named after the role in kebab-case: surface container high → `--rio-color-surface-container-high`. All 53 roles come from MCU's 2025 color spec (`createColorScheme`).
+- Light and dark values are combined with `light-dark()`, so the `color-scheme` of the element using a variable picks one.
 
 ## 2. Use elevation for layers that float above
 
-Elevation is the distance between two surfaces on the z-axis. It isn't a property of floating elements only: **every component has an elevation value**. A shadow is just one way to depict it.
+### Spec
 
-### Levels
+Elevation is the distance between two surfaces on the z-axis. Every component has an elevation value, not just floating ones. Elevation can be depicted in three ways:
+
+1. **Tonal difference**: the default, covered in section 1.
+2. **Shadow**: a small, sharp shadow reads as close; a large, soft one reads as far.
+3. **Scrim**: placed beneath modals and expanded navigation to focus attention. It uses the `scrim` color role at **32% opacity**.
 
 | Level | Height | Use                                             |
 | ----- | ------ | ----------------------------------------------- |
@@ -51,60 +61,69 @@ Elevation is the distance between two surfaces on the z-axis. It isn't a propert
 | 4     | 8dp    | Interaction states only, such as hover and drag |
 | 5     | 12dp   | Interaction states only, such as hover and drag |
 
-- Every component has a default level. Don't change it.
-- Change a level only in response to system events or user interaction, and apply the change consistently across similar elements.
-- Shadows are more powerful when used sparingly. Keep the number of levels on a screen small.
-
-### Ways to depict elevation
-
-1. **Tonal difference**: the default, covered in section 1.
-2. **Shadow**: a small, sharp shadow reads as close; a large, soft one reads as far.
-3. **Scrim**: placed beneath modals and expanded navigation to focus attention. It uses the `scrim` color role at **32% opacity**.
-
-### What Rio has to decide
+- Every component has a default (resting) level.
+- On hover, all Material buttons rise one level. A FAB rests at level 3 and rises to level 4.
 
 > "Tokens have no shadows or color; each platform determines the specific shadows and values to use at each elevation level."
 
-A level's dp value only says how far an element sits above the surface below it. It doesn't define the shadow's shape: offset, blur, spread, opacity, or number of layers. On Android, the OS light model computes the shadow from the elevation. On the web, `box-shadow` needs every one of those numbers written out.
+A level's dp value only says how far an element sits above the surface below it. It doesn't define the shadow's shape: offset, blur, spread, opacity, or number of layers. Android's light model computes a shadow from the elevation. On the web, `box-shadow` needs every one of those numbers written out.
 
-Rio uses the **per-level shadow styles in the M3 Figma Design Kit** (`M3/Elevation Light/1–5` and `M3/Elevation Dark/1–5`) as its reference. The kit's light and dark values are identical; only the layer order differs. Each level has two layers.
+### Recommendations
 
-| Level | Rio CSS variable         | Key shadow (30%) | Ambient shadow (15%) |
-| ----- | ------------------------ | ---------------- | -------------------- |
-| 0     | `--rio-elevation-level0` | None             | None                 |
-| 1     | `--rio-elevation-level1` | `0 1px 2px 0`    | `0 1px 3px 1px`      |
-| 2     | `--rio-elevation-level2` | `0 1px 2px 0`    | `0 2px 6px 2px`      |
-| 3     | `--rio-elevation-level3` | `0 1px 3px 0`    | `0 4px 8px 3px`      |
-| 4     | `--rio-elevation-level4` | `0 2px 3px 0`    | `0 6px 10px 4px`     |
-| 5     | `--rio-elevation-level5` | `0 4px 4px 0`    | `0 8px 12px 6px`     |
+- Don't change a component's default level.
+- Change levels only in response to system events or user interaction, and do it consistently across similar elements.
+- Use shadows sparingly ("less is more"). Keep the number of levels on a screen small.
 
-The kit hard-codes the shadow color as black (`#000000`). Rio instead mixes the opacity into the `shadow` role (`--rio-color-shadow`), so shadows follow the theme's shadow role.
+### In Rio
+
+- **Shadows come from the M3 Figma Design Kit**, because the spec leaves them to each platform. The kit is Google's design reference, not a token source. Rio uses its `M3/Elevation Light/1–5` and `M3/Elevation Dark/1–5` effect styles. Their light and dark values are identical (only the layer order differs), and each level has two layers:
+
+  | Level | Rio CSS variable         | Key shadow (30%) | Ambient shadow (15%) |
+  | ----- | ------------------------ | ---------------- | -------------------- |
+  | 0     | `--rio-elevation-level0` | None             | None                 |
+  | 1     | `--rio-elevation-level1` | `0 1px 2px 0`    | `0 1px 3px 1px`      |
+  | 2     | `--rio-elevation-level2` | `0 1px 2px 0`    | `0 2px 6px 2px`      |
+  | 3     | `--rio-elevation-level3` | `0 1px 3px 0`    | `0 4px 8px 3px`      |
+  | 4     | `--rio-elevation-level4` | `0 2px 3px 0`    | `0 6px 10px 4px`     |
+  | 5     | `--rio-elevation-level5` | `0 4px 4px 0`    | `0 8px 12px 6px`     |
+
+- The kit hard-codes the shadow color as black (`#000000`). Rio mixes the opacity into the `shadow` role (`--rio-color-shadow`) instead, so shadows follow the theme.
+- The scrim isn't implemented yet.
 
 ## 3. Build motion with springs
 
-In May 2025, M3E introduced the **motion physics system**, which replaces the previous easing-and-duration system. All motion is built from springs, and a spring is defined by three values: stiffness, damping, and initial velocity.
+### Spec
 
-### Structure: 2 schemes × 2 types × 3 speeds
+In May 2025, M3E introduced the **motion physics system**, which replaces the easing-and-duration system. All motion is built from springs, each defined by stiffness, damping, and initial velocity. There are 2 schemes × 2 types × 3 speeds:
 
-| Axis   | Value          | Description                                                                                   |
-| ------ | -------------- | --------------------------------------------------------------------------------------------- |
-| scheme | **expressive** | The default; use it in most cases. Overshoots the target and bounces back.                    |
-|        | standard       | For utilitarian products. Barely bounces.                                                     |
-| type   | **spatial**    | Position, size, rotation, and corner radius. Overshoots the target and settles back.          |
-|        | **effects**    | Color and opacity. Never overshoots.                                                          |
-| speed  | fast           | Small elements, such as switches and buttons                                                  |
-|        | default        | Elements that cover part of the screen, such as bottom sheets and an expanded navigation rail |
-|        | slow           | Full-screen transitions                                                                       |
+| Axis   | Value      | Description                                                                                   |
+| ------ | ---------- | --------------------------------------------------------------------------------------------- |
+| scheme | expressive | Overshoots the target and bounces back                                                        |
+|        | standard   | Eases into the target with minimal bounce                                                     |
+| type   | spatial    | Position, size, rotation, and corner radius. Overshoots the target and settles back.          |
+|        | effects    | Color and opacity. Never overshoots.                                                          |
+| speed  | fast       | Small elements, such as switches and buttons                                                  |
+|        | default    | Elements that cover part of the screen, such as bottom sheets and an expanded navigation rail |
+|        | slow       | Full-screen transitions                                                                       |
 
-- **Token names don't include the scheme.** For example: `md.sys.motion.spring.fast.spatial`. The scheme is chosen at the product level and applies to every token at once, so it can be swapped without touching any token.
-- Two tokens drive nearly all component motion. The spec says: "All component motion is driven by two tokens: expressive fast spatial and expressive fast effects."
+- **Token names don't include the scheme**, for example `md.sys.motion.spring.fast.spatial`. The scheme is chosen at the product level and applies to every token at once, so it can be swapped without touching any token.
+- "All component motion is driven by two tokens: expressive fast spatial and expressive fast effects."
 - The same token resolves to different values on different devices (watch, phone, tablet). Only the relationships hold everywhere, such as fast always being faster than default.
 
-### Web guidance
+**Raw spring values.** Damping is the damping ratio: 1 settles without overshoot, and lower values bounce.
 
-> "Use springs when possible, otherwise use curves that mimic the springs for animations without interruptions or gestures."
+| Spring          | standard (damping / stiffness) | expressive (damping / stiffness) |
+| --------------- | ------------------------------ | -------------------------------- |
+| fast spatial    | 0.9 / 1400                     | 0.6 / 800                        |
+| default spatial | 0.9 / 700                      | 0.8 / 380                        |
+| slow spatial    | 0.9 / 300                      | 0.8 / 200                        |
+| fast effects    | 1.0 / 3800                     | 1.0 / 3800                       |
+| default effects | 1.0 / 1600                     | 1.0 / 1600                       |
+| slow effects    | 1.0 / 800                      | 1.0 / 800                        |
 
-Animations that are never interrupted and aren't driven by gestures may use curves instead of springs. This is the official conversion table:
+Expressive differs from standard only in the spatial springs, which are softer and bouncier. The effects springs are identical.
+
+**Curves for the web.** The spec publishes a table that converts each spring into a cubic-bezier curve:
 
 | Spring                     | cubic-bezier           | Duration |
 | -------------------------- | ---------------------- | -------- |
@@ -123,20 +142,11 @@ Animations that are never interrupted and aren't driven by gestures may use curv
 
 The three standard spatial springs share one curve and differ only in duration. The effects curves are the same in both schemes.
 
-### Raw spring values
+### Recommendations
 
-Curves can't imitate animations that get interrupted or are driven by gestures. Those need a real spring, computed from the values below.
-
-| Spring          | standard (damping / stiffness) | expressive (damping / stiffness) |
-| --------------- | ------------------------------ | -------------------------------- |
-| fast spatial    | 0.9 / 1400                     | 0.6 / 800                        |
-| default spatial | 0.9 / 700                      | 0.8 / 380                        |
-| slow spatial    | 0.9 / 300                      | 0.8 / 200                        |
-| fast effects    | 1.0 / 3800                     | 1.0 / 3800                       |
-| default effects | 1.0 / 1600                     | 1.0 / 1600                       |
-| slow effects    | 1.0 / 800                      | 1.0 / 800                        |
-
-Damping is the damping ratio: 1 settles without overshoot, and lower values bounce. The values come from `StandardMotionTokens` and `ExpressiveMotionTokens` in Jetpack Compose Material3 (token version v0_14_0, androidx commit `079e2e3`). Expressive differs from standard only in the spatial springs, which are softer and bouncier. The effects springs are identical.
+- Use the **expressive** scheme for most products, especially hero moments and key interactions. Use **standard** for utilitarian products.
+- Most motion in a product should use the same scheme. Swapping the scheme for one element is an advanced customization for key moments.
+- On the web: "Use springs when possible, otherwise use curves that mimic the springs for animations without interruptions or gestures."
 
 ### In Rio
 
@@ -148,60 +158,61 @@ Each token becomes three CSS variables. The names don't include the scheme.
 | `--rio-motion-fast-spatial-duration` | `350ms`                                     | When the duration is needed on its own                                                                  |
 | `--rio-motion-fast-spatial-easing`   | `cubic-bezier(0.42, 1.67, 0.21, 0.9)`       | When the easing is needed on its own                                                                    |
 
-- The theme picks the scheme: `applyTheme(el, { sourceColor, motion: 'standard' })`. It defaults to `'expressive'`.
+- The theme picks the scheme: `applyTheme(el, { sourceColor, motion: 'standard' })`.
+- **Rio defaults to `'expressive'`.** The spec itself names no default scheme. Rio follows the recommendation here because it is an M3E library.
 - Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
-- The raw spring values are available from JavaScript through `getMotionSpring(scheme, token)`, for the spring solver.
+- The CSS variables carry the curves, for uninterrupted animations. Interrupted and gesture-driven animations will need the spring solver, which reads the raw values through `getMotionSpring(scheme, token)`.
 
 ## 4. Shape corners with a radius scale
 
-> "Material components use a corner radius scale to define all rectangular shapes, such as buttons, carousels, and dialogs."
+### Spec
 
-### The scale
+> "Material components use a corner radius scale to define all rectangular shapes, such as buttons, carousels, and dialogs."
 
 The scale has ten steps, named for how rounded the corner is. Three of them (`large-increased`, `extra-large-increased`, `extra-extra-large`) are new in M3E.
 
-| Step                  | Radius        | Rio CSS variable                           |
-| --------------------- | ------------- | ------------------------------------------ |
-| none                  | 0dp           | `--rio-shape-corner-none`                  |
-| extra-small           | 4dp           | `--rio-shape-corner-extra-small`           |
-| small                 | 8dp           | `--rio-shape-corner-small`                 |
-| medium                | 12dp          | `--rio-shape-corner-medium`                |
-| large                 | 16dp          | `--rio-shape-corner-large`                 |
-| large-increased       | 20dp          | `--rio-shape-corner-large-increased`       |
-| extra-large           | 28dp          | `--rio-shape-corner-extra-large`           |
-| extra-large-increased | 32dp          | `--rio-shape-corner-extra-large-increased` |
-| extra-extra-large     | 48dp          | `--rio-shape-corner-extra-extra-large`     |
-| full                  | Fully rounded | `--rio-shape-corner-full` (`9999px`)       |
+| Step                  | Radius        |
+| --------------------- | ------------- |
+| none                  | 0dp           |
+| extra-small           | 4dp           |
+| small                 | 8dp           |
+| medium                | 12dp          |
+| large                 | 16dp          |
+| large-increased       | 20dp          |
+| extra-large           | 28dp          |
+| extra-large-increased | 32dp          |
+| extra-extra-large     | 48dp          |
+| full                  | Fully rounded |
 
-### Asymmetric shapes
+- Shapes can be symmetric, or asymmetric with different steps per corner. Closely grouped items, such as menus and split buttons, use asymmetric **inner corners**.
+- Partial tokens exist for common asymmetric shapes: `extra-small-top`, `large-start`, `large-end`, `large-top`, `extra-large-top`.
+- Shapes can be customized at two levels: **resize a step**, so every component mapped to it follows, or **remap a component** to another step (for example, buttons from `full` to `small`).
+- M3 also has a library of expressive shapes that morph into each other, used by the button group and the loading indicator. For the web, the spec says: "Web is not currently available."
 
-- Components can use different values for different corners, from the same scale. Closely grouped items, such as menus and split buttons, use this for their **inner corners**.
-- The spec's partial tokens (`extra-small-top`, `large-start`, `large-end`, `large-top`, `extra-large-top`) need no extra variables in Rio. Set individual corners with logical properties such as `border-start-start-radius`, so the shapes also flip correctly in right-to-left layouts.
-
-### Customizing
-
-The spec allows two levels of customization:
-
-1. **Resize a step.** Every component mapped to that step follows. In Rio: `applyTheme(el, { sourceColor, shapes: { medium: 16 } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
-2. **Remap a component** to a different step, for example buttons from `full` to `small`. In Rio, this will be a component-level variable defined with each component.
-
-### Rules
+### Recommendations
 
 - **Optical roundness**: when nesting rounded shapes, don't reuse the outer radius. Use _outer radius − padding = inner radius_ (for example, 48dp − 14dp = 34dp).
 - Don't apply large or full corners to information-dense components such as cards.
-- **Animating `full`**: `9999px` works for static shapes but animates badly. A transition from `9999px` to `12px` stays fully round until the very end. Components that morph between `full` and another step must use half their height instead.
+- Use the shape library sparingly, for mostly visual elements rather than text-heavy containers.
 
-### Not covered: the shape library and shape morph
+### In Rio
 
-M3 also has a library of expressive shapes that morph into each other, used by the button group and the loading indicator. The spec says "Web is not currently available"; it exists only as a Compose API. It is out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
+- Each step is a CSS variable: `--rio-shape-corner-<step>`, for example `--rio-shape-corner-medium`.
+- `full` is `9999px`, the same value as Material Web's token. It works for static shapes but animates badly: a transition from `9999px` to `12px` stays fully round until the very end. Components that morph between `full` and another step must use half their height instead.
+- The partial tokens need no extra variables. Components set individual corners with logical properties such as `border-start-start-radius`, so shapes also flip correctly in right-to-left layouts.
+- **Resizing a step**: `applyTheme(el, { sourceColor, shapes: { medium: 16 } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
+- **Remapping a component** will be a component-level variable, defined with each component.
+- The shape library and shape morphing are out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
 
 ## 5. Set text with a type scale
 
+### 5.1 The type scale
+
+#### Spec
+
 > "Material 3 has one type scale containing two sets of type styles: 15 baseline and 15 emphasized."
 
-### The scale
-
-Values are in px (the spec writes pt). Rio emits them in rem: 16px = 1rem.
+Values are in px (the spec writes pt).
 
 | Style           | Typeface | Size / line height | Weight (baseline → emphasized) | Tracking |
 | --------------- | -------- | ------------------ | ------------------------------ | -------- |
@@ -221,21 +232,15 @@ Values are in px (the spec writes pt). Rio emits them in rem: 16px = 1rem.
 | label-medium    | plain    | 12 / 16            | 500 → 700                      | 0.5      |
 | label-small     | plain    | 11 / 16            | 500 → 700                      | 0.5      |
 
-Today the emphasized set differs from the baseline only in weight. The spec mentions "other minor adjustments", so check this table again when the tokens change.
+- The emphasized set is new in M3E. Today its tokens differ from the baseline only in weight, although the prose mentions "other minor adjustments". Check this table again when the tokens change.
+- "Material components don't use emphasized type styles by default." To emphasize something, swap in the emphasized token of the same style: `md.sys.typescale.display-large` → `md.sys.typescale.emphasized.display-large`.
 
-### Emphasized styles
+#### Recommendations
 
-- New in M3E. Use them for selection, actions, headlines, and other editorial emphasis, together with the baseline styles.
-- **Components don't use emphasized styles by default.** To emphasize something, swap in the emphasized token of the same style: `md.sys.typescale.display-large` → `md.sys.typescale.emphasized.display-large`.
-- They work well for badges, buttons for primary actions, extended FABs, and selected list and menu items.
+- Use emphasized styles for selection, actions, headlines, and other editorial emphasis, together with the baseline styles.
+- They work well for badges, buttons for primary actions, extended FABs, and selected list and menu items, and on text that already uses a heavier weight.
 
-### Typefaces
-
-- `brand` sets the larger styles (display, headline, title-large) for expression. `plain` sets the rest for readability.
-- Both default to Roboto. Rio's default value is `Roboto, system-ui, sans-serif`. Rio doesn't load any font itself; load Roboto in the app, or the system font is used.
-- Override with `applyTheme(el, { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } })`.
-
-### In Rio
+#### In Rio
 
 Each style becomes six CSS variables, and the emphasized set uses the spec's `emphasized` segment:
 
@@ -246,13 +251,31 @@ Each style becomes six CSS variables, and the emphasized set uses the spec's `em
 | `--rio-typescale-label-large-{font,size,line-height,weight}` |                                                  | Individual properties                        |
 | `--rio-typescale-emphasized-label-large…`                    | `700 0.875rem/1.25rem …`                         | The same six for the emphasized set          |
 
-Sizes, line heights, and tracking are in rem so text follows the user's font size setting, as Android's sp does.
+- Sizes, line heights, and tracking are emitted in **rem** (16px = 1rem), so text follows the user's font size setting, as Android's sp does. The spec defines no web unit; Material Web makes the same choice.
+- Components use the baseline styles, as the spec says. Each component decides where emphasis applies.
 
-### Not implemented yet: language height
+### 5.2 Typefaces
 
-> "Ignoring language height can lead to overlapping text and broken UI elements, leading to major internationalization issues and failing readability standards."
+#### Spec
 
-The type scale adapts line heights to the height of the script being set. The spec defines four categories:
+- Both typefaces are `Roboto` (`md.ref.typeface.brand` and `md.ref.typeface.plain`).
+- `brand` sets the larger styles (display, headline, title-large) for expression. `plain` sets the rest for readability.
+
+#### Recommendations
+
+- Consider replacing Roboto to strengthen brand expression, especially on emphasized styles.
+
+#### In Rio
+
+- **The default value is `Roboto, system-ui, sans-serif`.** The fallbacks aren't in the spec. They are there because Roboto may not be loaded on the web, and CSS expects a generic family at the end of `font-family`.
+- Rio doesn't load any font itself. Load Roboto in the app; otherwise the system font is used.
+- Override with `applyTheme(el, { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } })`.
+
+### 5.3 Language height (not implemented yet)
+
+#### Spec
+
+The type scale adapts line heights to the height of the script being set, in four categories:
 
 | Category     | Line height vs. small | Scripts                                                                                                                                                                                  |
 | ------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -261,26 +284,28 @@ The type scale adapts line heights to the height of the script being set. The sp
 | Large        | ~30% taller           | Burmese, Telugu                                                                                                                                                                          |
 | Extra large  | ~100% taller          | Nastaliq                                                                                                                                                                                 |
 
-What the spec asks for:
+- The base token values (the ones in section 5.1) are the small category.
+- Material components with vertical padding adapt automatically, because their height follows the line height. Components with fixed heights are built for the small values and may not adapt by default.
+- The percentages are approximate. The exact line-height tokens per category sit behind a "language height context" switch at the top of the token module on the spec page. Material Web's generated tokens don't include them either; they are built for one context, with no language-height tag.
 
-- **Default to medium**, because most languages fall into it, and switch categories based on the detected language.
-- **Components with vertical padding** should adapt automatically: their height follows the line height.
-- **Components with fixed heights** are built for the small values and may not adapt by default. Each such component needs a deliberate decision.
+#### Recommendations
 
-What's missing:
+> "Ignoring language height can lead to overlapping text and broken UI elements, leading to major internationalization issues and failing readability standards."
 
-- The percentages above are approximate. The exact line-height tokens per category sit behind a "language height context" switch at the top of the token module on the spec page, and the default view shows only small.
-- Material Web's generated tokens don't include them either. Its files are built for one context, with no language-height tag.
-- Rio currently emits only the small (base) values. Its defaults are therefore too tight for Korean, Chinese, Japanese, and most other non-Latin text.
+- Default to the medium category, because most languages fall into it, and switch categories based on the detected language.
 
-Planned approach:
+#### In Rio
 
-1. Read the exact values by switching the context on the spec page in a headless browser. Don't derive them by multiplying by 1.07; the spec's tokens are rounded per style.
-2. Emit the line heights per category and select them with `:lang()`, for example `:lang(ko, ja, zh) { --rio-typescale-body-large-line-height: …; }`. Any element can then opt in by setting `lang`, which pages should set anyway.
-3. Decide the default the spec recommends (medium) versus Latin-first (small), and make it a theme option.
-4. Audit fixed-height components (buttons, chips, text fields) against the medium and large categories once they exist.
+- Rio emits only the base (small) values today. Text in Korean, Chinese, Japanese, and most other non-Latin scripts is therefore set tighter than the spec intends.
+- Planned approach:
+  1. Read the exact values by switching the context on the spec page in a headless browser. Don't derive them by multiplying by 1.07; the spec's tokens are rounded per style.
+  2. Emit the line heights per category and select them with `:lang()`, for example `:lang(ko, ja, zh) { --rio-typescale-body-large-line-height: …; }`. This follows the recommendation to switch by language, and pages set `lang` anyway.
+  3. Audit fixed-height components (buttons, chips, text fields) against the medium and large categories once they exist.
+- **Open decision**: the default for text without a `lang` match. Following the spec gives small; the recommendation says medium. By Rio's rule the default would be small, with medium offered as a theme option.
 
-### Not implemented yet: variable font axes
+### 5.4 Variable font axes (not implemented yet)
+
+#### Spec
 
 > "Static fonts like Roboto are currently applied by default to all Material 3 components. Variable fonts like Roboto Flex have many more axes for expression, but aren't yet part of the M3 typescale."
 
@@ -293,22 +318,18 @@ The token tables still list axis values for every style. The pattern across all 
 | `opsz`                                         | The font size in px (57 for display-large, 11 for label-small)                                                                  | Optical size                                                               |
 | `GRAD`, `ROND`, `CRSV`, `slnt`, `FILL`, `HEXP` | 0                                                                                                                               | Grade, roundness, cursive, slant, fill, and hexp (unexplained in the spec) |
 
-Related guidance from the fonts page:
+#### Recommendations
 
-- Roboto Flex has slant, width, weight, grade, and optical size axes, plus advanced axes: thick stroke (`XOPQ`), thin stroke (`YOPQ`), counter width (`XTRA`), uppercase height (`YTUC`), lowercase height (`YTLC`), ascender height (`YTAS`), descender depth (`YTDE`), and figure height (`YTFI`).
-- **Fallback order** for variable fonts: Roboto Flex → Roboto → the Noto Sans collection. Roboto Flex covers only Latin, Greek, and Cyrillic, so Korean and other scripts fall through to Noto Sans.
+- Products using variable fonts should fall back in the order Roboto Flex → Roboto → the Noto Sans collection. Roboto Flex covers only Latin, Greek, and Cyrillic, so Korean and other scripts fall through to Noto Sans. No token encodes this.
+- For reference, Roboto Flex has slant, width, weight, grade, and optical size axes, plus advanced axes: thick stroke (`XOPQ`), thin stroke (`YOPQ`), counter width (`XTRA`), uppercase height (`YTUC`), lowercase height (`YTLC`), ascender height (`YTAS`), descender depth (`YTDE`), and figure height (`YTFI`).
 
-Planned approach, once Rio supports variable fonts:
+#### In Rio
 
-1. Treat it as a separate mode, not a tweak of the static one. The `wght` 600 vs. weight 700 difference means a variable-font theme needs its own weights.
-2. Emit a `--rio-typescale-<style>-axes` variable per style for `font-variation-settings`, and use `font-optical-sizing: auto` where the font supports `opsz`.
-3. Reconsider Rio's default typeface stack. It is `Roboto, system-ui, sans-serif` today, and the spec's fallback guidance suggests adding Noto Sans before the system font.
-
-### Sources and cross-checks
-
-- The values come from Material Web's generated tokens (Material 3 v34.0.21, platform web), and they match the expanded token tables on m3.material.io.
-- Compose's `TypeScaleTokens` (v0_103) disagrees on several tracking values. It has -0.2 for display-large, 0.2 for title-medium and body-medium, and different emphasized tracking. It appears to be rounded or out of date, so Rio doesn't use it for typography.
-- The same Material Web tokens confirm Rio's shape scale (including `full` as `9999px`), the elevation levels, and the standard motion springs.
+- Rio uses static font weights today, as the spec does by default.
+- Planned approach, once Rio supports variable fonts:
+  1. Treat it as a separate mode, not a tweak of the static one. The `wght` 600 vs. weight 700 difference means a variable-font theme needs its own weights.
+  2. Emit a `--rio-typescale-<style>-axes` variable per style for `font-variation-settings`, and use `font-optical-sizing: auto` where the font supports `opsz`.
+  3. Keep the default typeface stack, which follows the spec. A variable-font theme can follow the fallback recommendation by passing its own stack through `typefaces`.
 
 ## Implementation status
 
@@ -322,24 +343,32 @@ Planned approach, once Rio supports variable fonts:
 | Shape: corner radius scale                         | `tokens` | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
 | Shape: shape library and morphing                  | —        | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
 | Typography: baseline and emphasized type scales    | `tokens` | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
-| Typography: language height, variable font axes    | `tokens` | Not yet. See section 5.                                                                                                                                                 |
+| Typography: language height                        | `tokens` | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
+| Typography: variable font axes                     | `tokens` | Not yet. See section 5.4.                                                                                                                                               |
 
 ## Sources
 
-- [M3 Elevation – Overview](https://m3.material.io/styles/elevation/overview)
-- [M3 Elevation – Applying elevation](https://m3.material.io/styles/elevation/applying-elevation)
-- [M3 Motion physics – How it works](https://m3.material.io/styles/motion/overview/how-it-works)
-- [M3 Motion physics – Specs](https://m3.material.io/styles/motion/overview/specs)
-- [M3 Color roles](https://m3.material.io/styles/color/roles)
-- [M3 Shape – Corner radius scale](https://m3.material.io/styles/shape/corner-radius-scale)
-- [M3 Shape – Shape morph](https://m3.material.io/styles/shape/shape-morph)
-- Material 3 Design Kit (Figma Community): the `M3/Elevation Light` and `M3/Elevation Dark` effect styles
-- [Compose Material3 `ElevationTokens.kt`](https://github.com/androidx/androidx/blob/androidx-main/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevationTokens.kt)
-- [Compose Material3 `StandardMotionTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMotionTokens.kt)
-- [Compose Material3 `ExpressiveMotionTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExpressiveMotionTokens.kt)
-- [Compose Material3 `MotionScheme.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MotionScheme.kt): interface only
-- [Compose Material3 `ShapeTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ShapeTokens.kt)
-- [Compose Material3 `Shapes.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Shapes.kt): interface only
-- [M3 Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens)
-- [M3 Typography – Fonts](https://m3.material.io/styles/typography/fonts)
-- [Material Web `tokens/versions/latest` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/tokens/versions/latest/sass): `_md-sys-typescale.scss`, `_md-sys-typescale-emphasized.scss`, `_md-ref-typeface.scss`, plus `_md-sys-shape.scss`, `_md-sys-elevation.scss`, and `_md-sys-motion.scss` for cross-checks
+### Spec and recommendations: m3.material.io
+
+- [Elevation – Overview](https://m3.material.io/styles/elevation/overview)
+- [Elevation – Applying elevation](https://m3.material.io/styles/elevation/applying-elevation)
+- [Motion physics – How it works](https://m3.material.io/styles/motion/overview/how-it-works)
+- [Motion physics – Specs](https://m3.material.io/styles/motion/overview/specs) (includes the web conversion table)
+- [Color roles](https://m3.material.io/styles/color/roles)
+- [Shape – Corner radius scale](https://m3.material.io/styles/shape/corner-radius-scale)
+- [Shape – Shape morph](https://m3.material.io/styles/shape/shape-morph)
+- [Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens) (token tables read in expanded form)
+- [Typography – Fonts](https://m3.material.io/styles/typography/fonts)
+
+### Spec token values, generated per platform
+
+- [Material Web `tokens/versions/latest` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/tokens/versions/latest/sass): Material 3 v34.0.21, generated for the web. It is the source of Rio's typography values (`_md-sys-typescale.scss`, `_md-sys-typescale-emphasized.scss`, `_md-ref-typeface.scss`), which match the expanded tables on m3.material.io. It also confirms Rio's shape scale (including `full` as `9999px`), the elevation levels, and the standard motion springs (`_md-sys-shape.scss`, `_md-sys-elevation.scss`, `_md-sys-motion.scss`). It ships only the standard motion scheme.
+- Jetpack Compose Material3 tokens @ androidx `079e2e3`:
+  - [`ExpressiveMotionTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ExpressiveMotionTokens.kt) and [`StandardMotionTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMotionTokens.kt) (token version v0_14_0): the source of the raw spring values, the expressive ones in particular.
+  - [`ShapeTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ShapeTokens.kt) (14_1_0) and [`ElevationTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevationTokens.kt): agree with the spec and Material Web.
+  - `TypeScaleTokens.kt` (v0_103): **not used**. It disagrees with the spec on several tracking values (-0.2 for display-large, 0.2 for title-medium and body-medium, and different emphasized tracking), so it appears rounded or out of date.
+- Jetpack Compose Material3 interfaces @ androidx `079e2e3`, read for API shape only: [`MotionScheme.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MotionScheme.kt), [`Shapes.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Shapes.kt).
+
+### Design reference (not spec)
+
+- Material 3 Design Kit (Figma Community): the `M3/Elevation Light` and `M3/Elevation Dark` effect styles, used for Rio's web shadows.
