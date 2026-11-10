@@ -15,6 +15,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@mdi/js": "^7.4.47",
     "@vitejs/plugin-vue": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

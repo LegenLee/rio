@@ -1,20 +1,210 @@
-/* Sample for verifying the build pipeline. To be replaced with the real M3E switch styles. */
+/*
+ * M3 switch.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-switch.scss`, Material 3 v34.0.21),
+ * which match the spec's measurements table. The handle's center and size are declared as targets
+ * for each state; `attachSwitchHandle` from `@rio-m3e/core` springs `--_handle-x` and
+ * `--_handle-size` toward them. Without JavaScript the handle simply jumps.
+ *
+ * The root carries `data-selected`, plus `data-pressed` (from the ripple), `data-dragging` (from
+ * the drag), and `data-icon` when the handle shows an icon. State rules sit inside `:where()` so
+ * the disabled rules always win.
+ */
+
+@property --rio-switch-handle-x-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-switch-handle-size-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-switch-handle-x-off {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-switch-handle-x-on {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
 
 .rio-switch {
-  inline-size: 52px;
-  block-size: 32px;
-  border-radius: 16px;
-  border: 2px solid var(--rio-color-outline, #79747e);
-  background: var(--rio-color-surface-container-highest, #e6e0e9);
+  --_track-width: 52px;
+  --_track-height: 32px;
+  --_outline-width: 2px;
+
+  /* The handle's center, measured from the track's starting edge */
+  --rio-switch-handle-x-off: calc(var(--_track-height) / 2);
+  --rio-switch-handle-x-on: calc(var(--_track-width) - var(--_track-height) / 2);
+  --rio-switch-handle-x-target: var(--rio-switch-handle-x-off);
+  --rio-switch-handle-size-target: 16px;
+  --_handle-x: var(--rio-switch-handle-x-target);
+  --_handle-size: var(--rio-switch-handle-size-target);
+
+  /* Colors: unselected */
+  --_track: var(--rio-color-surface-container-highest);
+  --_outline: var(--rio-color-outline);
+  --_handle: var(--rio-color-outline);
+  --_handle-active: var(--rio-color-on-surface-variant);
+  --_icon: var(--rio-color-surface-container-highest);
+  --_state-layer: var(--rio-color-on-surface);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  inline-size: var(--_track-width);
+  block-size: var(--_track-height);
+  margin: 0;
+  padding: 0;
+  border: var(--_outline-width) solid var(--_outline);
+  border-radius: var(--rio-shape-corner-full);
+  background-color: var(--_track);
+  vertical-align: middle;
   cursor: pointer;
+  /* Horizontal drags belong to the handle; vertical ones still scroll the page. */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--rio-motion-fast-effects),
+    border-color var(--rio-motion-fast-effects);
 }
 
-.rio-switch[data-state='on'] {
-  border-color: transparent;
-  background: var(--rio-color-primary, #6750a4);
+/* States */
+
+.rio-switch:where([data-selected='true']) {
+  --rio-switch-handle-x-target: var(--rio-switch-handle-x-on);
+  --rio-switch-handle-size-target: 24px;
+  --_track: var(--rio-color-primary);
+  --_outline: var(--rio-color-primary);
+  --_handle: var(--rio-color-on-primary);
+  --_handle-active: var(--rio-color-primary-container);
+  --_icon: var(--rio-color-primary);
+  --_state-layer: var(--rio-color-primary);
 }
 
-.rio-switch[aria-disabled='true'] {
-  opacity: 0.38;
-  cursor: not-allowed;
+.rio-switch:where([data-icon]) {
+  --rio-switch-handle-size-target: 24px;
+}
+
+/* Pressing or dragging grows the handle */
+.rio-switch:is([data-pressed], [data-dragging]) {
+  --rio-switch-handle-size-target: 28px;
+}
+
+/* Hovering, focusing, or pressing changes the handle's color */
+
+@media (hover: hover) {
+  .rio-switch:hover .rio-switch__handle {
+    background-color: var(--_handle-active);
+  }
+
+  .rio-switch:hover .rio-switch__state::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-switch:is(:focus-visible, [data-pressed], [data-dragging]) .rio-switch__handle {
+  background-color: var(--_handle-active);
+}
+
+.rio-switch:focus-visible .rio-switch__state::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+/* Disabled, native or soft: the track at 12%, the unselected handle and the icons at 38% */
+
+.rio-switch:is(:disabled, [aria-disabled='true']) {
+  --_track: color-mix(in srgb, var(--rio-color-surface-container-highest) 12%, transparent);
+  --_outline: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+  --_handle: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_handle-active: var(--_handle);
+  --_icon: color-mix(in srgb, var(--rio-color-surface-container-highest) 38%, transparent);
+  cursor: default;
+}
+
+.rio-switch:is(:disabled, [aria-disabled='true']):where([data-selected='true']) {
+  --_track: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+  --_outline: transparent;
+  --_handle: var(--rio-color-surface);
+  --_handle-active: var(--rio-color-surface);
+  --_icon: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+}
+
+.rio-switch:is(:disabled, [aria-disabled='true']) .rio-switch__state::before {
+  opacity: 0;
+}
+
+/* Parts */
+
+/* The 40px circle around the handle: the state layer on ::before, the ripple on ::after */
+.rio-switch .rio-switch__state {
+  position: absolute;
+  inset-inline-start: calc(var(--_handle-x) - 20px - var(--_outline-width));
+  inset-block-start: calc(50% - 20px);
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--rio-shape-corner-full);
+  color: var(--_state-layer);
+  pointer-events: none;
+}
+
+.rio-switch__state::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+.rio-switch__handle {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  inset-inline-start: calc(var(--_handle-x) - var(--_handle-size) / 2 - var(--_outline-width));
+  inset-block-start: calc(50% - var(--_handle-size) / 2);
+  inline-size: var(--_handle-size);
+  block-size: var(--_handle-size);
+  border-radius: var(--rio-shape-corner-full);
+  background-color: var(--_handle);
+  color: var(--_icon);
+  pointer-events: none;
+  transition: background-color var(--rio-motion-fast-effects);
+}
+
+.rio-switch__icon {
+  display: inline-flex;
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+.rio-switch__icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* The track is 32px tall, below the spec's 48px minimum target. */
+.rio-switch__touch {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inline-size: max(100%, 48px);
+  block-size: max(100%, 48px);
+  translate: -50% -50%;
+}
+
+@media (forced-colors: active) {
+  .rio-switch__state::before {
+    display: none;
+  }
 }

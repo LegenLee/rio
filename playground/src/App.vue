@@ -14,6 +14,7 @@ import {
   type MotionToken,
   type SchemeVariant,
 } from '@rio-m3e/tokens';
+import { mdiCheck, mdiClose } from '@mdi/js';
 import { BUTTON_SIZES, BUTTON_VARIANTS, type ButtonShape, type ButtonVariant } from '@rio-m3e/core';
 import { RioButton, RioSwitch, vRipple } from '@rio-m3e/vue';
 import { reactive, ref, watchEffect } from 'vue';
@@ -23,7 +24,7 @@ const variant = ref<SchemeVariant>('tonal-spot');
 const contrast = ref(0);
 const mode = ref<'light dark' | 'light' | 'dark'>('light dark');
 const motion = ref<MotionScheme>('expressive');
-const checked = ref(false);
+const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
 const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
@@ -135,10 +136,33 @@ watchEffect(() => {
       </div>
     </section>
 
-    <section class="controls">
-      <RioSwitch v-model:checked="checked" />
-      <span>checked: {{ checked }}</span>
-      <RioSwitch disabled />
+    <section class="switches">
+      <label class="switch-row">
+        <RioSwitch v-model:selected="switches.plain" />
+        Plain: {{ switches.plain ? 'on' : 'off' }}
+      </label>
+      <label class="switch-row">
+        <RioSwitch v-model:selected="switches.selectedIcon">
+          <template #selected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+          </template>
+        </RioSwitch>
+        Icon when on
+      </label>
+      <label class="switch-row">
+        <RioSwitch v-model:selected="switches.bothIcons">
+          <template #selected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+          </template>
+          <template #unselected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+          </template>
+        </RioSwitch>
+        Icons on and off
+      </label>
+      <label class="switch-row"><RioSwitch disabled /> Disabled, off</label>
+      <label class="switch-row"><RioSwitch disabled selected /> Disabled, on</label>
+      <label class="switch-row"><RioSwitch soft-disabled /> Soft-disabled (Tab to it)</label>
     </section>
 
     <section class="type-scale">
@@ -246,6 +270,20 @@ main {
 
 .dot.moved {
   transform: translateX(288px);
+}
+
+.switches {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+.switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  font: var(--rio-typescale-body-large);
+  letter-spacing: var(--rio-typescale-body-large-tracking);
 }
 
 .buttons {

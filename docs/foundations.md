@@ -168,7 +168,9 @@ Each token becomes three CSS variables. The names don't include the scheme.
   - `solveSpring(params, from, to, velocity, t)` gives the exact position and velocity at any moment, in closed form, for underdamped, critically damped, and overdamped springs with unit mass, as in Compose.
   - `createSpring()` animates a number with `requestAnimationFrame`. A new target takes over from the current position and velocity, so an interrupted press reverses without a jolt.
   - `readSpringParams(el, token)` reads a token's spring from the element's `-damping` and `-stiffness` variables. Reading from CSS lets a subtree that swaps schemes change its springs too, and keeps `core` independent of `tokens`.
-  - `attachShapeMorph(el)` springs an element's corner radius toward the `--rio-shape-morph-target` its stylesheet declares for each state (`@rio-m3e/styles/base/shape-morph.css`). The button uses it for its press and selection shapes.
+  - `attachSpringProperty(el, { target, apply })` is the general form. The stylesheet declares a target length for each state in a registered custom property, and the spring follows it whenever a state attribute changes. A drag can take over with `hold()` and hand back with `release(velocity)`.
+  - `attachShapeMorph(el)` uses it for the corner radius, toward the `--rio-shape-morph-target` its stylesheet declares (`@rio-m3e/styles/base/shape-morph.css`). The button uses it for its press and selection shapes.
+  - The switch uses it for its handle's position and size, and `attachDrag` lets touch and pen drag the handle. The spring then starts at the finger's speed.
 - In JavaScript, `getMotionSpring(scheme, token)` and `getMotionCurve(scheme, token)` from `@rio-m3e/tokens` return the same values.
 
 ### Reduced motion
@@ -419,7 +421,8 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
 | Spring solver (handles interruptions and gestures) | `core`, `tokens`        | Done: `solveSpring`, `createSpring`, `readSpringParams`, and the `-damping` and `-stiffness` motion variables.                                                          |
-| Shape morph (corner radius)                        | `core`, `styles`        | Done: `attachShapeMorph`, `base/shape-morph.css`.                                                                                                                       |
+| Shape morph (corner radius)                        | `core`, `styles`        | Done: `attachShapeMorph`, `base/shape-morph.css`, built on `attachSpringProperty`.                                                                                      |
+| Drag                                               | `core`                  | Done: `attachDrag` (touch and pen by default, threshold, release velocity, click swallowing).                                                                           |
 | Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
 | Shape: shape library and morphing                  | —                       | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
 | Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |

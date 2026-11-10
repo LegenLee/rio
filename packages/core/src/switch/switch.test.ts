@@ -1,35 +1,59 @@
 import { describe, expect, test, vi } from 'vitest';
 import { createSwitch, type SwitchProps } from './switch';
 
-const setup = (props: SwitchProps) => {
-  const onCheckedChange = vi.fn();
-  return { sw: createSwitch({ props: () => props, onCheckedChange }), onCheckedChange };
+const setup = (props: SwitchProps = {}) => {
+  const onSelectedChange = vi.fn();
+  return { sw: createSwitch({ props: () => props, onSelectedChange }), onSelectedChange };
 };
 
-describe('createSwitch', () => {
-  test('toggle reports the opposite value', () => {
-    const { sw, onCheckedChange } = setup({ checked: false });
-    sw.toggle();
-    expect(onCheckedChange).toHaveBeenCalledWith(true);
-  });
+const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent;
 
-  test('toggle does nothing while disabled', () => {
-    const { sw, onCheckedChange } = setup({ checked: false, disabled: true });
-    sw.toggle();
-    expect(onCheckedChange).not.toHaveBeenCalled();
-  });
-
-  test('rootAttrs reflects the current props', () => {
-    expect(setup({ checked: true }).sw.rootAttrs()).toEqual({
+describe('rootAttrs', () => {
+  test('is an off switch button that never submits a form', () => {
+    expect(setup().sw.rootAttrs()).toEqual({
+      type: 'button',
       role: 'switch',
-      'aria-checked': 'true',
-      'aria-disabled': undefined,
-      'data-state': 'on',
-    });
-    expect(setup({ disabled: true }).sw.rootAttrs()).toMatchObject({
       'aria-checked': 'false',
-      'aria-disabled': 'true',
-      'data-state': 'off',
+      disabled: undefined,
+      'aria-disabled': undefined,
+      'data-selected': 'false',
     });
   });
+
+  test('reflects the selected state', () => {
+    expect(setup({ selected: true }).sw.rootAttrs()).toMatchObject({
+      'aria-checked': 'true',
+      'data-selected': 'true',
+    });
+  });
+
+  test('disabled is native, softDisabled is aria-disabled', () => {
+    expect(setup({ disabled: true }).sw.rootAttrs()).toMatchObject({
+      disabled: '',
+      'aria-disabled': undefined,
+    });
+    expect(setup({ softDisabled: true }).sw.rootAttrs()).toMatchObject({
+      disabled: undefined,
+      'aria-disabled': 'true',
+    });
+  });
+});
+
+describe('handleClick', () => {
+  test('requests the opposite value', () => {
+    const { sw, onSelectedChange } = setup({ selected: true });
+    sw.handleClick(click());
+    expect(onSelectedChange).toHaveBeenCalledWith(false);
+  });
+
+  test.each<SwitchProps>([{ disabled: true }, { softDisabled: true }])(
+    'blocks the click when %o',
+    (props) => {
+      const { sw, onSelectedChange } = setup(props);
+      const event = click();
+      sw.handleClick(event);
+      expect(onSelectedChange).not.toHaveBeenCalled();
+      expect(event.preventDefault).toHaveBeenCalled();
+    },
+  );
 });

@@ -61,13 +61,25 @@ describe('createSpring', () => {
     const spring = createSpring({ value: 0, onUpdate: () => {} });
     spring.to(100, UNDERDAMPED);
     await new Promise((r) => setTimeout(r, 60));
+    // Freeze the clock, so "before" and "after" are the same instant.
+    const frozen = vi.spyOn(performance, 'now').mockReturnValue(performance.now());
     const before = { value: spring.value, velocity: spring.velocity };
     expect(before.velocity).toBeGreaterThan(0);
 
     spring.to(0, UNDERDAMPED);
-    // Same instant, so nothing jumps: the spring is still moving toward 100 for now.
-    expect(spring.value).toBeCloseTo(before.value, 0);
-    expect(spring.velocity).toBeCloseTo(before.velocity, -1);
+    // Nothing jumps: the spring is still moving toward 100 for now, at the same speed.
+    expect(spring.value).toBeCloseTo(before.value, 6);
+    expect(spring.velocity).toBeCloseTo(before.velocity, 6);
+    frozen.mockRestore();
+    spring.stop();
+  });
+
+  test('an explicit velocity replaces the current one', () => {
+    const frozen = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    const spring = createSpring({ value: 0, onUpdate: () => {} });
+    spring.to(100, UNDERDAMPED, -250);
+    expect(spring.velocity).toBe(-250);
+    frozen.mockRestore();
     spring.stop();
   });
 

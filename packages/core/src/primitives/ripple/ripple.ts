@@ -27,18 +27,37 @@ const isDisabled = (el: Element) => el.matches(':disabled, [aria-disabled="true"
 const reducedMotion = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+export interface RippleOptions {
+  /**
+   * The element that draws the ripple and sets its size, when it isn't the element that receives
+   * presses. A switch, for example, takes presses on its whole track but ripples in the circle
+   * around its handle. Defaults to the element itself.
+   */
+  surface?: HTMLElement;
+}
+
+const setPressed = (els: HTMLElement[], pressed: boolean) => {
+  for (const el of els) {
+    if (pressed) el.dataset.pressed = '';
+    else delete el.dataset.pressed;
+  }
+};
+
 /**
- * Adds a press ripple to an element. While pressed, the element has `data-pressed`.
- * Load `@rio-m3e/styles/base/ripple.css` for the visuals; it styles elements marked `data-ripple`.
+ * Adds a press ripple to an element. While pressed, the element (and its surface) has
+ * `data-pressed`. Load `@rio-m3e/styles/base/ripple.css` for the visuals; it styles elements
+ * marked `data-ripple`.
  */
-export function attachRipple(element: HTMLElement): RippleHandle {
+export function attachRipple(element: HTMLElement, options: RippleOptions = {}): RippleHandle {
+  const surface = options.surface ?? element;
+  const marked = surface === element ? [element] : [element, surface];
   let pointerId: number | undefined;
   let touchTimer: ReturnType<typeof setTimeout> | undefined;
   let animation: Animation | undefined;
   let pressedAt = 0;
 
   const start = (event?: PointerEvent) => {
-    const { width, height, left, top } = element.getBoundingClientRect();
+    const { width, height, left, top } = surface.getBoundingClientRect();
     const larger = Math.max(width, height);
     const softEdge = Math.max(SOFT_EDGE_RATIO * larger, SOFT_EDGE_MINIMUM);
     const from = event
@@ -56,14 +75,14 @@ export function attachRipple(element: HTMLElement): RippleHandle {
     });
 
     animation?.cancel();
-    animation = element.animate([frame(from, radius.from), frame(to, radius.to)], {
+    animation = surface.animate([frame(from, radius.from), frame(to, radius.to)], {
       pseudoElement: '::after',
       duration: reducedMotion() ? 0 : GROW_MS,
       easing: GROW_EASING,
       fill: 'forwards',
     });
     pressedAt = performance.now();
-    element.dataset.pressed = '';
+    setPressed(marked, true);
   };
 
   const end = () => {
@@ -75,7 +94,7 @@ export function attachRipple(element: HTMLElement): RippleHandle {
     const remaining = MINIMUM_PRESS_MS - (performance.now() - pressedAt);
     const release = () => {
       // A newer press replaced this one, so it owns `data-pressed` now.
-      if (animation === current) delete element.dataset.pressed;
+      if (animation === current) setPressed(marked, false);
     };
     if (remaining > 0) setTimeout(release, remaining);
     else release();
@@ -123,7 +142,8 @@ export function attachRipple(element: HTMLElement): RippleHandle {
     end();
   };
 
-  element.dataset.ripple = '';
+  // Only the surface draws, so only it gets the marker the stylesheet looks for.
+  surface.dataset.ripple = '';
   element.addEventListener('pointerdown', onPointerDown);
   element.addEventListener('pointerup', onPointerUp);
   element.addEventListener('pointerleave', onPointerLeave);
@@ -135,8 +155,8 @@ export function attachRipple(element: HTMLElement): RippleHandle {
     detach() {
       clearTimeout(touchTimer);
       animation?.cancel();
-      delete element.dataset.ripple;
-      delete element.dataset.pressed;
+      delete surface.dataset.ripple;
+      setPressed(marked, false);
       element.removeEventListener('pointerdown', onPointerDown);
       element.removeEventListener('pointerup', onPointerUp);
       element.removeEventListener('pointerleave', onPointerLeave);

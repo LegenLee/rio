@@ -32,18 +32,23 @@ packages/
     index.ts
   core/src/
     primitives/             DOM behaviors shared across components
+      drag/
+        drag.ts
       ripple/
         ripple.ts
         ripple.test.ts
       shape-morph/
-        shape-morph.ts
+        shape-morph.ts      the corner radius, on top of spring-property
       spring/
         spring.ts           spring math and driver, used by other primitives
+      spring-property/
+        spring-property.ts  springs a value toward a CSS target per state
     button/                 component logic
       button.ts
       button.test.ts
     switch/
-      switch.ts
+      switch.ts             props, attributes, click handling
+      handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
     index.ts
   styles/src/
@@ -91,6 +96,7 @@ A primitive is a DOM behavior that several components share, such as the press r
 
 - **Only behaviors that need JavaScript.** If CSS alone can do it, it belongs in `styles/src/base/` instead. The state layer and the focus ring turned out to be CSS-only; the ripple needs the press position, and the spring needs per-frame math.
 - **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `shape-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation.
+- **DOM behavior that belongs to one component** stays in that component's folder in `core` (for example `switch/handle.ts`), built from primitives. It moves into `primitives/` once a second component needs it, like a shared helper.
 - **Shape: `attachX(element)` returns `{ detach() }`.** It takes a real element, adds listeners or animations, and gives back a handle that undoes everything. Adapters attach on mount and detach before unmount.
 - **State goes out through `data-*` attributes** on the element (`data-ripple`, `data-pressed`), so CSS can react without knowing about the JavaScript.
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.

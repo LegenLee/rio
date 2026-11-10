@@ -86,8 +86,11 @@ export interface Spring {
   readonly velocity: number;
   readonly target: number;
   readonly moving: boolean;
-  /** Heads to a new target, keeping the current position and velocity. */
-  to(target: number, params: SpringParams): void;
+  /**
+   * Heads to a new target from the current position. It keeps the current velocity unless one is
+   * given, for example the speed of a finger at the end of a drag.
+   */
+  to(target: number, params: SpringParams, velocity?: number): void;
   /** Moves to a value at once, without animating. */
   jump(value: number): void;
   /** Stops where it is. */
@@ -143,10 +146,10 @@ export function createSpring(options: SpringOptions): Spring {
     get moving() {
       return frame !== undefined;
     },
-    to(next, nextParams) {
+    to(next, nextParams, velocity) {
       const current = state();
       from = current.value;
-      startVelocity = current.velocity;
+      startVelocity = velocity ?? current.velocity;
       target = next;
       params = nextParams;
       startedAt = now();
