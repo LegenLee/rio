@@ -84,6 +84,18 @@ describe('RioButton', () => {
     expect(style.borderTopLeftRadius).toBe(`${parseInt(height) / 2}px`);
   });
 
+  test.each(['small', 'xlarge'] as const)(
+    'the state layer and ripple cover the whole %s button, border included',
+    async (size) => {
+      const screen = await render(Button, { ...label, props: { size } });
+      const el = screen.getByRole('button').element();
+      const width = `${el.getBoundingClientRect().width}px`;
+      for (const pseudo of ['::before', '::after']) {
+        expect(parseFloat(getComputedStyle(el, pseudo).width)).toBeCloseTo(parseFloat(width), 1);
+      }
+    },
+  );
+
   test('extra small buttons still have a 48px touch target', async () => {
     const screen = await render(Button, { ...label, props: { size: 'xsmall' } });
     const touch = screen.container.querySelector('.rio-button__touch')!;

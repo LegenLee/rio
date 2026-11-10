@@ -210,6 +210,17 @@
   --_container: color-mix(in srgb, var(--rio-color-on-surface) 10%, transparent);
 }
 
+/*
+ * The state layer (::before) and the ripple (::after) cover the border too. With `inset: 0` they
+ * would stop at the padding box, inside the border, and look slightly smaller than the container.
+ * Every variant keeps a border, transparent unless outlined, because forced-colors mode paints
+ * transparent borders in a system color and keeps the button's edge visible.
+ */
+.rio-button[data-variant]::before,
+.rio-button[data-variant]::after {
+  inset: calc(-1 * var(--_outline-width));
+}
+
 /* Parts */
 
 /* Extra small and small buttons are shorter than the spec's 48px minimum target. */
