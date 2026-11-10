@@ -1,0 +1,26 @@
+{
+  "name": "@rio-m3e/tokens",
+  "version": "0.0.0",
+  "description": "Design tokens and dynamic color for Rio",
+  "license": "Apache-2.0",
+  "author": "LegenLee",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@rio-m3e/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

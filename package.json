@@ -1,0 +1,14 @@
+{
+  "name": "rio-m3e-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.23.0",
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/*\" build",
+    "dev": "pnpm --filter @rio-m3e/playground dev",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
