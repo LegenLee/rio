@@ -6,6 +6,7 @@ import {
   hexFromArgb,
   type MaterialDynamicColors,
 } from '@material/material-color-utilities'
+import { TOKEN_PREFIX } from './prefix'
 
 /** M3 색상 역할 목록. 이름은 MCU `MaterialDynamicColors`의 메서드 이름과 같다. */
 export const COLOR_ROLES = [
@@ -65,6 +66,15 @@ export const COLOR_ROLES = [
 ] as const satisfies readonly (keyof MaterialDynamicColors)[]
 
 export type ColorRole = (typeof COLOR_ROLES)[number]
+
+export type ColorVar = `${typeof TOKEN_PREFIX}-color-${string}`
+
+const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+
+/** 역할의 CSS 변수 이름. `onPrimaryContainer` → `--rio-color-on-primary-container` */
+export function colorVar(role: ColorRole): ColorVar {
+  return `${TOKEN_PREFIX}-color-${kebab(role)}`
+}
 
 /** 역할별 색상. 값은 `#rrggbb`. */
 export type ColorScheme = Record<ColorRole, string>

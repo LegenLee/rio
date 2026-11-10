@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { COLOR_ROLES, applyTheme, colorVar, type SchemeVariant } from '@rio-m3e/tokens'
+import {
+  COLOR_ROLES,
+  ELEVATION_LEVELS,
+  applyTheme,
+  colorVar,
+  elevationVar,
+  type SchemeVariant,
+} from '@rio-m3e/tokens'
 import { RioSwitch } from '@rio-m3e/vue'
 import { ref, watchEffect } from 'vue'
 
@@ -52,6 +59,17 @@ watchEffect(() => {
       <RioSwitch disabled />
     </section>
 
+    <section class="elevations">
+      <div
+        v-for="level in ELEVATION_LEVELS"
+        :key="level"
+        class="elevation"
+        :style="{ boxShadow: `var(${elevationVar(level)})` }"
+      >
+        level {{ level }}
+      </div>
+    </section>
+
     <section class="swatches">
       <div
         v-for="role in COLOR_ROLES"
@@ -84,6 +102,25 @@ main {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
+}
+
+.elevations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--rio-color-surface-container-low);
+}
+
+.elevation {
+  display: grid;
+  place-items: center;
+  inline-size: 96px;
+  block-size: 96px;
+  border-radius: 12px;
+  background: var(--rio-color-surface-container-low);
+  font-size: 12px;
 }
 
 .swatches {

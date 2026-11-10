@@ -1,29 +1,23 @@
-import { COLOR_ROLES, createColorScheme, type ColorRole, type ColorSchemeOptions } from './color'
-import { TOKEN_PREFIX } from './prefix'
+import { COLOR_ROLES, colorVar, createColorScheme, type ColorSchemeOptions, type ColorVar } from './color'
+import { createElevationVariables, type ElevationVar } from './elevation'
 
 export type ThemeOptions = Omit<ColorSchemeOptions, 'dark'>
 
-export type ColorVar = `${typeof TOKEN_PREFIX}-color-${string}`
-
-const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
-
-/** 역할의 CSS 변수 이름. `onPrimaryContainer` → `--rio-color-on-primary-container` */
-export function colorVar(role: ColorRole): ColorVar {
-  return `${TOKEN_PREFIX}-color-${kebab(role)}`
-}
+export type ThemeVar = ColorVar | ElevationVar
 
 /**
- * 라이트/다크 값을 `light-dark()`로 묶은 CSS 변수 맵.
- * 실제 값은 변수를 쓰는 요소의 `color-scheme`에 따라 정해진다.
+ * 테마의 CSS 변수 전부.
+ * - 색: 라이트/다크 값을 `light-dark()`로 묶는다. 실제 값은 변수를 쓰는 요소의 `color-scheme`에 따라 정해진다.
+ * - elevation: 옵션과 상관없는 고정값이다.
  */
-export function createThemeVariables(options: ThemeOptions): Record<ColorVar, string> {
+export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
   const light = createColorScheme({ ...options, dark: false })
   const dark = createColorScheme({ ...options, dark: true })
-  const vars = {} as Record<ColorVar, string>
+  const vars = {} as Record<ThemeVar, string>
   for (const role of COLOR_ROLES) {
     vars[colorVar(role)] = `light-dark(${light[role]}, ${dark[role]})`
   }
-  return vars
+  return Object.assign(vars, createElevationVariables())
 }
 
 /** SSR이나 정적 스타일시트용 CSS 문자열. `color-scheme: light dark`를 함께 넣는다. */
