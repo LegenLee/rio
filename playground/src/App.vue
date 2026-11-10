@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { attachRipple, type RippleHandle } from '@rio-m3e/core';
 import {
   COLOR_ROLES,
   ELEVATION_LEVELS,
@@ -15,7 +16,14 @@ import {
   type SchemeVariant,
 } from '@rio-m3e/tokens';
 import { RioSwitch } from '@rio-m3e/vue';
-import { ref, watchEffect } from 'vue';
+import { ref, watchEffect, type Directive } from 'vue';
+
+// Playground-only directive: attach a ripple to any element, like an InkWell
+const ripples = new WeakMap<HTMLElement, RippleHandle>();
+const vRipple: Directive<HTMLElement> = {
+  mounted: (el) => ripples.set(el, attachRipple(el)),
+  unmounted: (el) => ripples.get(el)?.detach(),
+};
 
 const sourceColor = ref('#6750a4');
 const variant = ref<SchemeVariant>('tonal-spot');
@@ -90,11 +98,25 @@ watchEffect(() => {
 
     <!-- Stand-ins for real buttons, to try the state layer and focus ring (Tab to see the ring) -->
     <section class="controls">
-      <button type="button" class="demo-button rio-state-layer rio-focus-ring">Filled</button>
-      <button type="button" class="demo-button tonal rio-state-layer rio-focus-ring">Tonal</button>
-      <button type="button" class="demo-button rio-state-layer rio-focus-ring" disabled>
+      <button v-ripple type="button" class="demo-button rio-state-layer rio-ripple rio-focus-ring">
+        Filled
+      </button>
+      <button
+        v-ripple
+        type="button"
+        class="demo-button tonal rio-state-layer rio-ripple rio-focus-ring"
+      >
+        Tonal
+      </button>
+      <button
+        v-ripple
+        type="button"
+        class="demo-button rio-state-layer rio-ripple rio-focus-ring"
+        disabled
+      >
         Disabled
       </button>
+      <div v-ripple class="demo-card rio-state-layer rio-ripple">Any element can ripple</div>
     </section>
 
     <section class="controls">
@@ -219,6 +241,18 @@ main {
   color: var(--rio-color-on-primary);
   font: var(--rio-typescale-label-large);
   letter-spacing: var(--rio-typescale-label-large-tracking);
+  cursor: pointer;
+}
+
+.demo-card {
+  display: grid;
+  place-items: center;
+  inline-size: 240px;
+  block-size: 96px;
+  border-radius: var(--rio-shape-corner-medium);
+  background: var(--rio-color-surface-container-highest);
+  color: var(--rio-color-on-surface);
+  font: var(--rio-typescale-body-medium);
   cursor: pointer;
 }
 

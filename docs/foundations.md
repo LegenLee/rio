@@ -366,6 +366,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 
 - Hover is low-emphasis and fades in and out. Pressed is high-emphasis. Dragged is low-emphasis, so it doesn't distract.
 - Don't show an unavailable FAB disabled; don't show it at all.
+- From the gestures page: "UI elements should respond to gestures in real time."
 
 ### In Rio
 
@@ -374,28 +375,38 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - Hover applies only under `@media (hover: hover)`, because touch screens keep `:hover` after a tap.
 - The fade uses the `fast-effects` motion token, following the low-emphasis fade recommendation with the spec's token for opacity changes.
 - **`@rio-m3e/styles/base/focus-ring.css`**: the class `rio-focus-ring` draws an `outline` on `:focus-visible`, so only keyboard-style focus shows it. The color defaults to `secondary` and can be changed through `--rio-focus-ring-color`. `data-focus-ring="inner"` uses the inner offset.
-- **Pressed is a flat 10% overlay for now** (`:active` or `data-pressed`). The ripple needs the press position, so it will be a core primitive that sets `data-pressed`.
+- **Ripple**: `attachRipple(el)` from `@rio-m3e/core` adds a press ripple to any element, like Flutter's InkWell. Add the `rio-ripple` class from `@rio-m3e/styles/base/ripple.css` for the visuals.
+  - It draws on `::after`, above the state layer on `::before` and below the content. The wave is a radial gradient in `currentColor` at the pressed opacity, so it stays inside rounded corners without `overflow: hidden`.
+  - While pressed, the element has `data-pressed`. Elements with a ripple (`data-ripple`) don't get the flat pressed overlay.
+  - Behavior follows Material Web's ripple, Google's web implementation:
+    - Mouse and pen presses start at once. Touch presses wait 150ms, so a scroll that starts on the element doesn't ripple, and a tap shorter than that still ripples.
+    - > **Deviation from a recommendation.** The 150ms touch delay goes against "respond to gestures in real time". Without it, every scroll that starts on a pressable element would flash a ripple. Rio accepts the slight delay to avoid that, as Material Web does. Neither the spec nor the gestures page defines any touch behavior for the ripple; the timings and rules above are implementation choices.
+    - Keyboard activation (a click without a pointer) ripples from the center.
+    - A press stays visible for at least 225ms.
+    - The wave grows for 450ms with M3's legacy standard easing, moving from the press point to the center. It fades in over 105ms and out over 375ms.
+  - The ripple and the state layer are hidden under `forced-colors`, where backgrounds are replaced.
+  - Elements without a ripple keep the flat pressed overlay (`:active` or `data-pressed`).
 - **Open decisions**:
-  - Reduced motion: what Rio does under `prefers-reduced-motion`, for the ripple and for overshooting spatial springs.
+  - Reduced motion: what Rio does under `prefers-reduced-motion`. **Provisionally**, the ripple skips its growing wave and only fades. Overshooting spatial springs are still undecided.
   - Disabled and focus: the spec says disabled components can't be focused, but `aria-disabled` elements stay focusable on purpose, so screen-reader users can find them. Each component decides when it is built.
 
 ## Implementation status
 
-| Item                                               | Package  | Status                                                                                                                                                                  |
-| -------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color roles (2025 spec, light and dark)            | `tokens` | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
-| Elevation levels and web shadows                   | `tokens` | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
-| Scrim (32%)                                        | `tokens` | To do                                                                                                                                                                   |
-| Motion curves (official conversion table)          | `tokens` | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
-| Spring solver (handles interruptions and gestures) | `core`   | To do. The raw values are ready in `getMotionSpring`.                                                                                                                   |
-| Shape: corner radius scale                         | `tokens` | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
-| Shape: shape library and morphing                  | —        | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
-| Typography: baseline and emphasized type scales    | `tokens` | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
-| Typography: language height                        | `tokens` | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
-| Typography: variable font axes                     | `tokens` | Not yet. See section 5.4.                                                                                                                                               |
-| State layer opacities and focus indicator          | `tokens` | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
-| State layer and focus ring CSS                     | `styles` | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
-| Ripple (pressed)                                   | `core`   | To do. Pressed is a flat overlay until then.                                                                                                                            |
+| Item                                               | Package          | Status                                                                                                                                                                  |
+| -------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color roles (2025 spec, light and dark)            | `tokens`         | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
+| Elevation levels and web shadows                   | `tokens`         | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
+| Scrim (32%)                                        | `tokens`         | To do                                                                                                                                                                   |
+| Motion curves (official conversion table)          | `tokens`         | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
+| Spring solver (handles interruptions and gestures) | `core`           | To do. The raw values are ready in `getMotionSpring`.                                                                                                                   |
+| Shape: corner radius scale                         | `tokens`         | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
+| Shape: shape library and morphing                  | —                | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
+| Typography: baseline and emphasized type scales    | `tokens`         | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
+| Typography: language height                        | `tokens`         | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
+| Typography: variable font axes                     | `tokens`         | Not yet. See section 5.4.                                                                                                                                               |
+| State layer opacities and focus indicator          | `tokens`         | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
+| State layer and focus ring CSS                     | `styles`         | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
+| Ripple (pressed)                                   | `core`, `styles` | Done: `attachRipple`, `base/ripple.css`. The reduced-motion behavior is provisional.                                                                                    |
 
 ## Sources
 
@@ -412,6 +423,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - [Typography – Fonts](https://m3.material.io/styles/typography/fonts)
 - [States – State layers](https://m3.material.io/foundations/interaction/states/state-layers)
 - [States – Applying states](https://m3.material.io/foundations/interaction/states/applying-states)
+- [Gestures](https://m3.material.io/foundations/interaction/gestures)
 
 ### Spec token values, generated per platform
 
@@ -421,6 +433,10 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
   - [`ShapeTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ShapeTokens.kt) (14_1_0) and [`ElevationTokens.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ElevationTokens.kt): agree with the spec and Material Web.
   - `TypeScaleTokens.kt` (v0_103): **not used**. It disagrees with the spec on several tracking values (-0.2 for display-large, 0.2 for title-medium and body-medium, and different emphasized tracking), so it appears rounded or out of date.
 - Jetpack Compose Material3 interfaces @ androidx `079e2e3`, read for API shape only: [`MotionScheme.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MotionScheme.kt), [`Shapes.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Shapes.kt).
+
+### Implementation reference (not spec)
+
+- [Material Web `ripple/internal/ripple.ts` and `_ripple.scss` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/ripple/internal): Google's web ripple. Rio's `attachRipple` follows its behavior (touch delay, minimum press time, keyboard ripple, growth and fade timings) with its own code and structure.
 
 ### Design reference (not spec)
 

@@ -113,6 +113,9 @@ importers:
 
   playground:
     dependencies:
+      '@rio-m3e/core':
+        specifier: workspace:*
+        version: link:../packages/core
       '@rio-m3e/styles':
         specifier: workspace:*
         version: link:../packages/styles

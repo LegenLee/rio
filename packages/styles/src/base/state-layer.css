@@ -5,8 +5,8 @@
  * overlay uses `currentColor`, sits between the container background and the content, and shows
  * one state at a time: later rules win, so pressed beats focus, and focus beats hover.
  *
- * Pressed is a flat overlay for now. The spec's ripple needs the press position and will come from
- * a core primitive, which sets `data-pressed`.
+ * Pressed is a flat overlay unless the element has a ripple (`attachRipple` from `@rio-m3e/core`
+ * marks it with `data-ripple`). Then the ripple on `::after` shows the press instead.
  */
 
 .rio-state-layer {
@@ -37,8 +37,7 @@
   opacity: var(--rio-state-focus-state-layer-opacity);
 }
 
-.rio-state-layer:active::before,
-.rio-state-layer[data-pressed]::before {
+.rio-state-layer:not([data-ripple]):is(:active, [data-pressed])::before {
   opacity: var(--rio-state-pressed-state-layer-opacity);
 }
 
@@ -49,4 +48,11 @@
 /* Disabled elements don't change state, so they get no state layer at all. */
 .rio-state-layer:is(:disabled, [aria-disabled='true'])::before {
   opacity: 0;
+}
+
+/* Forced colors replace backgrounds, so the overlay would only get in the way. */
+@media (forced-colors: active) {
+  .rio-state-layer::before {
+    display: none;
+  }
 }

@@ -1,0 +1,60 @@
+/*
+ * Press ripple, driven by `attachRipple` from `@rio-m3e/core`. It sets `data-pressed` and animates
+ * the three registered properties below on `::after`.
+ *
+ * The ripple is a radial gradient in the content color (currentColor), so it stays inside the
+ * element's rounded corners without `overflow: hidden`. It sits under the content, above the
+ * state layer on `::before`. Fade timings follow Material Web's ripple.
+ */
+
+@property --rio-ripple-x {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-ripple-y {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-ripple-radius {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+.rio-ripple {
+  position: relative;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rio-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle var(--rio-ripple-radius) at var(--rio-ripple-x) var(--rio-ripple-y),
+    currentColor max(calc(100% - 70px), 65%),
+    transparent 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 375ms linear;
+}
+
+.rio-ripple[data-pressed]::after {
+  opacity: var(--rio-state-pressed-state-layer-opacity);
+  transition-duration: 105ms;
+}
+
+/* Forced colors replace backgrounds, so the ripple would only get in the way. */
+@media (forced-colors: active) {
+  .rio-ripple::after {
+    display: none;
+  }
+}
