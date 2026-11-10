@@ -7,7 +7,9 @@ import {
   elevationVar,
   motionVar,
   SHAPE_CORNERS,
+  TYPE_STYLES,
   shapeVar,
+  typescaleVar,
   type MotionScheme,
   type MotionToken,
   type SchemeVariant,
@@ -42,9 +44,9 @@ watchEffect(() => {
     <h1>Rio Playground</h1>
 
     <section class="controls">
-      <label>시드 색상 <input v-model="sourceColor" type="color" /></label>
+      <label>Source color <input v-model="sourceColor" type="color" /></label>
       <label>
-        변형
+        Variant
         <select v-model="variant">
           <option value="tonal-spot">Tonal Spot</option>
           <option value="neutral">Neutral</option>
@@ -53,20 +55,20 @@ watchEffect(() => {
         </select>
       </label>
       <label>
-        대비
+        Contrast
         <input v-model.number="contrast" type="range" min="-1" max="1" step="0.5" />
         {{ contrast }}
       </label>
       <label>
-        모드
+        Mode
         <select v-model="mode">
-          <option value="light dark">시스템</option>
-          <option value="light">라이트</option>
-          <option value="dark">다크</option>
+          <option value="light dark">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
         </select>
       </label>
       <label>
-        모션
+        Motion
         <select v-model="motion">
           <option value="expressive">Expressive</option>
           <option value="standard">Standard</option>
@@ -75,7 +77,7 @@ watchEffect(() => {
     </section>
 
     <section class="motion">
-      <button type="button" @click="moved = !moved">움직이기</button>
+      <button type="button" @click="moved = !moved">Move</button>
       <div v-for="token in SPATIAL" :key="token" class="track">
         <span
           class="dot"
