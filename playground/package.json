@@ -8,6 +8,7 @@
     "typecheck": "vue-tsc -p ."
   },
   "dependencies": {
+    "@rio-m3e/tokens": "workspace:*",
     "@rio-m3e/vue": "workspace:*",
     "vue": "catalog:"
   },
