@@ -40,6 +40,22 @@ export {
   type ShapeVar,
 } from './shape/shape';
 export {
+  TYPE_STYLES,
+  createTypographyVariables,
+  getTypeStyle,
+  typefaceVar,
+  typescaleVar,
+  type TypeStyle,
+  type TypeStyleOptions,
+  type TypeStyleSpec,
+  type Typeface,
+  type TypefaceOverrides,
+  type TypefaceVar,
+  type TypescalePart,
+  type TypescaleVar,
+  type TypographyVar,
+} from './typography/typography';
+export {
   applyTheme,
   createThemeCss,
   createThemeVariables,

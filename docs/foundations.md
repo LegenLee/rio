@@ -1,6 +1,6 @@
 # Rio Foundations: M3E Core Principles
 
-This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, and shape. Each section cites Google's official spec and notes how Rio implements it.
+This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, and typography. Each section cites Google's official spec and notes how Rio implements it.
 
 > Last verified: 2026-11-11. Sources are listed at the end. Update this document when the spec changes.
 
@@ -195,18 +195,134 @@ The spec allows two levels of customization:
 
 M3 also has a library of expressive shapes that morph into each other, used by the button group and the loading indicator. The spec says "Web is not currently available"; it exists only as a Compose API. It is out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
 
+## 5. Set text with a type scale
+
+> "Material 3 has one type scale containing two sets of type styles: 15 baseline and 15 emphasized."
+
+### The scale
+
+Values are in px (the spec writes pt). Rio emits them in rem: 16px = 1rem.
+
+| Style           | Typeface | Size / line height | Weight (baseline → emphasized) | Tracking |
+| --------------- | -------- | ------------------ | ------------------------------ | -------- |
+| display-large   | brand    | 57 / 64            | 400 → 500                      | -0.25    |
+| display-medium  | brand    | 45 / 52            | 400 → 500                      | 0        |
+| display-small   | brand    | 36 / 44            | 400 → 500                      | 0        |
+| headline-large  | brand    | 32 / 40            | 400 → 500                      | 0        |
+| headline-medium | brand    | 28 / 36            | 400 → 500                      | 0        |
+| headline-small  | brand    | 24 / 32            | 400 → 500                      | 0        |
+| title-large     | brand    | 22 / 28            | 400 → 500                      | 0        |
+| title-medium    | plain    | 16 / 24            | 500 → 700                      | 0.15     |
+| title-small     | plain    | 14 / 20            | 500 → 700                      | 0.1      |
+| body-large      | plain    | 16 / 24            | 400 → 500                      | 0.5      |
+| body-medium     | plain    | 14 / 20            | 400 → 500                      | 0.25     |
+| body-small      | plain    | 12 / 16            | 400 → 500                      | 0.4      |
+| label-large     | plain    | 14 / 20            | 500 → 700                      | 0.1      |
+| label-medium    | plain    | 12 / 16            | 500 → 700                      | 0.5      |
+| label-small     | plain    | 11 / 16            | 500 → 700                      | 0.5      |
+
+Today the emphasized set differs from the baseline only in weight. The spec mentions "other minor adjustments", so check this table again when the tokens change.
+
+### Emphasized styles
+
+- New in M3E. Use them for selection, actions, headlines, and other editorial emphasis, together with the baseline styles.
+- **Components don't use emphasized styles by default.** To emphasize something, swap in the emphasized token of the same style: `md.sys.typescale.display-large` → `md.sys.typescale.emphasized.display-large`.
+- They work well for badges, buttons for primary actions, extended FABs, and selected list and menu items.
+
+### Typefaces
+
+- `brand` sets the larger styles (display, headline, title-large) for expression. `plain` sets the rest for readability.
+- Both default to Roboto. Rio's default value is `Roboto, system-ui, sans-serif`. Rio doesn't load any font itself; load Roboto in the app, or the system font is used.
+- Override with `applyTheme(el, { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } })`.
+
+### In Rio
+
+Each style becomes six CSS variables, and the emphasized set uses the spec's `emphasized` segment:
+
+| Variable                                                     | Value                                            | Use                                          |
+| ------------------------------------------------------------ | ------------------------------------------------ | -------------------------------------------- |
+| `--rio-typescale-label-large`                                | `500 0.875rem/1.25rem var(--rio-typeface-plain)` | Drops straight into `font`                   |
+| `--rio-typescale-label-large-tracking`                       | `0.00625rem`                                     | `letter-spacing`, which `font` doesn't cover |
+| `--rio-typescale-label-large-{font,size,line-height,weight}` |                                                  | Individual properties                        |
+| `--rio-typescale-emphasized-label-large…`                    | `700 0.875rem/1.25rem …`                         | The same six for the emphasized set          |
+
+Sizes, line heights, and tracking are in rem so text follows the user's font size setting, as Android's sp does.
+
+### Not implemented yet: language height
+
+> "Ignoring language height can lead to overlapping text and broken UI elements, leading to major internationalization issues and failing readability standards."
+
+The type scale adapts line heights to the height of the script being set. The spec defines four categories:
+
+| Category     | Line height vs. small | Scripts                                                                                                                                                                                  |
+| ------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Small (base) | —                     | Cyrillic, Greek, Hebrew, Latin-based languages (except Vietnamese)                                                                                                                       |
+| Medium       | ~7% taller            | Amharic, Arabic, Armenian, Bangla, Chinese, Gujarati, Hindi, Japanese, Kannada, Khmer, Korean, Lao, Malayalam, Odia, Punjabi, Sinhala, Tamil, Thai, Vietnamese, and most other languages |
+| Large        | ~30% taller           | Burmese, Telugu                                                                                                                                                                          |
+| Extra large  | ~100% taller          | Nastaliq                                                                                                                                                                                 |
+
+What the spec asks for:
+
+- **Default to medium**, because most languages fall into it, and switch categories based on the detected language.
+- **Components with vertical padding** should adapt automatically: their height follows the line height.
+- **Components with fixed heights** are built for the small values and may not adapt by default. Each such component needs a deliberate decision.
+
+What's missing:
+
+- The percentages above are approximate. The exact line-height tokens per category sit behind a "language height context" switch at the top of the token module on the spec page, and the default view shows only small.
+- Material Web's generated tokens don't include them either. Its files are built for one context, with no language-height tag.
+- Rio currently emits only the small (base) values. Its defaults are therefore too tight for Korean, Chinese, Japanese, and most other non-Latin text.
+
+Planned approach:
+
+1. Read the exact values by switching the context on the spec page in a headless browser. Don't derive them by multiplying by 1.07; the spec's tokens are rounded per style.
+2. Emit the line heights per category and select them with `:lang()`, for example `:lang(ko, ja, zh) { --rio-typescale-body-large-line-height: …; }`. Any element can then opt in by setting `lang`, which pages should set anyway.
+3. Decide the default the spec recommends (medium) versus Latin-first (small), and make it a theme option.
+4. Audit fixed-height components (buttons, chips, text fields) against the medium and large categories once they exist.
+
+### Not implemented yet: variable font axes
+
+> "Static fonts like Roboto are currently applied by default to all Material 3 components. Variable fonts like Roboto Flex have many more axes for expression, but aren't yet part of the M3 typescale."
+
+The token tables still list axis values for every style. The pattern across all 30 styles:
+
+| Axis                                           | Value                                                                                                                           | Meaning                                                                    |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `wght`                                         | Same as the static weight, **except 600 where the static weight is 700** (emphasized title-medium, title-small, and all labels) | Weight                                                                     |
+| `wdth`                                         | 100                                                                                                                             | Width (normal)                                                             |
+| `opsz`                                         | The font size in px (57 for display-large, 11 for label-small)                                                                  | Optical size                                                               |
+| `GRAD`, `ROND`, `CRSV`, `slnt`, `FILL`, `HEXP` | 0                                                                                                                               | Grade, roundness, cursive, slant, fill, and hexp (unexplained in the spec) |
+
+Related guidance from the fonts page:
+
+- Roboto Flex has slant, width, weight, grade, and optical size axes, plus advanced axes: thick stroke (`XOPQ`), thin stroke (`YOPQ`), counter width (`XTRA`), uppercase height (`YTUC`), lowercase height (`YTLC`), ascender height (`YTAS`), descender depth (`YTDE`), and figure height (`YTFI`).
+- **Fallback order** for variable fonts: Roboto Flex → Roboto → the Noto Sans collection. Roboto Flex covers only Latin, Greek, and Cyrillic, so Korean and other scripts fall through to Noto Sans.
+
+Planned approach, once Rio supports variable fonts:
+
+1. Treat it as a separate mode, not a tweak of the static one. The `wght` 600 vs. weight 700 difference means a variable-font theme needs its own weights.
+2. Emit a `--rio-typescale-<style>-axes` variable per style for `font-variation-settings`, and use `font-optical-sizing: auto` where the font supports `opsz`.
+3. Reconsider Rio's default typeface stack. It is `Roboto, system-ui, sans-serif` today, and the spec's fallback guidance suggests adding Noto Sans before the system font.
+
+### Sources and cross-checks
+
+- The values come from Material Web's generated tokens (Material 3 v34.0.21, platform web), and they match the expanded token tables on m3.material.io.
+- Compose's `TypeScaleTokens` (v0_103) disagrees on several tracking values. It has -0.2 for display-large, 0.2 for title-medium and body-medium, and different emphasized tracking. It appears to be rounded or out of date, so Rio doesn't use it for typography.
+- The same Material Web tokens confirm Rio's shape scale (including `full` as `9999px`), the elevation levels, and the standard motion springs.
+
 ## Implementation status
 
-| Item                                               | Package   | Status                                                                                                                                  |
-| -------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Color roles (2025 spec, light and dark)            | `tokens`  | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                               |
-| Elevation levels and web shadows                   | `tokens`  | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                |
-| Scrim (32%)                                        | `tokens`  | To do                                                                                                                                   |
-| Motion curves (official conversion table)          | `tokens`  | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`. |
-| Spring solver (handles interruptions and gestures) | `core`    | To do. The raw values are ready in `getMotionSpring`.                                                                                   |
-| Shape: corner radius scale                         | `tokens`  | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.           |
-| Shape: shape library and morphing                  | —         | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                      |
-| Typography (including emphasized styles)           | Undecided | Spec not yet summarized                                                                                                                 |
+| Item                                               | Package  | Status                                                                                                                                                                  |
+| -------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color roles (2025 spec, light and dark)            | `tokens` | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
+| Elevation levels and web shadows                   | `tokens` | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
+| Scrim (32%)                                        | `tokens` | To do                                                                                                                                                                   |
+| Motion curves (official conversion table)          | `tokens` | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
+| Spring solver (handles interruptions and gestures) | `core`   | To do. The raw values are ready in `getMotionSpring`.                                                                                                                   |
+| Shape: corner radius scale                         | `tokens` | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
+| Shape: shape library and morphing                  | —        | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
+| Typography: baseline and emphasized type scales    | `tokens` | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
+| Typography: language height, variable font axes    | `tokens` | Not yet. See section 5.                                                                                                                                                 |
 
 ## Sources
 
@@ -224,3 +340,6 @@ M3 also has a library of expressive shapes that morph into each other, used by t
 - [Compose Material3 `MotionScheme.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MotionScheme.kt): interface only
 - [Compose Material3 `ShapeTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ShapeTokens.kt)
 - [Compose Material3 `Shapes.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Shapes.kt): interface only
+- [M3 Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens)
+- [M3 Typography – Fonts](https://m3.material.io/styles/typography/fonts)
+- [Material Web `tokens/versions/latest` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/tokens/versions/latest/sass): `_md-sys-typescale.scss`, `_md-sys-typescale-emphasized.scss`, `_md-ref-typeface.scss`, plus `_md-sys-shape.scss`, `_md-sys-elevation.scss`, and `_md-sys-motion.scss` for cross-checks

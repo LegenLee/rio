@@ -94,6 +94,22 @@ watchEffect(() => {
       <RioSwitch disabled />
     </section>
 
+    <section class="type-scale">
+      <div v-for="style in TYPE_STYLES" :key="style" class="type-row">
+        <code>{{ style }}</code>
+        <span
+          v-for="emphasized in [false, true]"
+          :key="String(emphasized)"
+          :style="{
+            font: `var(${typescaleVar(style, { emphasized })})`,
+            letterSpacing: `var(${typescaleVar(style, { emphasized, part: 'tracking' })})`,
+          }"
+        >
+          {{ emphasized ? 'Emphasized' : 'Baseline' }} type
+        </span>
+      </div>
+    </section>
+
     <section class="shapes">
       <div
         v-for="corner in SHAPE_CORNERS"
@@ -183,6 +199,23 @@ main {
 
 .dot.moved {
   transform: translateX(288px);
+}
+
+.type-scale {
+  display: grid;
+  gap: 8px;
+}
+
+.type-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr 1fr;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.type-row code {
+  font-size: 12px;
+  color: var(--rio-color-on-surface-variant);
 }
 
 .shapes {
