@@ -35,17 +35,26 @@ packages/
       ripple/
         ripple.ts
         ripple.test.ts
-    switch/                 component logic
+    button/                 component logic
+      button.ts
+      button.test.ts
+    switch/
       switch.ts
       switch.test.ts
     index.ts
   styles/src/
     base/                   CSS shared across components
       focus-ring.css
+      reduced-motion.css    imported by every component that uses motion tokens
       ripple.css            pairs with core's primitives/ripple
       state-layer.css
+    button.css
     switch.css
   vue/src/
+    button/
+      Button.vue
+    ripple/
+      ripple.ts             the v-ripple directive
     switch/
       Switch.vue
     menu/                   a component family keeps its parts together
@@ -111,7 +120,9 @@ A helper moves up only when a second caller actually needs it.
 
 ## Writing about the spec
 
-In `docs/foundations.md` and anywhere else Rio describes Material 3, keep three kinds of statements apart and label them:
+`docs/foundations.md` covers the system-wide foundations, and each component gets its own page in `docs/components/<id>.md` (for example `docs/components/button.md`), with Spec, Recommendations, and In Rio sections.
+
+In all of them, keep three kinds of statements apart and label them:
 
 - **Spec**: token values and normative definitions from Google.
 - **Recommendations**: guidance prose on m3.material.io (dos, don'ts, "should").

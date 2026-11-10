@@ -163,6 +163,17 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
 - The CSS variables carry the curves, for uninterrupted animations. Interrupted and gesture-driven animations will need the spring solver, which reads the raw values through `getMotionSpring(scheme, token)`.
 
+### Reduced motion
+
+**Spec**: none found. The M3 pages Rio has read don't define what happens when the user asks the OS to reduce motion. Those pages are the motion physics pages, easing and duration, transitions, and the accessibility, designing, usability, and building-for-all foundations. The closest is a recommendation on the usability page: "use it sparingly since motion can be distracting."
+
+**In Rio**: under `prefers-reduced-motion: reduce`, **spatial motion becomes instant and effects motion stays**.
+
+- Spatial motion moves things: position, size, rotation, and corner radius. Movement and overshoot are what reduced motion is meant to prevent, so they go.
+- Effects motion changes color and opacity. Short fades don't cause that discomfort, so they stay. This matches iOS's Reduce Motion, which keeps crossfades. Android's "Remove animations" goes further and drops everything.
+- Switching to the standard scheme was considered and rejected. Standard still moves and still overshoots slightly (y 1.06), and the spec presents it as a product style, not an accessibility mode.
+- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. The ripple applies the same rule in JavaScript: it skips the growing wave and keeps the fade. The spring solver will follow the same setting.
+
 ## 4. Shape corners with a radius scale
 
 ### Spec
@@ -388,27 +399,27 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
     - The wave grows for 450ms with M3's legacy standard easing, moving from the press point to the center. It fades in over 105ms and out over 375ms.
   - The ripple and the state layer are hidden under `forced-colors`, where backgrounds are replaced.
   - Elements without a ripple keep the flat pressed overlay (`:active` or `data-pressed`).
-- **Open decisions**:
-  - Reduced motion: what Rio does under `prefers-reduced-motion`. **Provisionally**, the ripple skips its growing wave and only fades. Overshooting spatial springs are still undecided.
-  - Disabled and focus: the spec says disabled components can't be focused, but `aria-disabled` elements stay focusable on purpose, so screen-reader users can find them. Each component decides when it is built.
+- **Reduced motion**: see section 3. The ripple skips its growing wave and only fades.
+- **Disabled and focus**: pressable components get two props. `disabled` is native and not focusable, as the spec says. `softDisabled` uses `aria-disabled` and stays focusable, which deviates from the spec on purpose so keyboard and screen-reader users can find the control. See [components/button.md](components/button.md).
 
 ## Implementation status
 
-| Item                                               | Package          | Status                                                                                                                                                                  |
-| -------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color roles (2025 spec, light and dark)            | `tokens`         | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
-| Elevation levels and web shadows                   | `tokens`         | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
-| Scrim (32%)                                        | `tokens`         | To do                                                                                                                                                                   |
-| Motion curves (official conversion table)          | `tokens`         | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
-| Spring solver (handles interruptions and gestures) | `core`           | To do. The raw values are ready in `getMotionSpring`.                                                                                                                   |
-| Shape: corner radius scale                         | `tokens`         | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
-| Shape: shape library and morphing                  | —                | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
-| Typography: baseline and emphasized type scales    | `tokens`         | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
-| Typography: language height                        | `tokens`         | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
-| Typography: variable font axes                     | `tokens`         | Not yet. See section 5.4.                                                                                                                                               |
-| State layer opacities and focus indicator          | `tokens`         | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
-| State layer and focus ring CSS                     | `styles`         | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
-| Ripple (pressed)                                   | `core`, `styles` | Done: `attachRipple`, `base/ripple.css`. The reduced-motion behavior is provisional.                                                                                    |
+| Item                                               | Package                 | Status                                                                                                                                                                  |
+| -------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
+| Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
+| Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
+| Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
+| Spring solver (handles interruptions and gestures) | `core`                  | To do. The raw values are ready in `getMotionSpring`.                                                                                                                   |
+| Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
+| Shape: shape library and morphing                  | —                       | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
+| Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
+| Typography: language height                        | `tokens`                | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
+| Typography: variable font axes                     | `tokens`                | Not yet. See section 5.4.                                                                                                                                               |
+| State layer opacities and focus indicator          | `tokens`                | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
+| State layer and focus ring CSS                     | `styles`                | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
+| Ripple (pressed)                                   | `core`, `styles`, `vue` | Done: `attachRipple`, `base/ripple.css`, `v-ripple`.                                                                                                                    |
+| Reduced motion                                     | `styles`                | Done: `base/reduced-motion.css`. Spatial motion is instant, and effects fades stay.                                                                                     |
 
 ## Sources
 

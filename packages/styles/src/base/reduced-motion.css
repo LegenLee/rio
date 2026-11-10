@@ -1,0 +1,21 @@
+/*
+ * Reduced motion: when the user asks the OS to reduce motion, spatial motion (position, size,
+ * rotation, corner radius) becomes instant. Effects motion (color, opacity) keeps its short fades,
+ * which don't cause the discomfort reduced motion is meant to prevent. This is a Rio decision; the
+ * M3 pages Rio has read don't define reduced-motion behavior.
+ *
+ * Every element gets the override, with !important, so it beats the theme variables `applyTheme`
+ * sets inline on the root, and any subtree that swaps motion schemes. Components that use the
+ * motion tokens import this file. The ripple follows the same rule in JavaScript.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    --rio-motion-fast-spatial: 0ms !important;
+    --rio-motion-fast-spatial-duration: 0ms !important;
+    --rio-motion-default-spatial: 0ms !important;
+    --rio-motion-default-spatial-duration: 0ms !important;
+    --rio-motion-slow-spatial: 0ms !important;
+    --rio-motion-slow-spatial-duration: 0ms !important;
+  }
+}

@@ -14,8 +14,9 @@ import {
   type MotionToken,
   type SchemeVariant,
 } from '@rio-m3e/tokens';
-import { RioSwitch, vRipple } from '@rio-m3e/vue';
-import { ref, watchEffect } from 'vue';
+import { BUTTON_SIZES, BUTTON_VARIANTS, type ButtonShape, type ButtonVariant } from '@rio-m3e/core';
+import { RioButton, RioSwitch, vRipple } from '@rio-m3e/vue';
+import { reactive, ref, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
 const variant = ref<SchemeVariant>('tonal-spot');
@@ -23,6 +24,10 @@ const contrast = ref(0);
 const mode = ref<'light dark' | 'light' | 'dark'>('light dark');
 const motion = ref<MotionScheme>('expressive');
 const checked = ref(false);
+const buttonShape = ref<ButtonShape>('round');
+// Text buttons can't toggle.
+const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
+const toggles = reactive<Partial<Record<ButtonVariant, boolean>>>({});
 const moved = ref(false);
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
@@ -88,18 +93,46 @@ watchEffect(() => {
       </div>
     </section>
 
-    <!-- Stand-ins for real buttons, to try the state layer and focus ring (Tab to see the ring) -->
-    <section class="controls">
-      <button v-ripple type="button" class="demo-button rio-state-layer rio-focus-ring">
-        Filled
-      </button>
-      <button v-ripple type="button" class="demo-button tonal rio-state-layer rio-focus-ring">
-        Tonal
-      </button>
-      <button v-ripple type="button" class="demo-button rio-state-layer rio-focus-ring" disabled>
-        Disabled
-      </button>
-      <div v-ripple class="demo-card rio-state-layer">Any element can ripple</div>
+    <section class="buttons">
+      <div class="controls">
+        <label>
+          Shape
+          <select v-model="buttonShape">
+            <option value="round">Round</option>
+            <option value="square">Square</option>
+          </select>
+        </label>
+      </div>
+      <div v-for="variant in BUTTON_VARIANTS" :key="variant" class="controls">
+        <RioButton
+          v-for="size in BUTTON_SIZES"
+          :key="size"
+          :variant="variant"
+          :size="size"
+          :shape="buttonShape"
+        >
+          <template v-if="size === 'small'" #icon>★</template>
+          {{ variant }} {{ size }}
+        </RioButton>
+      </div>
+      <div class="controls">
+        <RioButton
+          v-for="variant in TOGGLE_VARIANTS"
+          :key="variant"
+          v-model:selected="toggles[variant]"
+          toggle
+          :variant="variant"
+          :shape="buttonShape"
+        >
+          {{ variant }} toggle: {{ toggles[variant] ? 'on' : 'off' }}
+        </RioButton>
+      </div>
+      <div class="controls">
+        <RioButton disabled>Disabled</RioButton>
+        <RioButton variant="outlined" disabled>Disabled outlined</RioButton>
+        <RioButton soft-disabled>Soft-disabled (Tab to it)</RioButton>
+        <div v-ripple class="demo-card rio-state-layer">Any element can ripple</div>
+      </div>
     </section>
 
     <section class="controls">
@@ -215,16 +248,9 @@ main {
   transform: translateX(288px);
 }
 
-.demo-button {
-  block-size: 40px;
-  padding-inline: 16px;
-  border: none;
-  border-radius: var(--rio-shape-corner-full);
-  background: var(--rio-color-primary);
-  color: var(--rio-color-on-primary);
-  font: var(--rio-typescale-label-large);
-  letter-spacing: var(--rio-typescale-label-large-tracking);
-  cursor: pointer;
+.buttons {
+  display: grid;
+  gap: 16px;
 }
 
 .demo-card {
@@ -237,21 +263,6 @@ main {
   color: var(--rio-color-on-surface);
   font: var(--rio-typescale-body-medium);
   cursor: pointer;
-}
-
-.demo-button.tonal {
-  background: var(--rio-color-secondary-container);
-  color: var(--rio-color-on-secondary-container);
-}
-
-.demo-button:disabled {
-  background: color-mix(in srgb, var(--rio-color-on-surface) 10%, transparent);
-  color: color-mix(
-    in srgb,
-    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
-    transparent
-  );
-  cursor: default;
 }
 
 .type-scale {

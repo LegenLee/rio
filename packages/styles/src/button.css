@@ -1,0 +1,233 @@
+/*
+ * M3E common button.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-button-*.scss`, Material 3
+ * v34.0.21). Label type styles per size come from Compose's `ButtonDefaults.textStyleFor`. The
+ * element carries `data-variant`, `data-size`, `data-shape`, and, for toggle buttons,
+ * `data-selected`, which `createButton` from `@rio-m3e/core` sets.
+ *
+ * Variant, size, shape, and toggle rules sit inside `:where()`, so they add no specificity. The
+ * disabled and pressed rules always win, and apps can override any of them with a single class.
+ */
+
+.rio-button {
+  /* Size: small, the default */
+  --_height: 40px;
+  --_padding: 16px;
+  --_icon-size: 20px;
+  --_gap: 8px;
+  --_outline-width: 1px;
+  --_square: var(--rio-shape-corner-medium);
+  --_pressed: var(--rio-shape-corner-small);
+  --_selected-round: var(--rio-shape-corner-medium);
+  --_font: var(--rio-typescale-label-large);
+  --_tracking: var(--rio-typescale-label-large-tracking);
+
+  /* Round is half the height rather than corner-full (9999px), so it animates into other shapes. */
+  --_round: calc(var(--_height) / 2);
+  --_radius: var(--_round);
+
+  /* Color: filled, the default */
+  --_container: var(--rio-color-primary);
+  --_content: var(--rio-color-on-primary);
+  --_outline: transparent;
+  --_elevation: var(--rio-elevation-level0);
+  --_hover-elevation: var(--rio-elevation-level1);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--_gap);
+  box-sizing: border-box;
+  block-size: var(--_height);
+  padding-inline: var(--_padding);
+  border: var(--_outline-width) solid var(--_outline);
+  border-radius: var(--_radius);
+  background-color: var(--_container);
+  box-shadow: var(--_elevation);
+  color: var(--_content);
+  font: var(--_font);
+  letter-spacing: var(--_tracking);
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    border-radius var(--rio-motion-fast-spatial),
+    background-color var(--rio-motion-fast-effects),
+    color var(--rio-motion-fast-effects),
+    box-shadow var(--rio-motion-fast-effects);
+}
+
+/* Sizes */
+
+.rio-button:where([data-size='xsmall']) {
+  --_height: 32px;
+  --_padding: 12px;
+}
+
+.rio-button:where([data-size='medium']) {
+  --_height: 56px;
+  --_padding: 24px;
+  --_icon-size: 24px;
+  --_square: var(--rio-shape-corner-large);
+  --_pressed: var(--rio-shape-corner-medium);
+  --_selected-round: var(--rio-shape-corner-large);
+  --_font: var(--rio-typescale-title-medium);
+  --_tracking: var(--rio-typescale-title-medium-tracking);
+}
+
+.rio-button:where([data-size='large']) {
+  --_height: 96px;
+  --_padding: 48px;
+  --_icon-size: 32px;
+  --_gap: 12px;
+  --_outline-width: 2px;
+  --_square: var(--rio-shape-corner-extra-large);
+  --_pressed: var(--rio-shape-corner-large);
+  --_selected-round: var(--rio-shape-corner-extra-large);
+  --_font: var(--rio-typescale-headline-small);
+  --_tracking: var(--rio-typescale-headline-small-tracking);
+}
+
+.rio-button:where([data-size='xlarge']) {
+  --_height: 136px;
+  --_padding: 64px;
+  --_icon-size: 40px;
+  --_gap: 16px;
+  --_outline-width: 3px;
+  --_square: var(--rio-shape-corner-extra-large);
+  --_pressed: var(--rio-shape-corner-large);
+  --_selected-round: var(--rio-shape-corner-extra-large);
+  --_font: var(--rio-typescale-headline-large);
+  --_tracking: var(--rio-typescale-headline-large-tracking);
+}
+
+/* Shapes. A selected toggle swaps them: round turns square-ish, square turns round. */
+
+.rio-button:where([data-shape='square']) {
+  --_radius: var(--_square);
+}
+
+.rio-button:where([data-selected='true']) {
+  --_radius: var(--_selected-round);
+}
+
+.rio-button:where([data-shape='square'][data-selected='true']) {
+  --_radius: var(--_round);
+}
+
+/* Variants */
+
+.rio-button:where([data-variant='tonal']) {
+  --_container: var(--rio-color-secondary-container);
+  --_content: var(--rio-color-on-secondary-container);
+}
+
+.rio-button:where([data-variant='outlined']) {
+  --_container: transparent;
+  --_content: var(--rio-color-on-surface-variant);
+  --_outline: var(--rio-color-outline-variant);
+  --_hover-elevation: var(--rio-elevation-level0);
+}
+
+.rio-button:where([data-variant='elevated']) {
+  --_container: var(--rio-color-surface-container-low);
+  --_content: var(--rio-color-primary);
+  --_elevation: var(--rio-elevation-level1);
+  --_hover-elevation: var(--rio-elevation-level2);
+}
+
+.rio-button:where([data-variant='text']) {
+  --_container: transparent;
+  --_content: var(--rio-color-primary);
+  --_hover-elevation: var(--rio-elevation-level0);
+}
+
+/* Toggle buttons: unselected and selected colors, where they differ from the defaults above */
+
+.rio-button:where([data-variant='filled'][data-selected='false']) {
+  --_container: var(--rio-color-surface-container);
+  --_content: var(--rio-color-on-surface-variant);
+}
+
+.rio-button:where([data-variant='tonal'][data-selected='true']) {
+  --_container: var(--rio-color-secondary);
+  --_content: var(--rio-color-on-secondary);
+}
+
+.rio-button:where([data-variant='outlined'][data-selected='true']) {
+  --_container: var(--rio-color-inverse-surface);
+  --_content: var(--rio-color-inverse-on-surface);
+  --_outline: transparent;
+}
+
+.rio-button:where([data-variant='elevated'][data-selected='true']) {
+  --_container: var(--rio-color-primary);
+  --_content: var(--rio-color-on-primary);
+}
+
+/* Interaction: hover lifts one level, pressing returns to rest and morphs the corners */
+
+@media (hover: hover) {
+  .rio-button:hover {
+    box-shadow: var(--_hover-elevation);
+  }
+}
+
+.rio-button[data-pressed] {
+  border-radius: var(--_pressed);
+  box-shadow: var(--_elevation);
+}
+
+/* Disabled, native or soft */
+
+.rio-button:is(:disabled, [aria-disabled='true']) {
+  --_container: color-mix(in srgb, var(--rio-color-on-surface) 10%, transparent);
+  --_content: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  --_elevation: none;
+  --_hover-elevation: none;
+  cursor: default;
+}
+
+.rio-button:is(:disabled, [aria-disabled='true']):where(
+    [data-variant='outlined'],
+    [data-variant='text']
+  ) {
+  --_container: transparent;
+}
+
+.rio-button:is(:disabled, [aria-disabled='true']):where(
+    [data-variant='outlined'][data-selected='true']
+  ) {
+  --_container: color-mix(in srgb, var(--rio-color-on-surface) 10%, transparent);
+}
+
+/* Parts */
+
+/* Extra small and small buttons are shorter than the spec's 48px minimum target. */
+.rio-button__touch {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inline-size: max(100%, 48px);
+  block-size: max(100%, 48px);
+  translate: -50% -50%;
+}
+
+.rio-button__icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--_icon-size);
+  block-size: var(--_icon-size);
+  font-size: var(--_icon-size);
+}
+
+.rio-button__icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}
