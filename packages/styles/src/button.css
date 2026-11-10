@@ -146,6 +146,12 @@
   --_hover-elevation: var(--rio-elevation-level0);
 }
 
+/* Icon buttons only (see icon-button.css): no container, like text, but it can toggle */
+.rio-button:where([data-variant='standard']) {
+  --_container: transparent;
+  --_content: var(--rio-color-on-surface-variant);
+}
+
 /* Toggle buttons: unselected and selected colors, where they differ from the defaults above */
 
 .rio-button:where([data-variant='filled'][data-selected='false']) {
@@ -167,6 +173,10 @@
 .rio-button:where([data-variant='elevated'][data-selected='true']) {
   --_container: var(--rio-color-primary);
   --_content: var(--rio-color-on-primary);
+}
+
+.rio-button:where([data-variant='standard'][data-selected='true']) {
+  --_content: var(--rio-color-primary);
 }
 
 /* Interaction: hover lifts one level, pressing returns to rest and morphs the corners */
@@ -199,7 +209,8 @@
 
 .rio-button:is(:disabled, [aria-disabled='true']):where(
     [data-variant='outlined'],
-    [data-variant='text']
+    [data-variant='text'],
+    [data-variant='standard']
   ) {
   --_container: transparent;
 }

@@ -41,7 +41,7 @@ describe('RioSwitch', () => {
 
   test('Space and Enter both toggle, as the spec says', async () => {
     const screen = await render(Switch);
-    await userEvent.tab();
+    (screen.getByRole('switch').element() as HTMLElement).focus();
     await userEvent.keyboard(' ');
     await userEvent.keyboard('{Enter}');
     expect(screen.emitted('update:selected')).toHaveLength(2);
@@ -49,8 +49,8 @@ describe('RioSwitch', () => {
 
   test('disabled is not focusable and emits nothing', async () => {
     const screen = await render(Switch, { props: { disabled: true } });
-    await userEvent.tab();
-    await expect.element(screen.getByRole('switch')).not.toHaveFocus();
+    (screen.getByRole('switch').element() as HTMLElement).focus();
+    expect(document.activeElement).not.toBe(screen.getByRole('switch').element());
     await screen.getByRole('switch').click({ force: true });
     expect(screen.emitted('update:selected')).toBeUndefined();
   });
@@ -58,8 +58,8 @@ describe('RioSwitch', () => {
   test('softDisabled stays focusable but emits nothing, even when dragged', async () => {
     const screen = await render(Switch, { props: { softDisabled: true } });
     const sw = screen.getByRole('switch');
-    await userEvent.tab();
-    await expect.element(sw).toHaveFocus();
+    (sw.element() as HTMLElement).focus();
+    expect(document.activeElement).toBe(sw.element());
     await userEvent.keyboard('{Enter}');
     touch(sw.element(), 'pointerdown', 10);
     touch(sw.element(), 'pointermove', 60);

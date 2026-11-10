@@ -1,0 +1,84 @@
+/*
+ * M3E icon button, layered on top of `button.css`. The root carries both `rio-button` and
+ * `rio-icon-button`, so it inherits the button's shapes (round, square, pressed, selected), shape
+ * morphing, colors (the `standard` variant lives in `button.css` with the others), disabled rules,
+ * state layer, ripple, and touch target. This file holds only what differs: the three widths, the
+ * icon sizes, and no elevation.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-icon-button-*.scss`, Material 3
+ * v34.0.21). Every rule is `.rio-button.rio-icon-button`, so it beats `button.css` in any load
+ * order. None of them touch what the disabled and pressed rules set, so those still apply.
+ */
+
+.rio-button.rio-icon-button {
+  /* Small, default width */
+  --_icon-size: 24px;
+  --_padding: 8px;
+  --_elevation: none;
+  --_hover-elevation: none;
+
+  inline-size: calc(var(--_icon-size) + 2 * var(--_padding));
+  padding: 0;
+}
+
+/* Sizes: icon size and the padding beside it for each width */
+
+.rio-button.rio-icon-button:where([data-size='xsmall']) {
+  --_icon-size: 20px;
+  --_padding: 6px;
+}
+
+.rio-button.rio-icon-button:where([data-size='xsmall'][data-width='narrow']) {
+  --_padding: 4px;
+}
+
+.rio-button.rio-icon-button:where([data-size='xsmall'][data-width='wide']) {
+  --_padding: 10px;
+}
+
+.rio-button.rio-icon-button:where([data-size='small'][data-width='narrow']) {
+  --_padding: 4px;
+}
+
+.rio-button.rio-icon-button:where([data-size='small'][data-width='wide']) {
+  --_padding: 14px;
+}
+
+.rio-button.rio-icon-button:where([data-size='medium']) {
+  --_icon-size: 24px;
+  --_padding: 16px;
+}
+
+.rio-button.rio-icon-button:where([data-size='medium'][data-width='narrow']) {
+  --_padding: 12px;
+}
+
+.rio-button.rio-icon-button:where([data-size='medium'][data-width='wide']) {
+  --_padding: 24px;
+}
+
+.rio-button.rio-icon-button:where([data-size='large']) {
+  --_icon-size: 32px;
+  --_padding: 32px;
+}
+
+.rio-button.rio-icon-button:where([data-size='large'][data-width='narrow']) {
+  --_padding: 16px;
+}
+
+.rio-button.rio-icon-button:where([data-size='large'][data-width='wide']) {
+  --_padding: 48px;
+}
+
+.rio-button.rio-icon-button:where([data-size='xlarge']) {
+  --_icon-size: 40px;
+  --_padding: 48px;
+}
+
+.rio-button.rio-icon-button:where([data-size='xlarge'][data-width='narrow']) {
+  --_padding: 32px;
+}
+
+.rio-button.rio-icon-button:where([data-size='xlarge'][data-width='wide']) {
+  --_padding: 72px;
+}

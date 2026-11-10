@@ -14,9 +14,25 @@ import {
   type MotionToken,
   type SchemeVariant,
 } from '@rio-m3e/tokens';
-import { mdiCheck, mdiClose } from '@mdi/js';
-import { BUTTON_SIZES, BUTTON_VARIANTS, type ButtonShape, type ButtonVariant } from '@rio-m3e/core';
-import { RioButton, RioSwitch, vRipple } from '@rio-m3e/vue';
+import {
+  mdiBookmark,
+  mdiBookmarkOutline,
+  mdiCheck,
+  mdiClose,
+  mdiHeart,
+  mdiHeartOutline,
+  mdiMagnify,
+} from '@mdi/js';
+import {
+  BUTTON_SIZES,
+  BUTTON_VARIANTS,
+  ICON_BUTTON_VARIANTS,
+  ICON_BUTTON_WIDTHS,
+  type ButtonShape,
+  type ButtonVariant,
+  type IconButtonVariant,
+} from '@rio-m3e/core';
+import { RioButton, RioIconButton, RioSwitch, vRipple } from '@rio-m3e/vue';
 import { reactive, ref, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
@@ -29,6 +45,9 @@ const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
 const toggles = reactive<Partial<Record<ButtonVariant, boolean>>>({});
+const iconShape = ref<ButtonShape>('round');
+const favorites = reactive<Partial<Record<IconButtonVariant, boolean>>>({ standard: true });
+const bookmarked = ref(false);
 const moved = ref(false);
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
@@ -133,6 +152,90 @@ watchEffect(() => {
         <RioButton variant="outlined" disabled>Disabled outlined</RioButton>
         <RioButton soft-disabled>Soft-disabled (Tab to it)</RioButton>
         <div v-ripple class="demo-card rio-state-layer">Any element can ripple</div>
+      </div>
+    </section>
+
+    <section class="buttons">
+      <div class="controls">
+        <label>
+          Shape
+          <select v-model="iconShape">
+            <option value="round">Round</option>
+            <option value="square">Square</option>
+          </select>
+        </label>
+      </div>
+      <div v-for="variant in ICON_BUTTON_VARIANTS" :key="variant" class="controls">
+        <code class="row-label">{{ variant }}</code>
+        <RioIconButton
+          v-for="size in BUTTON_SIZES"
+          :key="size"
+          :label="`Search (${variant} ${size})`"
+          :variant="variant"
+          :size="size"
+          :shape="iconShape"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+        </RioIconButton>
+      </div>
+      <div v-for="size in ['small', 'medium'] as const" :key="size" class="controls">
+        <code class="row-label">{{ size }} widths</code>
+        <RioIconButton
+          v-for="width in ICON_BUTTON_WIDTHS"
+          :key="width"
+          :label="`Search (${width})`"
+          :size="size"
+          :width="width"
+          :shape="iconShape"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+        </RioIconButton>
+      </div>
+      <div class="controls">
+        <code class="row-label">toggles</code>
+        <RioIconButton
+          v-for="variant in ICON_BUTTON_VARIANTS"
+          :key="variant"
+          v-model:selected="favorites[variant]"
+          toggle
+          :label="`Add to favorites (${variant})`"
+          :variant="variant"
+          :shape="iconShape"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+          <template #selected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+          </template>
+        </RioIconButton>
+        <RioIconButton
+          v-model:selected="bookmarked"
+          toggle
+          label="Bookmark"
+          variant="tonal"
+          size="medium"
+          width="wide"
+          :shape="iconShape"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiBookmarkOutline" fill="currentColor" /></svg>
+          <template #selected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiBookmark" fill="currentColor" /></svg>
+          </template>
+        </RioIconButton>
+      </div>
+      <div class="controls">
+        <code class="row-label">disabled</code>
+        <RioIconButton
+          v-for="variant in ICON_BUTTON_VARIANTS"
+          :key="variant"
+          :label="`Search (${variant}, disabled)`"
+          :variant="variant"
+          disabled
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+        </RioIconButton>
+        <RioIconButton label="Search (soft-disabled)" soft-disabled>
+          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+        </RioIconButton>
       </div>
     </section>
 
@@ -289,6 +392,12 @@ main {
 .buttons {
   display: grid;
   gap: 16px;
+}
+
+.row-label {
+  inline-size: 7rem;
+  font-size: 12px;
+  color: var(--rio-color-on-surface-variant);
 }
 
 .demo-card {

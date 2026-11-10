@@ -46,6 +46,9 @@ packages/
     button/                 component logic
       button.ts
       button.test.ts
+    icon-button/
+      icon-button.ts        wraps createButton
+      icon-button.test.ts
     switch/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
@@ -59,10 +62,13 @@ packages/
       shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
     button.css
+    icon-button.css         layered on top of button.css
     switch.css
   vue/src/
     button/
       Button.vue
+    icon-button/
+      IconButton.vue
     ripple/
       ripple.ts             the v-ripple directive
     shape-morph/
@@ -169,6 +175,7 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Test the adapter contract: what the component emits, and that the parent owns the state.
 - Test primitives on a plain element built in the test, by dispatching the events they listen to (see `ripple.test.ts`).
 - Playwright refuses to click elements with `aria-disabled="true"`, but real pointers can still click them. To test a disabled guard, use `click({ force: true })`.
+- Check focusability with `element.focus()` and `document.activeElement`, not with Tab. Where Tab lands depends on where the previous test left the focus, which can be outside the page, so Tab-based tests pass or fail depending on test order.
 
 ### Visual regression
 

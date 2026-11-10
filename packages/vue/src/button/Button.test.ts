@@ -24,8 +24,8 @@ describe('RioButton', () => {
     const screen = await render(Button, { ...label, props: { disabled: true } });
     const button = screen.getByRole('button');
     await expect.element(button).toBeDisabled();
-    await userEvent.tab();
-    await expect.element(button).not.toHaveFocus();
+    (button.element() as HTMLElement).focus();
+    expect(document.activeElement).not.toBe(button.element());
     await button.click({ force: true });
     expect(screen.emitted('click')).toBeUndefined();
   });
@@ -34,8 +34,8 @@ describe('RioButton', () => {
     const screen = await render(Button, { ...label, props: { softDisabled: true } });
     const button = screen.getByRole('button');
     await expect.element(button).toHaveAttribute('aria-disabled', 'true');
-    await userEvent.tab();
-    await expect.element(button).toHaveFocus();
+    (button.element() as HTMLElement).focus();
+    expect(document.activeElement).toBe(button.element());
     await userEvent.keyboard('{Enter}');
     await button.click({ force: true });
     expect(screen.emitted('click')).toBeUndefined();
