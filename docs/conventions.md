@@ -165,4 +165,5 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
   pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build
   ```
 
+- CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. The `vrt` project isn't part of CI yet.
 - Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `chore:`.
