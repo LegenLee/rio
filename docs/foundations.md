@@ -375,7 +375,9 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - Hover applies only under `@media (hover: hover)`, because touch screens keep `:hover` after a tap.
 - The fade uses the `fast-effects` motion token, following the low-emphasis fade recommendation with the spec's token for opacity changes.
 - **`@rio-m3e/styles/base/focus-ring.css`**: the class `rio-focus-ring` draws an `outline` on `:focus-visible`, so only keyboard-style focus shows it. The color defaults to `secondary` and can be changed through `--rio-focus-ring-color`. `data-focus-ring="inner"` uses the inner offset.
-- **Ripple**: `attachRipple(el)` from `@rio-m3e/core` adds a press ripple to any element, like Flutter's InkWell. Add the `rio-ripple` class from `@rio-m3e/styles/base/ripple.css` for the visuals.
+- **Ripple**: `attachRipple(el)` from `@rio-m3e/core` adds a press ripple to any element, like Flutter's InkWell. `@rio-m3e/styles/base/ripple.css` draws it on every element the primitive marks with `data-ripple`, so no class is needed.
+  - In Vue, use the `v-ripple` directive (`vRipple` from `@rio-m3e/vue`), which also loads the stylesheet. `v-ripple="false"` turns it off.
+  - **It only draws the ripple.** It doesn't make an element pressable: put it on a `button` or a link, or give the element a role, focusability, and keyboard handling yourself. Making things pressable is the job of components such as the button.
   - It draws on `::after`, above the state layer on `::before` and below the content. The wave is a radial gradient in `currentColor` at the pressed opacity, so it stays inside rounded corners without `overflow: hidden`.
   - While pressed, the element has `data-pressed`. Elements with a ripple (`data-ripple`) don't get the flat pressed overlay.
   - Behavior follows Material Web's ripple, Google's web implementation:

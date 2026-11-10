@@ -29,7 +29,7 @@ const reducedMotion = () =>
 
 /**
  * Adds a press ripple to an element. While pressed, the element has `data-pressed`.
- * Add the `rio-ripple` class (from `@rio-m3e/styles/base/ripple.css`) for the visuals.
+ * Load `@rio-m3e/styles/base/ripple.css` for the visuals; it styles elements marked `data-ripple`.
  */
 export function attachRipple(element: HTMLElement): RippleHandle {
   let pointerId: number | undefined;

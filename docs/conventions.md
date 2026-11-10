@@ -77,6 +77,8 @@ A primitive is a DOM behavior that several components share, such as the press r
 - **Shape: `attachX(element)` returns `{ detach() }`.** It takes a real element, adds listeners or animations, and gives back a handle that undoes everything. Adapters attach on mount and detach before unmount.
 - **State goes out through `data-*` attributes** on the element (`data-ripple`, `data-pressed`), so CSS can react without knowing about the JavaScript.
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.
+- **The stylesheet selects on the primitive's data attribute, not on a class** (`[data-ripple]`, not `.rio-ripple`). Vue rewrites `class` whenever a `:class` binding changes and would drop a class the primitive added, but it leaves attributes it doesn't own alone.
+- **Adapters expose primitives in their framework's idiom.** In Vue, that's a directive (`vRipple` → `v-ripple`) that attaches on mount, detaches before unmount, and imports the paired stylesheet. A React adapter would use a hook instead.
 - Primitives are tested in a real browser (see Testing).
 
 ## Shared helpers
