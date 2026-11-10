@@ -72,12 +72,20 @@ describe('motionVar', () => {
 });
 
 describe('createMotionVariables', () => {
-  test('defines a shorthand, a duration, and an easing per token', () => {
+  test('defines the curve parts and the raw spring per token', () => {
     const vars = createMotionVariables();
-    expect(Object.keys(vars)).toHaveLength(MOTION_TOKENS.length * 3);
+    expect(Object.keys(vars)).toHaveLength(MOTION_TOKENS.length * 5);
     expect(vars['--rio-motion-fast-spatial']).toBe('350ms cubic-bezier(0.42, 1.67, 0.21, 0.9)');
     expect(vars['--rio-motion-fast-spatial-duration']).toBe('350ms');
     expect(vars['--rio-motion-fast-spatial-easing']).toBe('cubic-bezier(0.42, 1.67, 0.21, 0.9)');
+    expect(vars['--rio-motion-fast-spatial-damping']).toBe('0.6');
+    expect(vars['--rio-motion-fast-spatial-stiffness']).toBe('800');
+  });
+
+  test('the spring variables follow the scheme', () => {
+    const vars = createMotionVariables('standard');
+    expect(vars['--rio-motion-fast-spatial-damping']).toBe('0.9');
+    expect(vars['--rio-motion-fast-spatial-stiffness']).toBe('1400');
   });
 
   test('defaults to the expressive scheme', () => {

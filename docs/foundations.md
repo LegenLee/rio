@@ -152,16 +152,24 @@ The three standard spatial springs share one curve and differ only in duration. 
 
 Each token becomes three CSS variables. The names don't include the scheme.
 
-| Variable                             | Value (expressive)                          | Use                                                                                                     |
-| ------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `--rio-motion-fast-spatial`          | `350ms cubic-bezier(0.42, 1.67, 0.21, 0.9)` | Drops straight into `transition` or `animation`: `transition: transform var(--rio-motion-fast-spatial)` |
-| `--rio-motion-fast-spatial-duration` | `350ms`                                     | When the duration is needed on its own                                                                  |
-| `--rio-motion-fast-spatial-easing`   | `cubic-bezier(0.42, 1.67, 0.21, 0.9)`       | When the easing is needed on its own                                                                    |
+| Variable                              | Value (expressive)                          | Use                                                                                                     |
+| ------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `--rio-motion-fast-spatial`           | `350ms cubic-bezier(0.42, 1.67, 0.21, 0.9)` | Drops straight into `transition` or `animation`: `transition: transform var(--rio-motion-fast-spatial)` |
+| `--rio-motion-fast-spatial-duration`  | `350ms`                                     | When the duration is needed on its own                                                                  |
+| `--rio-motion-fast-spatial-easing`    | `cubic-bezier(0.42, 1.67, 0.21, 0.9)`       | When the easing is needed on its own                                                                    |
+| `--rio-motion-fast-spatial-damping`   | `0.6`                                       | The raw spring, for the spring solver                                                                   |
+| `--rio-motion-fast-spatial-stiffness` | `800`                                       | The raw spring, for the spring solver                                                                   |
 
 - The theme picks the scheme: `applyTheme(el, { sourceColor, motion: 'standard' })`.
 - **Rio defaults to `'expressive'`.** The spec itself names no default scheme. Rio follows the recommendation here because it is an M3E library.
 - Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
-- The CSS variables carry the curves, for uninterrupted animations. Interrupted and gesture-driven animations will need the spring solver, which reads the raw values through `getMotionSpring(scheme, token)`.
+- **Curves** serve uninterrupted animations, as CSS transitions.
+- **Springs** serve interrupted and gesture-driven animations. `@rio-m3e/core` solves them:
+  - `solveSpring(params, from, to, velocity, t)` gives the exact position and velocity at any moment, in closed form, for underdamped, critically damped, and overdamped springs with unit mass, as in Compose.
+  - `createSpring()` animates a number with `requestAnimationFrame`. A new target takes over from the current position and velocity, so an interrupted press reverses without a jolt.
+  - `readSpringParams(el, token)` reads a token's spring from the element's `-damping` and `-stiffness` variables. Reading from CSS lets a subtree that swaps schemes change its springs too, and keeps `core` independent of `tokens`.
+  - `attachShapeMorph(el)` springs an element's corner radius toward the `--rio-shape-morph-target` its stylesheet declares for each state (`@rio-m3e/styles/base/shape-morph.css`). The button uses it for its press and selection shapes.
+- In JavaScript, `getMotionSpring(scheme, token)` and `getMotionCurve(scheme, token)` from `@rio-m3e/tokens` return the same values.
 
 ### Reduced motion
 
@@ -172,7 +180,7 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - Spatial motion moves things: position, size, rotation, and corner radius. Movement and overshoot are what reduced motion is meant to prevent, so they go.
 - Effects motion changes color and opacity. Short fades don't cause that discomfort, so they stay. This matches iOS's Reduce Motion, which keeps crossfades. Android's "Remove animations" goes further and drops everything.
 - Switching to the standard scheme was considered and rejected. Standard still moves and still overshoots slightly (y 1.06), and the spec presents it as a product style, not an accessibility mode.
-- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. The ripple applies the same rule in JavaScript: it skips the growing wave and keeps the fade. The spring solver will follow the same setting.
+- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. The ripple applies the same rule in JavaScript: it skips the growing wave and keeps the fade. `attachShapeMorph` jumps straight to its target.
 
 ## 4. Shape corners with a radius scale
 
@@ -410,7 +418,8 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
 | Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
-| Spring solver (handles interruptions and gestures) | `core`                  | To do. The raw values are ready in `getMotionSpring`.                                                                                                                   |
+| Spring solver (handles interruptions and gestures) | `core`, `tokens`        | Done: `solveSpring`, `createSpring`, `readSpringParams`, and the `-damping` and `-stiffness` motion variables.                                                          |
+| Shape morph (corner radius)                        | `core`, `styles`        | Done: `attachShapeMorph`, `base/shape-morph.css`.                                                                                                                       |
 | Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
 | Shape: shape library and morphing                  | —                       | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
 | Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |

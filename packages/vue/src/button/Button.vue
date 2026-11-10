@@ -5,6 +5,7 @@ import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/button.css';
 import { vRipple } from '../ripple/ripple';
+import { vShapeMorph } from '../shape-morph/shape-morph';
 
 const props = withDefaults(defineProps<ButtonProps>(), buttonDefaults);
 const emit = defineEmits<{
@@ -28,6 +29,7 @@ const button = createButton({
 <template>
   <button
     v-ripple
+    v-shape-morph
     class="rio-button rio-state-layer rio-focus-ring"
     v-bind="button.rootAttrs()"
     @click="button.handleClick"

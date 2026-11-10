@@ -35,6 +35,10 @@ packages/
       ripple/
         ripple.ts
         ripple.test.ts
+      shape-morph/
+        shape-morph.ts
+      spring/
+        spring.ts           spring math and driver, used by other primitives
     button/                 component logic
       button.ts
       button.test.ts
@@ -47,6 +51,7 @@ packages/
       focus-ring.css
       reduced-motion.css    imported by every component that uses motion tokens
       ripple.css            pairs with core's primitives/ripple
+      shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
     button.css
     switch.css
@@ -55,6 +60,8 @@ packages/
       Button.vue
     ripple/
       ripple.ts             the v-ripple directive
+    shape-morph/
+      shape-morph.ts        v-shape-morph, used inside components (not exported yet)
     switch/
       Switch.vue
     menu/                   a component family keeps its parts together
@@ -82,7 +89,8 @@ packages/
 
 A primitive is a DOM behavior that several components share, such as the press ripple. Primitives live in `core/src/primitives/` and are public API, exported from `core/src/index.ts` for every adapter to use.
 
-- **Only behaviors that need JavaScript.** If CSS alone can do it, it belongs in `styles/src/base/` instead. The state layer and the focus ring turned out to be CSS-only; the ripple needs the press position, and the spring solver will need per-frame math.
+- **Only behaviors that need JavaScript.** If CSS alone can do it, it belongs in `styles/src/base/` instead. The state layer and the focus ring turned out to be CSS-only; the ripple needs the press position, and the spring needs per-frame math.
+- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `shape-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation.
 - **Shape: `attachX(element)` returns `{ detach() }`.** It takes a real element, adds listeners or animations, and gives back a handle that undoes everything. Adapters attach on mount and detach before unmount.
 - **State goes out through `data-*` attributes** on the element (`data-ripple`, `data-pressed`), so CSS can react without knowing about the JavaScript.
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.

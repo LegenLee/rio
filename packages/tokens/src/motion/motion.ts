@@ -94,7 +94,8 @@ export function getMotionCurve(scheme: MotionScheme, token: MotionToken): Motion
   return { easing: `cubic-bezier(${x1}, ${y1}, ${x2}, ${y2})`, duration };
 }
 
-export type MotionVarPart = 'duration' | 'easing';
+/** `duration` and `easing` describe the curve; `damping` and `stiffness` the raw spring. */
+export type MotionVarPart = 'duration' | 'easing' | 'damping' | 'stiffness';
 
 export type MotionVar =
   | `${typeof TOKEN_PREFIX}-motion-${MotionToken}`
@@ -109,16 +110,23 @@ export function motionVar(token: MotionToken, part?: MotionVarPart): MotionVar {
   return part ? `${TOKEN_PREFIX}-motion-${token}-${part}` : `${TOKEN_PREFIX}-motion-${token}`;
 }
 
-/** Curve-based CSS variables for one scheme. The names don't include the scheme. */
+/**
+ * CSS variables for one scheme: the curve for CSS transitions, and the raw spring for the spring
+ * solver in `@rio-m3e/core`, which reads them from the element it animates. The names don't
+ * include the scheme.
+ */
 export function createMotionVariables(
   scheme: MotionScheme = 'expressive',
 ): Record<MotionVar, string> {
   const vars = {} as Record<MotionVar, string>;
   for (const token of MOTION_TOKENS) {
     const { easing, duration } = getMotionCurve(scheme, token);
+    const { dampingRatio, stiffness } = getMotionSpring(scheme, token);
     vars[motionVar(token)] = `${duration}ms ${easing}`;
     vars[motionVar(token, 'duration')] = `${duration}ms`;
     vars[motionVar(token, 'easing')] = easing;
+    vars[motionVar(token, 'damping')] = String(dampingRatio);
+    vars[motionVar(token, 'stiffness')] = String(stiffness);
   }
   return vars;
 }

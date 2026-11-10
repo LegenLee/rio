@@ -16,7 +16,7 @@ describe('createThemeVariables', () => {
     expect(Object.keys(vars)).toHaveLength(
       COLOR_ROLES.length +
         ELEVATION_LEVELS.length +
-        MOTION_TOKENS.length * 3 +
+        MOTION_TOKENS.length * 5 +
         SHAPE_CORNERS.length +
         Object.keys(createTypographyVariables()).length +
         Object.keys(createStateVariables()).length,

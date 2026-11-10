@@ -42,6 +42,8 @@
   block-size: var(--_height);
   padding-inline: var(--_padding);
   border: var(--_outline-width) solid var(--_outline);
+  /* The shape-morph primitive springs the inline radius toward this target. */
+  --rio-shape-morph-target: var(--_radius);
   border-radius: var(--_radius);
   background-color: var(--_container);
   box-shadow: var(--_elevation);
@@ -52,8 +54,8 @@
   vertical-align: middle;
   cursor: pointer;
   user-select: none;
+  /* No border-radius transition: corners move with the fast-spatial spring (see base/shape-morph.css). */
   transition:
-    border-radius var(--rio-motion-fast-spatial),
     background-color var(--rio-motion-fast-effects),
     color var(--rio-motion-fast-effects),
     box-shadow var(--rio-motion-fast-effects);
@@ -176,6 +178,7 @@
 }
 
 .rio-button[data-pressed] {
+  --rio-shape-morph-target: var(--_pressed);
   border-radius: var(--_pressed);
   box-shadow: var(--_elevation);
 }
