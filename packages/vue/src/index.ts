@@ -1,1 +1,1 @@
-export { default as RioSwitch } from './Switch.vue'
+export { default as RioSwitch } from './Switch.vue';

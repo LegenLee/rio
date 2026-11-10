@@ -1,4 +1,4 @@
-export { TOKEN_PREFIX } from './prefix'
+export { TOKEN_PREFIX } from './prefix';
 export {
   COLOR_ROLES,
   colorVar,
@@ -8,18 +8,18 @@ export {
   type ColorSchemeOptions,
   type ColorVar,
   type SchemeVariant,
-} from './color'
+} from './color';
 export {
   ELEVATION_LEVELS,
   createElevationVariables,
   elevationVar,
   type ElevationLevel,
   type ElevationVar,
-} from './elevation'
+} from './elevation';
 export {
   applyTheme,
   createThemeCss,
   createThemeVariables,
   type ThemeOptions,
   type ThemeVar,
-} from './css'
+} from './css';

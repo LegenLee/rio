@@ -4,14 +4,19 @@
   "description": "Framework-agnostic component styles for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "files": [
+    "src",
+    "css.d.ts"
+  ],
   "type": "module",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     "./*.css": {
       "types": "./css.d.ts",
       "default": "./src/*.css"
     },
     "./package.json": "./package.json"
-  },
-  "files": ["src", "css.d.ts"]
+  }
 }

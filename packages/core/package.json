@@ -4,6 +4,9 @@
   "description": "Framework-agnostic state, props and behaviors for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -14,7 +17,6 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p ."

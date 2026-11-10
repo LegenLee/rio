@@ -1,1 +1,1 @@
-export const TOKEN_PREFIX = '--rio'
+export const TOKEN_PREFIX = '--rio';

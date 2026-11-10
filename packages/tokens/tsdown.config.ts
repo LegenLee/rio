@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsdown'
+import { defineConfig } from 'tsdown';
 
 export default defineConfig({
   entry: ['./src/index.ts'],
@@ -10,4 +10,4 @@ export default defineConfig({
     // 라이선스 주석은 번들에 그대로 남고, 출처는 루트 NOTICE에 적었다.
     onlyBundle: ['@material/material-color-utilities'],
   },
-})
+});

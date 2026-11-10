@@ -6,21 +6,25 @@ import {
   colorVar,
   elevationVar,
   type SchemeVariant,
-} from '@rio-m3e/tokens'
-import { RioSwitch } from '@rio-m3e/vue'
-import { ref, watchEffect } from 'vue'
+} from '@rio-m3e/tokens';
+import { RioSwitch } from '@rio-m3e/vue';
+import { ref, watchEffect } from 'vue';
 
-const sourceColor = ref('#6750a4')
-const variant = ref<SchemeVariant>('tonal-spot')
-const contrast = ref(0)
-const mode = ref<'light dark' | 'light' | 'dark'>('light dark')
-const checked = ref(false)
+const sourceColor = ref('#6750a4');
+const variant = ref<SchemeVariant>('tonal-spot');
+const contrast = ref(0);
+const mode = ref<'light dark' | 'light' | 'dark'>('light dark');
+const checked = ref(false);
 
 watchEffect(() => {
-  const root = document.documentElement
-  applyTheme(root, { sourceColor: sourceColor.value, variant: variant.value, contrast: contrast.value })
-  root.style.colorScheme = mode.value
-})
+  const root = document.documentElement;
+  applyTheme(root, {
+    sourceColor: sourceColor.value,
+    variant: variant.value,
+    contrast: contrast.value,
+  });
+  root.style.colorScheme = mode.value;
+});
 </script>
 
 <template>

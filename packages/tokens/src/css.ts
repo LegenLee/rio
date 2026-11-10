@@ -1,9 +1,15 @@
-import { COLOR_ROLES, colorVar, createColorScheme, type ColorSchemeOptions, type ColorVar } from './color'
-import { createElevationVariables, type ElevationVar } from './elevation'
+import {
+  COLOR_ROLES,
+  colorVar,
+  createColorScheme,
+  type ColorSchemeOptions,
+  type ColorVar,
+} from './color';
+import { createElevationVariables, type ElevationVar } from './elevation';
 
-export type ThemeOptions = Omit<ColorSchemeOptions, 'dark'>
+export type ThemeOptions = Omit<ColorSchemeOptions, 'dark'>;
 
-export type ThemeVar = ColorVar | ElevationVar
+export type ThemeVar = ColorVar | ElevationVar;
 
 /**
  * 테마의 CSS 변수 전부.
@@ -11,20 +17,20 @@ export type ThemeVar = ColorVar | ElevationVar
  * - elevation: 옵션과 상관없는 고정값이다.
  */
 export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
-  const light = createColorScheme({ ...options, dark: false })
-  const dark = createColorScheme({ ...options, dark: true })
-  const vars = {} as Record<ThemeVar, string>
+  const light = createColorScheme({ ...options, dark: false });
+  const dark = createColorScheme({ ...options, dark: true });
+  const vars = {} as Record<ThemeVar, string>;
   for (const role of COLOR_ROLES) {
-    vars[colorVar(role)] = `light-dark(${light[role]}, ${dark[role]})`
+    vars[colorVar(role)] = `light-dark(${light[role]}, ${dark[role]})`;
   }
-  return Object.assign(vars, createElevationVariables())
+  return Object.assign(vars, createElevationVariables());
 }
 
 /** SSR이나 정적 스타일시트용 CSS 문자열. `color-scheme: light dark`를 함께 넣는다. */
 export function createThemeCss(options: ThemeOptions & { selector?: string }): string {
-  const { selector = ':root', ...rest } = options
-  const lines = Object.entries(createThemeVariables(rest)).map(([k, v]) => `  ${k}: ${v};`)
-  return `${selector} {\n  color-scheme: light dark;\n${lines.join('\n')}\n}\n`
+  const { selector = ':root', ...rest } = options;
+  const lines = Object.entries(createThemeVariables(rest)).map(([k, v]) => `  ${k}: ${v};`);
+  return `${selector} {\n  color-scheme: light dark;\n${lines.join('\n')}\n}\n`;
 }
 
 /**
@@ -33,6 +39,6 @@ export function createThemeCss(options: ThemeOptions & { selector?: string }): s
  */
 export function applyTheme(target: HTMLElement, options: ThemeOptions): void {
   for (const [k, v] of Object.entries(createThemeVariables(options))) {
-    target.style.setProperty(k, v)
+    target.style.setProperty(k, v);
   }
 }

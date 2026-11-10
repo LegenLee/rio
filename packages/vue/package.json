@@ -4,6 +4,9 @@
   "description": "Vue components for Rio, a Material 3 Expressive implementation",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -14,7 +17,6 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
   "scripts": {
     "build": "tsdown",
     "typecheck": "vue-tsc -p ."
@@ -23,14 +25,14 @@
     "@rio-m3e/core": "workspace:^",
     "@rio-m3e/styles": "workspace:^"
   },
-  "peerDependencies": {
-    "vue": "^3.5.0"
-  },
   "devDependencies": {
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unplugin-vue": "catalog:",
     "vue": "catalog:",
     "vue-tsc": "catalog:"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
   }
 }
