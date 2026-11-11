@@ -53,6 +53,7 @@ export function attachRipple(element: HTMLElement, options: RippleOptions = {}):
   const marked = surface === element ? [element] : [element, surface];
   let pointerId: number | undefined;
   let touchTimer: ReturnType<typeof setTimeout> | undefined;
+  let releaseTimer: ReturnType<typeof setTimeout> | undefined;
   let animation: Animation | undefined;
   let pressedAt = 0;
 
@@ -96,8 +97,11 @@ export function attachRipple(element: HTMLElement, options: RippleOptions = {}):
       // A newer press replaced this one, so it owns `data-pressed` now.
       if (animation === current) setPressed(marked, false);
     };
-    if (remaining > 0) setTimeout(release, remaining);
-    else release();
+    if (remaining > 0) {
+      releaseTimer = setTimeout(release, remaining);
+    } else {
+      release();
+    }
   };
 
   const isOwnPointer = (event: PointerEvent) =>
@@ -154,6 +158,7 @@ export function attachRipple(element: HTMLElement, options: RippleOptions = {}):
   return {
     detach() {
       clearTimeout(touchTimer);
+      clearTimeout(releaseTimer);
       animation?.cancel();
       delete surface.dataset.ripple;
       setPressed(marked, false);
