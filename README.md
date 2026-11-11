@@ -30,7 +30,11 @@ pnpm test --run
 
 ## Material Color Utilities 관련
 
-> 확장자 없는 import 때문에 node에서 실행이 바로 안 된다([#195](https://github.com/material-foundation/material-color-utilities/issues/195))... 지금부터 이 새끼의 라이브러리에 장난(싸제 말로 번들링)을 실시한다!
+> **새끼… 기열!!**  
+> 아, 이 무슨 경우란 말인가! 감히 확장자도 달지 않은 채 자진입대를 감행한 기열 오도九글 때문에 노오도 해병이 악기바리를 거부하는 찐빠가 벌어지고야 말았다([#195](https://github.com/material-foundation/material-color-utilities/issues/195))!  
+> "악!! 혹시 해병스크립트(싸제 말로 자바스크립트) 확장자를 붙여서 자진입대 하시려던 것인지 여쭤봐도 되는 의중을 확인하는 것에 허락을 구하는 것을 고려해도 되겠습니까?!?!"  
+> 지금부터 이 새끼의 라이브러리에 장난(싸제 말로 번들링)을 실시한다!!  
+> **악!!**
 
 네, 그렇습니다.
 
