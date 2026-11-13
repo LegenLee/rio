@@ -1,0 +1,39 @@
+name: Update screenshots
+
+# Retakes every reference screenshot in the same container as the `visual` job in ci.yml, and
+# uploads them as an artifact. Run it by hand from the Actions tab on the branch to update, then
+# download the artifact, extract it at the repository root, review the images, and commit them:
+#
+#   unzip screenshots.zip && tar xf screenshots.tar && rm screenshots.zip screenshots.tar
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      - run: pnpm test:visual --run --update
+
+      # A tar keeps the paths relative to the repository root; the artifact on its own would start
+      # them at the deepest folder the files share.
+      - name: Collect the screenshots
+        run: find packages -path '*/__screenshots__/*' -type f | sort | tar cf screenshots.tar -T -
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: screenshots.tar

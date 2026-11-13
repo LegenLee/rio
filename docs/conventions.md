@@ -75,6 +75,9 @@ packages/
       shape-morph.ts        v-shape-morph, used inside components (not exported yet)
     switch/
       Switch.vue
+      Switch.vrt.test.ts    screenshot test (see Visual regression)
+    test/
+      vrt.ts                shared setup for the screenshot tests
     menu/                   a component family keeps its parts together
       Menu.vue
       MenuItem.vue
@@ -154,11 +157,11 @@ Rio's defaults follow the spec. Recommendations become options or component-leve
 
 Vitest runs three projects, configured in the root `vitest.config.ts`:
 
-| Project   | Covers                                                          | Runs in                              | Command            |
-| --------- | --------------------------------------------------------------- | ------------------------------------ | ------------------ |
-| `unit`    | `packages/tokens`, `packages/core` (except `primitives`)        | Node                                 | `pnpm test`        |
-| `browser` | `packages/vue` (`*.test.ts`) and `packages/core/src/primitives` | Headless Chromium through Playwright | `pnpm test`        |
-| `vrt`     | `packages/vue` (`*.vrt.test.ts`)                                | Headless Chromium at 1280×720        | `pnpm test:visual` |
+| Project   | Covers                                                          | Runs in                                                        | Command            |
+| --------- | --------------------------------------------------------------- | -------------------------------------------------------------- | ------------------ |
+| `unit`    | `packages/tokens`, `packages/core` (except `primitives`)        | Node                                                           | `pnpm test`        |
+| `browser` | `packages/vue` (`*.test.ts`) and `packages/core/src/primitives` | Headless Chromium through Playwright                           | `pnpm test`        |
+| `vrt`     | `packages/vue` (`*.vrt.test.ts`)                                | Headless Chromium at 1280×720; in CI, the Playwright container | `pnpm test:visual` |
 
 - `pnpm test` watches for changes locally and runs once in CI. Pass `--run` to run once locally.
 - First-time setup: `pnpm exec playwright install chromium`.
@@ -179,9 +182,15 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 
 ### Visual regression
 
-- Name screenshot tests `*.vrt.test.ts`. Reference images are stored in `__screenshots__/` next to the test and committed.
-- Pixels differ across operating systems, fonts, and browser versions, so reference images must come from one fixed environment (CI or a Docker image), never from local machines. Until that environment exists, treat `vrt` results as a local reference only.
-- Failure artifacts (actual and diff images) go to `.vitest/`, which is git-ignored.
+Pixels differ across operating systems, fonts, and browser versions, so the committed reference screenshots come from one fixed environment: the official Playwright container (`mcr.microsoft.com/playwright:v1.65.0-noble`) that the `visual` job in `ci.yml` runs in. They are never made on a local machine.
+
+- **Writing tests**: name them `*.vrt.test.ts`, next to the component. Import the helpers from `packages/vue/src/test/vrt.ts`: they load Roboto from `@fontsource/roboto` instead of relying on system fonts, apply the default theme, and render a gallery on the theme's surface in the light or dark scheme. `keyboardFocus()` focuses an element so it shows its focus ring; assert `:focus-visible` before the screenshot.
+- **Keep galleries inside the 1280×720 test frame.** Anything past it is cut off; lay large sizes out in rows.
+- **References** are stored in `__screenshots__/` next to the test and committed. In CI a missing or different screenshot fails the `visual` job, which uploads the actual and diff images as the `visual-diffs` artifact.
+- **Locally**, `pnpm test:visual --run` compares against references in `.vitest/screenshots/` instead, which is git-ignored, so it shows what your change did on your machine. The first run creates them and fails with "Review it before running tests again"; run it again.
+- **To add or update references**: push the branch, run **Actions → Update screenshots** on it, download the `screenshots` artifact, and extract it at the repository root (`unzip screenshots.zip && tar xf screenshots.tar`). Review the images like code, then commit them.
+- **Upgrading Playwright**: the version in the root `package.json` is pinned and must match the container tag in `ci.yml` and `screenshots.yml`. Change all three together, then retake every reference.
+- Failure artifacts (actual and diff images) go to `.vitest/attachments/`, which is git-ignored.
 
 ### Known quirks
 
@@ -199,7 +208,7 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
   pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build
   ```
 
-- CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. The `vrt` project isn't part of CI yet.
+- CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. Its `visual` job runs the `vrt` project in the Playwright container (see Visual regression).
 - Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `chore:`.
 
 ## Releases

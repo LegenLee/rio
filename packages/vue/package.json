@@ -35,6 +35,9 @@
     "@rio-m3e/styles": "workspace:^"
   },
   "devDependencies": {
+    "@fontsource/roboto": "^5.3.0",
+    "@mdi/js": "^7.4.47",
+    "@rio-m3e/tokens": "workspace:^",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unplugin-vue": "catalog:",

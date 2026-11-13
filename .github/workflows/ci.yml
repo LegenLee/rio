@@ -37,6 +37,34 @@ jobs:
       - name: Install Chromium for the browser tests
         run: pnpm exec playwright install --with-deps chromium
 
-      # `vrt` is left out until reference screenshots exist
       - run: pnpm test --run
       - run: pnpm build
+
+  # Screenshot tests. The committed reference screenshots come from this container and are only
+  # valid here: the image fixes the OS, fonts, and Chromium. Its tag must match the Playwright
+  # version in package.json, and screenshots.yml uses the same image to retake them.
+  visual:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      # Chromium needs more shared memory than Docker's default 64 MB
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      - run: pnpm test:visual --run
+
+      # The actual and diff images of failed comparisons
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-diffs
+          path: .vitest/attachments
+          include-hidden-files: true
+          if-no-files-found: ignore
