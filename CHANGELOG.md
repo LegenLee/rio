@@ -2,7 +2,7 @@
 
 Notable changes to Rio, newest first. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before 1.0, any minor version may break the API.
 
-Rio isn't on npm. Each version is a GitHub release with the packages attached as tarballs.
+Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
 ## [0.1.0] - 2026-11-13
 

@@ -2,7 +2,7 @@ name: Release
 
 # Pushing a version tag such as v0.1.0 runs the CI checks, packs every package, and creates a draft
 # GitHub release with the tarballs and the version's section of CHANGELOG.md. Review the draft and
-# publish it by hand. Nothing goes to npm.
+# publish it by hand; publishing it starts publish.yml, which sends the same tarballs to npm.
 on:
   push:
     tags: ['v*']

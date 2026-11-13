@@ -4,6 +4,11 @@
   "description": "Framework-agnostic state, props and behaviors for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LegenLee/rio.git",
+    "directory": "packages/core"
+  },
   "files": [
     "dist",
     "NOTICE"
@@ -17,6 +22,9 @@
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsdown",

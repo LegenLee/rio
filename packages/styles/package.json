@@ -4,6 +4,11 @@
   "description": "Framework-agnostic component styles for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LegenLee/rio.git",
+    "directory": "packages/styles"
+  },
   "files": [
     "src",
     "css.d.ts",
@@ -19,5 +24,8 @@
       "default": "./src/*.css"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
