@@ -1,20 +1,126 @@
-# Rio (리오)
+# Rio
 
-Material 3 Expressive의 Vue 구현체! 디자인 시스템부터 컴포넌트까지! M3E를 처음부터 끝까지 웹으로 구현한다!
+Rio is a Vue implementation of Material 3 Expressive.  
+It's the UI library that will replace Vuetify in the [Nozomi](https://github.com/LegenLee/nozomi) project.
 
-## 목표!
+## Disclaimer
 
-염병할 구글이 Material Web을 유지보수 모드로 전환했다! 아! 통탄스럽구나! 구글 특유의 라이브러리 유기가 또 나왔다!
-꼴 받아서 도저히 못 참겠다! 내가 만든다!
+Material Design and Material 3 are trademarks of Google LLC. This project is not affiliated with,
+endorsed by, or connected to Google in any way.
 
-## 왜 이름이 (츠카츠키) 리오임
+## Roadmap
 
-내 마음이다! 내가 내 프로젝트에 리오라고 붙이는 게 뭐가 불만이냐! 꼴 받으면 내 프로젝트 포크해서 이름 바꿔서 내도 된다!
+Development status: early. Before 1.0, any minor version may break the API.
 
-## 라이선스
+### v0.1
 
-[Apache License 2.0](LICENSE)이다! 포크할 때 참고하던지!
+- [x] Foundations: color (with material-color-utilities), elevation, motion, shape, typography, and states
+- [x] Button
+- [x] Icon button
+- [x] Switch
 
-Copyright 2026 LegenLee
+### Later
 
-Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트는 Google과 아무 관계가 없고 Google이 보증하는 프로젝트도 아닙니다.
+- [ ] Tooltip
+- [ ] Link buttons
+- [ ] Form value for the switch
+- [ ] Language-specific line heights and variable font axes
+
+## Usage
+
+```sh
+pnpm add @rio-m3e/vue @rio-m3e/tokens
+```
+
+`@rio-m3e/tokens` sets the theme as CSS variables. Apply it once before mounting the app.
+
+```ts
+// main.ts
+import { applyTheme } from '@rio-m3e/tokens';
+import { createApp } from 'vue';
+import App from './App.vue';
+
+const root = document.documentElement;
+applyTheme(root, { sourceColor: '#6750a4' });
+root.style.colorScheme = 'light dark'; // follow the system's light or dark mode
+
+createApp(App).mount('#app');
+```
+
+Each component brings its own styles. Rio ships no icons, so bring your own.
+
+```vue
+<script setup lang="ts">
+import { mdiHeart, mdiHeartOutline } from '@mdi/js';
+import { RioButton, RioIconButton, RioSwitch } from '@rio-m3e/vue';
+import { ref } from 'vue';
+
+const favorite = ref(false);
+const wifi = ref(true);
+</script>
+
+<template>
+  <RioButton variant="tonal">Save</RioButton>
+
+  <RioIconButton v-model:selected="favorite" label="Add to favorites" toggle variant="standard">
+    <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+    <template #selected-icon>
+      <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+    </template>
+  </RioIconButton>
+
+  <label><RioSwitch v-model:selected="wifi" /> Wi-Fi</label>
+</template>
+```
+
+Each component has a page in [docs/components](/docs/components).
+
+## Development
+
+### Development setup
+
+- [Node.js](https://nodejs.org) v24 or later (runtime)
+- [pnpm](https://pnpm.io) v11 (package manager)
+- [Visual Studio Code](https://code.visualstudio.com/) (editor)
+
+### Required Visual Studio Code extensions
+
+- [Vue](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- [Oxc](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) (formatter and linter)
+
+### Commands
+
+```sh
+pnpm install
+pnpm exec playwright install chromium   # first time only
+pnpm dev                                # playground
+pnpm test --run
+```
+
+The working branch is `dev`, and pull requests go to `dev`. The rules are in
+[docs/conventions.md](/docs/conventions.md), and how M3E was read and carried over is in
+[docs/foundations.md](/docs/foundations.md).
+
+## License
+
+    Copyright © 2026 LegenLee
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+`@rio-m3e/tokens` bundles [material-color-utilities](https://github.com/material-foundation/material-color-utilities)
+by Google LLC, also under the Apache License 2.0. See [NOTICE](/NOTICE).
+
+## README Translations
+
+- [English](/README.md)
+- [Korean / 한국어](/i18n/README.ko.md)

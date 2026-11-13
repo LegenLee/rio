@@ -1,0 +1,18 @@
+/*
+ * Keyboard focus indicator: a ring around the element, shown only for keyboard-style focus
+ * (:focus-visible), so mouse and touch users don't see it.
+ *
+ * Every M3 component token so far uses `secondary` for the ring. A component that needs another
+ * color sets `--rio-focus-ring-color`. The ring follows the element's border radius.
+ */
+
+.rio-focus-ring:focus-visible {
+  outline: var(--rio-state-focus-indicator-thickness) solid
+    var(--rio-focus-ring-color, var(--rio-color-secondary));
+  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+}
+
+/* Draws the ring inside the element, for places where an outer ring would be clipped. */
+.rio-focus-ring[data-focus-ring='inner']:focus-visible {
+  outline-offset: var(--rio-state-focus-indicator-inner-offset);
+}

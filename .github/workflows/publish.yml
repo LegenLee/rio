@@ -1,0 +1,58 @@
+name: Publish
+
+# Publishing a draft release that release.yml made sends the same tarballs to npm. It uses trusted
+# publishing (OIDC): no npm token is stored anywhere, and npm attaches provenance on its own.
+#
+# Each package on npmjs.com must trust this workflow: Settings → Trusted Publisher → GitHub
+# Actions, with owner LegenLee, repository rio, workflow `publish.yml`, and environment `npm`.
+# npm can only trust a package that already exists, so the first version is published by hand.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    # Protection rules, such as required reviewers, can be added to this environment in the
+    # repository settings.
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # for trusted publishing
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or later
+      - run: npm install --global npm@11
+
+      - name: Download the release's tarballs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release download "$GITHUB_REF_NAME"
+          --repo "$GITHUB_REPOSITORY"
+          --pattern '*.tgz'
+          --dir release
+
+      # Dependencies before the packages that depend on them; add new packages to this list.
+      # Versions already on npm are skipped, so a run that failed halfway can be re-run.
+      # Prereleases (v0.2.0-rc.1) go to the `next` dist-tag instead of `latest`.
+      # The tarball paths start with ./ because npm reads `release/x.tgz` as a GitHub repository.
+      - name: Publish to npm
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          dist_tag=latest
+          case "$version" in *-*) dist_tag=next ;; esac
+          for name in tokens core styles vue; do
+            if [ -n "$(npm view "@rio-m3e/$name@$version" version 2>/dev/null)" ]; then
+              echo "@rio-m3e/$name@$version is already on npm, skipping"
+              continue
+            fi
+            npm publish "./release/rio-m3e-$name-$version.tgz" --tag "$dist_tag"
+          done

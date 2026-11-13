@@ -1,3 +1,74 @@
-// MCU(material-color-utilities) 기반 동적 색상과 디자인 토큰이 들어올 자리.
-
-export const TOKEN_PREFIX = '--rio'
+export { TOKEN_PREFIX } from './prefix';
+export {
+  COLOR_ROLES,
+  colorVar,
+  createColorScheme,
+  type ColorRole,
+  type ColorScheme,
+  type ColorSchemeOptions,
+  type ColorVar,
+  type SchemeVariant,
+} from './color/color';
+export {
+  ELEVATION_LEVELS,
+  createElevationVariables,
+  elevationVar,
+  type ElevationLevel,
+  type ElevationVar,
+} from './elevation/elevation';
+export {
+  MOTION_SCHEMES,
+  MOTION_TOKENS,
+  createMotionVariables,
+  getMotionCurve,
+  getMotionSpring,
+  motionVar,
+  type MotionCurve,
+  type MotionScheme,
+  type MotionSpring,
+  type MotionToken,
+  type MotionVar,
+  type MotionVarPart,
+} from './motion/motion';
+export {
+  SHAPE_CORNERS,
+  createShapeVariables,
+  shapeVar,
+  type CustomizableShapeCorner,
+  type ShapeCorner,
+  type ShapeOverrides,
+  type ShapeVar,
+} from './shape/shape';
+export {
+  FOCUS_INDICATOR_PARTS,
+  STATE_LAYER_STATES,
+  createStateVariables,
+  focusIndicatorVar,
+  stateLayerOpacityVar,
+  type FocusIndicatorPart,
+  type StateLayerState,
+  type StateVar,
+} from './state/state';
+export {
+  TYPE_STYLES,
+  createTypographyVariables,
+  getTypeStyle,
+  typefaceVar,
+  typescaleVar,
+  type TypeStyle,
+  type TypeStyleOptions,
+  type TypeStyleSpec,
+  type Typeface,
+  type TypefaceOverrides,
+  type TypefaceVar,
+  type TypescalePart,
+  type TypescaleVar,
+  type TypographyVar,
+} from './typography/typography';
+export {
+  applyTheme,
+  createThemeCss,
+  createThemeVariables,
+  type ThemeOptions,
+  type ThemeVar,
+} from './theme';

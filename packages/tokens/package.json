@@ -1,9 +1,18 @@
 {
   "name": "@rio-m3e/tokens",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Design tokens and dynamic color for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LegenLee/rio.git",
+    "directory": "packages/tokens"
+  },
+  "files": [
+    "dist",
+    "NOTICE"
+  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -14,12 +23,15 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p ."
   },
   "devDependencies": {
+    "@material/material-color-utilities": "0.4.0",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   }

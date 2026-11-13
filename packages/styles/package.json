@@ -1,11 +1,23 @@
 {
   "name": "@rio-m3e/styles",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic component styles for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LegenLee/rio.git",
+    "directory": "packages/styles"
+  },
+  "files": [
+    "src",
+    "css.d.ts",
+    "NOTICE"
+  ],
   "type": "module",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     "./*.css": {
       "types": "./css.d.ts",
@@ -13,5 +25,7 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["src", "css.d.ts"]
+  "publishConfig": {
+    "access": "public"
+  }
 }

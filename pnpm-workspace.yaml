@@ -2,14 +2,14 @@ packages:
   - packages/*
   - playground
 
-# 공유 버전은 전부 여기서 관리한다. 각 패키지는 "catalog:"으로 참조.
+# All shared versions live here. Packages refer to them with "catalog:".
 catalog:
-  # tsdown은 아직 0.x라 정확한 버전으로 고정
+  # tsdown is still 0.x, so pin the exact version
   tsdown: 0.23.7
-  # TS 7.0에는 vue-tsc가 쓰는 컴파일러 API가 없다. 7.1 나올 때까지 6.x 유지
+  # TS 7.0 lacks the compiler API vue-tsc relies on. Stay on 6.x until 7.1 ships
   typescript: ~6.0.3
   vue: ^3.5.45
-  # rolldown-plugin-dts의 peer 범위가 ~3.2 || ~3.3
+  # rolldown-plugin-dts accepts vue-tsc ~3.2 || ~3.3
   vue-tsc: ~3.3.14
   unplugin-vue: ^8.0.1
   vite: ^8.3.7

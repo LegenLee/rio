@@ -1,9 +1,18 @@
 {
   "name": "@rio-m3e/vue",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vue components for Rio, a Material 3 Expressive implementation",
   "license": "Apache-2.0",
   "author": "LegenLee",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LegenLee/rio.git",
+    "directory": "packages/vue"
+  },
+  "files": [
+    "dist",
+    "NOTICE"
+  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -14,7 +23,9 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "typecheck": "vue-tsc -p ."
@@ -23,14 +34,14 @@
     "@rio-m3e/core": "workspace:^",
     "@rio-m3e/styles": "workspace:^"
   },
-  "peerDependencies": {
-    "vue": "^3.5.0"
-  },
   "devDependencies": {
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unplugin-vue": "catalog:",
     "vue": "catalog:",
     "vue-tsc": "catalog:"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
   }
 }

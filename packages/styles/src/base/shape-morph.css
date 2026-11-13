@@ -1,0 +1,13 @@
+/*
+ * Shape morphing, driven by `attachShapeMorph` from `@rio-m3e/core`. A component sets
+ * `--rio-shape-morph-target` to the corner radius it wants in each state, and sets
+ * `border-radius` to the same value, so it still works without JavaScript. The primitive reads
+ * the target in px, which needs the registration below, and animates the inline radius with a
+ * spring. It marks the element with `data-shape-morph`.
+ */
+
+@property --rio-shape-morph-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}

@@ -1,0 +1,58 @@
+/*
+ * State layer: a semi-transparent overlay in the content color at a fixed opacity per state.
+ *
+ * Put `rio-state-layer` on the interactive element and set its content color with `color`. The
+ * overlay uses `currentColor`, sits between the container background and the content, and shows
+ * one state at a time: later rules win, so pressed beats focus, and focus beats hover.
+ *
+ * Pressed is a flat overlay unless the element has a ripple (`attachRipple` from `@rio-m3e/core`
+ * marks it with `data-ripple`). Then the ripple on `::after` shows the press instead.
+ */
+
+.rio-state-layer {
+  position: relative;
+  isolation: isolate;
+}
+
+.rio-state-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+/* Touch screens keep :hover after a tap, so only devices that can hover get a hover state. */
+@media (hover: hover) {
+  .rio-state-layer:hover::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-state-layer:focus-visible::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+.rio-state-layer:not([data-ripple]):is(:active, [data-pressed])::before {
+  opacity: var(--rio-state-pressed-state-layer-opacity);
+}
+
+.rio-state-layer[data-dragged]::before {
+  opacity: var(--rio-state-dragged-state-layer-opacity);
+}
+
+/* Disabled elements don't change state, so they get no state layer at all. */
+.rio-state-layer:is(:disabled, [aria-disabled='true'])::before {
+  opacity: 0;
+}
+
+/* Forced colors replace backgrounds, so the overlay would only get in the way. */
+@media (forced-colors: active) {
+  .rio-state-layer::before {
+    display: none;
+  }
+}
