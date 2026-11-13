@@ -206,6 +206,8 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 
 Rio is released on GitHub only, never to npm. A release is a tag on `main` plus the four packages as tarballs.
 
+The `@rio-m3e` scope is still held on npm, by the `rio-m3e` organization, with nothing published. The packages depend on each other by version range, so a consumer who forgets the overrides gets whatever npm has under those names. Holding the scope means no one else can publish there. Keep the organization, and its owner account's two-factor authentication, even though nothing is published.
+
 - **Versions move together.** Every package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Before 1.0, a minor version may break the API.
 - **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section.
 - **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
