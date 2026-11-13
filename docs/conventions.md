@@ -131,7 +131,7 @@ A helper moves up only when a second caller actually needs it.
 
 - **Formatting**: oxfmt with single quotes, semicolons, and a 100-column line width (`.oxfmtrc.json`). Run `pnpm fmt` to format and `pnpm fmt:check` to check.
 - **Linting**: oxlint with the eslint, typescript, unicorn, oxc, and vue plugins (`.oxlintrc.json`). Run `pnpm lint`. Vue templates aren't linted yet; ESLint may be added for them later if template mistakes become common.
-- **Language**: write code comments and everything under `docs/` in English. The README keeps its Korean voice.
+- **Language**: write code comments, everything under `docs/`, `README.md`, and the package READMEs in English. Localized READMEs live in `i18n/`, such as `i18n/README.ko.md`.
 - **Version pins**:
   - tsdown, oxfmt, and oxlint are pinned to exact versions because they are pre-1.0 or move fast.
   - Vitest and `@vitest/browser-playwright` are pinned to the same exact version, so the browser provider always matches Vitest.
@@ -204,19 +204,33 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 
 ## Releases
 
-Rio is released on GitHub only, never to npm. A release is a tag on `main` plus the four packages as tarballs.
-
-The `@rio-m3e` scope is still held on npm, by the `rio-m3e` organization, with nothing published. The packages depend on each other by version range, so a consumer who forgets the overrides gets whatever npm has under those names. Holding the scope means no one else can publish there. Keep the organization, and its owner account's two-factor authentication, even though nothing is published.
+Each version goes to npm and to a GitHub release, as the same four tarballs. The packages are published under the `@rio-m3e` scope, which belongs to the `rio-m3e` organization on npm.
 
 - **Versions move together.** Every package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Before 1.0, a minor version may break the API.
-- **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section.
+- **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section, followed by a `pnpm add` line.
 - **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
-- **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it. After the changelog section it adds install instructions: the packages depend on each other by version range, so consumers have to point those at the tarballs with overrides, or their package manager looks on npm.
+- **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it.
+- **npm publishing is trusted publishing** (OIDC) from `.github/workflows/publish.yml`. No npm token is stored anywhere, and npm attaches provenance, which needs the `repository` field in each `package.json`. `publishConfig.access` is `public` because scoped packages are private by default.
 
 To release:
 
 1. On `dev`, set the version in every `packages/*/package.json`, add the CHANGELOG.md section, and commit.
-2. Fast-forward `main` to `dev` and push it.
-3. Tag `main` (`git tag v0.1.0`) and push the tag.
-4. `.github/workflows/release.yml` runs the CI checks, writes the notes, packs, and creates a **draft** release with the tarballs attached.
-5. Review the draft on GitHub and publish it.
+2. Merge `dev` into `main` with `--no-ff`, so each release is one merge commit on `main`, and push `main`.
+3. Tag that merge commit (`git tag -a v0.1.0 -m v0.1.0`) and push the tag.
+4. Fast-forward `dev` to `main` and push it, so the tag is reachable from `dev` too (`git describe` and `git log v0.1.0..` work there).
+5. `.github/workflows/release.yml` runs the CI checks, writes the notes, packs, and creates a **draft** release with the tarballs attached.
+6. Review the draft on GitHub and publish it. That starts `publish.yml`, which publishes the same tarballs to npm, dependencies first. Versions already on npm are skipped, so a failed run can be re-run.
+
+### Trusted publishing setup
+
+npm can only trust a workflow for a package that already exists, so the first version of each package is published by hand:
+
+1. After `release.yml` has made the draft, download its four tarballs.
+2. Log in with `npm login`. With a passkey as the second factor, finish the login in a browser that can reach the passkey: Chrome, or the phone itself. Firefox on Linux can't.
+3. Publish the tarballs, dependencies first: `npm publish ./rio-m3e-tokens-0.1.0.tgz`, then `core`, `styles`, and `vue`. Keep the `./`: npm reads a path like `release/x.tgz` as a GitHub repository.
+4. Publish the draft. `publish.yml` finds every version already on npm and skips them.
+
+Then, shortly before the next release, set up each package on npmjs.com:
+
+1. **Settings → Trusted Publisher → GitHub Actions**: owner `LegenLee`, repository `rio`, workflow `publish.yml`, environment `npm`. A new trusted publisher expires if it doesn't publish within 2 days, so don't set it up long before a release.
+2. After the first release published this way, set **Settings → Publishing access** to "Require two-factor authentication and disallow tokens". Trusted publishing keeps working, because it doesn't use tokens.
