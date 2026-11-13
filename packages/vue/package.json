@@ -1,11 +1,12 @@
 {
   "name": "@rio-m3e/vue",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vue components for Rio, a Material 3 Expressive implementation",
   "license": "Apache-2.0",
   "author": "LegenLee",
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "type": "module",
   "sideEffects": false,

@@ -201,3 +201,20 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 
 - CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. The `vrt` project isn't part of CI yet.
 - Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `chore:`.
+
+## Releases
+
+Rio is released on GitHub only, never to npm. A release is a tag on `main` plus the four packages as tarballs.
+
+- **Versions move together.** Every package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Before 1.0, a minor version may break the API.
+- **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section.
+- **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
+- **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it. After the changelog section it adds install instructions: the packages depend on each other by version range, so consumers have to point those at the tarballs with overrides, or their package manager looks on npm.
+
+To release:
+
+1. On `dev`, set the version in every `packages/*/package.json`, add the CHANGELOG.md section, and commit.
+2. Fast-forward `main` to `dev` and push it.
+3. Tag `main` (`git tag v0.1.0`) and push the tag.
+4. `.github/workflows/release.yml` runs the CI checks, writes the notes, packs, and creates a **draft** release with the tarballs attached.
+5. Review the draft on GitHub and publish it.

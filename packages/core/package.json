@@ -1,11 +1,12 @@
 {
   "name": "@rio-m3e/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic state, props and behaviors for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "type": "module",
   "sideEffects": false,

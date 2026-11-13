@@ -9,6 +9,8 @@
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "release:pack": "pnpm build && node scripts/pack.mjs",
+    "release:notes": "node scripts/release-notes.mjs",
     "test": "vitest --project unit --project browser",
     "test:visual": "vitest --project vrt",
     "typecheck": "pnpm -r typecheck"

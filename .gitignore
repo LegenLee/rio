@@ -6,3 +6,8 @@ coverage/
 .DS_Store
 .vite/
 .vitest/
+
+# Release tarballs, and the copies scripts/pack.mjs puts in each package while packing
+release/
+packages/*/LICENSE
+packages/*/NOTICE
