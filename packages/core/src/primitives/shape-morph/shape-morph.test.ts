@@ -28,6 +28,13 @@ const setup = (className: string) => {
 
 const radius = () => parseFloat(getComputedStyle(box).borderTopLeftRadius);
 const mutationsFlushed = () => new Promise((r) => setTimeout(r));
+// Frame callbacks run in the order they were requested, so a frame requested after the mutation
+// observer has run comes after the spring's first frame, which is when the spring writes the
+// radius. A timeout alone can fire before that frame on a slow machine.
+const springStarted = async () => {
+  await mutationsFlushed();
+  await new Promise((r) => requestAnimationFrame(r));
+};
 
 afterEach(() => {
   handle?.detach();
@@ -44,7 +51,7 @@ describe('attachShapeMorph', () => {
     });
 
     box.dataset.pressed = '';
-    await mutationsFlushed();
+    await springStarted();
     expect(box.style.borderRadius).not.toBe(''); // the spring owns the radius while moving
 
     await vi.waitFor(() => expect(box.style.borderRadius).toBe(''), { timeout: 2000 });
