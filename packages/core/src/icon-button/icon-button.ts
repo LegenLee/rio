@@ -67,8 +67,8 @@ export interface IconButtonOptions {
   content?: () => IconButtonContent;
   /** Called for a click that isn't blocked. */
   onClick: (event: MouseEvent) => void;
-  /** Called after an unblocked click on a toggle button, with the new value. */
-  onSelectedChange: (selected: boolean) => void;
+  /** Called after an unblocked click on a toggle button, with the requested value. */
+  onChange: (selected: boolean) => void;
 }
 
 /**
@@ -108,7 +108,7 @@ export function createIconButton(options: IconButtonOptions): IconButtonApi {
   const button = createButton({
     props: () => ({ ...options.props(), variant: options.props().variant as ButtonVariant }),
     onClick: options.onClick,
-    onSelectedChange: options.onSelectedChange,
+    onChange: options.onChange,
   });
 
   return {

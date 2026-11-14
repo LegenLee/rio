@@ -15,7 +15,7 @@ const slots = defineSlots<{
   'unselected-icon'?: () => unknown;
 }>();
 
-const onSelectedChange = (next: boolean) => emit('update:selected', next);
+const onChange = (next: boolean) => emit('update:selected', next);
 const sw = createSwitch({
   // `satisfies` fails the build if a prop added to SwitchProps is missing here.
   props: () => ({ selected, disabled, softDisabled }) satisfies Record<keyof SwitchProps, unknown>,
@@ -23,7 +23,7 @@ const sw = createSwitch({
     selectedIcon: !!slots['selected-icon'],
     unselectedIcon: !!slots['unselected-icon'],
   }),
-  onSelectedChange,
+  onChange,
 });
 
 const root = useTemplateRef<HTMLButtonElement>('root');
@@ -33,7 +33,7 @@ let handles: { detach(): void }[] = [];
 onMounted(() => {
   handles = [
     attachRipple(root.value!, { surface: state.value! }),
-    attachSwitchHandle(root.value!, { selected: () => selected, onSelectedChange }),
+    attachSwitchHandle(root.value!, { selected: () => selected, onChange }),
   ];
 });
 

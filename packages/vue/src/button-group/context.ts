@@ -33,7 +33,8 @@ interface GroupItemProps {
 export function useButtonGroupItem<P extends GroupItemProps>(
   /** Returns the button's own props. A function, so destructured props stay reactive. */
   props: () => P,
-  onSelectedChange: (selected: boolean) => void,
+  /** Reports a change of `selected` when no group owns it, usually by emitting `update:selected`. */
+  emitChange: (selected: boolean) => void,
 ) {
   const group = inject(buttonGroupKey, null);
   const grouped = () => !!group && group.selection() !== 'none' && props().value !== undefined;
@@ -49,9 +50,10 @@ export function useButtonGroupItem<P extends GroupItemProps>(
         ...(grouped() ? { toggle: true, selected: group!.isSelected(own.value!) } : {}),
       };
     },
-    onSelectedChange(selected: boolean) {
+    /** The `onChange` to pass to core: to the group if it owns the state, otherwise to the app. */
+    onChange(selected: boolean) {
       if (grouped()) group!.select(props().value!, selected);
-      else onSelectedChange(selected);
+      else emitChange(selected);
     },
   };
 }

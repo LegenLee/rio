@@ -3,14 +3,14 @@ import { createIconButton, type IconButtonContent, type IconButtonProps } from '
 
 const setup = (props: Partial<IconButtonProps> = {}, content?: IconButtonContent) => {
   const onClick = vi.fn();
-  const onSelectedChange = vi.fn();
+  const onChange = vi.fn();
   const button = createIconButton({
     props: () => ({ label: 'Add to favorites', ...props }),
     content: content && (() => content),
     onClick,
-    onSelectedChange,
+    onChange,
   });
-  return { button, onClick, onSelectedChange };
+  return { button, onClick, onChange };
 };
 
 const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent;
@@ -35,10 +35,10 @@ describe('createIconButton', () => {
   });
 
   test('every variant can toggle, the standard one included', () => {
-    const { button, onSelectedChange } = setup({ variant: 'standard', toggle: true });
+    const { button, onChange } = setup({ variant: 'standard', toggle: true });
     expect(button.parts.root()['aria-pressed']).toBe('false');
     button.handleClick(click());
-    expect(onSelectedChange).toHaveBeenCalledWith(true);
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 
   test('shows the selected icon only on a selected toggle that has one', () => {

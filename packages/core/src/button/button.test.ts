@@ -3,14 +3,14 @@ import { createButton, type ButtonContent, type ButtonProps } from './button';
 
 const setup = (props: ButtonProps = {}, content?: ButtonContent) => {
   const onClick = vi.fn();
-  const onSelectedChange = vi.fn();
+  const onChange = vi.fn();
   const button = createButton({
     props: () => props,
     content: content && (() => content),
     onClick,
-    onSelectedChange,
+    onChange,
   });
-  return { button, onClick, onSelectedChange };
+  return { button, onClick, onChange };
 };
 
 const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent;
@@ -78,28 +78,28 @@ describe('showsIcon', () => {
 
 describe('handleClick', () => {
   test('passes an enabled click through', () => {
-    const { button, onClick, onSelectedChange } = setup();
+    const { button, onClick, onChange } = setup();
     const event = click();
     button.handleClick(event);
     expect(onClick).toHaveBeenCalledWith(event);
-    expect(onSelectedChange).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
     expect(event.preventDefault).not.toHaveBeenCalled();
   });
 
   test('flips a toggle button', () => {
-    const { button, onSelectedChange } = setup({ toggle: true, selected: false });
+    const { button, onChange } = setup({ toggle: true, selected: false });
     button.handleClick(click());
-    expect(onSelectedChange).toHaveBeenCalledWith(true);
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 
   test.each<ButtonProps>([{ disabled: true }, { softDisabled: true }])(
     'blocks the click and its default action when %o',
     (props) => {
-      const { button, onClick, onSelectedChange } = setup({ ...props, toggle: true });
+      const { button, onClick, onChange } = setup({ ...props, toggle: true });
       const event = click();
       button.handleClick(event);
       expect(onClick).not.toHaveBeenCalled();
-      expect(onSelectedChange).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
       expect(event.preventDefault).toHaveBeenCalled();
     },
   );

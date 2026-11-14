@@ -52,7 +52,7 @@ describe('RioButton', () => {
       props: () => props,
       content: () => ({ icon }),
       onClick: noop,
-      onSelectedChange: noop,
+      onChange: noop,
     });
     expectSkeleton(rootOf(screen), buttonSkeleton, api);
   });
@@ -88,7 +88,7 @@ describe('RioIconButton', () => {
       props: () => props,
       content: () => ({ selectedIcon }),
       onClick: noop,
-      onSelectedChange: noop,
+      onChange: noop,
     });
     expectSkeleton(rootOf(screen), iconButtonSkeleton, api);
     // Which icon fills the icon part is core's call too.
@@ -122,7 +122,7 @@ describe('RioSwitch', () => {
     const api = createSwitch({
       props: () => props,
       content: () => content,
-      onSelectedChange: noop,
+      onChange: noop,
     });
     expectSkeleton(rootOf(screen), switchSkeleton, api);
     // When the icon part renders, which icon fills it is core's call too.

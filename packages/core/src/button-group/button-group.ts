@@ -49,7 +49,7 @@ export const buttonGroupDefaults = {
 export interface ButtonGroupOptions {
   /** Returns the current prop values. The adapter owns the state. */
   props: () => ButtonGroupProps;
-  /** Called with the requested selection. Adapters wire it to v-model, onChange, and so on. */
+  /** Called with the requested selection. Adapters wire it to v-model, a callback prop, and so on. */
   onChange: (selected: ButtonGroupSelected) => void;
 }
 

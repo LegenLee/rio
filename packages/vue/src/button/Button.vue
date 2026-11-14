@@ -43,7 +43,7 @@ const button = createButton({
   props: item.props,
   content: () => ({ icon: !!slots.icon }),
   onClick: (event) => emit('click', event),
-  onSelectedChange: item.onSelectedChange,
+  onChange: item.onChange,
 });
 </script>
 

@@ -60,7 +60,7 @@ const button = createIconButton({
   props: item.props,
   content: () => ({ selectedIcon: !!slots['selected-icon'] }),
   onClick: (event) => emit('click', event),
-  onSelectedChange: item.onSelectedChange,
+  onChange: item.onChange,
 });
 </script>
 

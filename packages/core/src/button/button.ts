@@ -66,8 +66,8 @@ export interface ButtonOptions {
   content?: () => ButtonContent;
   /** Called for a click that isn't blocked. */
   onClick: (event: MouseEvent) => void;
-  /** Called after an unblocked click on a toggle button, with the new value. */
-  onSelectedChange: (selected: boolean) => void;
+  /** Called after an unblocked click on a toggle button, with the requested value. */
+  onChange: (selected: boolean) => void;
 }
 
 /**
@@ -138,7 +138,7 @@ export function createButton(options: ButtonOptions): ButtonApi {
         return;
       }
       options.onClick(event);
-      if (isToggle(p)) options.onSelectedChange(!p.selected);
+      if (isToggle(p)) options.onChange(!p.selected);
     },
   };
 }

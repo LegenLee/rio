@@ -2,10 +2,10 @@ import { describe, expect, test, vi } from 'vitest';
 import { createSwitch, type SwitchContent, type SwitchProps } from './switch';
 
 const setup = (props: SwitchProps = {}, content?: SwitchContent) => {
-  const onSelectedChange = vi.fn();
+  const onChange = vi.fn();
   return {
-    sw: createSwitch({ props: () => props, content: content && (() => content), onSelectedChange }),
-    onSelectedChange,
+    sw: createSwitch({ props: () => props, content: content && (() => content), onChange }),
+    onChange,
   };
 };
 
@@ -82,18 +82,18 @@ describe('showsIcon', () => {
 
 describe('handleClick', () => {
   test('requests the opposite value', () => {
-    const { sw, onSelectedChange } = setup({ selected: true });
+    const { sw, onChange } = setup({ selected: true });
     sw.handleClick(click());
-    expect(onSelectedChange).toHaveBeenCalledWith(false);
+    expect(onChange).toHaveBeenCalledWith(false);
   });
 
   test.each<SwitchProps>([{ disabled: true }, { softDisabled: true }])(
     'blocks the click when %o',
     (props) => {
-      const { sw, onSelectedChange } = setup(props);
+      const { sw, onChange } = setup(props);
       const event = click();
       sw.handleClick(event);
-      expect(onSelectedChange).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
       expect(event.preventDefault).toHaveBeenCalled();
     },
   );

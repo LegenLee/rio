@@ -32,8 +32,8 @@ export interface SwitchOptions {
   props: () => SwitchProps;
   /** Returns what content the adapter has. Without it, the handle has no icons. */
   content?: () => SwitchContent;
-  /** Called with the requested value. Adapters wire it to v-model, onChange, and so on. */
-  onSelectedChange: (selected: boolean) => void;
+  /** Called with the requested value. Adapters wire it to v-model, a callback prop, and so on. */
+  onChange: (selected: boolean) => void;
 }
 
 /**
@@ -113,7 +113,7 @@ export function createSwitch(options: SwitchOptions): SwitchApi {
         event.preventDefault();
         return;
       }
-      options.onSelectedChange(!p.selected);
+      options.onChange(!p.selected);
     },
   };
 }
