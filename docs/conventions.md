@@ -213,7 +213,12 @@ Rio's defaults follow the spec. Recommendations become options or component-leve
 
 ## Docs site
 
-`docs/` is also a VitePress site (`@rio-m3e/docs`). `.github/workflows/docs.yml` publishes it to GitHub Pages from `main`, so the site matches the released packages. Run `pnpm docs:dev` to work on it and `pnpm docs:build` to check it; the build fails on dead links.
+`docs/` is also a VitePress site (`@rio-m3e/docs`). `.github/workflows/docs.yml` publishes it to GitHub Pages when a release is published, together with npm, so the site matches the released packages. Run `pnpm docs:dev` to work on it and `pnpm docs:build` to check it; the build fails on dead links, but not on dead anchors (`page.md#heading`), so check those by hand.
+
+Publishing needs a one-time setup on GitHub:
+
+1. **Settings → Pages → Source**: "GitHub Actions".
+2. **Settings → Environments → github-pages → Deployment branches and tags**: allow the branch `main` and the tags `v*`. GitHub creates this environment with the first step and usually allows only the default branch, which is `dev`. A deployment from a release tag or from `main` then fails with "… is not allowed to deploy to github-pages due to environment protection rules".
 
 - **Pages** are the Markdown files under `docs/`. The navigation and sidebar are in `docs/.vitepress/config.ts`, so a new page needs an entry there.
 - **Examples**: each component page starts with an Examples section. An example is a plain SFC in `docs/components/demos/<id>/`, written as app code would be (imports from `@rio-m3e/vue`, no docs-only helpers), because the page shows its source as the example's code:
@@ -321,7 +326,7 @@ To release:
 3. Tag that merge commit (`git tag -a v0.1.0 -m v0.1.0`) and push the tag.
 4. Fast-forward `dev` to `main` and push it, so the tag is reachable from `dev` too (`git describe` and `git log v0.1.0..` work there).
 5. `.github/workflows/release.yml` runs the CI checks, writes the notes, packs, and creates a **draft** release with the tarballs attached.
-6. Review the draft on GitHub and publish it. That starts `publish.yml`, which publishes the same tarballs to npm, dependencies first. Versions already on npm are skipped, so a failed run can be re-run.
+6. Review the draft on GitHub and publish it. That starts `publish.yml`, which publishes the same tarballs to npm, dependencies first. Versions already on npm are skipped, so a failed run can be re-run. It also starts `docs.yml`, which publishes the docs site.
 
 ### Trusted publishing setup
 
