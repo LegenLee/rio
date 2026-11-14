@@ -5,6 +5,7 @@ import {
   getMotionCurve,
   getMotionSpring,
   motionVar,
+  standardSpringVar,
   type MotionScheme,
   type MotionToken,
 } from './motion';
@@ -74,7 +75,8 @@ describe('motionVar', () => {
 describe('createMotionVariables', () => {
   test('defines the curve parts and the raw spring per token', () => {
     const vars = createMotionVariables();
-    expect(Object.keys(vars)).toHaveLength(MOTION_TOKENS.length * 5);
+    // Five per token, plus damping and stiffness for each spatial token in the standard scheme
+    expect(Object.keys(vars)).toHaveLength(MOTION_TOKENS.length * 5 + 3 * 2);
     expect(vars['--rio-motion-fast-spatial']).toBe('350ms cubic-bezier(0.42, 1.67, 0.21, 0.9)');
     expect(vars['--rio-motion-fast-spatial-duration']).toBe('350ms');
     expect(vars['--rio-motion-fast-spatial-easing']).toBe('cubic-bezier(0.42, 1.67, 0.21, 0.9)');
@@ -90,6 +92,17 @@ describe('createMotionVariables', () => {
 
   test('defaults to the expressive scheme', () => {
     expect(createMotionVariables()).toEqual(createMotionVariables('expressive'));
+  });
+
+  test('always includes the standard spatial springs, whatever the scheme', () => {
+    for (const scheme of ['expressive', 'standard'] as const) {
+      const vars = createMotionVariables(scheme);
+      expect(vars['--rio-motion-standard-fast-spatial-damping']).toBe('0.9');
+      expect(vars['--rio-motion-standard-fast-spatial-stiffness']).toBe('1400');
+      expect(vars[standardSpringVar('slow-spatial', 'damping')]).toBe(
+        String(getMotionSpring('standard', 'slow-spatial').dampingRatio),
+      );
+    }
   });
 
   test('uses the same names for every scheme', () => {

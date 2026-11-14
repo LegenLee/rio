@@ -19,16 +19,20 @@ export {
 export {
   MOTION_SCHEMES,
   MOTION_TOKENS,
+  SPATIAL_MOTION_TOKENS,
   createMotionVariables,
   getMotionCurve,
   getMotionSpring,
   motionVar,
+  standardSpringVar,
   type MotionCurve,
   type MotionScheme,
   type MotionSpring,
   type MotionToken,
   type MotionVar,
   type MotionVarPart,
+  type SpatialMotionToken,
+  type StandardSpringVar,
 } from './motion/motion';
 export {
   SHAPE_CORNERS,

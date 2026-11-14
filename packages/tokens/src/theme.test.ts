@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { COLOR_ROLES } from './color/color';
 import { ELEVATION_LEVELS } from './elevation/elevation';
-import { MOTION_TOKENS, createMotionVariables } from './motion/motion';
+import { MOTION_TOKENS, SPATIAL_MOTION_TOKENS, createMotionVariables } from './motion/motion';
 import { SHAPE_CORNERS } from './shape/shape';
 import { createStateVariables } from './state/state';
 import { applyTheme, createThemeCss, createThemeVariables } from './theme';
@@ -17,6 +17,7 @@ describe('createThemeVariables', () => {
       COLOR_ROLES.length +
         ELEVATION_LEVELS.length +
         MOTION_TOKENS.length * 5 +
+        SPATIAL_MOTION_TOKENS.length * 2 +
         SHAPE_CORNERS.length +
         Object.keys(createTypographyVariables()).length +
         Object.keys(createStateVariables()).length,
