@@ -18,7 +18,7 @@ describe('createButtonGroup', () => {
   });
 
   test('keeps no selection unless asked to', () => {
-    const { group, onChange } = setup({ value: 'a' });
+    const { group, onChange } = setup({ selected: 'a' });
     expect(group.isSelected('a')).toBe(false);
     group.select('b', true);
     expect(onChange).not.toHaveBeenCalled();
@@ -26,14 +26,14 @@ describe('createButtonGroup', () => {
 
   describe('single', () => {
     test('selecting a button replaces the previous one', () => {
-      const { group, onChange } = setup({ selection: 'single', value: 'a' });
+      const { group, onChange } = setup({ selection: 'single', selected: 'a' });
       expect(group.isSelected('a')).toBe(true);
       group.select('b', true);
       expect(onChange).toHaveBeenCalledWith('b');
     });
 
     test('the selected button can be turned off', () => {
-      const { group, onChange } = setup({ selection: 'single', value: 'a' });
+      const { group, onChange } = setup({ selection: 'single', selected: 'a' });
       group.select('a', false);
       expect(onChange).toHaveBeenCalledWith(undefined);
     });
@@ -42,7 +42,7 @@ describe('createButtonGroup', () => {
       const { group, onChange } = setup({
         selection: 'single',
         required: true,
-        value: 'a',
+        selected: 'a',
       });
       group.select('a', false);
       expect(onChange).not.toHaveBeenCalled();
@@ -51,7 +51,7 @@ describe('createButtonGroup', () => {
 
   describe('multiple', () => {
     test('adds and removes values', () => {
-      const { group, onChange } = setup({ selection: 'multiple', value: ['a'] });
+      const { group, onChange } = setup({ selection: 'multiple', selected: ['a'] });
       group.select('b', true);
       expect(onChange).toHaveBeenLastCalledWith(['a', 'b']);
       group.select('a', false);
@@ -62,12 +62,12 @@ describe('createButtonGroup', () => {
       const { group, onChange } = setup({
         selection: 'multiple',
         required: true,
-        value: [1, 2],
+        selected: [1, 2],
       });
       group.select(1, false);
       expect(onChange).toHaveBeenLastCalledWith([2]);
       onChange.mockClear();
-      const last = setup({ selection: 'multiple', required: true, value: [2] });
+      const last = setup({ selection: 'multiple', required: true, selected: [2] });
       last.group.select(2, false);
       expect(last.onChange).not.toHaveBeenCalled();
     });
@@ -81,7 +81,7 @@ describe('createButtonGroup', () => {
   });
 
   test('ignores requests that change nothing', () => {
-    const { group, onChange } = setup({ selection: 'multiple', value: ['a'] });
+    const { group, onChange } = setup({ selection: 'multiple', selected: ['a'] });
     group.select('a', true);
     group.select('b', false);
     expect(onChange).not.toHaveBeenCalled();

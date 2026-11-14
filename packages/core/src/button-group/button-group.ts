@@ -34,7 +34,7 @@ export interface ButtonGroupProps {
   /** With a selection, keeps at least one button selected: the last one can't be turned off. */
   required?: boolean;
   /** The selected value (`single`) or values (`multiple`). */
-  value?: ButtonGroupSelected;
+  selected?: ButtonGroupSelected;
 }
 
 export const buttonGroupDefaults = {
@@ -43,7 +43,7 @@ export const buttonGroupDefaults = {
   shape: 'round',
   selection: 'none',
   required: false,
-} satisfies Omit<Required<ButtonGroupProps>, 'value'>;
+} satisfies Omit<Required<ButtonGroupProps>, 'selected'>;
 
 export interface ButtonGroupOptions {
   /** Returns the current prop values. The adapter owns the state. */
@@ -71,7 +71,7 @@ export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
 
   const isSelected = (value: ButtonGroupValue) => {
     const p = props();
-    return p.selection !== 'none' && valuesOf(p.value).includes(value);
+    return p.selection !== 'none' && valuesOf(p.selected).includes(value);
   };
 
   return {
@@ -88,7 +88,7 @@ export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
     select(value, selected) {
       const p = props();
       if (p.selection === 'none' || isSelected(value) === selected) return;
-      const current = valuesOf(p.value);
+      const current = valuesOf(p.selected);
       if (!selected && p.required && current.length === 1) return;
       if (p.selection === 'single') {
         options.onChange(selected ? value : undefined);

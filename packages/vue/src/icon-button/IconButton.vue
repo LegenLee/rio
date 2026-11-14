@@ -52,7 +52,7 @@ const showsSelectedIcon = computed(() => {
   >
     <span class="rio-button__touch" aria-hidden="true" />
     <span class="rio-button__icon" aria-hidden="true">
-      <slot v-if="props.toggle && props.selected && slots['selected-icon']" name="selected-icon" />
+      <slot v-if="showsSelectedIcon" name="selected-icon" />
       <slot v-else />
     </span>
   </button>

@@ -11,20 +11,20 @@ import '@rio-m3e/styles/button-group.css';
 import { onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue';
 import { buttonGroupKey } from './context';
 
-interface Props extends Omit<ButtonGroupProps, 'value'> {
+interface Props extends Omit<ButtonGroupProps, 'selected'> {
   modelValue?: ButtonGroupSelected;
 }
 
 const props = withDefaults(defineProps<Props>(), buttonGroupDefaults);
-const emit = defineEmits<{ 'update:modelValue': [value: ButtonGroupSelected] }>();
+const emit = defineEmits<{ 'update:modelValue': [selected: ButtonGroupSelected] }>();
 defineSlots<{
   /** `RioButton`s and `RioIconButton`s. They take the group's size and shape unless they set their own. */
   default?: () => unknown;
 }>();
 
 const group = createButtonGroup({
-  props: () => ({ ...props, value: props.modelValue }),
-  onChange: (value) => emit('update:modelValue', value),
+  props: () => ({ ...props, selected: props.modelValue }),
+  onChange: (selected) => emit('update:modelValue', selected),
 });
 
 provide(buttonGroupKey, {
