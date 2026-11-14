@@ -1,13 +1,16 @@
 /*
  * Shape morphing, driven by `attachShapeMorph` from `@rio-m3e/core`. A component sets
- * `--rio-shape-morph-target` to the corner radius it wants in each state, and sets
- * `border-radius` to the same value, so it still works without JavaScript. The primitive reads
+ * `--rio-shape-morph-target` to the corner radius it wants in each state. The primitive reads
  * the targets in px, which needs the registrations below, and springs the inline radii toward
  * them. It marks the element with `data-shape-morph`.
  *
  * Shapes whose sides differ set `--rio-shape-morph-start-target` and `--rio-shape-morph-end-target`
  * (the corners at the start and end of the line, in the writing direction) with any class or
  * attribute selector; otherwise both follow `--rio-shape-morph-target`.
+ *
+ * The component also draws its corners from the per-side targets, so it still works without
+ * JavaScript, and lists both targets in its `transition` as `1ms step-end`, so the springs see
+ * them change (see "Primitives" in docs/conventions.md, and button.css).
  */
 
 @property --rio-shape-morph-target {

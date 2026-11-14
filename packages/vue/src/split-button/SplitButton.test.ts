@@ -265,9 +265,10 @@ describe('RioSplitButton', () => {
       const screen = await renderSplit({}, { themed: true });
       const { leading, trailing } = halves(screen);
       await userEvent.hover(leading);
-      // corner-medium (12px) for small.
+      // corner-medium (12px) for small. The pointer may start over the trailing button, which
+      // then settles back.
       await vi.waitFor(() => expect(corners(leading)).toEqual([20, 12, 12, 20]));
-      expect(corners(trailing)).toEqual([4, 20, 20, 4]);
+      await vi.waitFor(() => expect(corners(trailing)).toEqual([4, 20, 20, 4]));
       await userEvent.unhover(leading);
       await vi.waitFor(() => expect(corners(leading)).toEqual([20, 4, 4, 20]));
     });
@@ -314,9 +315,15 @@ describe('RioSplitButton', () => {
       expect(iconShift(trailing)).toBe(0);
 
       await screen.rerender({ open: false });
-      await vi.waitFor(() => expect(atRest(trailing)).toBe(true), { timeout: 2000 });
+      // At rest again, after turning back.
+      await vi.waitFor(
+        () => {
+          expect(atRest(trailing)).toBe(true);
+          expect(getComputedStyle(menuIcon(trailing)).rotate).toBe('0deg');
+        },
+        { timeout: 2000 },
+      );
       expect(corners(trailing)).toEqual([12, 68, 68, 12]);
-      expect(getComputedStyle(menuIcon(trailing)).rotate).toBe('0deg');
       expect(iconShift(trailing)).toBe(-6);
     });
 

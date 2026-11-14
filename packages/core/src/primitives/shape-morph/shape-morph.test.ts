@@ -2,7 +2,8 @@ import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { attachShapeMorph, type ShapeMorphHandle } from './shape-morph';
 
 // The parts of a component stylesheet the primitive relies on, inlined so the test stands alone.
-// The registrations and the per-side defaults mirror `@rio-m3e/styles/base/shape-morph.css`.
+// The registrations and the per-side defaults mirror `@rio-m3e/styles/base/shape-morph.css`; the
+// corners that show the targets and the instant transitions mirror `button.css`.
 beforeAll(() => {
   const style = document.createElement('style');
   style.textContent = `
@@ -13,18 +14,25 @@ beforeAll(() => {
       --rio-shape-morph-start-target: var(--rio-shape-morph-target);
       --rio-shape-morph-end-target: var(--rio-shape-morph-target);
     }
-    .box { width: 100px; height: 40px; --rio-shape-morph-target: 20px; border-radius: 20px; }
-    .box[data-pressed] { --rio-shape-morph-target: 8px; border-radius: 8px; }
+    .box {
+      width: 100px;
+      height: 40px;
+      --rio-shape-morph-target: 20px;
+      border-start-start-radius: var(--rio-shape-morph-start-target);
+      border-end-start-radius: var(--rio-shape-morph-start-target);
+      border-start-end-radius: var(--rio-shape-morph-end-target);
+      border-end-end-radius: var(--rio-shape-morph-end-target);
+      transition:
+        --rio-shape-morph-start-target 1ms step-end,
+        --rio-shape-morph-end-target 1ms step-end;
+    }
+    .box[data-pressed] { --rio-shape-morph-target: 8px; }
     .box.springy {
       --rio-motion-fast-spatial-damping: 0.6;
       --rio-motion-fast-spatial-stiffness: 800;
     }
     /* A shape whose end side differs, like the first button of a connected button group */
-    .box.lopsided[data-pressed] {
-      --rio-shape-morph-end-target: 4px;
-      border-start-end-radius: 4px;
-      border-end-end-radius: 4px;
-    }
+    .box.lopsided[data-pressed] { --rio-shape-morph-end-target: 4px; }
   `;
   document.head.append(style);
 });
@@ -47,14 +55,9 @@ const radius = (corner: Corner = 'borderTopLeftRadius') =>
 const inline = () =>
   box.style.getPropertyValue('border-start-start-radius') +
   box.style.getPropertyValue('border-start-end-radius');
-const mutationsFlushed = () => new Promise((r) => setTimeout(r));
-// Frame callbacks run in the order they were requested, so a frame requested after the mutation
-// observer has run comes after the spring's first frame, which is when the spring writes the
-// radius. A timeout alone can fire before that frame on a slow machine.
-const springStarted = async () => {
-  await mutationsFlushed();
-  await new Promise((r) => requestAnimationFrame(r));
-};
+// The spring hears of a change a frame or two later, from the target's transition, and writes the
+// radius in its first frame.
+const springStarted = () => vi.waitFor(() => expect(inline()).not.toBe(''));
 
 afterEach(() => {
   handle?.detach();
@@ -71,8 +74,7 @@ describe('attachShapeMorph', () => {
     });
 
     box.dataset.pressed = '';
-    await springStarted();
-    expect(inline()).not.toBe(''); // the spring owns the radius while moving
+    await springStarted(); // the spring owns the radius while moving
 
     await vi.waitFor(() => expect(inline()).toBe(''), { timeout: 2000 });
     cancelAnimationFrame(frame);
@@ -84,9 +86,8 @@ describe('attachShapeMorph', () => {
   test('jumps when the theme defines no spring', async () => {
     setup('box');
     box.dataset.pressed = '';
-    await mutationsFlushed();
+    await vi.waitFor(() => expect(radius()).toBe(8));
     expect(inline()).toBe('');
-    expect(radius()).toBe(8);
   });
 
   test.each([

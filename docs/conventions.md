@@ -159,6 +159,12 @@ A primitive is a DOM behavior that several components share, such as the press r
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.
 - **The stylesheet selects on the primitive's data attribute, not on a class** (`[data-ripple]`, not `.rio-ripple`). Vue rewrites `class` whenever a `:class` binding changes and would drop a class the primitive added, but it leaves attributes it doesn't own alone.
 - **Adapters expose primitives in their framework's idiom.** In Vue, that's a directive (`vRipple` → `v-ripple`) that attaches on mount, detaches before unmount, and imports the paired stylesheet. A React adapter would use a hook instead.
+- **Springs see their targets through a transition.** A stylesheet that declares a target for `attachSpringProperty` (directly, or through `attachShapeMorph`) does two things on the element:
+  - It lists the target in `transition` as `<target> 1ms step-end`. While the element is rendered, the browser then reports every change of the target, whatever causes it: a state attribute, `:hover`, a theme variable on an ancestor, or the element's position among its siblings. A change made while it isn't rendered (`display: none`, or out of the document) makes no transition; the primitive catches up, without animating, when the element shows again. Without the transition, including when the app's CSS replaces the `transition` list, the spring never moves and the stylesheet's value shows.
+  - It draws the animated property from the target, not from the expression behind it: `border-start-start-radius: var(--rio-shape-morph-start-target)`, not `var(--_radius)`. `step-end` holds the old value until the spring takes over, so the new value doesn't flash for a frame first.
+
+  CSS can't add to a `transition` list, so components keep their spring targets in the public `--rio-spring-targets` and end their `transition` with `var(--rio-spring-targets)`. A stylesheet that springs more targets on an element extends the variable, as the split button's trailing button does, and an app that sets its own `transition` on one of these elements includes it. The variable is defined only on elements that spring, so it doesn't belong in a `transition` anywhere else: an undefined `var()` drops the whole declaration.
+
 - Primitives are tested in a real browser (see Testing).
 
 ## Shared helpers

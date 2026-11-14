@@ -4,15 +4,14 @@
 // radius for each state in `--rio-shape-morph-target`, or, for shapes whose sides differ (a
 // button at the end of a connected button group), per side in `--rio-shape-morph-start-target`
 // and `--rio-shape-morph-end-target`. Sides follow the writing direction, so right-to-left
-// layouts mirror the shape.
+// layouts mirror the shape. Like every spring target, the per-side targets need an instant
+// transition in the element's `transition` list (see spring-property).
 
 import { attachSpringProperty } from '../spring-property/spring-property';
 
 export interface ShapeMorphOptions {
   /** The motion token whose spring drives the morph. Defaults to `'fast-spatial'`. */
   token?: string;
-  /** Attributes whose changes can move the target. Defaults to Rio's state attributes. */
-  watch?: string[];
 }
 
 export interface ShapeMorphHandle {

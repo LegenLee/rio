@@ -1,3 +1,4 @@
+import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -117,5 +118,27 @@ describe('RioButton', () => {
     // Within half a pixel: engines round layout differently (WebKit to 1/64px).
     expect(touch.left + touch.width / 2).toBeCloseTo(button.left + button.width / 2, 0);
     expect(touch.top + touch.height / 2).toBeCloseTo(button.top + button.height / 2, 0);
+  });
+
+  // `--rio-spring-targets` is public: an app's own `transition` keeps the corner springs by
+  // including it, and stops them by leaving it out (the corners then change at once).
+  test.each([
+    ['keeps', 'opacity 200ms, var(--rio-spring-targets)', true],
+    ['leaves out', 'opacity 200ms', false],
+  ])('an app transition that %s --rio-spring-targets', async (_, transition, springs) => {
+    const theme = createThemeVariables({ sourceColor: '#6750a4' });
+    const screen = await render(Button, { ...label, attrs: { style: { ...theme, transition } } });
+    const button = screen.getByRole('button').element() as HTMLElement;
+    button.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, isPrimary: true, buttons: 1, pointerId: 1 }),
+    );
+    if (springs) {
+      await vi.waitFor(() => expect(button.style.borderStartStartRadius).not.toBe(''));
+    } else {
+      // Small's pressed corner is corner-small, 8px.
+      await vi.waitFor(() => expect(getComputedStyle(button).borderStartStartRadius).toBe('8px'));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(button.style.borderStartStartRadius).toBe('');
+    }
   });
 });

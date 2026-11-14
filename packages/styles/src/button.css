@@ -42,9 +42,19 @@
   block-size: var(--_height);
   padding-inline: var(--_padding);
   border: var(--_outline-width) solid var(--_outline);
-  /* The shape-morph primitive springs the inline radius toward this target. */
+  /*
+   * The shape-morph primitive springs the inline radii toward these targets. The corners show the
+   * targets, not `--_radius`: when the state changes, a target holds its old value until the
+   * spring takes over (see `transition` below), so the new shape doesn't flash first. Button
+   * groups and split buttons set the per-side targets.
+   */
   --rio-shape-morph-target: var(--_radius);
-  border-radius: var(--_radius);
+  --rio-shape-morph-start-target: var(--rio-shape-morph-target);
+  --rio-shape-morph-end-target: var(--rio-shape-morph-target);
+  border-start-start-radius: var(--rio-shape-morph-start-target);
+  border-end-start-radius: var(--rio-shape-morph-start-target);
+  border-start-end-radius: var(--rio-shape-morph-end-target);
+  border-end-end-radius: var(--rio-shape-morph-end-target);
   background-color: var(--_container);
   box-shadow: var(--_elevation);
   color: var(--_content);
@@ -54,11 +64,20 @@
   vertical-align: middle;
   cursor: pointer;
   user-select: none;
-  /* No border-radius transition: corners move with the fast-spatial spring (see base/shape-morph.css). */
+  /*
+   * No border-radius transition: corners move with the fast-spatial spring (see
+   * base/shape-morph.css). The spring targets get an instant transition instead, which is how the
+   * spring sees them change (core's spring-property). `--rio-spring-targets` is public: an app
+   * that sets its own `transition` on a button keeps the morphing by including it, and
+   * stylesheets that spring more targets on a button extend it.
+   */
+  --rio-spring-targets:
+    --rio-shape-morph-start-target 1ms step-end, --rio-shape-morph-end-target 1ms step-end;
   transition:
     background-color var(--rio-motion-fast-effects),
     color var(--rio-motion-fast-effects),
-    box-shadow var(--rio-motion-fast-effects);
+    box-shadow var(--rio-motion-fast-effects),
+    var(--rio-spring-targets);
 }
 
 /* Sizes */
@@ -189,7 +208,6 @@
 
 .rio-button[data-pressed] {
   --rio-shape-morph-target: var(--_pressed);
-  border-radius: var(--_pressed);
   box-shadow: var(--_elevation);
 }
 

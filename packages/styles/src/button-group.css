@@ -53,12 +53,9 @@
   --_end: var(--_inner-now);
 
   flex: 1 1 0;
+  /* The corners show these targets (button.css). */
   --rio-shape-morph-start-target: var(--_start);
   --rio-shape-morph-end-target: var(--_end);
-  border-start-start-radius: var(--_start);
-  border-end-start-radius: var(--_start);
-  border-start-end-radius: var(--_end);
-  border-end-end-radius: var(--_end);
 }
 
 .rio-button-group[data-variant='connected'] > .rio-button:where([data-size='large']) {
