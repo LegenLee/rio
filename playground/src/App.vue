@@ -18,6 +18,8 @@ import {
   mdiBookmark,
   mdiBookmarkOutline,
   mdiCheck,
+  mdiChevronDown,
+  mdiClockOutline,
   mdiClose,
   mdiFormatAlignCenter,
   mdiFormatAlignLeft,
@@ -37,12 +39,20 @@ import {
   BUTTON_VARIANTS,
   ICON_BUTTON_VARIANTS,
   ICON_BUTTON_WIDTHS,
+  SPLIT_BUTTON_VARIANTS,
   type ButtonShape,
   type ButtonSize,
   type ButtonVariant,
   type IconButtonVariant,
 } from '@rio-m3e/core';
-import { RioButton, RioButtonGroup, RioIconButton, RioSwitch, vRipple } from '@rio-m3e/vue';
+import {
+  RioButton,
+  RioButtonGroup,
+  RioIconButton,
+  RioSplitButton,
+  RioSwitch,
+  vRipple,
+} from '@rio-m3e/vue';
 import { reactive, ref, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
@@ -63,6 +73,8 @@ const groupShape = ref<ButtonShape>('round');
 const view = ref<string>('week');
 const align = ref<string>('left');
 const textStyles = ref<string[]>(['bold']);
+const splitSize = ref<ButtonSize>('small');
+const splitOpen = reactive<Record<string, boolean>>({});
 const moved = ref(false);
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
@@ -347,6 +359,62 @@ watchEffect(() => {
             <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignRight" fill="currentColor" /></svg>
           </RioIconButton>
         </RioButtonGroup>
+      </div>
+    </section>
+
+    <section class="buttons">
+      <div class="controls">
+        <label>
+          Size
+          <select v-model="splitSize">
+            <option v-for="size in BUTTON_SIZES" :key="size" :value="size">{{ size }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="controls">
+        <code class="row-label">split</code>
+        <RioSplitButton
+          v-for="variant in SPLIT_BUTTON_VARIANTS"
+          :key="variant"
+          v-model:open="splitOpen[variant]"
+          :variant="variant"
+          :size="splitSize"
+          menu-label="More watch options"
+        >
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiClockOutline" fill="currentColor" /></svg>
+          </template>
+          Watch later
+          <template #menu-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+          </template>
+        </RioSplitButton>
+      </div>
+      <div class="controls">
+        <code class="row-label">split, sizes</code>
+        <RioSplitButton
+          v-for="size in BUTTON_SIZES"
+          :key="size"
+          v-model:open="splitOpen[size]"
+          variant="tonal"
+          :size="size"
+          menu-label="More options"
+        >
+          Label
+          <template #menu-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+          </template>
+        </RioSplitButton>
+      </div>
+      <div class="controls">
+        <code class="row-label">split, disabled</code>
+        <RioSplitButton menu-label="More options" disabled>
+          Disabled
+          <template #menu-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+          </template>
+        </RioSplitButton>
+        <code>{{ splitOpen }}</code>
       </div>
     </section>
 

@@ -52,6 +52,10 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    split-button/
+      split-button.ts       two createButtons, and the trailing one's menu state
+      menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
+      split-button.test.ts
     switch/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
@@ -70,6 +74,7 @@ packages/
     button.css
     button-group.css
     icon-button.css         layered on top of button.css
+    split-button.css        layered on top of button.css
     switch.css
   vue/src/
     button/
@@ -193,6 +198,8 @@ In all of them, keep three kinds of statements apart and label them:
 - **Spec**: token values and normative definitions from Google.
 - **Recommendations**: guidance prose on m3.material.io (dos, don'ts, "should").
 - **In Rio**: what Rio decides on top, with the reason.
+
+From Compose Material3, use only the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never rely on `private` or `internal` code, and link the files at the androidx commit you read.
 
 Rio's defaults follow the spec. Recommendations become options or component-level practice, and never quietly change a default. Never present a Rio decision as the spec. Where Rio goes against the spec or a recommendation, mark the spot with a quoted note that starts with **Deviation from the spec.** or **Deviation from a recommendation.**, and say what Rio does instead and why. See the ripple's touch delay in `docs/foundations.md`, section 6.
 

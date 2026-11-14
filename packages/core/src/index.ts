@@ -8,5 +8,7 @@ export * from './primitives/ripple/ripple';
 export * from './primitives/shape-morph/shape-morph';
 export * from './primitives/spring-property/spring-property';
 export * from './primitives/spring/spring';
+export * from './split-button/menu-icon';
+export * from './split-button/split-button';
 export * from './switch/handle';
 export * from './switch/switch';

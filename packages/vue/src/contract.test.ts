@@ -8,11 +8,15 @@ import {
   createButtonGroup,
   createIconButton,
   createSwitch,
+  createSplitButton,
   iconButtonSkeleton,
+  splitButtonSkeleton,
   switchSkeleton,
   type ButtonGroupProps,
   type ButtonProps,
   type IconButtonProps,
+  type SplitButtonContent,
+  type SplitButtonProps,
   type SwitchContent,
   type SwitchProps,
 } from '@rio-m3e/core';
@@ -22,6 +26,7 @@ import { h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
 import IconButton from './icon-button/IconButton.vue';
+import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import { expectSkeleton, findPart } from './test/contract';
 
@@ -147,5 +152,43 @@ describe('RioButtonGroup', () => {
     });
     const api = createButtonGroup({ props: () => ({ ...props, selected }), onChange: noop });
     expectSkeleton(rootOf(screen), buttonGroupSkeleton, api);
+  });
+});
+
+describe('RioSplitButton', () => {
+  const labelOnly = { icon: false, label: true };
+  const iconOnly = { icon: true, label: false };
+  const both = { icon: true, label: true };
+
+  test.each<[string, SplitButtonProps, SplitButtonContent]>([
+    ['a label', { menuLabel: 'More' }, labelOnly],
+    ['an icon and a label', { menuLabel: 'More' }, both],
+    ['only an icon, named by label', { menuLabel: 'More', label: 'Go' }, iconOnly],
+    ['open', { menuLabel: 'More', open: true }, labelOnly],
+    // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
+    [
+      'extra large, tonal, opening a dialog, and a submit button',
+      { menuLabel: 'More', variant: 'tonal', size: 'xlarge', popup: 'dialog', type: 'submit' },
+      both,
+    ],
+    ['disabled', { menuLabel: 'More', disabled: true }, labelOnly],
+    ['soft-disabled and open', { menuLabel: 'More', softDisabled: true, open: true }, labelOnly],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(SplitButton, {
+      props,
+      slots: {
+        ...(content.label ? { default: () => 'Label' } : {}),
+        ...(content.icon ? { icon: () => '+' } : {}),
+        'menu-icon': () => '▾',
+      },
+    });
+    const api = createSplitButton({
+      props: () => props,
+      content: () => content,
+      onClick: noop,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), splitButtonSkeleton, api);
+    expect(findPart(rootOf(screen), splitButtonSkeleton, 'menuIcon', api)?.textContent).toBe('▾');
   });
 });
