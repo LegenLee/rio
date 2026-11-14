@@ -11,6 +11,7 @@ How the Rio repository is organized and how code in it is written. Read this bef
 | `@rio-m3e/styles` | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
 | `@rio-m3e/vue`    | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
 | `playground`      | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
+| `docs`            | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
 
@@ -193,6 +194,7 @@ A helper moves up only when a second caller actually needs it.
   - tsdown, oxfmt, and oxlint are pinned to exact versions because they are pre-1.0 or move fast.
   - Vitest and `@vitest/browser-playwright` are pinned to the same exact version, so the browser provider always matches Vitest.
   - TypeScript stays on 6.x until vue-tsc supports TypeScript 7.
+  - VitePress is pinned to an exact version while 2.0 is in alpha. Its stable 1.x line is built on Vite 5.
   - Shared versions live in the `catalog` in `pnpm-workspace.yaml`.
 
 ## Writing about the spec
@@ -208,6 +210,27 @@ In all of them, keep three kinds of statements apart and label them:
 From Compose Material3, use only the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never rely on `private` or `internal` code, and link the files at the androidx commit you read.
 
 Rio's defaults follow the spec. Recommendations become options or component-level practice, and never quietly change a default. Never present a Rio decision as the spec. Where Rio goes against the spec or a recommendation, mark the spot with a quoted note that starts with **Deviation from the spec.** or **Deviation from a recommendation.**, and say what Rio does instead and why. See the ripple's touch delay in `docs/foundations.md`, section 6.
+
+## Docs site
+
+`docs/` is also a VitePress site (`@rio-m3e/docs`). `.github/workflows/docs.yml` publishes it to GitHub Pages from `main`, so the site matches the released packages. Run `pnpm docs:dev` to work on it and `pnpm docs:build` to check it; the build fails on dead links.
+
+- **Pages** are the Markdown files under `docs/`. The navigation and sidebar are in `docs/.vitepress/config.ts`, so a new page needs an entry there.
+- **Examples**: each component page starts with an Examples section. An example is a plain SFC in `docs/components/demos/<id>/`, written as app code would be (imports from `@rio-m3e/vue`, no docs-only helpers), because the page shows its source as the example's code:
+
+  ```md
+  <Demo><Variants /></Demo>
+
+  ::: details Code
+  <<< ./demos/button/Variants.vue
+  :::
+  ```
+
+- **One adapter draws the examples.** Every adapter renders the same markup (see Core output and Markup contract), so the live examples use the Vue adapter only. When another adapter exists, its code goes next to the Vue code in a code group, and the live example stays Vue.
+- **The site wears Rio's theme.** `docs/.vitepress/theme/` writes the theme variables during server rendering and points VitePress's colors and font at them. Examples sit in `.vp-raw`, which keeps VitePress's styles out (`docs/postcss.config.mjs`), so they look the way they do in an app.
+- **Imports come from `src`** through the `@rio-m3e/source` condition, as in the playground, so the site always shows the current code without a build.
+- The build also writes `llms.txt` and `llms-full.txt`, Markdown copies of the docs for AI tools, with each example's code in place of the live example (vitepress-plugin-llms).
+- On GitHub, the Markdown shows `<Demo>` and `:::` blocks as plain text. Read the docs on the site.
 
 ## Testing
 
@@ -273,7 +296,7 @@ Pixels differ across operating systems, fonts, and browser versions, so the comm
 - Before you commit, run:
 
   ```sh
-  pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build
+  pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build && pnpm docs:build
   ```
 
 - CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. Its `visual` job runs the `vrt` project in the Playwright container (see Visual regression).
