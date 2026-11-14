@@ -38,7 +38,7 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 pnpm add @rio-m3e/vue @rio-m3e/tokens
 ```
 
-앱을 띄우기 전에 `applyTheme`를 호출하여 적용합니다.
+앱을 **마운트하기 전**에 `applyTheme`를 호출하여 테마를 적용합니다.
 테마는 `@rio-m3e/tokens`에서 CSS 변수로 제공됩니다.
 
 ```ts

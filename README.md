@@ -32,7 +32,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 pnpm add @rio-m3e/vue @rio-m3e/tokens
 ```
 
-`@rio-m3e/tokens` sets the theme as CSS variables. Apply it once before mounting the app.
+`@rio-m3e/tokens` sets the theme as CSS variables. Apply it once **BEFORE** mounting the app.
 
 ```ts
 // main.ts
