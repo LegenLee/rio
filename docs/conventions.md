@@ -108,6 +108,26 @@ packages/
 - Exception: `@rio-m3e/styles` exposes CSS files one by one, including those in `base/` (`@rio-m3e/styles/switch.css`, `@rio-m3e/styles/base/ripple.css`).
 - Inside the workspace, the `@rio-m3e/source` export condition points TypeScript and Vite at `src/` instead of `dist/`, so changes show up without a rebuild.
 
+## Core output
+
+How `core` hands a component's markup to the adapters. The stylesheets depend on that markup, so it is a contract: every adapter has to produce the same thing. Keeping it in `core` means a new adapter is a thin layer, not a second copy of the markup.
+
+- **Parts.** A component's `core` API returns one attribute bundle for each part of its markup: the root, and parts such as `touch`, `icon`, and `label`. A part is named after the element in its class (`rio-button__icon` is `icon`).
+- **Classes come from `core`.** Each bundle includes the part's `class`, so the class names the stylesheet selects on are written once, in `core`.
+- **Adapters keep only the skeleton**: which element each part is, which part sits inside which, where content goes (slots, children), and when an optional part renders (the icon only when there is one).
+- **Bundles are HTML attributes**, as `setAttribute` would take them:
+  - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
+  - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
+- **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
+  - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
+  - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
+  - More values: the value itself. `data-variant`, `data-size`, `data-shape`, `data-width`.
+- **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`, that take standard DOM events. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
+- **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
+- **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
+
+> Today only the root bundle exists (`rootAttrs()`), and the other parts and all class names are still written in the Vue templates. Moving them into `core` is planned.
+
 ## Primitives
 
 A primitive is a DOM behavior that several components share, such as the press ripple. Primitives live in `core/src/primitives/` and are public API, exported from `core/src/index.ts` for every adapter to use.

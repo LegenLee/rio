@@ -41,7 +41,8 @@
   opacity: var(--rio-state-pressed-state-layer-opacity);
 }
 
-.rio-state-layer[data-dragged]::before {
+/* `attachDrag` from `@rio-m3e/core` marks an element with `data-dragging` while it moves. */
+.rio-state-layer[data-dragging]::before {
   opacity: var(--rio-state-dragged-state-layer-opacity);
 }
 
