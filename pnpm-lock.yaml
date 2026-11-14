@@ -6,6 +6,12 @@ settings:
 
 catalogs:
   default:
+    '@fontsource/roboto':
+      specifier: ^5.3.0
+      version: 5.3.0
+    '@mdi/js':
+      specifier: ^7.4.47
+      version: 7.4.47
     '@vitejs/plugin-vue':
       specifier: ^6.0.10
       version: 6.0.10
@@ -66,10 +72,10 @@ importers:
   docs:
     dependencies:
       '@fontsource/roboto':
-        specifier: ^5.3.0
+        specifier: 'catalog:'
         version: 5.3.0
       '@mdi/js':
-        specifier: ^7.4.47
+        specifier: 'catalog:'
         version: 7.4.47
       '@rio-m3e/core':
         specifier: workspace:*
@@ -139,10 +145,10 @@ importers:
         version: link:../styles
     devDependencies:
       '@fontsource/roboto':
-        specifier: ^5.3.0
+        specifier: 'catalog:'
         version: 5.3.0
       '@mdi/js':
-        specifier: ^7.4.47
+        specifier: 'catalog:'
         version: 7.4.47
       '@rio-m3e/tokens':
         specifier: workspace:^
@@ -182,7 +188,7 @@ importers:
         version: 3.5.45(typescript@6.0.3)
     devDependencies:
       '@mdi/js':
-        specifier: ^7.4.47
+        specifier: 'catalog:'
         version: 7.4.47
       '@vitejs/plugin-vue':
         specifier: 'catalog:'

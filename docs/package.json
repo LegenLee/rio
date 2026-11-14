@@ -9,8 +9,8 @@
     "typecheck": "vue-tsc -p ."
   },
   "dependencies": {
-    "@fontsource/roboto": "^5.3.0",
-    "@mdi/js": "^7.4.47",
+    "@fontsource/roboto": "catalog:",
+    "@mdi/js": "catalog:",
     "@rio-m3e/core": "workspace:*",
     "@rio-m3e/styles": "workspace:*",
     "@rio-m3e/tokens": "workspace:*",

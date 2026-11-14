@@ -15,3 +15,6 @@ catalog:
   unplugin-vue: ^8.0.1
   vite: ^8.3.7
   '@vitejs/plugin-vue': ^6.0.10
+  # Roboto for screenshot tests and the docs, icons for the examples
+  '@fontsource/roboto': ^5.3.0
+  '@mdi/js': ^7.4.47
