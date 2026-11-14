@@ -1,3 +1,4 @@
+import type { ButtonGroupValue } from '../button-group/button-group';
 import {
   createButton,
   type ButtonApi,
@@ -37,6 +38,8 @@ export interface IconButtonProps {
   softDisabled?: boolean;
   /** Defaults to `'button'`, so it doesn't submit a form by accident. */
   type?: 'button' | 'submit' | 'reset';
+  /** Identifies the button inside a button group that keeps a selection, as on the button. */
+  value?: ButtonGroupValue;
 }
 
 export const iconButtonDefaults = {
@@ -49,7 +52,7 @@ export const iconButtonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Omit<Required<IconButtonProps>, 'label'>;
+} satisfies Omit<Required<IconButtonProps>, 'label' | 'value'>;
 
 export interface IconButtonOptions {
   /** Returns the current prop values. The adapter owns the state. */

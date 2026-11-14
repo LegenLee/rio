@@ -19,9 +19,18 @@ import {
   mdiBookmarkOutline,
   mdiCheck,
   mdiClose,
+  mdiFormatAlignCenter,
+  mdiFormatAlignLeft,
+  mdiFormatAlignRight,
+  mdiFormatBold,
+  mdiFormatItalic,
+  mdiFormatUnderline,
   mdiHeart,
   mdiHeartOutline,
   mdiMagnify,
+  mdiPause,
+  mdiSkipNext,
+  mdiSkipPrevious,
 } from '@mdi/js';
 import {
   BUTTON_SIZES,
@@ -29,10 +38,11 @@ import {
   ICON_BUTTON_VARIANTS,
   ICON_BUTTON_WIDTHS,
   type ButtonShape,
+  type ButtonSize,
   type ButtonVariant,
   type IconButtonVariant,
 } from '@rio-m3e/core';
-import { RioButton, RioIconButton, RioSwitch, vRipple } from '@rio-m3e/vue';
+import { RioButton, RioButtonGroup, RioIconButton, RioSwitch, vRipple } from '@rio-m3e/vue';
 import { reactive, ref, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
@@ -48,6 +58,11 @@ const toggles = reactive<Partial<Record<ButtonVariant, boolean>>>({});
 const iconShape = ref<ButtonShape>('round');
 const favorites = reactive<Partial<Record<IconButtonVariant, boolean>>>({ standard: true });
 const bookmarked = ref(false);
+const groupSize = ref<ButtonSize>('small');
+const groupShape = ref<ButtonShape>('round');
+const view = ref<string>('week');
+const align = ref<string>('left');
+const textStyles = ref<string[]>(['bold']);
 const moved = ref(false);
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
@@ -239,6 +254,102 @@ watchEffect(() => {
       </div>
     </section>
 
+    <section class="buttons">
+      <div class="controls">
+        <label>
+          Size
+          <select v-model="groupSize">
+            <option v-for="size in BUTTON_SIZES" :key="size" :value="size">{{ size }}</option>
+          </select>
+        </label>
+        <label>
+          Shape
+          <select v-model="groupShape">
+            <option value="round">Round</option>
+            <option value="square">Square</option>
+          </select>
+        </label>
+      </div>
+      <div class="controls">
+        <code class="row-label">standard</code>
+        <RioButtonGroup :size="groupSize" :shape="groupShape">
+          <RioIconButton label="Previous" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiSkipPrevious" fill="currentColor" /></svg>
+          </RioIconButton>
+          <RioIconButton label="Pause" width="wide">
+            <svg viewBox="0 0 24 24"><path :d="mdiPause" fill="currentColor" /></svg>
+          </RioIconButton>
+          <RioIconButton label="Next" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiSkipNext" fill="currentColor" /></svg>
+          </RioIconButton>
+        </RioButtonGroup>
+      </div>
+      <div class="controls">
+        <code class="row-label">standard, labels</code>
+        <RioButtonGroup :size="groupSize" :shape="groupShape">
+          <RioButton variant="outlined">Cancel</RioButton>
+          <RioButton variant="tonal">Save draft</RioButton>
+          <RioButton>Send</RioButton>
+        </RioButtonGroup>
+      </div>
+      <div class="controls">
+        <code class="row-label">standard, multiple</code>
+        <RioButtonGroup
+          v-model="textStyles"
+          :size="groupSize"
+          :shape="groupShape"
+          selection="multiple"
+        >
+          <RioIconButton label="Bold" value="bold" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiFormatBold" fill="currentColor" /></svg>
+          </RioIconButton>
+          <RioIconButton label="Italic" value="italic" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiFormatItalic" fill="currentColor" /></svg>
+          </RioIconButton>
+          <RioIconButton label="Underline" value="underline" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiFormatUnderline" fill="currentColor" /></svg>
+          </RioIconButton>
+        </RioButtonGroup>
+        <code>{{ textStyles }}</code>
+      </div>
+      <div class="group-demo">
+        <code class="row-label">connected, single, required</code>
+        <RioButtonGroup
+          v-model="view"
+          variant="connected"
+          :size="groupSize"
+          :shape="groupShape"
+          selection="single"
+          required
+        >
+          <RioButton value="day">Day</RioButton>
+          <RioButton value="week">Week</RioButton>
+          <RioButton value="month">Month</RioButton>
+          <RioButton value="year">Year</RioButton>
+        </RioButtonGroup>
+      </div>
+      <div class="group-demo">
+        <code class="row-label">connected, icons</code>
+        <RioButtonGroup
+          v-model="align"
+          variant="connected"
+          :size="groupSize"
+          :shape="groupShape"
+          selection="single"
+        >
+          <RioIconButton label="Align left" value="left" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignLeft" fill="currentColor" /></svg>
+          </RioIconButton>
+          <RioIconButton label="Align center" value="center" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignCenter" fill="currentColor" /></svg>
+          </RioIconButton>
+          <RioIconButton label="Align right" value="right" variant="tonal">
+            <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignRight" fill="currentColor" /></svg>
+          </RioIconButton>
+        </RioButtonGroup>
+      </div>
+    </section>
+
     <section class="switches">
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.plain" />
@@ -392,6 +503,12 @@ main {
 .buttons {
   display: grid;
   gap: 16px;
+}
+
+.group-demo {
+  display: grid;
+  gap: 8px;
+  max-inline-size: 480px;
 }
 
 .row-label {

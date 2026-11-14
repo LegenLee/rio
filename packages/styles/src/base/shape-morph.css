@@ -2,12 +2,33 @@
  * Shape morphing, driven by `attachShapeMorph` from `@rio-m3e/core`. A component sets
  * `--rio-shape-morph-target` to the corner radius it wants in each state, and sets
  * `border-radius` to the same value, so it still works without JavaScript. The primitive reads
- * the target in px, which needs the registration below, and animates the inline radius with a
- * spring. It marks the element with `data-shape-morph`.
+ * the targets in px, which needs the registrations below, and springs the inline radii toward
+ * them. It marks the element with `data-shape-morph`.
+ *
+ * Shapes whose sides differ set `--rio-shape-morph-start-target` and `--rio-shape-morph-end-target`
+ * (the corners at the start and end of the line, in the writing direction) with any class or
+ * attribute selector; otherwise both follow `--rio-shape-morph-target`.
  */
 
 @property --rio-shape-morph-target {
   syntax: '<length>';
   inherits: false;
   initial-value: 0px;
+}
+
+@property --rio-shape-morph-start-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-shape-morph-end-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+:where([data-shape-morph]) {
+  --rio-shape-morph-start-target: var(--rio-shape-morph-target);
+  --rio-shape-morph-end-target: var(--rio-shape-morph-target);
 }

@@ -170,6 +170,14 @@ export function createSpring(options: SpringOptions): Spring {
 }
 
 /**
+ * Whether the user asked for reduced motion. Spatial springs should jump straight to their target
+ * (or be skipped) when it is on; see `docs/foundations.md`, section 3.
+ */
+export function prefersReducedMotion(): boolean {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/**
  * Reads a motion token's spring from CSS variables on an element, for example
  * `--rio-motion-fast-spatial-damping` and `-stiffness`. Reading them from the element, rather than
  * from the tokens package, lets a subtree that swaps motion schemes change its springs too.

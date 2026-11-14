@@ -46,6 +46,9 @@ packages/
     button/                 component logic
       button.ts
       button.test.ts
+    button-group/
+      button-group.ts       props and selection rules
+      interaction.ts        arrow keys and pressed widths (DOM, tested through the Vue component)
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
@@ -53,6 +56,8 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
+    utils/                  level 2 helpers (see Shared helpers)
+      object.ts             omitUndefined, for button and button-group
     index.ts
   styles/src/
     base/                   CSS shared across components
@@ -62,11 +67,15 @@ packages/
       shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
     button.css
+    button-group.css
     icon-button.css         layered on top of button.css
     switch.css
   vue/src/
     button/
       Button.vue
+    button-group/
+      ButtonGroup.vue
+      context.ts            what the group provides; buttons read it with useButtonGroupItem
     icon-button/
       IconButton.vue
     ripple/

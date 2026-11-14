@@ -169,7 +169,8 @@ Each token becomes three CSS variables. The names don't include the scheme.
   - `createSpring()` animates a number with `requestAnimationFrame`. A new target takes over from the current position and velocity, so an interrupted press reverses without a jolt.
   - `readSpringParams(el, token)` reads a token's spring from the element's `-damping` and `-stiffness` variables. Reading from CSS lets a subtree that swaps schemes change its springs too, and keeps `core` independent of `tokens`.
   - `attachSpringProperty(el, { target, apply })` is the general form. The stylesheet declares a target length for each state in a registered custom property, and the spring follows it whenever a state attribute changes. A drag can take over with `hold()` and hand back with `release(velocity)`.
-  - `attachShapeMorph(el)` uses it for the corner radius, toward the `--rio-shape-morph-target` its stylesheet declares (`@rio-m3e/styles/base/shape-morph.css`). The button uses it for its press and selection shapes.
+  - `attachShapeMorph(el)` uses it for the corner radius, toward the `--rio-shape-morph-target` its stylesheet declares (`@rio-m3e/styles/base/shape-morph.css`). The start and end sides spring separately, so a stylesheet can give them different targets (`--rio-shape-morph-start-target` and `-end-target`), as the connected button group does. The button uses it for its press and selection shapes.
+  - The button group uses `createSpring` directly for the pressed button's width and its neighbors'.
   - The switch uses it for its handle's position and size, and `attachDrag` lets touch and pen drag the handle. The spring then starts at the finger's speed.
 - In JavaScript, `getMotionSpring(scheme, token)` and `getMotionCurve(scheme, token)` from `@rio-m3e/tokens` return the same values.
 

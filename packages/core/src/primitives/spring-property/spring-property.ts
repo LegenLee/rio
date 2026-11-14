@@ -6,7 +6,7 @@
 //
 // A drag can take manual control with `hold()` and give it back with `release(velocity)`.
 
-import { createSpring, readSpringParams } from '../spring/spring';
+import { createSpring, prefersReducedMotion, readSpringParams } from '../spring/spring';
 
 export interface SpringPropertyOptions {
   /** A registered <length> custom property that holds the target for the current state. */
@@ -39,9 +39,6 @@ export const STATE_ATTRIBUTES = [
   'data-icon',
 ];
 
-const reducedMotion = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 export function attachSpringProperty(
   element: HTMLElement,
   options: SpringPropertyOptions,
@@ -64,7 +61,7 @@ export function attachSpringProperty(
     // Without the stylesheet the target isn't a length, so leave the element alone.
     if (!Number.isFinite(target)) return;
     const params = readSpringParams(element, token);
-    if (!params || reducedMotion()) spring.jump(target);
+    if (!params || prefersReducedMotion()) spring.jump(target);
     else spring.to(target, params, velocity);
   };
 

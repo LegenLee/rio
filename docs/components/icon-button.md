@@ -105,12 +105,14 @@ The container is as tall as the button of the same size. Its width is the icon s
 | `disabled`     | `boolean`                                                | `false`     |
 | `softDisabled` | `boolean`                                                | `false`     |
 | `type`         | `'button' \| 'submit' \| 'reset'`                        | `'button'`  |
+| `value`        | `string \| number`, for button groups                    | —           |
 
 - Events: `click` (only when not blocked), and `update:selected` (toggle buttons).
 - Slots: the default slot is the icon. `selected-icon` replaces it while a toggle button is selected, for the filled icon the guidelines ask for. **Rio ships no icons**; apps bring their own. Both slots are hidden from assistive technology.
 - **`label` is required** and becomes `aria-label`, so the accessible name always describes the action, as the spec asks. Describe the action ("Add to favorites"), not the icon ("Heart").
 - **The default is filled**, as the spec says. Material Web's `<md-icon-button>` and Compose's `IconButton` are the standard style, with filled, tonal, and outlined as separate components, so code ported from them should set `variant="standard"`.
 - Everything else works as on the button: a native `<button>` with the ripple, the state layer, and the focus ring; `type` defaults to `'button'`; a toggle sets `aria-pressed`; and `disabled` and `softDisabled` are the same two props. See [button.md](button.md) for the `softDisabled` deviation note.
+- Inside a [button group](button-group.md), `size` and `shape` default to the group's, and a group that keeps a selection owns the state of icon buttons with a `value`, including which icon they show.
 
 ### Built on the button
 
@@ -126,7 +128,6 @@ The container is as tall as the button of the same size. Its width is the icon s
 ### Not yet
 
 - **Tooltip**: there's no tooltip component yet. Until there is, `label` gives screen readers the name, but mouse users see no description on hover.
-- **Button groups**: the guidelines describe icon buttons in a standard button group reacting to each other when pressed. That's a separate component.
 - **Link icon buttons** (`href`), as with the button.
 
 ## Sources

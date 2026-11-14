@@ -90,12 +90,14 @@ Toggle buttons replace those colors:
 | `disabled`     | `boolean`                                                   | `false`    |
 | `softDisabled` | `boolean`                                                   | `false`    |
 | `type`         | `'button' \| 'submit' \| 'reset'`                           | `'button'` |
+| `value`        | `string \| number`, for button groups                       | —          |
 
 - Events: `click` (only when not blocked), and `update:selected` (toggle buttons).
 - Slots: the default slot is the label, and `icon` is a leading icon. The icon is hidden from assistive technology, so the label must stand on its own.
 - The root is a native `<button>`, with the ripple (`v-ripple`), the state layer, and the focus ring.
 - `type` defaults to `'button'`, so a button inside a form doesn't submit it by accident.
 - `toggle` on a text button is ignored, because the spec has no tokens for it. A toggle button sets `aria-pressed`.
+- Inside a [button group](button-group.md), `size` and `shape` default to the group's. In a group that keeps a selection, a button with a `value` is a toggle whose state the group owns.
 
 ### Disabled: two props
 
@@ -113,7 +115,7 @@ Toggle buttons replace those colors:
 ### Implementation notes
 
 - **The round shape is half the height**, not `corner-full` (`9999px`), so the pressed and selected shape changes animate smoothly.
-- **Shape changes use the `fast-spatial` spring**, as the spec says. The stylesheet declares the corner radius for each state in `--rio-shape-morph-target`: rest, pressed (`data-pressed` from the ripple), and selected. `attachShapeMorph` springs the inline radius toward it whenever the state changes, keeping the velocity when a quick release interrupts a press. With the expressive scheme the corners overshoot slightly and settle. At rest the inline value is removed, so the stylesheet stays in charge. Under reduced motion the corners change instantly, while color and elevation keep their short fades (foundations, section 3).
+- **Shape changes use the `fast-spatial` spring**, as the spec says. The stylesheet declares the corner radius for each state in `--rio-shape-morph-target`: rest, pressed (`data-pressed` from the ripple), and selected. `attachShapeMorph` springs the inline radii toward it whenever the state changes (each side separately, which connected button groups use), keeping the velocity when a quick release interrupts a press. With the expressive scheme the corners overshoot slightly and settle. At rest the inline value is removed, so the stylesheet stays in charge. Under reduced motion the corners change instantly, while color and elevation keep their short fades (foundations, section 3).
 - **Touch target**: an invisible `rio-button__touch` element extends extra small and small buttons to 48px.
 - Variant, size, shape, and toggle selectors are wrapped in `:where()`, so they add no specificity. The disabled and pressed rules always win, and an app can override any of them with a single class.
 

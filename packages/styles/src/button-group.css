@@ -1,0 +1,101 @@
+/*
+ * M3E button group: a row of buttons and icon buttons (`button.css`, `icon-button.css`). The group
+ * has no color of its own. It carries `data-variant`, `data-size`, and `data-shape`, which
+ * `createButtonGroup` from `@rio-m3e/core` sets; the size and shape reach the buttons through the
+ * framework adapter, so these rules read the buttons' own `data-size` and `data-shape`.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-button-group-standard-*.scss` and
+ * `_md-comp-button-group-connected-*.scss`, Material 3 v34.0.21). The pressed button's width
+ * change in standard groups is JavaScript (`attachButtonGroup` from `@rio-m3e/core`).
+ */
+
+.rio-button-group {
+  /* Standard, small */
+  --_between: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--_between);
+  vertical-align: middle;
+}
+
+/* Standard: the space keeps every button's 48px target clear of its neighbors' */
+
+.rio-button-group:where([data-size='xsmall']) {
+  --_between: 18px;
+}
+
+.rio-button-group:where([data-size='medium'], [data-size='large'], [data-size='xlarge']) {
+  --_between: 8px;
+}
+
+/*
+ * Connected: 2px apart, and as wide as the space it's given, shared equally by its buttons. The
+ * ends of the row keep the group's shape; the facing corners are smaller, tighten when pressed,
+ * and open up fully when the button is selected. Each button springs its two sides separately
+ * (see base/shape-morph.css).
+ */
+
+.rio-button-group:where([data-variant='connected']) {
+  --_between: 2px;
+
+  display: flex;
+}
+
+.rio-button-group[data-variant='connected'] > .rio-button {
+  /* Small, medium, and extra small */
+  --_inner: var(--rio-shape-corner-small);
+  --_inner-pressed: var(--rio-shape-corner-extra-small);
+  /* Corners that face another button, and corners at the ends of the row */
+  --_inner-now: var(--_inner);
+  --_outer: var(--_round);
+  --_start: var(--_inner-now);
+  --_end: var(--_inner-now);
+
+  flex: 1 1 0;
+  --rio-shape-morph-start-target: var(--_start);
+  --rio-shape-morph-end-target: var(--_end);
+  border-start-start-radius: var(--_start);
+  border-end-start-radius: var(--_start);
+  border-start-end-radius: var(--_end);
+  border-end-end-radius: var(--_end);
+}
+
+.rio-button-group[data-variant='connected'] > .rio-button:where([data-size='large']) {
+  --_inner: var(--rio-shape-corner-large);
+  --_inner-pressed: var(--rio-shape-corner-medium);
+}
+
+.rio-button-group[data-variant='connected'] > .rio-button:where([data-size='xlarge']) {
+  --_inner: var(--rio-shape-corner-large-increased);
+  --_inner-pressed: var(--rio-shape-corner-large);
+}
+
+/* A square group's ends use the same radius as its facing corners. */
+.rio-button-group[data-variant='connected'] > .rio-button[data-shape='square'] {
+  --_outer: var(--_inner);
+}
+
+.rio-button-group[data-variant='connected'] > .rio-button:first-child {
+  --_start: var(--_outer);
+}
+
+.rio-button-group[data-variant='connected'] > .rio-button:last-child {
+  --_end: var(--_outer);
+}
+
+.rio-button-group[data-variant='connected'] > .rio-button[data-selected='true'] {
+  --_inner-now: var(--_round);
+  --_outer: var(--_round);
+}
+
+/* After selected, so a pressed selected button still tightens its facing corners */
+.rio-button-group[data-variant='connected'] > .rio-button[data-pressed] {
+  --_inner-now: var(--_inner-pressed);
+}
+
+/* Extra small and small icon buttons keep a 48px minimum width, matching their target. */
+.rio-button-group[data-variant='connected']
+  > .rio-icon-button:where([data-size='xsmall'], [data-size='small']) {
+  min-inline-size: 48px;
+}

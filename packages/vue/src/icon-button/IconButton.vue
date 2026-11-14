@@ -5,10 +5,17 @@ import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/button.css';
 import '@rio-m3e/styles/icon-button.css';
+import { computed } from 'vue';
+import { useButtonGroupItem } from '../button-group/context';
 import { vRipple } from '../ripple/ripple';
 import { vShapeMorph } from '../shape-morph/shape-morph';
 
-const props = withDefaults(defineProps<IconButtonProps>(), iconButtonDefaults);
+// Size and shape stay undefined when not set, so a surrounding button group can fill them in.
+const props = withDefaults(defineProps<IconButtonProps>(), {
+  ...iconButtonDefaults,
+  size: undefined,
+  shape: undefined,
+});
 const emit = defineEmits<{
   click: [event: MouseEvent];
   'update:selected': [selected: boolean];
@@ -23,10 +30,15 @@ const slots = defineSlots<{
   'selected-icon'?: () => unknown;
 }>();
 
+const item = useButtonGroupItem(props, (selected) => emit('update:selected', selected));
 const button = createIconButton({
-  props: () => props,
+  props: item.props,
   onClick: (event) => emit('click', event),
-  onSelectedChange: (selected) => emit('update:selected', selected),
+  onSelectedChange: item.onSelectedChange,
+});
+const showsSelectedIcon = computed(() => {
+  const p = item.props();
+  return !!(p.toggle && p.selected && slots['selected-icon']);
 });
 </script>
 

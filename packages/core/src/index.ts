@@ -1,3 +1,5 @@
+export * from './button-group/button-group';
+export * from './button-group/interaction';
 export * from './button/button';
 export * from './icon-button/icon-button';
 export * from './primitives/drag/drag';

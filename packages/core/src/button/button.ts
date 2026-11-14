@@ -1,3 +1,6 @@
+import type { ButtonGroupValue } from '../button-group/button-group';
+import { omitUndefined } from '../utils/object';
+
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
@@ -31,6 +34,11 @@ export interface ButtonProps {
   softDisabled?: boolean;
   /** Defaults to `'button'`, so a button inside a form doesn't submit it by accident. */
   type?: 'button' | 'submit' | 'reset';
+  /**
+   * Identifies the button inside a button group that keeps a selection. Such a group makes the
+   * button a toggle and decides whether it is selected.
+   */
+  value?: ButtonGroupValue;
 }
 
 export const buttonDefaults = {
@@ -42,7 +50,7 @@ export const buttonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Required<ButtonProps>;
+} satisfies Omit<Required<ButtonProps>, 'value'>;
 
 export interface ButtonOptions {
   /** Returns the current prop values. The adapter owns the state. */
@@ -62,10 +70,7 @@ export interface ButtonApi {
 const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text';
 
 /** Defaults under the given props, skipping props that are explicitly `undefined`. */
-const resolve = (props: ButtonProps): Required<ButtonProps> => ({
-  ...buttonDefaults,
-  ...Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined)),
-});
+const resolve = (props: ButtonProps) => ({ ...buttonDefaults, ...omitUndefined(props) });
 
 export function createButton(options: ButtonOptions): ButtonApi {
   return {
