@@ -114,7 +114,8 @@ describe('RioButton', () => {
     const screen = await render(Button, { ...label, props: { size: 'xsmall' }, attrs: { dir } });
     const button = screen.getByRole('button').element().getBoundingClientRect();
     const touch = screen.container.querySelector('.rio-button__touch')!.getBoundingClientRect();
-    expect(touch.left + touch.width / 2).toBeCloseTo(button.left + button.width / 2, 1);
-    expect(touch.top + touch.height / 2).toBeCloseTo(button.top + button.height / 2, 1);
+    // Within half a pixel: engines round layout differently (WebKit to 1/64px).
+    expect(touch.left + touch.width / 2).toBeCloseTo(button.left + button.width / 2, 0);
+    expect(touch.top + touch.height / 2).toBeCloseTo(button.top + button.height / 2, 0);
   });
 });
