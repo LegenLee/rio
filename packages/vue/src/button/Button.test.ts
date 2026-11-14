@@ -109,4 +109,12 @@ describe('RioButton', () => {
     const touch = screen.container.querySelector('.rio-button__touch')!;
     expect(getComputedStyle(touch).height).toBe('48px');
   });
+
+  test.each(['ltr', 'rtl'])('the touch target is centered on the button, %s', async (dir) => {
+    const screen = await render(Button, { ...label, props: { size: 'xsmall' }, attrs: { dir } });
+    const button = screen.getByRole('button').element().getBoundingClientRect();
+    const touch = screen.container.querySelector('.rio-button__touch')!.getBoundingClientRect();
+    expect(touch.left + touch.width / 2).toBeCloseTo(button.left + button.width / 2, 1);
+    expect(touch.top + touch.height / 2).toBeCloseTo(button.top + button.height / 2, 1);
+  });
 });

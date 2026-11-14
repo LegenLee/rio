@@ -196,8 +196,10 @@
 /* The track is 32px tall, below the spec's 48px minimum target. */
 .rio-switch__touch {
   position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 50%;
+  /* Physical, like `translate`: a logical start would flip in right-to-left layouts and push the
+     target off the switch. */
+  top: 50%;
+  left: 50%;
   inline-size: max(100%, 48px);
   block-size: max(100%, 48px);
   translate: -50% -50%;
