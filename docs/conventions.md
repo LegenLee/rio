@@ -209,7 +209,9 @@ Pixels differ across operating systems, fonts, and browser versions, so the comm
   ```
 
 - CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. Its `visual` job runs the `vrt` project in the Playwright container (see Visual regression).
-- Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `chore:`.
+- Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `ci:`, `chore:`.
+  - `test:` changes only tests, test helpers, or reference screenshots.
+  - `ci:` changes only `.github/workflows/`.
 
 ## Releases
 
