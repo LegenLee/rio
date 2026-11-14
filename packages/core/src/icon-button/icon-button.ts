@@ -5,7 +5,7 @@ import {
   type ButtonSize,
   type ButtonVariant,
 } from '../button/button';
-import type { PartAttrs } from '../parts';
+import type { PartAttrs, PartNode } from '../parts';
 
 export const ICON_BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'standard'] as const;
 export type IconButtonVariant = (typeof ICON_BUTTON_VARIANTS)[number];
@@ -72,14 +72,7 @@ export interface IconButtonOptions {
 }
 
 /**
- * The icon button's markup, part by part. The adapter renders:
- *
- * ```
- * <button root>
- *   <span touch />
- *   <span icon>the selected icon when showsSelectedIcon(), otherwise the icon</span>
- * </button>
- * ```
+ * The icon button's markup, part by part. `iconButtonSkeleton` says how the adapter nests them.
  */
 export interface IconButtonParts {
   root: () => PartAttrs;
@@ -87,6 +80,19 @@ export interface IconButtonParts {
   touch: () => PartAttrs;
   icon: () => PartAttrs;
 }
+
+/**
+ * How the adapter renders the icon button's parts. The icon holds the selected icon when
+ * `showsSelectedIcon()`, otherwise the default one.
+ */
+export const iconButtonSkeleton: PartNode<keyof IconButtonParts> = {
+  part: 'root',
+  tag: 'button',
+  children: [
+    { part: 'touch', tag: 'span' },
+    { part: 'icon', tag: 'span', content: true },
+  ],
+};
 
 export interface IconButtonApi {
   parts: IconButtonParts;

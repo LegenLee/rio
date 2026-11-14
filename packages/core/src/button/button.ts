@@ -1,5 +1,5 @@
 import type { ButtonGroupValue } from '../button-group/button-group';
-import type { PartAttrs } from '../parts';
+import type { PartAttrs, PartNode } from '../parts';
 import { omitUndefined } from '../utils/object';
 
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
@@ -71,15 +71,7 @@ export interface ButtonOptions {
 }
 
 /**
- * The button's markup, part by part. The adapter renders:
- *
- * ```
- * <button root>
- *   <span touch />
- *   <span icon>leading icon</span>   only when showsIcon()
- *   <span label>label</span>
- * </button>
- * ```
+ * The button's markup, part by part. `buttonSkeleton` says how the adapter nests them.
  */
 export interface ButtonParts {
   root: () => PartAttrs;
@@ -88,6 +80,17 @@ export interface ButtonParts {
   icon: () => PartAttrs;
   label: () => PartAttrs;
 }
+
+/** How the adapter renders the button's parts. The icon holds the leading icon. */
+export const buttonSkeleton: PartNode<keyof ButtonParts, 'showsIcon'> = {
+  part: 'root',
+  tag: 'button',
+  children: [
+    { part: 'touch', tag: 'span' },
+    { part: 'icon', tag: 'span', when: 'showsIcon', content: true },
+    { part: 'label', tag: 'span', content: true },
+  ],
+};
 
 export interface ButtonApi {
   parts: ButtonParts;

@@ -1,4 +1,4 @@
-import type { PartAttrs } from '../parts';
+import type { PartAttrs, PartNode } from '../parts';
 
 export interface SwitchProps {
   /** Whether the switch is on. */
@@ -37,19 +37,7 @@ export interface SwitchOptions {
 }
 
 /**
- * The switch's markup, part by part. The adapter renders:
- *
- * ```
- * <button root>
- *   <span touch />
- *   <span state />                 the circle where the state layer and ripple draw
- *   <span handle>
- *     <span icon>                    only when showsIcon()
- *       the selected icon when showsSelectedIcon(), otherwise the unselected one
- *     </span>
- *   </span>
- * </button>
- * ```
+ * The switch's markup, part by part. `switchSkeleton` says how the adapter nests them.
  */
 export interface SwitchParts {
   root: () => PartAttrs;
@@ -59,6 +47,25 @@ export interface SwitchParts {
   handle: () => PartAttrs;
   icon: () => PartAttrs;
 }
+
+/**
+ * How the adapter renders the switch's parts. The state part is the circle where the state layer
+ * and the ripple draw. The icon holds the selected icon when `showsSelectedIcon()`, otherwise the
+ * unselected one.
+ */
+export const switchSkeleton: PartNode<keyof SwitchParts, 'showsIcon'> = {
+  part: 'root',
+  tag: 'button',
+  children: [
+    { part: 'touch', tag: 'span' },
+    { part: 'state', tag: 'span' },
+    {
+      part: 'handle',
+      tag: 'span',
+      children: [{ part: 'icon', tag: 'span', when: 'showsIcon', content: true }],
+    },
+  ],
+};
 
 export interface SwitchApi {
   parts: SwitchParts;

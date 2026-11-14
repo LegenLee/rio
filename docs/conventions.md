@@ -87,7 +87,9 @@ packages/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     test/
+      contract.ts           expectSkeleton, for the contract tests
       vrt.ts                shared setup for the screenshot tests
+    contract.test.ts        every component against core's skeletons (see Testing)
     menu/                   a component family keeps its parts together
       Menu.vue
       MenuItem.vue
@@ -115,7 +117,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 
 - **Parts.** A component's `core` API returns one attribute bundle for each part of its markup: the root, and parts such as `touch`, `icon`, and `label`. A part is named after the element in its class (`rio-button__icon` is `icon`).
 - **Classes come from `core`.** Each bundle includes the part's `class`, so the class names the stylesheet selects on are written once, in `core`.
-- **Adapters keep only the skeleton**: which element each part is, which part sits inside which, and where content goes (slots, children). Whether an optional part renders (`showsIcon()`) and which content fills it (`showsSelectedIcon()`) are `core`'s calls; the adapter only wires them to its conditional rendering (`v-if` in Vue).
+- **Adapters render the skeleton that `core` defines** (see below): the elements, how they nest, and where content goes are all in `core`. Whether an optional part renders (`showsIcon()`) and which content fills it (`showsSelectedIcon()`) are `core`'s calls too; the adapter only wires them to its conditional rendering (`v-if` in Vue) and puts its slots or children where the skeleton says.
 - **Bundles are HTML attributes**, as `setAttribute` would take them:
   - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
@@ -127,7 +129,9 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
 - **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
 
-For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`. Each component's `Parts` interface draws the skeleton the adapter renders.
+For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`.
+
+Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tree): which part sits inside which, what element each one is, which render only on a decision such as `showsIcon`, and which hold content. It is the machine-readable form of the contract, which the contract tests check every adapter against (see Testing).
 
 ## Adapters
 
@@ -216,6 +220,18 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Test primitives on a plain element built in the test, by dispatching the events they listen to (see `ripple.test.ts`).
 - Playwright refuses to click elements with `aria-disabled="true"`, but real pointers can still click them. To test a disabled guard, use `click({ force: true })`.
 - Check focusability with `element.focus()` and `document.activeElement`, not with Tab. Where Tab lands depends on where the previous test left the focus, which can be outside the page, so Tab-based tests pass or fail depending on test order.
+
+### Markup contract
+
+- `packages/vue/src/contract.test.ts` renders every component in a few configurations and checks the DOM against the component's skeleton from `core` with `expectSkeleton` (`packages/vue/src/test/contract.ts`). For each configuration it builds the `core` API from the same props and content, and checks, part by part:
+  - the tag, and the order and nesting of the parts, with none missing and none extra, and no part whose decision is false;
+  - every attribute `core` gives the part: class names as tokens, `undefined` as absent;
+  - no text outside the parts that hold content, since it would end up in the accessible name;
+  - on parts inside the root, no `aria-*`, `role`, or `tabindex` that `core` didn't give, so an adapter can't hide or rename what assistive technology reads.
+- Other extra attributes are allowed, such as `data-ripple` from a primitive, and so is anything on the root, which the app can pass attributes through to.
+- Which content fills a part (`showsSelectedIcon()`) is checked in the contract test itself, with `findPart`, since the skeleton doesn't look inside content.
+- Configurations cover each decision both ways (with and without an icon, on and off, toggles), disabled states, and one with every non-boolean prop away from its default, which catches a prop the adapter fails to pass on.
+- A new component gets a skeleton in `core` and a block in the contract test. A new adapter writes the same test against the same skeletons, and `expectSkeleton` moves to a place shared by the adapters' tests then. Never into a published package: it uses the DOM and Vitest.
 
 ### Visual regression
 

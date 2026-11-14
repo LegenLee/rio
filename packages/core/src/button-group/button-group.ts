@@ -1,5 +1,5 @@
 import type { ButtonShape, ButtonSize } from '../button/button';
-import type { PartAttrs } from '../parts';
+import type { PartAttrs, PartNode } from '../parts';
 import { omitUndefined } from '../utils/object';
 
 /**
@@ -54,12 +54,18 @@ export interface ButtonGroupOptions {
 }
 
 /**
- * The button group's markup. The adapter renders `<div root>` around the buttons; the buttons
- * are the group's direct children.
+ * The button group's markup. `buttonGroupSkeleton` says how the adapter renders it.
  */
 export interface ButtonGroupParts {
   root: () => PartAttrs;
 }
+
+/** How the adapter renders the button group: one root, with the buttons as its direct children. */
+export const buttonGroupSkeleton: PartNode<keyof ButtonGroupParts> = {
+  part: 'root',
+  tag: 'div',
+  content: true,
+};
 
 export interface ButtonGroupApi {
   parts: ButtonGroupParts;
