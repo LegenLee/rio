@@ -4,6 +4,51 @@
 
 > Last verified: 2026-11-15.
 
+## Examples
+
+<script setup>
+import Disabled from './demos/split-button/Disabled.vue';
+import Icon from './demos/split-button/Icon.vue';
+import Sizes from './demos/split-button/Sizes.vue';
+import Variants from './demos/split-button/Variants.vue';
+</script>
+
+Rio has no menu component yet, so these trailing buttons only switch `open`, and the menu icon turns. Hover or press either button to see its inner corners change.
+
+### Variants
+
+<Demo><Variants /></Demo>
+
+::: details Code
+<<< ./demos/split-button/Variants.vue
+:::
+
+### Sizes
+
+<Demo><Sizes /></Demo>
+
+::: details Code
+<<< ./demos/split-button/Sizes.vue
+:::
+
+### Icon
+
+<Demo><Icon /></Demo>
+
+::: details Code
+<<< ./demos/split-button/Icon.vue
+:::
+
+### Disabled
+
+The soft-disabled buttons stay focusable. Press Tab to reach them.
+
+<Demo><Disabled /></Demo>
+
+::: details Code
+<<< ./demos/split-button/Disabled.vue
+:::
+
 ## Spec
 
 ### Variants and configurations

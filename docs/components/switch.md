@@ -4,6 +4,42 @@
 
 > Last verified: 2026-11-11.
 
+## Examples
+
+<script setup>
+import Basic from './demos/switch/Basic.vue';
+import Disabled from './demos/switch/Disabled.vue';
+import Icons from './demos/switch/Icons.vue';
+</script>
+
+### Basic
+
+Click the switch or its label. On a touch screen, you can also drag the handle.
+
+<Demo><Basic /></Demo>
+
+::: details Code
+<<< ./demos/switch/Basic.vue
+:::
+
+### Icons
+
+<Demo><Icons /></Demo>
+
+::: details Code
+<<< ./demos/switch/Icons.vue
+:::
+
+### Disabled
+
+The soft-disabled switch stays focusable. Press Tab to reach it.
+
+<Demo><Disabled /></Demo>
+
+::: details Code
+<<< ./demos/switch/Disabled.vue
+:::
+
 ## Spec
 
 ### Anatomy and measurements

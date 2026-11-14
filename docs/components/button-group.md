@@ -4,6 +4,42 @@
 
 > Last verified: 2026-11-14.
 
+## Examples
+
+<script setup>
+import Connected from './demos/button-group/Connected.vue';
+import MultiSelect from './demos/button-group/MultiSelect.vue';
+import Standard from './demos/button-group/Standard.vue';
+</script>
+
+### Standard
+
+Press and hold a button: it grows, and its neighbors give way.
+
+<Demo><Standard /></Demo>
+
+::: details Code
+<<< ./demos/button-group/Standard.vue
+:::
+
+### Multi-select
+
+<Demo><MultiSelect /></Demo>
+
+::: details Code
+<<< ./demos/button-group/MultiSelect.vue
+:::
+
+### Connected
+
+A connected group is as wide as the space it's given. The first group keeps one button selected.
+
+<Demo column><Connected /></Demo>
+
+::: details Code
+<<< ./demos/button-group/Connected.vue
+:::
+
 ## Spec
 
 ### Variants and configurations

@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - playground
+  - docs
 
 # All shared versions live here. Packages refer to them with "catalog:".
 catalog:

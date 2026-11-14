@@ -1,0 +1,28 @@
+{
+  "name": "@rio-m3e/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "typecheck": "vue-tsc -p ."
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.3.0",
+    "@mdi/js": "^7.4.47",
+    "@rio-m3e/core": "workspace:*",
+    "@rio-m3e/styles": "workspace:*",
+    "@rio-m3e/tokens": "workspace:*",
+    "@rio-m3e/vue": "workspace:*",
+    "vue": "catalog:"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.32",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitepress": "2.0.0-alpha.21",
+    "vitepress-plugin-llms": "^1.15.0",
+    "vue-tsc": "catalog:"
+  }
+}

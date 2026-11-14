@@ -4,6 +4,69 @@
 
 > Last verified: 2026-11-11.
 
+## Examples
+
+<script setup>
+import Disabled from './demos/button/Disabled.vue';
+import Icon from './demos/button/Icon.vue';
+import Shapes from './demos/button/Shapes.vue';
+import Sizes from './demos/button/Sizes.vue';
+import Toggle from './demos/button/Toggle.vue';
+import Variants from './demos/button/Variants.vue';
+</script>
+
+### Variants
+
+<Demo><Variants /></Demo>
+
+::: details Code
+<<< ./demos/button/Variants.vue
+:::
+
+### Sizes
+
+<Demo><Sizes /></Demo>
+
+::: details Code
+<<< ./demos/button/Sizes.vue
+:::
+
+### Shapes
+
+Press and hold to see the corners spring toward the pressed shape.
+
+<Demo><Shapes /></Demo>
+
+::: details Code
+<<< ./demos/button/Shapes.vue
+:::
+
+### Icon
+
+<Demo><Icon /></Demo>
+
+::: details Code
+<<< ./demos/button/Icon.vue
+:::
+
+### Toggle
+
+<Demo><Toggle /></Demo>
+
+::: details Code
+<<< ./demos/button/Toggle.vue
+:::
+
+### Disabled
+
+The soft-disabled button stays focusable. Press Tab to reach it.
+
+<Demo><Disabled /></Demo>
+
+::: details Code
+<<< ./demos/button/Disabled.vue
+:::
+
 ## Spec
 
 ### Configurations

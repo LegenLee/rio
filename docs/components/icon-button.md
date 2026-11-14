@@ -4,6 +4,58 @@
 
 > Last verified: 2026-11-11.
 
+## Examples
+
+<script setup>
+import Disabled from './demos/icon-button/Disabled.vue';
+import Sizes from './demos/icon-button/Sizes.vue';
+import Toggle from './demos/icon-button/Toggle.vue';
+import Variants from './demos/icon-button/Variants.vue';
+import Widths from './demos/icon-button/Widths.vue';
+</script>
+
+### Variants
+
+<Demo><Variants /></Demo>
+
+::: details Code
+<<< ./demos/icon-button/Variants.vue
+:::
+
+### Sizes
+
+<Demo><Sizes /></Demo>
+
+::: details Code
+<<< ./demos/icon-button/Sizes.vue
+:::
+
+### Widths
+
+<Demo><Widths /></Demo>
+
+::: details Code
+<<< ./demos/icon-button/Widths.vue
+:::
+
+### Toggle
+
+<Demo><Toggle /></Demo>
+
+::: details Code
+<<< ./demos/icon-button/Toggle.vue
+:::
+
+### Disabled
+
+The soft-disabled button stays focusable. Press Tab to reach it.
+
+<Demo><Disabled /></Demo>
+
+::: details Code
+<<< ./demos/icon-button/Disabled.vue
+:::
+
 ## Spec
 
 ### Configurations
