@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["vitepress/client"]
+  },
+  "include": [".vitepress/**/*.ts", ".vitepress/**/*.vue", "**/*.vue", "**/*.md"],
+  "exclude": ["node_modules", ".vitepress/cache", ".vitepress/dist"],
+  "vueCompilerOptions": {
+    // Type-check the <script setup> blocks in Markdown pages too
+    "vitePressExtensions": [".md"]
+  }
+}

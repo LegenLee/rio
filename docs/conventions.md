@@ -11,6 +11,7 @@ How the Rio repository is organized and how code in it is written. Read this bef
 | `@rio-m3e/styles` | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
 | `@rio-m3e/vue`    | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
 | `playground`      | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
+| `docs`            | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
 
@@ -46,13 +47,23 @@ packages/
     button/                 component logic
       button.ts
       button.test.ts
+    button-group/
+      button-group.ts       props and selection rules
+      interaction.ts        arrow keys and pressed widths (DOM, tested through the Vue component)
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    split-button/
+      split-button.ts       two createButtons, and the trailing one's menu state
+      menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
+      split-button.test.ts
     switch/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
+    parts.ts                PartAttrs, the type of every part's attributes (see Core output)
+    utils/                  level 2 helpers (see Shared helpers)
+      object.ts             omitUndefined, for button and button-group
     index.ts
   styles/src/
     base/                   CSS shared across components
@@ -62,11 +73,16 @@ packages/
       shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
     button.css
+    button-group.css
     icon-button.css         layered on top of button.css
+    split-button.css        layered on top of button.css
     switch.css
   vue/src/
     button/
       Button.vue
+    button-group/
+      ButtonGroup.vue
+      context.ts            what the group provides; buttons read it with useButtonGroupItem
     icon-button/
       IconButton.vue
     ripple/
@@ -75,6 +91,11 @@ packages/
       shape-morph.ts        v-shape-morph, used inside components (not exported yet)
     switch/
       Switch.vue
+      Switch.vrt.test.ts    screenshot test (see Visual regression)
+    test/
+      contract.ts           expectSkeleton, for the contract tests
+      vrt.ts                shared setup for the screenshot tests
+    contract.test.ts        every component against core's skeletons (see Testing)
     menu/                   a component family keeps its parts together
       Menu.vue
       MenuItem.vue
@@ -96,6 +117,37 @@ packages/
 - Exception: `@rio-m3e/styles` exposes CSS files one by one, including those in `base/` (`@rio-m3e/styles/switch.css`, `@rio-m3e/styles/base/ripple.css`).
 - Inside the workspace, the `@rio-m3e/source` export condition points TypeScript and Vite at `src/` instead of `dist/`, so changes show up without a rebuild.
 
+## Core output
+
+How `core` hands a component's markup to the adapters. The stylesheets depend on that markup, so it is a contract: every adapter has to produce the same thing. Keeping it in `core` means a new adapter is a thin layer, not a second copy of the markup.
+
+- **Parts.** A component's `core` API returns one attribute bundle for each part of its markup: the root, and parts such as `touch`, `icon`, and `label`. A part is named after the element in its class (`rio-button__icon` is `icon`).
+- **Classes come from `core`.** Each bundle includes the part's `class`, so the class names the stylesheet selects on are written once, in `core`.
+- **Adapters render the skeleton that `core` defines** (see below): the elements, how they nest, and where content goes are all in `core`. Whether an optional part renders (`showsIcon()`) and which content fills it (`showsSelectedIcon()`) are `core`'s calls too; the adapter only wires them to its conditional rendering (`v-if` in Vue) and puts its slots or children where the skeleton says.
+- **Bundles are HTML attributes**, as `setAttribute` would take them:
+  - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
+  - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
+- **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
+  - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
+  - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
+  - More values: the value itself. `data-variant`, `data-size`, `data-shape`, `data-width`.
+- **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`, that take standard DOM events. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
+- **Callbacks to the adapter are named by what they report: `onChange` for state, the event's name for anything else.** A request to change the state the adapter owns is `onChange`, with the requested value, which the adapter may or may not accept: the `selected` of the button, the icon button, and the switch, and the button group's selection. Anything else gets its own name, such as the button's `onClick`. The adapter maps `onChange` to its framework's way of reporting state, such as `update:selected` for `v-model:selected` in Vue.
+  - A component that owns more than one state keeps `onChange` for its main value and names the others `on<State>Change`: a menu would have `onChange` for its selection and `onOpenChange` for whether it is open. In Vue they become `v-model` and `v-model:open`.
+- **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
+- **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
+
+For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`.
+
+Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tree): which part sits inside which, what element each one is, which render only on a decision such as `showsIcon`, and which hold content. It is the machine-readable form of the contract, which the contract tests check every adapter against (see Testing).
+
+## Adapters
+
+How an adapter turns `core`'s API into components.
+
+- **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
+  - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
+
 ## Primitives
 
 A primitive is a DOM behavior that several components share, such as the press ripple. Primitives live in `core/src/primitives/` and are public API, exported from `core/src/index.ts` for every adapter to use.
@@ -108,6 +160,12 @@ A primitive is a DOM behavior that several components share, such as the press r
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.
 - **The stylesheet selects on the primitive's data attribute, not on a class** (`[data-ripple]`, not `.rio-ripple`). Vue rewrites `class` whenever a `:class` binding changes and would drop a class the primitive added, but it leaves attributes it doesn't own alone.
 - **Adapters expose primitives in their framework's idiom.** In Vue, that's a directive (`vRipple` → `v-ripple`) that attaches on mount, detaches before unmount, and imports the paired stylesheet. A React adapter would use a hook instead.
+- **Springs see their targets through a transition.** A stylesheet that declares a target for `attachSpringProperty` (directly, or through `attachShapeMorph`) does two things on the element:
+  - It lists the target in `transition` as `<target> 1ms step-end`. While the element is rendered, the browser then reports every change of the target, whatever causes it: a state attribute, `:hover`, a theme variable on an ancestor, or the element's position among its siblings. A change made while it isn't rendered (`display: none`, or out of the document) makes no transition; the primitive catches up, without animating, when the element shows again. Without the transition, including when the app's CSS replaces the `transition` list, the spring never moves and the stylesheet's value shows.
+  - It draws the animated property from the target, not from the expression behind it: `border-start-start-radius: var(--rio-shape-morph-start-target)`, not `var(--_radius)`. `step-end` holds the old value until the spring takes over, so the new value doesn't flash for a frame first.
+
+  CSS can't add to a `transition` list, so components keep their spring targets in the public `--rio-spring-targets` and end their `transition` with `var(--rio-spring-targets)`. A stylesheet that springs more targets on an element extends the variable, as the split button's trailing button does, and an app that sets its own `transition` on one of these elements includes it. The variable is defined only on elements that spring, so it doesn't belong in a `transition` anywhere else: an undefined `var()` drops the whole declaration.
+
 - Primitives are tested in a real browser (see Testing).
 
 ## Shared helpers
@@ -136,6 +194,7 @@ A helper moves up only when a second caller actually needs it.
   - tsdown, oxfmt, and oxlint are pinned to exact versions because they are pre-1.0 or move fast.
   - Vitest and `@vitest/browser-playwright` are pinned to the same exact version, so the browser provider always matches Vitest.
   - TypeScript stays on 6.x until vue-tsc supports TypeScript 7.
+  - VitePress is pinned to an exact version while 2.0 is in alpha. Its stable 1.x line is built on Vite 5.
   - Shared versions live in the `catalog` in `pnpm-workspace.yaml`.
 
 ## Writing about the spec
@@ -148,17 +207,45 @@ In all of them, keep three kinds of statements apart and label them:
 - **Recommendations**: guidance prose on m3.material.io (dos, don'ts, "should").
 - **In Rio**: what Rio decides on top, with the reason.
 
+From Compose Material3, use only the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never rely on `private` or `internal` code, and link the files at the androidx commit you read.
+
 Rio's defaults follow the spec. Recommendations become options or component-level practice, and never quietly change a default. Never present a Rio decision as the spec. Where Rio goes against the spec or a recommendation, mark the spot with a quoted note that starts with **Deviation from the spec.** or **Deviation from a recommendation.**, and say what Rio does instead and why. See the ripple's touch delay in `docs/foundations.md`, section 6.
+
+## Docs site
+
+`docs/` is also a VitePress site (`@rio-m3e/docs`). `.github/workflows/docs.yml` publishes it to GitHub Pages when a release is published, together with npm, so the site matches the released packages. Run `pnpm docs:dev` to work on it and `pnpm docs:build` to check it; the build fails on dead links, but not on dead anchors (`page.md#heading`), so check those by hand.
+
+Publishing needs a one-time setup on GitHub:
+
+1. **Settings → Pages → Source**: "GitHub Actions".
+2. **Settings → Environments → github-pages → Deployment branches and tags**: allow the branch `main` and the tags `v*`. GitHub creates this environment with the first step and usually allows only the default branch, which is `dev`. A deployment from a release tag or from `main` then fails with "… is not allowed to deploy to github-pages due to environment protection rules".
+
+- **Pages** are the Markdown files under `docs/`. The navigation and sidebar are in `docs/.vitepress/config.ts`, so a new page needs an entry there.
+- **Examples**: each component page starts with an Examples section. An example is a plain SFC in `docs/components/demos/<id>/`, written as app code would be (imports from `@rio-m3e/vue`, no docs-only helpers), because the page shows its source as the example's code:
+
+  ```md
+  <Demo><Variants /></Demo>
+
+  ::: details Code
+  <<< ./demos/button/Variants.vue
+  :::
+  ```
+
+- **One adapter draws the examples.** Every adapter renders the same markup (see Core output and Markup contract), so the live examples use the Vue adapter only. When another adapter exists, its code goes next to the Vue code in a code group, and the live example stays Vue.
+- **The site wears Rio's theme.** `docs/.vitepress/theme/` writes the theme variables during server rendering and points VitePress's colors and font at them. Examples sit in `.vp-raw`, which keeps VitePress's styles out (`docs/postcss.config.mjs`), so they look the way they do in an app.
+- **Imports come from `src`** through the `@rio-m3e/source` condition, as in the playground, so the site always shows the current code without a build.
+- The build also writes `llms.txt` and `llms-full.txt`, Markdown copies of the docs for AI tools, with each example's code in place of the live example (vitepress-plugin-llms).
+- On GitHub, the Markdown shows `<Demo>` and `:::` blocks as plain text. Read the docs on the site.
 
 ## Testing
 
 Vitest runs three projects, configured in the root `vitest.config.ts`:
 
-| Project   | Covers                                                          | Runs in                              | Command            |
-| --------- | --------------------------------------------------------------- | ------------------------------------ | ------------------ |
-| `unit`    | `packages/tokens`, `packages/core` (except `primitives`)        | Node                                 | `pnpm test`        |
-| `browser` | `packages/vue` (`*.test.ts`) and `packages/core/src/primitives` | Headless Chromium through Playwright | `pnpm test`        |
-| `vrt`     | `packages/vue` (`*.vrt.test.ts`)                                | Headless Chromium at 1280×720        | `pnpm test:visual` |
+| Project   | Covers                                                          | Runs in                                                        | Command            |
+| --------- | --------------------------------------------------------------- | -------------------------------------------------------------- | ------------------ |
+| `unit`    | `packages/tokens`, `packages/core` (except `primitives`)        | Node                                                           | `pnpm test`        |
+| `browser` | `packages/vue` (`*.test.ts`) and `packages/core/src/primitives` | Headless Chromium through Playwright                           | `pnpm test`        |
+| `vrt`     | `packages/vue` (`*.vrt.test.ts`)                                | Headless Chromium at 1280×720; in CI, the Playwright container | `pnpm test:visual` |
 
 - `pnpm test` watches for changes locally and runs once in CI. Pass `--run` to run once locally.
 - First-time setup: `pnpm exec playwright install chromium`.
@@ -177,11 +264,29 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Playwright refuses to click elements with `aria-disabled="true"`, but real pointers can still click them. To test a disabled guard, use `click({ force: true })`.
 - Check focusability with `element.focus()` and `document.activeElement`, not with Tab. Where Tab lands depends on where the previous test left the focus, which can be outside the page, so Tab-based tests pass or fail depending on test order.
 
+### Markup contract
+
+- `packages/vue/src/contract.test.ts` renders every component in a few configurations and checks the DOM against the component's skeleton from `core` with `expectSkeleton` (`packages/vue/src/test/contract.ts`). For each configuration it builds the `core` API from the same props and content, and checks, part by part:
+  - the tag, and the order and nesting of the parts, with none missing and none extra, and no part whose decision is false;
+  - every attribute `core` gives the part: class names as tokens, `undefined` as absent;
+  - no text outside the parts that hold content, since it would end up in the accessible name;
+  - on parts inside the root, no `aria-*`, `role`, or `tabindex` that `core` didn't give, so an adapter can't hide or rename what assistive technology reads.
+- Other extra attributes are allowed, such as `data-ripple` from a primitive, and so is anything on the root, which the app can pass attributes through to.
+- Which content fills a part (`showsSelectedIcon()`) is checked in the contract test itself, with `findPart`, since the skeleton doesn't look inside content.
+- Configurations cover each decision both ways (with and without an icon, on and off, toggles), disabled states, and one with every non-boolean prop away from its default, which catches a prop the adapter fails to pass on.
+- A new component gets a skeleton in `core` and a block in the contract test. A new adapter writes the same test against the same skeletons, and `expectSkeleton` moves to a place shared by the adapters' tests then. Never into a published package: it uses the DOM and Vitest.
+
 ### Visual regression
 
-- Name screenshot tests `*.vrt.test.ts`. Reference images are stored in `__screenshots__/` next to the test and committed.
-- Pixels differ across operating systems, fonts, and browser versions, so reference images must come from one fixed environment (CI or a Docker image), never from local machines. Until that environment exists, treat `vrt` results as a local reference only.
-- Failure artifacts (actual and diff images) go to `.vitest/`, which is git-ignored.
+Pixels differ across operating systems, fonts, and browser versions, so the committed reference screenshots come from one fixed environment: the official Playwright container (`mcr.microsoft.com/playwright:v1.65.0-noble`) that the `visual` job in `ci.yml` runs in. They are never made on a local machine.
+
+- **Writing tests**: name them `*.vrt.test.ts`, next to the component. Import the helpers from `packages/vue/src/test/vrt.ts`: they load Roboto from `@fontsource/roboto` instead of relying on system fonts, apply the default theme, and render a gallery on the theme's surface in the light or dark scheme. `keyboardFocus()` focuses an element so it shows its focus ring; assert `:focus-visible` before the screenshot.
+- **Keep galleries inside the 1280×720 test frame.** Anything past it is cut off; lay large sizes out in rows.
+- **References** are stored in `__screenshots__/` next to the test and committed. In CI a missing or different screenshot fails the `visual` job, which uploads the actual and diff images as the `visual-diffs` artifact.
+- **Locally**, `pnpm test:visual --run` compares against references in `.vitest/screenshots/` instead, which is git-ignored, so it shows what your change did on your machine. The first run creates them and fails with "Review it before running tests again"; run it again.
+- **To add or update references**: push the branch, run **Actions → Update screenshots** on it, download the `screenshots` artifact, and extract it at the repository root (`unzip screenshots.zip && tar xf screenshots.tar`). Review the images like code, then commit them.
+- **Upgrading Playwright**: the version in the root `package.json` is pinned and must match the container tag in `ci.yml` and `screenshots.yml`. Change all three together, then retake every reference.
+- Failure artifacts (actual and diff images) go to `.vitest/attachments/`, which is git-ignored.
 
 ### Known quirks
 
@@ -196,11 +301,13 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Before you commit, run:
 
   ```sh
-  pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build
+  pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build && pnpm docs:build
   ```
 
-- CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. The `vrt` project isn't part of CI yet.
-- Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `chore:`.
+- CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. Its `visual` job runs the `vrt` project in the Playwright container (see Visual regression).
+- Commit messages follow Conventional Commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `ci:`, `chore:`.
+  - `test:` changes only tests, test helpers, or reference screenshots.
+  - `ci:` changes only `.github/workflows/`.
 
 ## Releases
 
@@ -219,7 +326,7 @@ To release:
 3. Tag that merge commit (`git tag -a v0.1.0 -m v0.1.0`) and push the tag.
 4. Fast-forward `dev` to `main` and push it, so the tag is reachable from `dev` too (`git describe` and `git log v0.1.0..` work there).
 5. `.github/workflows/release.yml` runs the CI checks, writes the notes, packs, and creates a **draft** release with the tarballs attached.
-6. Review the draft on GitHub and publish it. That starts `publish.yml`, which publishes the same tarballs to npm, dependencies first. Versions already on npm are skipped, so a failed run can be re-run.
+6. Review the draft on GitHub and publish it. That starts `publish.yml`, which publishes the same tarballs to npm, dependencies first. Versions already on npm are skipped, so a failed run can be re-run. It also starts `docs.yml`, which publishes the docs site.
 
 ### Trusted publishing setup
 

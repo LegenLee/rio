@@ -14,7 +14,7 @@ export interface SwitchHandleOptions {
   /** Returns whether the switch is on. */
   selected: () => boolean;
   /** Called when a drag ends on the other side. */
-  onSelectedChange: (selected: boolean) => void;
+  onChange: (selected: boolean) => void;
 }
 
 export interface SwitchHandleHandle {
@@ -63,7 +63,7 @@ export function attachSwitchHandle(
     onEnd({ velocityX }) {
       const velocity = direction * velocityX;
       const next = Math.abs(velocity) > FLING_VELOCITY ? velocity > 0 : x.value > (off + on) / 2;
-      if (next !== options.selected()) options.onSelectedChange(next);
+      if (next !== options.selected()) options.onChange(next);
       // If the state changes, the target moves a moment later and the spring retargets smoothly.
       x.release(velocity);
     },

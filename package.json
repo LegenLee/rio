@@ -5,6 +5,9 @@
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" build",
     "dev": "pnpm --filter @rio-m3e/playground dev",
+    "docs:dev": "pnpm --filter @rio-m3e/docs dev",
+    "docs:build": "pnpm --filter @rio-m3e/docs build",
+    "docs:preview": "pnpm --filter @rio-m3e/docs preview",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
@@ -20,7 +23,7 @@
     "@vitest/browser-playwright": "5.1.0",
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
-    "playwright": "^1.65.0",
+    "playwright": "1.65.0",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "5.1.0",

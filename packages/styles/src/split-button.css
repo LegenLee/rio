@@ -1,0 +1,185 @@
+/*
+ * M3E split button: a leading button and a trailing menu button, 2px apart. Both are buttons
+ * (`button.css`), so they keep the button's sizes, colors, elevation, disabled rules, state layer,
+ * ripple, and touch target. This file adds what differs: the paddings, the trailing button's
+ * width, the corners, and the menu icon. `createSplitButton` from `@rio-m3e/core` sets the
+ * attributes, and the buttons carry `data-size`, `data-variant`, and, on the trailing button,
+ * `data-open`.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-split-button-*.scss`, Material 3
+ * v34.0.21). The menu icon's offset comes from the spec page's measurements, and its direction
+ * (toward the start) from the M3 Design Kit.
+ */
+
+@property --rio-split-button-menu-turn-target {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --rio-split-button-menu-shift-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+.rio-split-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+/*
+ * Both buttons: the corners at the ends of the split button are round, and the facing ones are
+ * small. Hovering, focusing, or pressing a button rounds its facing corners more, and opening the
+ * menu rounds the trailing button fully. Each side springs on its own (see base/shape-morph.css).
+ */
+.rio-split-button > .rio-button {
+  /* Small */
+  --_lead-start: 16px;
+  --_lead-end: 12px;
+  --_menu-size: 22px;
+  --_menu-padding: 13px;
+  --_menu-offset: 1px;
+  --_inner: var(--rio-shape-corner-extra-small);
+  --_inner-active: var(--rio-shape-corner-medium);
+
+  --_inner-now: var(--_inner);
+}
+
+/*
+ * `[data-variant]` is always there; it lifts this above button.css's per-side defaults in any
+ * order. The corners show these targets (button.css).
+ */
+.rio-split-button > .rio-button[data-variant] {
+  --rio-shape-morph-start-target: var(--_start);
+  --rio-shape-morph-end-target: var(--_end);
+}
+
+.rio-split-button > .rio-button:where([data-size='xsmall']) {
+  --_lead-start: 12px;
+  --_lead-end: 10px;
+  --_inner-active: var(--rio-shape-corner-small);
+}
+
+.rio-split-button > .rio-button:where([data-size='medium']) {
+  --_lead-start: 24px;
+  --_lead-end: 24px;
+  --_menu-size: 26px;
+  --_menu-padding: 15px;
+  --_menu-offset: 2px;
+}
+
+.rio-split-button > .rio-button:where([data-size='large']) {
+  --_lead-start: 48px;
+  --_lead-end: 48px;
+  --_menu-size: 38px;
+  --_menu-padding: 29px;
+  --_menu-offset: 3px;
+  --_inner: var(--rio-shape-corner-small);
+  --_inner-active: var(--rio-shape-corner-large-increased);
+}
+
+.rio-split-button > .rio-button:where([data-size='xlarge']) {
+  --_lead-start: 64px;
+  --_lead-end: 64px;
+  --_menu-size: 50px;
+  --_menu-padding: 43px;
+  --_menu-offset: 6px;
+  --_inner: var(--rio-shape-corner-medium);
+  --_inner-active: var(--rio-shape-corner-large-increased);
+}
+
+@media (hover: hover) {
+  .rio-split-button > .rio-button:hover {
+    --_inner-now: var(--_inner-active);
+  }
+}
+
+.rio-split-button > .rio-button:is(:focus-visible, [data-pressed]) {
+  --_inner-now: var(--_inner-active);
+}
+
+/*
+ * Disabled buttons don't react, so their corners stay put. Being open still shows (that rule comes
+ * later): a disabled toggle button keeps its selected shape too.
+ */
+.rio-split-button > .rio-button:is(:disabled, [aria-disabled='true']) {
+  --_inner-now: var(--_inner);
+}
+
+/* Leading button */
+
+.rio-split-button > .rio-split-button__leading {
+  --_start: var(--_round);
+  --_end: var(--_inner-now);
+
+  padding-inline: var(--_lead-start) var(--_lead-end);
+}
+
+/* Trailing button: a square, or 48px wide when shorter, with the menu icon in it */
+
+.rio-split-button > .rio-split-button__trailing {
+  --_start: var(--_inner-now);
+  --_end: var(--_round);
+  --rio-split-button-menu-shift-target: var(--_menu-offset);
+  /* Toward the start: left, or right in right-to-left layouts */
+  --_start-sign: -1;
+
+  inline-size: calc(var(--_menu-size) + 2 * var(--_menu-padding));
+  padding: 0;
+}
+
+.rio-split-button > .rio-split-button__trailing:dir(rtl) {
+  --_start-sign: 1;
+}
+
+/*
+ * Open: fully round, with the icon centered and turned half a circle, its point swinging through
+ * the start side, toward the leading button. The color doesn't change; a state layer shows
+ * instead, at the pressed opacity.
+ */
+.rio-split-button > .rio-split-button__trailing[data-open] {
+  --_inner-now: var(--_round);
+  --rio-split-button-menu-turn-target: 180deg;
+  --rio-split-button-menu-shift-target: 0px;
+}
+
+.rio-split-button > .rio-split-button__trailing[data-open]:dir(rtl) {
+  --rio-split-button-menu-turn-target: -180deg;
+}
+
+.rio-split-button
+  > .rio-split-button__trailing[data-open]:not(:disabled, [aria-disabled='true'])::before {
+  opacity: var(--rio-state-pressed-state-layer-opacity);
+}
+
+/*
+ * The springs in `attachSplitButtonMenuIcon` write `--_menu-turn` and `--_menu-shift` while they
+ * move; at rest the targets apply. The targets are registered and don't inherit, so they are
+ * passed down through these.
+ */
+.rio-split-button > .rio-split-button__trailing {
+  --_menu-turn-rest: var(--rio-split-button-menu-turn-target);
+  --_menu-shift-rest: var(--rio-split-button-menu-shift-target);
+  /* The button's spring targets (button.css), and the menu icon's. */
+  --rio-spring-targets:
+    --rio-shape-morph-start-target 1ms step-end, --rio-shape-morph-end-target 1ms step-end,
+    --rio-split-button-menu-turn-target 1ms step-end,
+    --rio-split-button-menu-shift-target 1ms step-end;
+}
+
+.rio-split-button__menu-icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--_menu-size);
+  block-size: var(--_menu-size);
+  rotate: var(--_menu-turn, var(--_menu-turn-rest));
+  translate: calc(var(--_menu-shift, var(--_menu-shift-rest)) * var(--_start-sign)) 0;
+}
+
+.rio-split-button__menu-icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}

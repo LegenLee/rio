@@ -1,22 +1,34 @@
 // Springs a value toward a target that CSS declares per state. The stylesheet sets a registered
-// <length> custom property (the target) for each state; when one of the watched attributes
-// changes, the target is read again in px and the spring heads there, keeping its velocity if a
-// change interrupts it. The animated value goes to `apply`; at rest `apply(undefined)` hands back
-// to the stylesheet.
+// custom property (the target) for each state, such as a <length> or an <angle>, read in px or
+// deg. The spring heads for the target whenever it changes, keeping its velocity if a change
+// interrupts it. The animated value goes to `apply`; at rest `apply(undefined)` hands back to the
+// stylesheet.
+//
+// The stylesheet also gives the target an instant transition, `<target> 1ms step-end`, in the
+// element's `transition` list. The browser then reports every change of the target as a
+// transition event, whatever caused it: a state attribute, :hover or :focus-visible, a theme
+// variable set on an ancestor, or a selector such as :first-child. So the spring knows the value on
+// screen, even while it rests. `step-end` holds the old value until the spring takes over.
+// Without the transition (or if the app's CSS replaces the `transition` list) the spring never
+// moves, and the stylesheet's value shows directly.
+//
+// An element that isn't rendered (display: none, or out of the document) gets no transitions, so
+// a target that changed meanwhile is caught up, without animating, when the element shows again.
 //
 // A drag can take manual control with `hold()` and give it back with `release(velocity)`.
 
-import { createSpring, readSpringParams } from '../spring/spring';
+import { createSpring, prefersReducedMotion, readSpringParams } from '../spring/spring';
 
 export interface SpringPropertyOptions {
-  /** A registered <length> custom property that holds the target for the current state. */
+  /**
+   * A registered custom property that holds the target for the current state: a <length>, read
+   * in px, or an <angle>, read in deg. The stylesheet has to transition it (see above).
+   */
   target: string;
-  /** Writes the animated value in px, or clears it with `undefined` at rest. */
+  /** Writes the animated value (px or deg), or clears it with `undefined` at rest. */
   apply: (value: number | undefined) => void;
   /** The motion token whose spring drives the value. Defaults to `'fast-spatial'`. */
   token?: string;
-  /** Attributes whose changes can move the target. Defaults to Rio's state attributes. */
-  watch?: string[];
 }
 
 export interface SpringPropertyHandle {
@@ -29,18 +41,8 @@ export interface SpringPropertyHandle {
   detach(): void;
 }
 
-/** The data attributes Rio's components use for state. */
-export const STATE_ATTRIBUTES = [
-  'data-pressed',
-  'data-dragging',
-  'data-selected',
-  'data-shape',
-  'data-size',
-  'data-icon',
-];
-
-const reducedMotion = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** The transition events that report a change of the target. */
+const EVENTS = ['transitionrun', 'transitionend', 'transitioncancel'] as const;
 
 export function attachSpringProperty(
   element: HTMLElement,
@@ -64,17 +66,28 @@ export function attachSpringProperty(
     // Without the stylesheet the target isn't a length, so leave the element alone.
     if (!Number.isFinite(target)) return;
     const params = readSpringParams(element, token);
-    if (!params || reducedMotion()) spring.jump(target);
+    if (!params || prefersReducedMotion()) spring.jump(target);
     else spring.to(target, params, velocity);
   };
 
-  const observer = new MutationObserver(() => {
+  // While the transition holds the old value, the read finds nothing new; `transitionend` brings
+  // the new one. Events from other properties, or bubbling up from inside, don't count.
+  const onTransition = (event: TransitionEvent) => {
+    if (event.target !== element || event.propertyName !== options.target) return;
     if (!held && read() !== spring.target) go();
+  };
+  for (const type of EVENTS) element.addEventListener(type, onTransition);
+
+  // Showing the element again changes its size from nothing, which is when to catch up with a
+  // target that changed while it was hidden. The screen already shows that target, so jump. While
+  // a transition holds the old value the read finds nothing new, so this leaves visible changes to
+  // the transition events.
+  const resync = new ResizeObserver(() => {
+    if (held || spring.moving) return;
+    const now = read();
+    if (Number.isFinite(now) && now !== spring.target) spring.jump(now);
   });
-  observer.observe(element, {
-    attributes: true,
-    attributeFilter: options.watch ?? STATE_ATTRIBUTES,
-  });
+  resync.observe(element);
 
   return {
     get value() {
@@ -89,7 +102,8 @@ export function attachSpringProperty(
       go(velocity);
     },
     detach() {
-      observer.disconnect();
+      for (const type of EVENTS) element.removeEventListener(type, onTransition);
+      resync.disconnect();
       spring.stop();
       options.apply(undefined);
     },

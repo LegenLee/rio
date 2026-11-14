@@ -1,41 +1,56 @@
 <script setup lang="ts">
-import { buttonDefaults, createButton, type ButtonProps } from '@rio-m3e/core';
+import { createButton, type ButtonProps } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/button.css';
+import { useButtonGroupItem } from '../button-group/context';
 import { vRipple } from '../ripple/ripple';
 import { vShapeMorph } from '../shape-morph/shape-morph';
 
-const props = withDefaults(defineProps<ButtonProps>(), buttonDefaults);
+// No defaults here: core fills them in, after a surrounding button group has filled in its size
+// and shape.
+const { variant, size, shape, toggle, selected, disabled, softDisabled, type, value } =
+  defineProps<ButtonProps>();
 const emit = defineEmits<{
   click: [event: MouseEvent];
   'update:selected': [selected: boolean];
 }>();
-defineSlots<{
+const slots = defineSlots<{
   /** The label. */
   default?: () => unknown;
   /** A leading icon. It is hidden from assistive technology, so the label must stand alone. */
   icon?: () => unknown;
 }>();
 
+// `satisfies` fails the build if a prop added to ButtonProps is missing here.
+const item = useButtonGroupItem(
+  () =>
+    ({
+      variant,
+      size,
+      shape,
+      toggle,
+      selected,
+      disabled,
+      softDisabled,
+      type,
+      value,
+    }) satisfies Record<keyof ButtonProps, unknown>,
+  (next) => emit('update:selected', next),
+);
 const button = createButton({
-  props: () => props,
+  props: item.props,
+  content: () => ({ icon: !!slots.icon }),
   onClick: (event) => emit('click', event),
-  onSelectedChange: (selected) => emit('update:selected', selected),
+  onChange: item.onChange,
 });
 </script>
 
 <template>
-  <button
-    v-ripple
-    v-shape-morph
-    class="rio-button rio-state-layer rio-focus-ring"
-    v-bind="button.rootAttrs()"
-    @click="button.handleClick"
-  >
-    <span class="rio-button__touch" aria-hidden="true" />
-    <span v-if="$slots.icon" class="rio-button__icon" aria-hidden="true"><slot name="icon" /></span>
-    <span class="rio-button__label"><slot /></span>
+  <button v-ripple v-shape-morph v-bind="button.parts.root()" @click="button.handleClick">
+    <span v-bind="button.parts.touch()" />
+    <span v-if="button.showsIcon()" v-bind="button.parts.icon()"><slot name="icon" /></span>
+    <span v-bind="button.parts.label()"><slot /></span>
   </button>
 </template>

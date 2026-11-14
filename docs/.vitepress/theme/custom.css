@@ -1,0 +1,29 @@
+/*
+ * The site wears Rio's theme: VitePress's colors and font point at the --rio-* variables that
+ * RioTheme writes on :root. Each color is a light-dark() pair, so one rule covers both schemes.
+ * This rule must come after VitePress's own `.dark` rule, which has the same specificity.
+ */
+:root {
+  --vp-font-family-base: var(--rio-typeface-plain);
+
+  --vp-c-bg: var(--rio-color-surface);
+  --vp-c-bg-alt: var(--rio-color-surface-container-low);
+  --vp-c-bg-elv: var(--rio-color-surface-container);
+  --vp-c-bg-soft: var(--rio-color-surface-container-high);
+
+  --vp-c-text-1: var(--rio-color-on-surface);
+  --vp-c-text-2: var(--rio-color-on-surface-variant);
+
+  --vp-c-divider: var(--rio-color-outline-variant);
+  --vp-c-gutter: var(--rio-color-outline-variant);
+  --vp-c-border: var(--rio-color-outline);
+
+  --vp-c-brand-1: var(--rio-color-primary);
+  --vp-c-brand-2: var(--rio-color-primary);
+  --vp-c-brand-3: var(--rio-color-primary);
+  --vp-c-brand-soft: color-mix(in srgb, var(--rio-color-primary) 14%, transparent);
+
+  --vp-button-brand-text: var(--rio-color-on-primary);
+  --vp-button-brand-hover-text: var(--rio-color-on-primary);
+  --vp-button-brand-active-text: var(--rio-color-on-primary);
+}

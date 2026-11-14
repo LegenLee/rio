@@ -4,7 +4,8 @@
  * Values come from Material Web's component tokens (`_md-comp-switch.scss`, Material 3 v34.0.21),
  * which match the spec's measurements table. The handle's center and size are declared as targets
  * for each state; `attachSwitchHandle` from `@rio-m3e/core` springs `--_handle-x` and
- * `--_handle-size` toward them. Without JavaScript the handle simply jumps.
+ * `--_handle-size` toward them, which show the targets at rest. The targets get an instant
+ * transition so the springs see them change. Without JavaScript the handle simply jumps.
  *
  * The root carries `data-selected`, plus `data-pressed` (from the ripple), `data-dragging` (from
  * the drag), and `data-icon` when the handle shows an icon. State rules sit inside `:where()` so
@@ -72,9 +73,14 @@
   /* Horizontal drags belong to the handle; vertical ones still scroll the page. */
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
+  /* The handle's spring targets get an instant transition, which is how the springs see them
+     change (core's spring-property). Public, as on the button (button.css). */
+  --rio-spring-targets:
+    --rio-switch-handle-x-target 1ms step-end, --rio-switch-handle-size-target 1ms step-end;
   transition:
     background-color var(--rio-motion-fast-effects),
-    border-color var(--rio-motion-fast-effects);
+    border-color var(--rio-motion-fast-effects),
+    var(--rio-spring-targets);
 }
 
 /* States */
@@ -196,8 +202,10 @@
 /* The track is 32px tall, below the spec's 48px minimum target. */
 .rio-switch__touch {
   position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 50%;
+  /* Physical, like `translate`: a logical start would flip in right-to-left layouts and push the
+     target off the switch. */
+  top: 50%;
+  left: 50%;
   inline-size: max(100%, 48px);
   block-size: max(100%, 48px);
   translate: -50% -50%;

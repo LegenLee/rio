@@ -1,22 +1,24 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createIconButton, type IconButtonProps } from './icon-button';
+import { createIconButton, type IconButtonContent, type IconButtonProps } from './icon-button';
 
-const setup = (props: Partial<IconButtonProps> = {}) => {
+const setup = (props: Partial<IconButtonProps> = {}, content?: IconButtonContent) => {
   const onClick = vi.fn();
-  const onSelectedChange = vi.fn();
+  const onChange = vi.fn();
   const button = createIconButton({
     props: () => ({ label: 'Add to favorites', ...props }),
+    content: content && (() => content),
     onClick,
-    onSelectedChange,
+    onChange,
   });
-  return { button, onClick, onSelectedChange };
+  return { button, onClick, onChange };
 };
 
 const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent;
 
 describe('createIconButton', () => {
   test('defaults to a small, round, default-width filled button named by its label', () => {
-    expect(setup().button.rootAttrs()).toMatchObject({
+    expect(setup().button.parts.root()).toMatchObject({
+      class: 'rio-button rio-state-layer rio-focus-ring rio-icon-button',
       type: 'button',
       'aria-label': 'Add to favorites',
       'data-variant': 'filled',
@@ -26,11 +28,25 @@ describe('createIconButton', () => {
     });
   });
 
+  test('shares the touch and icon parts with the button', () => {
+    const { parts } = setup().button;
+    expect(parts.touch()).toEqual({ class: 'rio-button__touch', 'aria-hidden': 'true' });
+    expect(parts.icon()).toEqual({ class: 'rio-button__icon', 'aria-hidden': 'true' });
+  });
+
   test('every variant can toggle, the standard one included', () => {
-    const { button, onSelectedChange } = setup({ variant: 'standard', toggle: true });
-    expect(button.rootAttrs()['aria-pressed']).toBe('false');
+    const { button, onChange } = setup({ variant: 'standard', toggle: true });
+    expect(button.parts.root()['aria-pressed']).toBe('false');
     button.handleClick(click());
-    expect(onSelectedChange).toHaveBeenCalledWith(true);
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  test('shows the selected icon only on a selected toggle that has one', () => {
+    const has = { selectedIcon: true };
+    expect(setup({ toggle: true, selected: true }, has).button.showsSelectedIcon()).toBe(true);
+    expect(setup({ toggle: true, selected: false }, has).button.showsSelectedIcon()).toBe(false);
+    expect(setup({ selected: true }, has).button.showsSelectedIcon()).toBe(false);
+    expect(setup({ toggle: true, selected: true }).button.showsSelectedIcon()).toBe(false);
   });
 
   test('blocks clicks when soft-disabled, like the button', () => {
@@ -39,6 +55,6 @@ describe('createIconButton', () => {
     button.handleClick(event);
     expect(onClick).not.toHaveBeenCalled();
     expect(event.preventDefault).toHaveBeenCalled();
-    expect(button.rootAttrs()['aria-disabled']).toBe('true');
+    expect(button.parts.root()['aria-disabled']).toBe('true');
   });
 });

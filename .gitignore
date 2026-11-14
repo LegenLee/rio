@@ -6,6 +6,8 @@ coverage/
 .DS_Store
 .vite/
 .vitest/
+# VitePress's dev cache (its build output is dist/)
+.vitepress/cache/
 
 # Release tarballs, and the copies scripts/pack.mjs puts in each package while packing
 release/

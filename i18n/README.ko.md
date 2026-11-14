@@ -25,8 +25,15 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 - [x] 아이콘 버튼
 - [x] 스위치
 
+### v0.2
+
+- [x] 버튼 그룹
+- [x] 분할 버튼
+- [x] 예제가 있는 문서 사이트
+
 ### 추후 로드맵
 
+- [ ] 메뉴
 - [ ] 툴팁
 - [ ] 링크 버튼
 - [ ] 스위치의 폼 값
@@ -38,7 +45,7 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 pnpm add @rio-m3e/vue @rio-m3e/tokens
 ```
 
-앱을 띄우기 전에 `applyTheme`를 호출하여 적용합니다.
+앱을 **마운트하기 전**에 `applyTheme`를 호출하여 테마를 적용합니다.
 테마는 `@rio-m3e/tokens`에서 CSS 변수로 제공됩니다.
 
 ```ts

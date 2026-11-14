@@ -20,6 +20,17 @@ export const MOTION_TOKENS = [
  */
 export type MotionToken = (typeof MOTION_TOKENS)[number];
 
+/**
+ * The spatial tokens. Their springs are also available in the standard scheme whatever the
+ * theme's scheme, for motion the spec pins to it, such as the split button's menu icon.
+ */
+export const SPATIAL_MOTION_TOKENS = [
+  'fast-spatial',
+  'default-spatial',
+  'slow-spatial',
+] as const satisfies readonly MotionToken[];
+export type SpatialMotionToken = (typeof SPATIAL_MOTION_TOKENS)[number];
+
 export interface MotionSpring {
   /** 1 settles without overshoot; lower values bounce. */
   dampingRatio: number;
@@ -99,7 +110,22 @@ export type MotionVarPart = 'duration' | 'easing' | 'damping' | 'stiffness';
 
 export type MotionVar =
   | `${typeof TOKEN_PREFIX}-motion-${MotionToken}`
-  | `${typeof TOKEN_PREFIX}-motion-${MotionToken}-${MotionVarPart}`;
+  | `${typeof TOKEN_PREFIX}-motion-${MotionToken}-${MotionVarPart}`
+  | StandardSpringVar;
+
+export type StandardSpringVar =
+  `${typeof TOKEN_PREFIX}-motion-standard-${SpatialMotionToken}-${'damping' | 'stiffness'}`;
+
+/**
+ * CSS variable for a spatial token's spring in the standard scheme, set whatever the theme's
+ * scheme is. In `@rio-m3e/core`, `readSpringParams(element, 'standard-fast-spatial')` reads it.
+ */
+export function standardSpringVar(
+  token: SpatialMotionToken,
+  part: 'damping' | 'stiffness',
+): StandardSpringVar {
+  return `${TOKEN_PREFIX}-motion-standard-${token}-${part}`;
+}
 
 /**
  * CSS variable name for a token. Without `part`, the variable holds `<duration> <easing>`
@@ -113,7 +139,8 @@ export function motionVar(token: MotionToken, part?: MotionVarPart): MotionVar {
 /**
  * CSS variables for one scheme: the curve for CSS transitions, and the raw spring for the spring
  * solver in `@rio-m3e/core`, which reads them from the element it animates. The names don't
- * include the scheme.
+ * include the scheme. The standard scheme's spatial springs are added under their own names
+ * (`standardSpringVar`) whatever the scheme.
  */
 export function createMotionVariables(
   scheme: MotionScheme = 'expressive',
@@ -127,6 +154,11 @@ export function createMotionVariables(
     vars[motionVar(token, 'easing')] = easing;
     vars[motionVar(token, 'damping')] = String(dampingRatio);
     vars[motionVar(token, 'stiffness')] = String(stiffness);
+  }
+  for (const token of SPATIAL_MOTION_TOKENS) {
+    const { dampingRatio, stiffness } = getMotionSpring('standard', token);
+    vars[standardSpringVar(token, 'damping')] = String(dampingRatio);
+    vars[standardSpringVar(token, 'stiffness')] = String(stiffness);
   }
   return vars;
 }

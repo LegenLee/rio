@@ -1,3 +1,7 @@
+import type { ButtonGroupValue } from '../button-group/button-group';
+import type { PartAttrs, PartNode } from '../parts';
+import { omitUndefined } from '../utils/object';
+
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
@@ -31,6 +35,11 @@ export interface ButtonProps {
   softDisabled?: boolean;
   /** Defaults to `'button'`, so a button inside a form doesn't submit it by accident. */
   type?: 'button' | 'submit' | 'reset';
+  /**
+   * Identifies the button inside a button group that keeps a selection. Such a group makes the
+   * button a toggle and decides whether it is selected.
+   */
+  value?: ButtonGroupValue;
 }
 
 export const buttonDefaults = {
@@ -42,19 +51,51 @@ export const buttonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Required<ButtonProps>;
+} satisfies Omit<Required<ButtonProps>, 'value'>;
+
+/** What the adapter has to put in the button, which only the adapter can see. */
+export interface ButtonContent {
+  /** Whether there is a leading icon. */
+  icon: boolean;
+}
 
 export interface ButtonOptions {
   /** Returns the current prop values. The adapter owns the state. */
   props: () => ButtonProps;
+  /** Returns what content the adapter has. Without it, the button has no icon. */
+  content?: () => ButtonContent;
   /** Called for a click that isn't blocked. */
   onClick: (event: MouseEvent) => void;
-  /** Called after an unblocked click on a toggle button, with the new value. */
-  onSelectedChange: (selected: boolean) => void;
+  /** Called after an unblocked click on a toggle button, with the requested value. */
+  onChange: (selected: boolean) => void;
 }
 
+/**
+ * The button's markup, part by part. `buttonSkeleton` says how the adapter nests them.
+ */
+export interface ButtonParts {
+  root: () => PartAttrs;
+  /** Extends small buttons to the 48px target. */
+  touch: () => PartAttrs;
+  icon: () => PartAttrs;
+  label: () => PartAttrs;
+}
+
+/** How the adapter renders the button's parts. The icon holds the leading icon. */
+export const buttonSkeleton: PartNode<keyof ButtonParts, 'showsIcon'> = {
+  part: 'root',
+  tag: 'button',
+  children: [
+    { part: 'touch', tag: 'span' },
+    { part: 'icon', tag: 'span', when: 'showsIcon', content: true },
+    { part: 'label', tag: 'span', content: true },
+  ],
+};
+
 export interface ButtonApi {
-  rootAttrs: () => Record<string, string | undefined>;
+  parts: ButtonParts;
+  /** Whether to render the icon part. */
+  showsIcon: () => boolean;
   /** Attach to the root element's `click`. */
   handleClick: (event: MouseEvent) => void;
 }
@@ -62,28 +103,33 @@ export interface ButtonApi {
 const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text';
 
 /** Defaults under the given props, skipping props that are explicitly `undefined`. */
-const resolve = (props: ButtonProps): Required<ButtonProps> => ({
-  ...buttonDefaults,
-  ...Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined)),
-});
+const resolve = (props: ButtonProps) => ({ ...buttonDefaults, ...omitUndefined(props) });
 
 export function createButton(options: ButtonOptions): ButtonApi {
   return {
-    rootAttrs() {
-      const p = resolve(options.props());
-      const toggle = isToggle(p);
-      return {
-        type: p.type,
-        disabled: p.disabled ? '' : undefined,
-        // Native disabled already says it; aria-disabled is only for the soft variant.
-        'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
-        'aria-pressed': toggle ? String(p.selected) : undefined,
-        'data-variant': p.variant,
-        'data-size': p.size,
-        'data-shape': p.shape,
-        'data-selected': toggle ? String(p.selected) : undefined,
-      };
+    parts: {
+      root() {
+        const p = resolve(options.props());
+        const toggle = isToggle(p);
+        return {
+          class: 'rio-button rio-state-layer rio-focus-ring',
+          type: p.type,
+          disabled: p.disabled ? '' : undefined,
+          // Native disabled already says it; aria-disabled is only for the soft variant.
+          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          'aria-pressed': toggle ? String(p.selected) : undefined,
+          'data-variant': p.variant,
+          'data-size': p.size,
+          'data-shape': p.shape,
+          'data-selected': toggle ? String(p.selected) : undefined,
+        };
+      },
+      touch: () => ({ class: 'rio-button__touch', 'aria-hidden': 'true' }),
+      // The icon only decorates; the label names the button.
+      icon: () => ({ class: 'rio-button__icon', 'aria-hidden': 'true' }),
+      label: () => ({ class: 'rio-button__label' }),
     },
+    showsIcon: () => !!options.content?.().icon,
     handleClick(event) {
       const p = options.props();
       if (p.disabled || p.softDisabled) {
@@ -92,7 +138,7 @@ export function createButton(options: ButtonOptions): ButtonApi {
         return;
       }
       options.onClick(event);
-      if (isToggle(p)) options.onSelectedChange(!p.selected);
+      if (isToggle(p)) options.onChange(!p.selected);
     },
   };
 }

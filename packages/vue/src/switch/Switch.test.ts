@@ -134,4 +134,14 @@ describe('RioSwitch', () => {
     sw.click();
     expect(screen.emitted('update:selected')).toEqual([[true]]);
   });
+
+  test.each(['ltr', 'rtl'])('the touch target is centered on the track, %s', async (dir) => {
+    const screen = await render(Switch, { attrs: { dir } });
+    const target = screen.container.querySelector<HTMLElement>('.rio-switch__touch')!;
+    const touchRect = target.getBoundingClientRect();
+    const track = target.offsetParent!.getBoundingClientRect();
+    // Within half a pixel: engines round layout differently (WebKit to 1/64px).
+    expect(touchRect.left + touchRect.width / 2).toBeCloseTo(track.left + track.width / 2, 0);
+    expect(touchRect.top + touchRect.height / 2).toBeCloseTo(track.top + track.height / 2, 0);
+  });
 });
