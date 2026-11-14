@@ -1,11 +1,13 @@
 name: Docs
 
-# Publishes the docs site to GitHub Pages from `main`, so the site matches the released packages.
-# It needs Settings → Pages → Source set to "GitHub Actions". Run it by hand to republish without
-# a release.
+# Publishing a release (the draft that release.yml made) publishes the docs site to GitHub Pages,
+# at the same moment publish.yml sends that version to npm, so the site matches the released
+# packages. It needs a one-time setup on GitHub, described in docs/conventions.md → Docs site.
+# Run it by hand on `main` to publish again, such as after a failed run; a run on any other
+# branch does nothing.
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -18,6 +20,8 @@ concurrency:
 
 jobs:
   build:
+    # A release runs on its tag. A manual run defaults to `dev`, which would publish unreleased docs.
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
