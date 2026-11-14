@@ -14,6 +14,14 @@ describe('RioButton', () => {
     await expect.element(button).toHaveAttribute('data-variant', 'filled');
   });
 
+  test("keeps core's classes next to the ones the app adds", async () => {
+    const screen = await render(Button, { ...label, attrs: { class: 'app-class' } });
+    const classes = screen.getByRole('button').element().classList;
+    for (const name of ['rio-button', 'rio-state-layer', 'rio-focus-ring', 'app-class']) {
+      expect(classes.contains(name)).toBe(true);
+    }
+  });
+
   test('emits click', async () => {
     const screen = await render(Button, label);
     await screen.getByRole('button').click();

@@ -1,4 +1,5 @@
 import type { ButtonShape, ButtonSize } from '../button/button';
+import type { PartAttrs } from '../parts';
 import { omitUndefined } from '../utils/object';
 
 /**
@@ -52,8 +53,22 @@ export interface ButtonGroupOptions {
   onChange: (selected: ButtonGroupSelected) => void;
 }
 
+/**
+ * The button group's markup. The adapter renders `<div root>` around the buttons; the buttons
+ * are the group's direct children.
+ */
+export interface ButtonGroupParts {
+  root: () => PartAttrs;
+}
+
 export interface ButtonGroupApi {
-  rootAttrs: () => Record<string, string | undefined>;
+  parts: ButtonGroupParts;
+  /** The size for buttons that don't set their own, with the default filled in. */
+  size: () => ButtonSize;
+  /** The shape for buttons that don't set their own, with the default filled in. */
+  shape: () => ButtonShape;
+  /** The selection mode, with the default filled in. */
+  selection: () => ButtonGroupSelection;
   /** Whether the button with this value is selected. */
   isSelected: (value: ButtonGroupValue) => boolean;
   /**
@@ -75,15 +90,21 @@ export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
   };
 
   return {
-    rootAttrs() {
-      const p = props();
-      return {
-        role: 'group',
-        'data-variant': p.variant,
-        'data-size': p.size,
-        'data-shape': p.shape,
-      };
+    parts: {
+      root() {
+        const p = props();
+        return {
+          class: 'rio-button-group',
+          role: 'group',
+          'data-variant': p.variant,
+          'data-size': p.size,
+          'data-shape': p.shape,
+        };
+      },
     },
+    size: () => props().size,
+    shape: () => props().shape,
+    selection: () => props().selection,
     isSelected,
     select(value, selected) {
       const p = props();

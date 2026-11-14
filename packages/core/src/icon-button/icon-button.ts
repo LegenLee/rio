@@ -1,11 +1,11 @@
 import type { ButtonGroupValue } from '../button-group/button-group';
 import {
   createButton,
-  type ButtonApi,
   type ButtonShape,
   type ButtonSize,
   type ButtonVariant,
 } from '../button/button';
+import type { PartAttrs } from '../parts';
 
 export const ICON_BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'standard'] as const;
 export type IconButtonVariant = (typeof ICON_BUTTON_VARIANTS)[number];
@@ -54,32 +54,76 @@ export const iconButtonDefaults = {
   type: 'button',
 } satisfies Omit<Required<IconButtonProps>, 'label' | 'value'>;
 
+/** What the adapter has to put in the icon button, which only the adapter can see. */
+export interface IconButtonContent {
+  /** Whether there is an icon for the selected state. */
+  selectedIcon: boolean;
+}
+
 export interface IconButtonOptions {
   /** Returns the current prop values. The adapter owns the state. */
   props: () => IconButtonProps;
+  /** Returns what content the adapter has. Without it, there is no selected icon. */
+  content?: () => IconButtonContent;
   /** Called for a click that isn't blocked. */
   onClick: (event: MouseEvent) => void;
   /** Called after an unblocked click on a toggle button, with the new value. */
   onSelectedChange: (selected: boolean) => void;
 }
 
-export function createIconButton(options: IconButtonOptions): ButtonApi {
+/**
+ * The icon button's markup, part by part. The adapter renders:
+ *
+ * ```
+ * <button root>
+ *   <span touch />
+ *   <span icon>the selected icon when showsSelectedIcon(), otherwise the icon</span>
+ * </button>
+ * ```
+ */
+export interface IconButtonParts {
+  root: () => PartAttrs;
+  /** Extends small icon buttons to the 48px target. */
+  touch: () => PartAttrs;
+  icon: () => PartAttrs;
+}
+
+export interface IconButtonApi {
+  parts: IconButtonParts;
+  /** Whether the icon part shows the selected icon instead of the default one. */
+  showsSelectedIcon: () => boolean;
+  /** Attach to the root element's `click`. */
+  handleClick: (event: MouseEvent) => void;
+}
+
+export function createIconButton(options: IconButtonOptions): IconButtonApi {
   // An icon button behaves exactly like a button. The button only reads `variant` to write
   // `data-variant` and to keep text buttons from toggling, and no icon button variant is `text`.
   const button = createButton({
-    ...options,
     props: () => ({ ...options.props(), variant: options.props().variant as ButtonVariant }),
+    onClick: options.onClick,
+    onSelectedChange: options.onSelectedChange,
   });
 
   return {
-    rootAttrs() {
+    parts: {
+      root() {
+        const p = options.props();
+        const root = button.parts.root();
+        return {
+          ...root,
+          class: `${root.class} rio-icon-button`,
+          'aria-label': p.label,
+          'data-width': p.width ?? iconButtonDefaults.width,
+          'data-variant': p.variant ?? iconButtonDefaults.variant,
+        };
+      },
+      touch: button.parts.touch,
+      icon: button.parts.icon,
+    },
+    showsSelectedIcon() {
       const p = options.props();
-      return {
-        ...button.rootAttrs(),
-        'aria-label': p.label,
-        'data-width': p.width ?? iconButtonDefaults.width,
-        'data-variant': p.variant ?? iconButtonDefaults.variant,
-      };
+      return !!(p.toggle && p.selected && options.content?.().selectedIcon);
     },
     handleClick: button.handleClick,
   };

@@ -9,12 +9,20 @@ const setup = (props: ButtonGroupProps = {}) => {
 
 describe('createButtonGroup', () => {
   test('is a group, small, round, and standard by default', () => {
-    expect(setup().group.rootAttrs()).toEqual({
+    expect(setup().group.parts.root()).toEqual({
+      class: 'rio-button-group',
       role: 'group',
       'data-variant': 'standard',
       'data-size': 'small',
       'data-shape': 'round',
     });
+  });
+
+  test('hands its buttons a size, a shape, and a selection mode, defaults filled in', () => {
+    const { group } = setup();
+    expect([group.size(), group.shape(), group.selection()]).toEqual(['small', 'round', 'none']);
+    const set = setup({ size: 'large', shape: 'square', selection: 'single' }).group;
+    expect([set.size(), set.shape(), set.selection()]).toEqual(['large', 'square', 'single']);
   });
 
   test('keeps no selection unless asked to', () => {

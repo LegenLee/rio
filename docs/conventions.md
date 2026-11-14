@@ -56,6 +56,7 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
+    parts.ts                PartAttrs, the type of every part's attributes (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
     index.ts
@@ -114,7 +115,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 
 - **Parts.** A component's `core` API returns one attribute bundle for each part of its markup: the root, and parts such as `touch`, `icon`, and `label`. A part is named after the element in its class (`rio-button__icon` is `icon`).
 - **Classes come from `core`.** Each bundle includes the part's `class`, so the class names the stylesheet selects on are written once, in `core`.
-- **Adapters keep only the skeleton**: which element each part is, which part sits inside which, where content goes (slots, children), and when an optional part renders (the icon only when there is one).
+- **Adapters keep only the skeleton**: which element each part is, which part sits inside which, and where content goes (slots, children). Whether an optional part renders (`showsIcon()`) and which content fills it (`showsSelectedIcon()`) are `core`'s calls; the adapter only wires them to its conditional rendering (`v-if` in Vue).
 - **Bundles are HTML attributes**, as `setAttribute` would take them:
   - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
@@ -126,7 +127,14 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
 - **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
 
-> Today only the root bundle exists (`rootAttrs()`), and the other parts and all class names are still written in the Vue templates. Moving them into `core` is planned.
+For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`. Each component's `Parts` interface draws the skeleton the adapter renders.
+
+## Adapters
+
+How an adapter turns `core`'s API into components.
+
+- **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
+  - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
 
 ## Primitives
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   attachButtonGroup,
-  buttonGroupDefaults,
   createButtonGroup,
   type ButtonGroupHandle,
   type ButtonGroupProps,
@@ -11,11 +10,14 @@ import '@rio-m3e/styles/button-group.css';
 import { onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue';
 import { buttonGroupKey } from './context';
 
+// `v-model` without an argument binds `modelValue`; core calls the same thing `selected`.
 interface Props extends Omit<ButtonGroupProps, 'selected'> {
+  /** The selected value (`single`) or values (`multiple`), with `v-model`. */
   modelValue?: ButtonGroupSelected;
 }
 
-const props = withDefaults(defineProps<Props>(), buttonGroupDefaults);
+// No defaults here: core fills them in.
+const { variant, size, shape, selection, required, modelValue } = defineProps<Props>();
 const emit = defineEmits<{ 'update:modelValue': [selected: ButtonGroupSelected] }>();
 defineSlots<{
   /** `RioButton`s and `RioIconButton`s. They take the group's size and shape unless they set their own. */
@@ -23,14 +25,23 @@ defineSlots<{
 }>();
 
 const group = createButtonGroup({
-  props: () => ({ ...props, selected: props.modelValue }),
+  // `satisfies` fails the build if a prop added to ButtonGroupProps is missing here.
+  props: () =>
+    ({
+      variant,
+      size,
+      shape,
+      selection,
+      required,
+      selected: modelValue,
+    }) satisfies Record<keyof ButtonGroupProps, unknown>,
   onChange: (selected) => emit('update:modelValue', selected),
 });
 
 provide(buttonGroupKey, {
-  size: () => props.size,
-  shape: () => props.shape,
-  selection: () => props.selection,
+  size: group.size,
+  shape: group.shape,
+  selection: group.selection,
   isSelected: group.isSelected,
   select: group.select,
 });
@@ -44,7 +55,7 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <div ref="root" class="rio-button-group" v-bind="group.rootAttrs()">
+  <div ref="root" v-bind="group.parts.root()">
     <slot />
   </div>
 </template>

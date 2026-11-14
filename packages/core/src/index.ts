@@ -2,6 +2,7 @@ export * from './button-group/button-group';
 export * from './button-group/interaction';
 export * from './button/button';
 export * from './icon-button/icon-button';
+export * from './parts';
 export * from './primitives/drag/drag';
 export * from './primitives/ripple/ripple';
 export * from './primitives/shape-morph/shape-morph';

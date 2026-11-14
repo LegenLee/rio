@@ -72,6 +72,15 @@ describe('RioButtonGroup', () => {
     expect([b!.dataset.size, b!.dataset.shape]).toEqual(['xsmall', 'square']);
   });
 
+  test("icon buttons take the group's size and shape too", async () => {
+    const screen = await render(ButtonGroup, {
+      props: { size: 'large', shape: 'square' },
+      slots: { default: () => [h(IconButton, { label: 'A' }, () => '♡')] },
+    });
+    const button = screen.getByRole('button').element() as HTMLElement;
+    expect([button.dataset.size, button.dataset.shape]).toEqual(['large', 'square']);
+  });
+
   describe('selection', () => {
     test('single: selecting another button replaces the selection; the parent owns it', async () => {
       const screen = await render(ButtonGroup, {
