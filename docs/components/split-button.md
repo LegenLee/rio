@@ -13,7 +13,7 @@ import Sizes from './demos/split-button/Sizes.vue';
 import Variants from './demos/split-button/Variants.vue';
 </script>
 
-Rio has no menu component yet, so these trailing buttons only switch `open`, and the menu icon turns. Hover or press either button to see its inner corners change.
+The app renders the menu, since Rio has no menu component yet (see [The menu](#the-menu)). These examples render none: their trailing buttons only switch `open`, which turns the menu icon and sets `aria-expanded`, so a screen reader announces a menu that never appears. Hover or press either button to see its inner corners change.
 
 ### Variants
 
