@@ -40,6 +40,9 @@ jobs:
       - run: pnpm test --run
       - run: pnpm build
 
+      # Fails on dead links, and on a demo that breaks server rendering
+      - run: pnpm docs:build
+
   # Screenshot tests. The committed reference screenshots come from this container and are only
   # valid here: the image fixes the OS, fonts, and Chromium. Its tag must match the Playwright
   # version in package.json, and screenshots.yml uses the same image to retake them.
