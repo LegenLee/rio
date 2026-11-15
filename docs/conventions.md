@@ -339,5 +339,8 @@ npm can only trust a workflow for a package that already exists, so the first ve
 
 Then, shortly before the next release, set up each package on npmjs.com:
 
-1. **Settings → Trusted Publisher → GitHub Actions**: owner `LegenLee`, repository `rio`, workflow `publish.yml`, environment `npm`. A new trusted publisher expires if it doesn't publish within 2 days, so don't set it up long before a release.
+1. **Settings → Trusted Publisher → GitHub Actions**: owner `LegenLee`, repository `rio`, workflow `publish.yml`, environment `npm`. The label is optional. A new trusted publisher expires if it doesn't publish within 2 days, so don't set it up long before a release.
+   - **Allowed actions**: turn on **Allow npm publish**, and leave **Allow npm dist-tag** off. `npm stage publish` is always allowed, and new trusted publishers allow only that by default. A staged version waits in npmjs.com → Staged Packages until a maintainer approves it with the second factor, and the approval can't use OIDC. `publish.yml` publishes directly with `npm publish`, so it needs the publish permission. It sets the dist-tag while publishing (`--tag`), which worked for v0.2.0 without the dist-tag permission; that permission is for running `npm dist-tag` on its own.
+   - The provider and the required fields can't be changed later; to change them, delete the trusted publisher and create a new one.
+   - Editing a package's settings needs a session signed in with the second factor. If npmjs.com answers "Please configure 2FA to edit this package" although 2FA is on, sign in again where the passkey works (Chrome, or the phone).
 2. After the first release published this way, set **Settings → Publishing access** to "Require two-factor authentication and disallow tokens". Trusted publishing keeps working, because it doesn't use tokens.

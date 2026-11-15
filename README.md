@@ -1,7 +1,8 @@
 # Rio
 
 Rio is a Vue implementation of Material 3 Expressive.  
-It's the UI library that will replace Vuetify in the [Nozomi](https://github.com/LegenLee/nozomi) project.
+It's the UI library that will replace Vuetify in the [Nozomi](https://github.com/LegenLee/nozomi) project.  
+You can see the document page in [here](https://legenlee.github.io/rio/).
 
 ## Disclaimer
 

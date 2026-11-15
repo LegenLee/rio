@@ -2,7 +2,8 @@
 
 Material 3 Expressive의 Vue 구현체입니다.  
 [Nozomi](https://github.com/LegenLee/nozomi) 프로젝트의 Vuetify
-프레임워크를 대체하기 위해 작성하는 UI 라이브러리입니다.
+프레임워크를 대체하기 위해 작성하는 UI 라이브러리입니다.  
+문서 페이지는 [여기](https://legenlee.github.io/rio/)를 확인해주시기 바랍니다.
 
 ## 목적
 
