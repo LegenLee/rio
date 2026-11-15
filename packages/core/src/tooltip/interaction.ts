@@ -58,19 +58,6 @@ const SWALLOW_CLICK_MS = 600;
 /** How far a held touch may move, in px, and still count as held */
 const MOVE_SLOP = 10;
 
-/** Events that stay in the tooltip rather than reach the app's markup around its element */
-const CONTAINED = [
-  'click',
-  'auxclick',
-  'dblclick',
-  'pointerdown',
-  'pointerup',
-  'mousedown',
-  'mouseup',
-  'contextmenu',
-] as const;
-const stopPropagation = (event: Event) => event.stopPropagation();
-
 // Every tooltip shown now, and when the last one closed: right after one, the next shows at once.
 const shown = new Set<HTMLElement>();
 let lastClosedAt = -Infinity;
@@ -117,7 +104,8 @@ export function attachTooltip(
   const request = (open: boolean) => options.onOpenChange(open);
 
   // A transient tooltip is a manual popover that gives way to any other overlay. A persistent one
-  // is an auto popover, which a click or another popover elsewhere closes.
+  // is an auto popover, which a click or another popover elsewhere closes. Either way, clicks and
+  // presses in it stay in it, so a card or a row around its element doesn't take them.
   let overlay: OverlayHandle | undefined;
   let overlayPersistent: boolean | undefined;
   /** When the pointer last went down on the element, whether the tooltip was open */
@@ -130,7 +118,9 @@ export function attachTooltip(
     const onClose = () => request(false);
     overlay = attachOverlay(
       root,
-      persistent ? { mode: 'auto', onClose } : { mode: 'manual', transient: true, onClose },
+      persistent
+        ? { mode: 'auto', contain: true, onClose }
+        : { mode: 'manual', transient: true, contain: true, onClose },
     );
     return overlay;
   };
@@ -311,10 +301,6 @@ export function attachTooltip(
     request(!(event.detail === 0 ? isOpen() : openAtPress));
   };
 
-  // The tooltip shows in the top layer, but sits in the app's markup next to its element. Clicks and
-  // presses in it stay in it, so a card or a row around the element doesn't take them. Keys go on,
-  // for Escape.
-  for (const type of CONTAINED) root.addEventListener(type, stopPropagation);
   trigger.addEventListener('pointerenter', onPointerEnter);
   trigger.addEventListener('pointerleave', onPointerLeave);
   trigger.addEventListener('focusin', onFocusIn);
@@ -366,7 +352,6 @@ export function attachTooltip(
       stopShow();
       stopHide();
       stopPress();
-      for (const type of CONTAINED) root.removeEventListener(type, stopPropagation);
       if (described) setToken(described.element, 'aria-describedby', described.id, false);
       expanded?.removeAttribute('aria-expanded');
       if (shown.delete(root)) lastClosedAt = performance.now();

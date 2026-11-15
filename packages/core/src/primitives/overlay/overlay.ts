@@ -17,6 +17,8 @@
 // - Closing an overlay closes the overlays opened from it. The browser does this for nested auto
 //   popovers, but not for a popover opened from a dialog.
 // - A `transient` overlay, such as a tooltip, closes when any other overlay opens.
+// - A `contain`ed overlay keeps clicks and presses in it. It shows in the top layer but sits in the
+//   app's markup, inside a card or a row that may handle clicks of its own. Keys go on, for Escape.
 //
 // The adapter owns `open` and calls `show()` and `hide()` to match it. When an overlay closes, or
 // asks to close, on its own, `onClose` tells the adapter why, and the adapter sets its state to
@@ -49,6 +51,8 @@ export interface OverlayOptions {
   mode: OverlayMode;
   /** Closes when any other overlay opens, as a tooltip does. */
   transient?: boolean;
+  /** Keeps clicks and presses in the element from bubbling past it, as a tooltip and a dialog do. */
+  contain?: boolean;
   /** The overlay closed, or asks to close, without the adapter asking. */
   onClose: (reason: OverlayCloseReason) => void;
 }
@@ -61,6 +65,8 @@ export interface OverlayHandle {
   show(source?: HTMLElement): void;
   /** Closes the element, without calling `onClose`. */
   hide(): void;
+  /** Whether an overlay that opened after this one is still open, other than a transient one. */
+  covered(): boolean;
   detach(): void;
 }
 
@@ -85,6 +91,19 @@ interface Registry {
 }
 
 const registries = new WeakMap<Document, Registry>();
+
+/** What a `contain`ed overlay keeps in */
+const PRESSES = [
+  'click',
+  'auxclick',
+  'dblclick',
+  'pointerdown',
+  'pointerup',
+  'mousedown',
+  'mouseup',
+  'contextmenu',
+] as const;
+const stopPropagation = (event: Event) => event.stopPropagation();
 
 const isOpen = ({ element, options }: Entry) =>
   options.mode === 'modal' ? (element as HTMLDialogElement).open : element.matches(':popover-open');
@@ -206,6 +225,9 @@ export function attachOverlay(element: HTMLElement, options: OverlayOptions): Ov
     element.popover = options.mode;
     element.addEventListener('toggle', onToggle);
   }
+  if (options.contain) {
+    for (const type of PRESSES) element.addEventListener(type, stopPropagation);
+  }
   if (registry.attached++ === 0) document.addEventListener('keydown', registry.onKeydown);
 
   let detached = false;
@@ -229,12 +251,17 @@ export function attachOverlay(element: HTMLElement, options: OverlayOptions): Ov
       close(entry);
       closed(entry, true);
     },
+    covered() {
+      const index = registry.stack.indexOf(entry);
+      return index >= 0 && registry.stack.slice(index + 1).some((open) => !open.options.transient);
+    },
     detach() {
       if (detached) return;
       detached = true;
       element.removeEventListener('close', onDialogClose);
       element.removeEventListener('cancel', onCancel);
       element.removeEventListener('toggle', onToggle);
+      for (const type of PRESSES) element.removeEventListener(type, stopPropagation);
       const index = registry.stack.indexOf(entry);
       if (index >= 0) registry.stack.splice(index, 1);
       track(registry);
