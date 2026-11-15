@@ -375,7 +375,7 @@ Pixels differ across operating systems, fonts, and browser versions, so the comm
 
 Each version goes to npm and to a GitHub release, as the same four tarballs. The packages are published under the `@rio-m3e` scope, which belongs to the `rio-m3e` organization on npm.
 
-- **Versions move together.** Every package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Before 1.0, a minor version may break the API.
+- **Versions move together.** Every published package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Private packages, such as `testing`, keep `0.0.0`; the release scripts skip them. Before 1.0, a minor version may break the API.
 - **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section, followed by a `pnpm add` line.
 - **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
 - **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it.
