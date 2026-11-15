@@ -124,6 +124,15 @@ const pointAt = (element: Element) => {
 };
 
 describe('RioSubMenu', () => {
+  test('opens and closes without a warning from Vue', async () => {
+    // Opening and closing render it again; a warning from Vue fails the test (`test/setup.ts`).
+    const { item, isOpen } = await setup();
+    await userEvent.click(item('Share'));
+    await vi.waitFor(() => expect(isOpen('Share')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await vi.waitFor(() => expect(isOpen('Share')).toBe(false));
+  });
+
   test('its item says it opens a menu, which is named by the label', async () => {
     const { item, menu } = await setup();
     expect(item('Share').getAttribute('aria-haspopup')).toBe('menu');

@@ -77,7 +77,7 @@ const sub = createSubMenu({
 const { item } = sub;
 provide(menuKey, menuContextOf(sub.menu));
 
-const itemElement = useTemplateRef<HTMLElement>('item');
+const itemElement = useTemplateRef<HTMLElement>('itemElement');
 const root = useTemplateRef<HTMLElement>('root');
 let handle: SubMenuDomHandle | undefined;
 onMounted(() => {
@@ -93,7 +93,7 @@ onBeforeUnmount(() => handle?.detach());
 
 <template>
   <button
-    ref="item"
+    ref="itemElement"
     v-ripple
     v-bind="mergeProps($attrs, item.parts.root())"
     @click="item.handleClick"
