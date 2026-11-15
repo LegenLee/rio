@@ -13,6 +13,7 @@ import {
   createMenuItem,
   createSubMenu,
   createSwitch,
+  createTooltip,
   createSplitButton,
   iconButtonSkeleton,
   menuDividerSkeleton,
@@ -21,6 +22,8 @@ import {
   menuSkeleton,
   splitButtonSkeleton,
   switchSkeleton,
+  tooltipSkeleton,
+  tooltipTriggerSkeleton,
   type ButtonGroupProps,
   type ButtonProps,
   type IconButtonProps,
@@ -32,6 +35,8 @@ import {
   type SubMenuProps,
   type SwitchContent,
   type SwitchProps,
+  type TooltipContent,
+  type TooltipProps,
 } from '@rio-m3e/core';
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, test } from 'vitest';
@@ -47,6 +52,7 @@ import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
+import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
 const rootOf = (screen: { container: Element }) => screen.container.firstElementChild!;
@@ -343,5 +349,50 @@ describe('RioMenuGroup and RioMenuDivider', () => {
   test('a divider', async () => {
     const screen = await render(MenuDivider);
     expectSkeleton(rootOf(screen), menuDividerSkeleton, createMenuDivider());
+  });
+});
+
+describe('RioTooltip', () => {
+  test.each<[string, TooltipProps & { subhead?: string }, TooltipContent]>([
+    ['plain', {}, { subhead: false, actions: false }],
+    // Every non-boolean prop away from its default, with every slot: a dialog
+    [
+      'rich and persistent, with a subhead and actions, placed elsewhere',
+      {
+        variant: 'rich',
+        persistent: true,
+        subhead: 'Albums',
+        side: 'end',
+        align: 'center',
+        offset: 8,
+      },
+      { subhead: true, actions: true },
+    ],
+    ['rich, with its text only', { variant: 'rich' }, { subhead: false, actions: false }],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(Tooltip, {
+      props: { ...props, text: 'Text' },
+      slots: {
+        default: () => h('button', null, 'Target'),
+        ...(content.actions ? { actions: () => h('button', null, 'Action') } : {}),
+      },
+    });
+    const trigger = rootOf(screen);
+    const root = trigger.querySelector<HTMLElement>('.rio-tooltip')!;
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const api = createTooltip({
+      props: () => props,
+      content: () => content,
+      ids: {
+        root: root.id,
+        subhead: `${root.id.replace(/-tooltip$/, '')}-subhead`,
+        supportingText: `${root.id.replace(/-tooltip$/, '')}-text`,
+      },
+    });
+    expectSkeleton(trigger, tooltipTriggerSkeleton, api);
+    // The app's element, then the tooltip
+    expect(trigger.firstElementChild?.textContent).toBe('Target');
+    expect(trigger.lastElementChild).toBe(root);
+    expectSkeleton(root, tooltipSkeleton, api);
   });
 });

@@ -70,6 +70,10 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
+    tooltip/
+      tooltip.ts            plain and rich tooltips: props, parts, roles, placement
+      interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
+      tooltip.test.ts
     parts.ts                PartAttrs, the type of every part's attributes, and CancelableEvent (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
@@ -88,6 +92,7 @@ packages/
     menu.css
     split-button.css        layered on top of button.css
     switch.css
+    tooltip.css
   vue/src/
     button/
       Button.vue
@@ -103,6 +108,8 @@ packages/
     switch/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
+    tooltip/
+      Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/
       setup.ts              fails a test during which Vue warns
       vrt.ts                shared setup for the screenshot tests

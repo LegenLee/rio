@@ -29,7 +29,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 ### v0.3
 
 - [x] Menu, with submenus
-- [ ] Tooltip
+- [x] Tooltip
 - [ ] Dialog
 
 ### Later

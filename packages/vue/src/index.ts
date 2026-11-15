@@ -9,3 +9,4 @@ export { default as RioSubMenu } from './menu/SubMenu.vue';
 export { vRipple } from './ripple/ripple';
 export { default as RioSplitButton } from './split-button/SplitButton.vue';
 export { default as RioSwitch } from './switch/Switch.vue';
+export { default as RioTooltip } from './tooltip/Tooltip.vue';

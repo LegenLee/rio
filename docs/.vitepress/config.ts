@@ -39,6 +39,7 @@ export default defineConfig({
           { text: 'Menu', link: '/components/menu' },
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
+          { text: 'Tooltip', link: '/components/tooltip' },
         ],
       },
       {

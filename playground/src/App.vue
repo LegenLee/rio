@@ -63,6 +63,7 @@ import {
   RioSplitButton,
   RioSubMenu,
   RioSwitch,
+  RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
 import { reactive, ref, useTemplateRef, watchEffect } from 'vue';
@@ -99,6 +100,13 @@ const menus = reactive({
   view: false,
 });
 const viewButton = useTemplateRef('viewButton');
+const persistentTip = ref(false);
+const toolbar = [
+  { action: 'Cut', icon: mdiContentCut },
+  { action: 'Copy', icon: mdiContentCopy },
+  { action: 'Paste', icon: mdiContentPaste },
+  { action: 'Share', icon: mdiShareVariant },
+];
 const layout = ref<string | number | undefined>('grid');
 const sortBy = ref<string | number | undefined>('date');
 const filters = ref<(string | number)[] | string | number | undefined>(['photos']);
@@ -674,6 +682,50 @@ watchEffect(() => {
         <code
           >sort={{ sortBy }} filters={{ filters }} layout={{ layout }} action={{ lastAction }}</code
         >
+      </div>
+    </section>
+
+    <section class="buttons tooltips">
+      <div class="controls">
+        <code class="row-label">plain</code>
+        <RioTooltip v-for="{ action, icon } in toolbar" :key="action" :text="action">
+          <RioIconButton :label="action" @click="lastAction = action.toLowerCase()">
+            <svg viewBox="0 0 24 24"><path :d="icon" fill="currentColor" /></svg>
+          </RioIconButton>
+        </RioTooltip>
+        <span
+          >Text with a
+          <RioTooltip text="Shown 8px off text, which has no visible edge" :offset="8">
+            <abbr tabindex="0">tooltip</abbr>
+          </RioTooltip></span
+        >
+      </div>
+      <div class="controls">
+        <code class="row-label">rich</code>
+        <RioTooltip variant="rich" subhead="Storage" text="You have 2 GB of 15 GB left.">
+          <RioButton variant="outlined">Storage</RioButton>
+        </RioTooltip>
+        <RioTooltip variant="rich" subhead="Backups">
+          <RioButton variant="outlined">Backups</RioButton>
+          <template #content>Photos back up every night while your phone charges.</template>
+          <template #actions>
+            <RioButton variant="text" @click="lastAction = 'learn more'">Learn more</RioButton>
+            <RioButton variant="text" @click="lastAction = 'settings'">Settings</RioButton>
+          </template>
+        </RioTooltip>
+        <RioTooltip
+          v-model:open="persistentTip"
+          variant="rich"
+          persistent
+          subhead="New: shared albums"
+          text="Invite people to add their photos to an album."
+        >
+          <RioButton variant="tonal">Albums</RioButton>
+          <template #actions>
+            <RioButton variant="text" @click="persistentTip = false">Got it</RioButton>
+          </template>
+        </RioTooltip>
+        <code>persistent={{ persistentTip }}</code>
       </div>
     </section>
 
