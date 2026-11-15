@@ -279,6 +279,31 @@ describe('attachOverlay', () => {
     expect(appDialog.open).toBe(true);
   });
 
+  test('an open popover moved in the document is reported closed', async () => {
+    const menu = overlay(element('div'), { mode: 'auto' });
+    menu.handle.show();
+    await settle();
+    // Out and straight back in, as a framework moving it does: the browser closes it silently.
+    document.body.append(menu.element);
+    await vi.waitFor(() => expect(menu.onClose).toHaveBeenCalledExactlyOnceWith('dismiss'));
+    expect(isOpen(menu.element)).toBe(false);
+    await userEvent.keyboard('{Escape}');
+    expect(menu.onClose).toHaveBeenCalledOnce();
+  });
+
+  test('an open modal dialog moved in the document is reported closed', async () => {
+    const dialog = overlay(element('dialog'), { mode: 'modal' });
+    dialog.handle.show();
+    await settle();
+    // It keeps `open` but stops being modal; Rio clears the rest.
+    document.body.append(dialog.element);
+    await vi.waitFor(() => expect(dialog.onClose).toHaveBeenCalledExactlyOnceWith('dismiss'));
+    expect((dialog.element as HTMLDialogElement).open).toBe(false);
+    // So it can be shown again
+    dialog.handle.show();
+    expect(dialog.element.matches(':modal')).toBe(true);
+  });
+
   test("Escape aimed at the app's own dialog is left to the browser", async () => {
     const tooltip = overlay(element('div'), { mode: 'manual', transient: true });
     tooltip.handle.show();

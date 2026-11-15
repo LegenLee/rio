@@ -129,6 +129,18 @@ describe('attachAnchoredPosition', () => {
     expect(box(floating).top).toBeGreaterThanOrEqual(8);
   });
 
+  test('a side fallback has to fit along the anchor too, or the element stays above or below', () => {
+    const { height } = view();
+    // Too tall for the window: neither below, above, nor beside it fits.
+    const floating = place(
+      anchorAt(200, height * 0.3),
+      { fallbacks: ['top', 'end', 'start'] },
+      height * 2,
+    );
+    // Below has more room than above; beside it would have to start at the top of the window.
+    expect(floating.dataset.side).toBe('bottom');
+  });
+
   test('shifts along the anchor to stay on screen', () => {
     const anchor = anchorAt(view().width - 70, 100);
     expect(box(place(anchor, { padding: 8 })).left).toBe(view().width - 8 - 100);

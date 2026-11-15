@@ -25,6 +25,10 @@
 // can't be stopped from doing that.
 //
 // Each document keeps its own record, so overlays in an iframe stack among themselves.
+//
+// An open overlay whose element leaves the document, even to come straight back as a framework
+// moving it does, is closed by the browser without an event. Rio notices and reports it with
+// `'dismiss'`.
 
 export type OverlayMode = 'auto' | 'manual' | 'modal';
 
@@ -64,16 +68,20 @@ interface Entry {
   element: HTMLElement;
   options: OverlayOptions;
   source?: HTMLElement;
-  /** The open overlays of the element's document, in the order they opened. */
-  stack: Entry[];
+  /** The record of the element's document */
+  registry: Registry;
   /** Why Rio is closing it, until the event that reports the close arrives. */
   reason?: OverlayCloseReason;
 }
 
 interface Registry {
+  /** The open overlays, in the order they opened */
   stack: Entry[];
   attached: number;
   onKeydown: (event: KeyboardEvent) => void;
+  /** Watches the document while something is open; see `track`. */
+  moves: MutationObserver;
+  document: Document;
 }
 
 const registries = new WeakMap<Document, Registry>();
@@ -81,18 +89,34 @@ const registries = new WeakMap<Document, Registry>();
 const isOpen = ({ element, options }: Entry) =>
   options.mode === 'modal' ? (element as HTMLDialogElement).open : element.matches(':popover-open');
 
+/** Open on the record, but no longer in the top layer, after leaving the document */
+const left = (entry: Entry) =>
+  entry.options.mode === 'modal' ? !entry.element.matches(':modal') : !isOpen(entry);
+
 const close = (entry: Entry) => {
   if (!isOpen(entry)) return;
   if (entry.options.mode === 'modal') (entry.element as HTMLDialogElement).close();
   else entry.element.hidePopover();
 };
 
+// An open popover or dialog that leaves the document, even to come straight back (as a framework
+// moving it does), closes without an event. While anything is open, changes to the document are
+// checked for that, and such an overlay is reported closed.
+const track = (registry: Registry) => {
+  if (registry.stack.length) {
+    registry.moves.observe(registry.document, { childList: true, subtree: true });
+  } else {
+    registry.moves.disconnect();
+  }
+};
+
 // `show()` records the opening at once, and the `toggle` event that follows a task later finds it
 // recorded. Popovers the browser opens itself (`popovertarget`) are recorded by that event.
 const opened = (entry: Entry) => {
-  const { stack } = entry;
+  const { stack } = entry.registry;
   if (stack.includes(entry)) return;
   stack.push(entry);
+  track(entry.registry);
   for (const other of stack.filter((open) => open !== entry && open.options.transient)) {
     other.reason = 'replaced';
     close(other);
@@ -102,10 +126,11 @@ const opened = (entry: Entry) => {
 // `hide()` takes the overlay off the record at once too (`asked`), so a `show()` in the same task
 // starts afresh; the event that follows finds nothing to do.
 const closed = (entry: Entry, asked: boolean) => {
-  const { stack } = entry;
+  const { stack } = entry.registry;
   const index = stack.indexOf(entry);
   if (index < 0) return;
   stack.splice(index, 1);
+  track(entry.registry);
   const reason = entry.reason ?? 'dismiss';
   entry.reason = undefined;
   if (!asked) entry.options.onClose(reason);
@@ -138,7 +163,15 @@ const registryOf = (document: Document) => {
       event.preventDefault();
       top.options.onClose('escape');
     };
-    registry = { stack, attached: 0, onKeydown };
+    // A popover that left the document is closed. A dialog keeps `open` but loses the top layer
+    // and its modality, so the stale `open` is cleared too, or the next `showModal()` would throw.
+    const moves = new MutationObserver(() => {
+      for (const entry of stack.filter(left)) {
+        if (entry.options.mode === 'modal') (entry.element as HTMLDialogElement).close();
+        closed(entry, false);
+      }
+    });
+    registry = { stack, attached: 0, onKeydown, moves, document };
     registries.set(document, registry);
   }
   return registry;
@@ -151,7 +184,7 @@ export function attachOverlay(element: HTMLElement, options: OverlayOptions): Ov
   }
   const document = element.ownerDocument;
   const registry = registryOf(document);
-  const entry: Entry = { element, options, stack: registry.stack };
+  const entry: Entry = { element, options, registry };
 
   // Popovers report opening and closing, whoever caused it, and dialogs report closing. Events
   // arrive a task later, so they are checked against the element's state now.
@@ -181,8 +214,9 @@ export function attachOverlay(element: HTMLElement, options: OverlayOptions): Ov
       if (detached || isOpen(entry)) return;
       // Rio may have closed it in this same task (for another overlay, or with its parent), with
       // the event yet to come: it starts afresh, on top, and the reason given then is void.
-      const index = entry.stack.indexOf(entry);
-      if (index >= 0) entry.stack.splice(index, 1);
+      const index = registry.stack.indexOf(entry);
+      if (index >= 0) registry.stack.splice(index, 1);
+      track(registry);
       entry.reason = undefined;
       entry.source = source;
       if (modal) (element as HTMLDialogElement).showModal();
@@ -201,8 +235,9 @@ export function attachOverlay(element: HTMLElement, options: OverlayOptions): Ov
       element.removeEventListener('close', onDialogClose);
       element.removeEventListener('cancel', onCancel);
       element.removeEventListener('toggle', onToggle);
-      const index = entry.stack.indexOf(entry);
-      if (index >= 0) entry.stack.splice(index, 1);
+      const index = registry.stack.indexOf(entry);
+      if (index >= 0) registry.stack.splice(index, 1);
+      track(registry);
       close(entry);
       if (!modal) element.removeAttribute('popover');
       if (--registry.attached === 0) document.removeEventListener('keydown', registry.onKeydown);

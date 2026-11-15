@@ -1,0 +1,236 @@
+/*
+ * M3E vertical menu. `attachMenu` from `@rio-m3e/core` shows the menu in the top layer as a
+ * popover and places it next to its anchor (`base/anchored-position.css`), which also says where
+ * it ended up (`data-side`, `data-align`) and how much room there is.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-menus.scss`, `-standard`,
+ * `-vibrant`, Material 3 v34.0.21). The spacing around the items comes from the M3 Design Kit: a
+ * 48px row per item, with the 44px item inset 2px above and below and 4px at the sides, so items
+ * sit 4px apart and 4px from the container's edges.
+ */
+
+.rio-menu {
+  --_container: var(--rio-color-surface-container-low);
+  --_content: var(--rio-color-on-surface);
+  --_icon: var(--rio-color-on-surface-variant);
+  --_supporting: var(--rio-color-on-surface-variant);
+  --_selected-container: var(--rio-color-tertiary-container);
+  --_selected-content: var(--rio-color-on-tertiary-container);
+
+  /* Only while open: a `display` here would override the browser's hiding of closed popovers. */
+  flex-direction: column;
+  box-sizing: border-box;
+  /* Not in the tokens: the baseline menu's limits */
+  min-inline-size: 112px;
+  max-inline-size: min(280px, var(--rio-anchored-available-width, 280px));
+  max-block-size: var(--rio-anchored-available-height, none);
+  padding: 2px 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 0;
+  border-radius: var(--rio-shape-corner-large);
+  background-color: var(--_container);
+  color: var(--_content);
+  box-shadow: var(--rio-elevation-level2);
+}
+
+.rio-menu:where([data-variant='vibrant']) {
+  --_container: var(--rio-color-tertiary-container);
+  --_content: var(--rio-color-on-tertiary-container);
+  --_icon: var(--rio-color-on-tertiary-container);
+  --_supporting: var(--rio-color-on-tertiary-container);
+  --_selected-container: var(--rio-color-tertiary);
+  --_selected-content: var(--rio-color-on-tertiary);
+}
+
+/*
+ * Opening: the menu expands from the side facing its anchor and fades in; closing reverses it.
+ * Without `transition-behavior: allow-discrete` support for `overlay`, closing is instant.
+ */
+.rio-menu {
+  --_origin-block: top;
+  --_origin-inline: left;
+
+  transform-origin: var(--_origin-inline) var(--_origin-block);
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    scale var(--rio-motion-fast-spatial),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+.rio-menu:popover-open {
+  display: flex;
+}
+
+.rio-menu:not(:popover-open) {
+  opacity: 0;
+  scale: 1 0.8;
+}
+
+@starting-style {
+  .rio-menu:popover-open {
+    opacity: 0;
+    scale: 1 0.8;
+  }
+}
+
+.rio-menu[data-side='top'] {
+  --_origin-block: bottom;
+}
+
+.rio-menu:is([data-side='start'], [data-side='end']) {
+  --_origin-block: top;
+}
+
+.rio-menu:is([data-align='end'], [data-side='start']):dir(ltr),
+.rio-menu:not([data-align='end'], [data-side='start']):dir(rtl) {
+  --_origin-inline: right;
+}
+
+.rio-menu[data-instant] {
+  transition: none;
+}
+
+/* Items */
+
+.rio-menu-item {
+  --_item-content: var(--_content);
+  --_item-icon: var(--_icon);
+  --_item-supporting: var(--_supporting);
+  --_item-container: transparent;
+  --_corner-block-start: var(--rio-shape-corner-extra-small);
+  --_corner-block-end: var(--rio-shape-corner-extra-small);
+
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 2px 0;
+  padding: 8px 12px;
+  border: 0;
+  border-start-start-radius: var(--_corner-block-start);
+  border-start-end-radius: var(--_corner-block-start);
+  border-end-start-radius: var(--_corner-block-end);
+  border-end-end-radius: var(--_corner-block-end);
+  background-color: var(--_item-container);
+  color: var(--_item-content);
+  font: var(--rio-typescale-label-large);
+  letter-spacing: var(--rio-typescale-label-large-tracking);
+  text-align: start;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--rio-motion-fast-effects),
+    color var(--rio-motion-fast-effects),
+    border-radius var(--rio-motion-fast-spatial);
+  --rio-focus-ring-color: var(--rio-color-secondary);
+}
+
+/* The first and last items of a menu or group round their outer corners to sit inside the container. */
+.rio-menu-item:nth-child(1 of .rio-menu-item) {
+  --_corner-block-start: var(--rio-shape-corner-medium);
+}
+
+.rio-menu-item:nth-last-child(1 of .rio-menu-item) {
+  --_corner-block-end: var(--rio-shape-corner-medium);
+}
+
+.rio-menu-item[data-selected='true'] {
+  --_item-content: var(--_selected-content);
+  --_item-icon: var(--_selected-content);
+  --_item-supporting: var(--_selected-content);
+  --_item-container: var(--_selected-container);
+  --_corner-block-start: var(--rio-shape-corner-medium);
+  --_corner-block-end: var(--rio-shape-corner-medium);
+}
+
+.rio-menu-item[aria-disabled='true'] {
+  cursor: default;
+}
+
+.rio-menu-item[aria-disabled='true'] > :not(.rio-menu-item__touch) {
+  opacity: 0.38;
+}
+
+.rio-menu-item[aria-disabled='true'][data-selected='true'] {
+  --_item-container: color-mix(in srgb, var(--_selected-container) 38%, transparent);
+}
+
+.rio-menu-item__touch {
+  position: absolute;
+  inset: -2px 0;
+}
+
+.rio-menu-item__icon,
+.rio-menu-item__trailing-icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+  color: var(--_item-icon);
+}
+
+.rio-menu-item__icon > :is(svg, img),
+.rio-menu-item__trailing-icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.rio-menu-item__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.rio-menu-item__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rio-menu-item__supporting-text {
+  color: var(--_item-supporting);
+  font: var(--rio-typescale-body-small);
+  letter-spacing: var(--rio-typescale-body-small-tracking);
+}
+
+.rio-menu-item__trailing-text {
+  flex: none;
+  color: var(--_item-supporting);
+}
+
+/* Groups and dividers */
+
+.rio-menu-group__items {
+  display: flex;
+  flex-direction: column;
+}
+
+.rio-menu-group__label {
+  display: flex;
+  align-items: center;
+  min-block-size: 32px;
+  padding-inline: 12px;
+  color: var(--_supporting);
+  font: var(--rio-typescale-label-large);
+  letter-spacing: var(--rio-typescale-label-large-tracking);
+}
+
+/* Not in the vertical menu's tokens: the baseline menu's divider, 1px of surface variant */
+.rio-menu-divider {
+  flex: none;
+  block-size: 1px;
+  margin: 4px 12px;
+  background-color: var(--rio-color-surface-variant);
+}
+
+@media (forced-colors: active) {
+  .rio-menu {
+    border: 1px solid CanvasText;
+  }
+}

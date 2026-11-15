@@ -36,6 +36,7 @@ export default defineConfig({
           { text: 'Button', link: '/components/button' },
           { text: 'Button group', link: '/components/button-group' },
           { text: 'Icon button', link: '/components/icon-button' },
+          { text: 'Menu', link: '/components/menu' },
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
         ],

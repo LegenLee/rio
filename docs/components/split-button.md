@@ -11,9 +11,20 @@ import Disabled from './demos/split-button/Disabled.vue';
 import Icon from './demos/split-button/Icon.vue';
 import Sizes from './demos/split-button/Sizes.vue';
 import Variants from './demos/split-button/Variants.vue';
+import WithMenu from './demos/split-button/WithMenu.vue';
 </script>
 
-The app renders the menu, since Rio has no menu component yet (see [The menu](#the-menu)). These examples render none: their trailing buttons only switch `open`, which turns the menu icon and sets `aria-expanded`, so a screen reader announces a menu that never appears. Hover or press either button to see its inner corners change.
+### With a menu
+
+The app pairs the split button with a [menu](./menu.md) (see [The menu](#the-menu)).
+
+<Demo><WithMenu /></Demo>
+
+::: details Code
+<<< ./demos/split-button/WithMenu.vue
+:::
+
+The other examples render no menu: their trailing buttons only switch `open`, which turns the menu icon and sets `aria-expanded`, so a screen reader announces a menu that never appears. Hover or press either button to see its inner corners change.
 
 ### Variants
 
@@ -140,7 +151,7 @@ The soft-disabled buttons stay focusable. Press Tab to reach them.
 
 ### The menu
 
-- Rio has no menu component yet, so the split button only reports `open`. The app renders the menu (or another popup), places it 4px from the split button, aligned with `trailing`, and sets `open` back to `false` when it closes. When the menu closes with Escape, move the focus back to `trailing`, as in the WAI-ARIA menu button pattern.
+- The split button only reports `open`; the app renders the menu, usually a `RioMenu` sharing `v-model:open`, with `:anchor="split.trailing"`, `:offset="4"`, and `align="end"`: 4px from the split button, lined up with the trailing button. `RioMenu` gives the focus back to `trailing` when it closes with Escape or a choice, as in the WAI-ARIA menu button pattern. Another popup places itself the same way.
 - `popup` tells assistive technology what opens. Use the matching value when it isn't a menu, such as `'dialog'` for a card.
 
 ### Menu icon
@@ -171,7 +182,6 @@ The soft-disabled buttons stay focusable. Press Tab to reach them.
 
 ### Not yet
 
-- **The menu**, and placing it next to the split button. Both wait for the menu component.
 - **`aria-controls`** on the trailing button, pointing at the menu. It's optional in the WAI-ARIA menu button pattern, and how to set it depends on how the menu component connects to the split button. Until then, the app can set it on `trailing`.
 - Form attributes on the leading button (`name`, `value`, `form`) for a `type="submit"` split button. The app can set them on `leading` for now.
 

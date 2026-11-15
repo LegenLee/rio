@@ -57,6 +57,10 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    menu/
+      menu.ts               the menu, its items, groups, and dividers: props, parts, selection
+      interaction.ts        opening, placement, keyboard, and focus (DOM, tested through the Vue component)
+      menu.test.ts
     split-button/
       split-button.ts       two createButtons, and the trailing one's menu state
       menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
@@ -80,6 +84,7 @@ packages/
     button.css
     button-group.css
     icon-button.css         layered on top of button.css
+    menu.css
     split-button.css        layered on top of button.css
     switch.css
   vue/src/
@@ -104,6 +109,9 @@ packages/
     menu/                   a component family keeps its parts together
       Menu.vue
       MenuItem.vue
+      MenuGroup.vue
+      MenuDivider.vue
+      context.ts            what the menu provides to its items
     index.ts
 ```
 

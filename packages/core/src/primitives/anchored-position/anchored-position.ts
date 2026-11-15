@@ -4,8 +4,9 @@
 // its coordinates are the viewport's and no ancestor clips it.
 //
 // The preferred side comes first. If the element doesn't fit there, the fallbacks are tried in
-// order, and if none fits, the side with the most room wins. Along the other axis the element is
-// shifted to stay on screen. `start` and `end` follow the writing direction, like the shape
+// order. If none fits, the preferred side or the opposite one, whichever has more room, wins, and
+// the element can scroll there (see the available height below). Along the other axis the element
+// is shifted to stay on screen. `start` and `end` follow the writing direction, like the shape
 // morph's sides.
 //
 // What it decides goes out for the stylesheet:
@@ -163,13 +164,18 @@ export function attachAnchoredPosition(
       width: floating.scrollWidth + borders.width,
       height: floating.scrollHeight + borders.height,
     };
-    const needs = (side: Physical) =>
-      side === 'top' || side === 'bottom' ? natural.height : natural.width;
-    const side =
-      candidates.find((candidate) => room[physical(candidate)] >= needs(physical(candidate))) ??
-      candidates.reduce((best, candidate) =>
-        room[physical(candidate)] > room[physical(best)] ? candidate : best,
-      );
+    // A side fits when the element fits beside the anchor there, and along it within the window.
+    const fits = (candidate: AnchoredSide) => {
+      const at = physical(candidate);
+      return at === 'top' || at === 'bottom'
+        ? room[at] >= natural.height && natural.width <= viewport.width - 2 * padding
+        : room[at] >= natural.width && natural.height <= viewport.height - 2 * padding;
+    };
+    // When no side fits, the element stays on the preferred side or the opposite one, whichever has
+    // more room, and scrolls there, as a long dropdown does.
+    const roomier = (a: AnchoredSide, b: AnchoredSide) =>
+      room[physical(b)] > room[physical(a)] ? b : a;
+    const side = candidates.find(fits) ?? roomier(preferred, OPPOSITE[preferred]);
     const at = physical(side);
     const vertical = at === 'top' || at === 'bottom';
 

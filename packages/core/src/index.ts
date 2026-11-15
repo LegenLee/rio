@@ -2,6 +2,8 @@ export * from './button-group/button-group';
 export * from './button-group/interaction';
 export * from './button/button';
 export * from './icon-button/icon-button';
+export * from './menu/interaction';
+export * from './menu/menu';
 export * from './parts';
 export * from './primitives/anchored-position/anchored-position';
 export * from './primitives/drag/drag';

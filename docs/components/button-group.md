@@ -115,14 +115,14 @@ A connected group is as wide as the space it's given. The first group keeps one 
 </RioButtonGroup>
 ```
 
-| Prop        | Type                                                                   | Default      |
-| ----------- | ---------------------------------------------------------------------- | ------------ |
-| `variant`   | `'standard' \| 'connected'`                                            | `'standard'` |
-| `size`      | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'`               | `'small'`    |
-| `shape`     | `'round' \| 'square'`                                                  | `'round'`    |
-| `selection` | `'none' \| 'single' \| 'multiple'`                                     | `'none'`     |
-| `required`  | `boolean`                                                              | `false`      |
-| `value`     | a value (`single`), or an array of values (`multiple`), with `v-model` | —            |
+| Prop         | Type                                                                   | Default      |
+| ------------ | ---------------------------------------------------------------------- | ------------ |
+| `variant`    | `'standard' \| 'connected'`                                            | `'standard'` |
+| `size`       | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'`               | `'small'`    |
+| `shape`      | `'round' \| 'square'`                                                  | `'round'`    |
+| `selection`  | `'none' \| 'single' \| 'multiple'`                                     | `'none'`     |
+| `required`   | `boolean`                                                              | `false`      |
+| `modelValue` | a value (`single`), or an array of values (`multiple`), with `v-model` | —            |
 
 - Event: `update:modelValue`. The parent owns the selection.
 - **Buttons take the group's size and shape** unless they set their own. A button can still opt out, for the spec's hero moments.

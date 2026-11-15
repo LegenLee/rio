@@ -41,6 +41,21 @@
   opacity: var(--rio-state-pressed-state-layer-opacity);
 }
 
+/*
+ * A button that opened a menu stays pressed while the menu is open, as the menu spec recommends
+ * ("When a menu is opened, the corresponding button or icon button should remain the same
+ * visually, with the addition of a pressed state"). Only a button that opens a popup: other
+ * buttons that expand something, such as an accordion's, keep their look. Disabled ones are left
+ * out here, since this selector outweighs the disabled rule below.
+ */
+.rio-state-layer[aria-haspopup]:not(
+    [aria-haspopup='false'],
+    :disabled,
+    [aria-disabled='true']
+  )[aria-expanded='true']::before {
+  opacity: var(--rio-state-pressed-state-layer-opacity);
+}
+
 /* `attachDrag` from `@rio-m3e/core` marks an element with `data-dragging` while it moves. */
 .rio-state-layer[data-dragging]::before {
   opacity: var(--rio-state-dragged-state-layer-opacity);

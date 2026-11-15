@@ -21,6 +21,10 @@ import {
   mdiChevronDown,
   mdiClockOutline,
   mdiClose,
+  mdiContentCopy,
+  mdiContentCut,
+  mdiContentPaste,
+  mdiDotsVertical,
   mdiFormatAlignCenter,
   mdiFormatAlignLeft,
   mdiFormatAlignRight,
@@ -44,16 +48,21 @@ import {
   type ButtonSize,
   type ButtonVariant,
   type IconButtonVariant,
+  type MenuAnchorPoint,
 } from '@rio-m3e/core';
 import {
   RioButton,
   RioButtonGroup,
   RioIconButton,
+  RioMenu,
+  RioMenuDivider,
+  RioMenuGroup,
+  RioMenuItem,
   RioSplitButton,
   RioSwitch,
   vRipple,
 } from '@rio-m3e/vue';
-import { reactive, ref, watchEffect } from 'vue';
+import { reactive, ref, useTemplateRef, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
 const variant = ref<SchemeVariant>('tonal-spot');
@@ -76,6 +85,33 @@ const textStyles = ref<string[]>(['bold']);
 const splitSize = ref<ButtonSize>('small');
 const splitOpen = reactive<Record<string, boolean>>({});
 const moved = ref(false);
+const menus = reactive({
+  edit: false,
+  more: false,
+  sort: false,
+  filters: false,
+  split: false,
+  context: false,
+  long: false,
+});
+const sortBy = ref<string | number | undefined>('date');
+const filters = ref<(string | number)[] | string | number | undefined>(['photos']);
+const lastAction = ref('');
+const contextPoint = ref<MenuAnchorPoint | null>(null);
+const editButton = useTemplateRef('editButton');
+const moreButton = useTemplateRef('moreButton');
+const sortButton = useTemplateRef('sortButton');
+const filtersButton = useTemplateRef('filtersButton');
+const longButton = useTemplateRef('longButton');
+const saveSplit = useTemplateRef('saveSplit');
+const openContext = (event: MouseEvent) => {
+  contextPoint.value = {
+    x: event.clientX,
+    y: event.clientY,
+    element: event.currentTarget as Element,
+  };
+  menus.context = true;
+};
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
 
@@ -418,6 +454,163 @@ watchEffect(() => {
       </div>
     </section>
 
+    <section class="buttons menus">
+      <div class="controls">
+        <code class="row-label">menu</code>
+        <RioButton
+          ref="editButton"
+          variant="tonal"
+          aria-haspopup="menu"
+          :aria-expanded="menus.edit"
+          @click="menus.edit = !menus.edit"
+        >
+          Edit
+        </RioButton>
+        <RioMenu v-model:open="menus.edit" :anchor="editButton" label="Edit">
+          <RioMenuItem @click="lastAction = 'cut'">
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiContentCut" fill="currentColor" /></svg
+            ></template>
+            Cut
+            <template #trailing-text>Ctrl+X</template>
+          </RioMenuItem>
+          <RioMenuItem @click="lastAction = 'copy'">
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiContentCopy" fill="currentColor" /></svg
+            ></template>
+            Copy
+            <template #trailing-text>Ctrl+C</template>
+          </RioMenuItem>
+          <RioMenuItem disabled>
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiContentPaste" fill="currentColor" /></svg
+            ></template>
+            Paste
+            <template #trailing-text>Ctrl+V</template>
+          </RioMenuItem>
+          <RioMenuDivider />
+          <RioMenuGroup label="Share">
+            <RioMenuItem @click="lastAction = 'email'">Email</RioMenuItem>
+            <RioMenuItem @click="lastAction = 'link'">
+              Copy link
+              <template #supporting-text>Anyone with the link can view</template>
+            </RioMenuItem>
+          </RioMenuGroup>
+        </RioMenu>
+
+        <RioIconButton
+          ref="moreButton"
+          label="More"
+          aria-haspopup="menu"
+          :aria-expanded="menus.more"
+          @click="menus.more = !menus.more"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiDotsVertical" fill="currentColor" /></svg>
+        </RioIconButton>
+        <RioMenu
+          v-model:open="menus.more"
+          :anchor="moreButton"
+          variant="vibrant"
+          align="end"
+          label="More"
+        >
+          <RioMenuItem @click="lastAction = 'rename'">Rename</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'duplicate'">Duplicate</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'delete'">Delete</RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="sortButton"
+          variant="outlined"
+          aria-haspopup="menu"
+          :aria-expanded="menus.sort"
+          @click="menus.sort = !menus.sort"
+        >
+          Sort
+        </RioButton>
+        <RioMenu
+          v-model:open="menus.sort"
+          v-model="sortBy"
+          :anchor="sortButton"
+          selection="single"
+          label="Sort by"
+        >
+          <RioMenuItem v-for="by in ['name', 'date', 'size']" :key="by" :value="by">
+            <template #icon="{ selected }">
+              <svg v-if="selected" viewBox="0 0 24 24">
+                <path :d="mdiCheck" fill="currentColor" />
+              </svg>
+            </template>
+            {{ by }}
+          </RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="filtersButton"
+          variant="outlined"
+          aria-haspopup="menu"
+          :aria-expanded="menus.filters"
+          @click="menus.filters = !menus.filters"
+        >
+          Filters
+        </RioButton>
+        <RioMenu
+          v-model:open="menus.filters"
+          v-model="filters"
+          :anchor="filtersButton"
+          selection="multiple"
+          label="Filters"
+        >
+          <RioMenuItem v-for="kind in ['photos', 'videos', 'documents']" :key="kind" :value="kind">
+            <template #icon="{ selected }">
+              <svg v-if="selected" viewBox="0 0 24 24">
+                <path :d="mdiCheck" fill="currentColor" />
+              </svg>
+            </template>
+            {{ kind }}
+          </RioMenuItem>
+        </RioMenu>
+
+        <RioSplitButton ref="saveSplit" v-model:open="menus.split" menu-label="More save options">
+          Save
+          <template #menu-icon
+            ><svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg
+          ></template>
+        </RioSplitButton>
+        <RioMenu
+          v-model:open="menus.split"
+          :anchor="saveSplit?.trailing"
+          :offset="4"
+          align="end"
+          label="More save options"
+        >
+          <RioMenuItem @click="lastAction = 'save as'">Save as…</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'save copy'">Save a copy</RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="longButton"
+          variant="text"
+          aria-haspopup="menu"
+          :aria-expanded="menus.long"
+          @click="menus.long = !menus.long"
+        >
+          Long
+        </RioButton>
+        <RioMenu v-model:open="menus.long" :anchor="longButton" label="Long">
+          <RioMenuItem v-for="n in 30" :key="n">Item {{ n }}</RioMenuItem>
+        </RioMenu>
+      </div>
+      <div class="controls">
+        <div class="context-area" @contextmenu.prevent="openContext">Right-click here</div>
+        <RioMenu v-model:open="menus.context" :anchor="contextPoint" label="Context">
+          <RioMenuItem @click="lastAction = 'open'">Open</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'download'">Download</RioMenuItem>
+        </RioMenu>
+        <code>sort={{ sortBy }} filters={{ filters }} action={{ lastAction }}</code>
+      </div>
+    </section>
+
     <section class="switches">
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.plain" />
@@ -523,6 +716,16 @@ main {
   display: grid;
   justify-items: start;
   gap: 8px;
+}
+
+.context-area {
+  display: grid;
+  place-items: center;
+  inline-size: 240px;
+  block-size: 96px;
+  border: 1px dashed var(--rio-color-outline);
+  border-radius: 12px;
+  user-select: none;
 }
 
 .track {
