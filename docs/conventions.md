@@ -33,8 +33,12 @@ packages/
     index.ts
   core/src/
     primitives/             DOM behaviors shared across components
+      anchored-position/
+        anchored-position.ts  places a floating element next to an anchor (see Overlays)
       drag/
         drag.ts
+      overlay/
+        overlay.ts          the top layer and the order of Rio's overlays (see Overlays)
       ripple/
         ripple.ts
         ripple.test.ts
@@ -67,6 +71,7 @@ packages/
     index.ts
   styles/src/
     base/                   CSS shared across components
+      anchored-position.css pairs with core's primitives/anchored-position
       focus-ring.css
       reduced-motion.css    imported by every component that uses motion tokens
       ripple.css            pairs with core's primitives/ripple
@@ -167,6 +172,29 @@ A primitive is a DOM behavior that several components share, such as the press r
   CSS can't add to a `transition` list, so components keep their spring targets in the public `--rio-spring-targets` and end their `transition` with `var(--rio-spring-targets)`. A stylesheet that springs more targets on an element extends the variable, as the split button's trailing button does, and an app that sets its own `transition` on one of these elements includes it. The variable is defined only on elements that spring, so it doesn't belong in a `transition` anywhere else: an undefined `var()` drops the whole declaration.
 
 - Primitives are tested in a real browser (see Testing).
+
+### Overlays
+
+Menus, tooltips, and dialogs float above the page. Two primitives carry them: `attachOverlay` shows them and keeps them in order, and `attachAnchoredPosition` places menus and tooltips next to what opened them. These are Rio's decisions (decided 2026-11-15); the spec only asks that "menus temporarily appear in front of all other permanent UI elements".
+
+- **Overlays live in the top layer, not on a z-index.** Menus and tooltips are popovers, and dialogs are `<dialog>` shown with `showModal()`. The top layer stacks them in the order they open, above the page, so a dialog covers a menu opened before it, and a menu opened from a dialog covers the dialog. No ancestor's `overflow` or `transform` clips them, and the app doesn't manage z-indexes. The cost: nothing outside the top layer can sit above an open Rio overlay. A top layer element the app opens later, such as its own dialog, does.
+- **Menus use the browser's popover stack** (`popover="auto"`). A popover inside another one, or shown from an element inside it (`show(source)`), keeps that one open; showing an unrelated one closes the rest; a click outside closes them all; and a modal dialog closes them as it opens. That is how nested menus behave, and it held in Chromium 158, WebKit 27.2, and Firefox 160.
+- **Rio fills in where the browser falls short or differs:**
+  - Escape closes only the topmost overlay. Firefox closes at once every popover that opened without a user activation, such as a submenu opened on hover, while Chromium and WebKit close the topmost. `attachOverlay` takes the keydown first (bubbling, so an element that handles Escape itself keeps it), cancels the browser's handling, and asks the topmost overlay to close.
+    - Escape aimed at a dialog or popover the app opened itself, with the focus inside it, is left to the browser. One case is left over: an auto popover of the app's own, above a Rio overlay and without the focus, doesn't get Escape.
+    - While a Rio overlay is open, even a tooltip, Escape arrives canceled. An app that handles Escape on `window` only when `defaultPrevented` is false doesn't see it then. That's accepted: closing a tooltip with Escape is what WCAG 1.4.13 asks for.
+  - Closing an overlay closes the overlays opened from it. The browser does this for nested popovers but not for a popover opened from a dialog.
+  - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
+  - Each document keeps its own record, so overlays in an iframe stack among themselves.
+- **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own (user's call, 2026-11-15):
+  - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
+  - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.
+  - `'parent'`: the overlay it was opened from closed.
+  - `'replaced'`: another overlay opened, and this transient one gave way.
+
+  All but `'escape'` arrive after the overlay closed, so the adapter has to follow them. A component's own API still reports through `onChange` and `on<State>Change` (see Core output); the reason is the primitive's.
+
+- **Placing is done in JavaScript, not with CSS anchor positioning.** Anchor positioning reached every engine only in January 2026 (Chrome 125, Safari 26, Firefox 147), so older browsers would get no placement at all. JavaScript also tells the stylesheet which side the element ended up on (`data-side`), which the opening motion needs, and can anchor to a point, as context menus do. Revisit once anchor positioning is Baseline widely available (mid-2028).
 
 ## Shared helpers
 
