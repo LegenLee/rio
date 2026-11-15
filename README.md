@@ -26,10 +26,14 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Split button
 - [x] Docs site with live examples
 
+### v0.3
+
+- [x] Menu, with submenus
+- [ ] Tooltip
+- [ ] Dialog
+
 ### Later
 
-- [ ] Menu
-- [ ] Tooltip
 - [ ] Link buttons
 - [ ] Form value for the switch
 - [ ] Language-specific line heights and variable font axes
