@@ -55,8 +55,18 @@
   transition:
     opacity var(--rio-motion-fast-effects),
     scale var(--rio-motion-fast-spatial),
+    border-radius var(--rio-motion-fast-spatial),
     overlay var(--rio-motion-fast-effects) allow-discrete,
     display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+/*
+ * With a submenu open, the menu the pointer or the focus is in keeps the active container shape
+ * (corner large), and the others take the inactive one (corner small), on the `fast-spatial` curve.
+ * `attachMenu` marks them with `data-inactive`.
+ */
+.rio-menu[data-inactive] {
+  border-radius: var(--rio-shape-corner-small);
 }
 
 .rio-menu:popover-open {
@@ -146,6 +156,15 @@
   --_item-container: var(--_selected-container);
   --_corner-block-start: var(--rio-shape-corner-medium);
   --_corner-block-end: var(--rio-shape-corner-medium);
+}
+
+/*
+ * The item whose submenu is open is active, with the hovered state layer
+ * (`menu-item.active.state-layer`), where `base/state-layer.css` would show a menu button's open
+ * menu as pressed. With the focus on it, that pressed layer stays, of the same strength as focus.
+ */
+.rio-menu-item.rio-state-layer[aria-haspopup][aria-expanded='true']:not(:focus-visible)::before {
+  opacity: var(--rio-state-hover-state-layer-opacity);
 }
 
 .rio-menu-item[aria-disabled='true'] {

@@ -34,7 +34,9 @@ import {
   mdiHeart,
   mdiHeartOutline,
   mdiMagnify,
+  mdiMenuRight,
   mdiPause,
+  mdiShareVariant,
   mdiSkipNext,
   mdiSkipPrevious,
 } from '@mdi/js';
@@ -59,6 +61,7 @@ import {
   RioMenuGroup,
   RioMenuItem,
   RioSplitButton,
+  RioSubMenu,
   RioSwitch,
   vRipple,
 } from '@rio-m3e/vue';
@@ -93,7 +96,10 @@ const menus = reactive({
   split: false,
   context: false,
   long: false,
+  view: false,
 });
+const viewButton = useTemplateRef('viewButton');
+const layout = ref<string | number | undefined>('grid');
 const sortBy = ref<string | number | undefined>('date');
 const filters = ref<(string | number)[] | string | number | undefined>(['photos']);
 const lastAction = ref('');
@@ -600,14 +606,74 @@ watchEffect(() => {
         <RioMenu v-model:open="menus.long" :anchor="longButton" label="Long">
           <RioMenuItem v-for="n in 30" :key="n">Item {{ n }}</RioMenuItem>
         </RioMenu>
+
+        <RioButton
+          ref="viewButton"
+          variant="tonal"
+          aria-haspopup="menu"
+          :aria-expanded="menus.view"
+          @click="menus.view = !menus.view"
+        >
+          Submenus
+        </RioButton>
+        <RioMenu v-model:open="menus.view" :anchor="viewButton" label="View">
+          <RioMenuItem @click="lastAction = 'refresh'">Refresh</RioMenuItem>
+          <RioSubMenu v-model="layout" label="Layout" selection="single">
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem v-for="kind in ['grid', 'list', 'columns']" :key="kind" :value="kind">
+              <template #icon="{ selected }">
+                <svg v-if="selected" viewBox="0 0 24 24">
+                  <path :d="mdiCheck" fill="currentColor" />
+                </svg>
+              </template>
+              {{ kind }}
+            </RioMenuItem>
+          </RioSubMenu>
+          <RioSubMenu label="Share">
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiShareVariant" fill="currentColor" /></svg
+            ></template>
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem @click="lastAction = 'email'">Email</RioMenuItem>
+            <RioMenuItem @click="lastAction = 'link'">Copy link</RioMenuItem>
+            <RioSubMenu label="More apps">
+              <template #trailing-icon
+                ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+              ></template>
+              <RioMenuItem @click="lastAction = 'chat'">Chat</RioMenuItem>
+              <RioMenuItem @click="lastAction = 'notes'">Notes</RioMenuItem>
+            </RioSubMenu>
+          </RioSubMenu>
+          <RioSubMenu label="Export" disabled>
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem>PDF</RioMenuItem>
+          </RioSubMenu>
+          <RioMenuDivider />
+          <RioMenuItem @click="lastAction = 'settings'">Settings</RioMenuItem>
+        </RioMenu>
       </div>
       <div class="controls">
         <div class="context-area" @contextmenu.prevent="openContext">Right-click here</div>
         <RioMenu v-model:open="menus.context" :anchor="contextPoint" label="Context">
           <RioMenuItem @click="lastAction = 'open'">Open</RioMenuItem>
           <RioMenuItem @click="lastAction = 'download'">Download</RioMenuItem>
+          <RioSubMenu label="Open with">
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem @click="lastAction = 'viewer'">Viewer</RioMenuItem>
+            <RioMenuItem @click="lastAction = 'editor'">Editor</RioMenuItem>
+          </RioSubMenu>
         </RioMenu>
-        <code>sort={{ sortBy }} filters={{ filters }} action={{ lastAction }}</code>
+        <code
+          >sort={{ sortBy }} filters={{ filters }} layout={{ layout }} action={{ lastAction }}</code
+        >
       </div>
     </section>
 

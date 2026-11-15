@@ -11,6 +11,7 @@ import {
   createMenuDivider,
   createMenuGroup,
   createMenuItem,
+  createSubMenu,
   createSwitch,
   createSplitButton,
   iconButtonSkeleton,
@@ -28,6 +29,7 @@ import {
   type MenuProps,
   type SplitButtonContent,
   type SplitButtonProps,
+  type SubMenuProps,
   type SwitchContent,
   type SwitchProps,
 } from '@rio-m3e/core';
@@ -41,6 +43,7 @@ import Menu from './menu/Menu.vue';
 import MenuDivider from './menu/MenuDivider.vue';
 import MenuGroup from './menu/MenuGroup.vue';
 import MenuItem from './menu/MenuItem.vue';
+import SubMenu from './menu/SubMenu.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import { expectSkeleton, findPart } from './test/contract';
@@ -279,6 +282,48 @@ describe('RioMenuItem', () => {
       onClick: noop,
     });
     expectSkeleton(element, menuItemSkeleton, api);
+  });
+});
+
+describe('RioSubMenu', () => {
+  const none = { icon: false, supportingText: false, trailingText: false, trailingIcon: false };
+  const all = { icon: true, supportingText: true, trailingText: true, trailingIcon: true };
+
+  test.each<[string, SubMenuProps, MenuProps, MenuItemContent]>([
+    ['a label', { label: 'Share' }, {}, none],
+    // Every prop away from its default, with every slot, in a menu whose style carries over
+    [
+      'disabled, selecting, with every slot, in a vibrant instant menu',
+      { label: 'Sort by', disabled: true, selection: 'single', selected: 'name' },
+      { variant: 'vibrant', instant: true },
+      all,
+    ],
+  ])('%s', async (_, props, menuProps, content) => {
+    const slots = {
+      default: () => h(MenuItem, { value: 'name' }, () => 'Name'),
+      ...(content.icon ? { icon: () => '+' } : {}),
+      ...(content.supportingText ? { 'supporting-text': () => 'More' } : {}),
+      ...(content.trailingText ? { 'trailing-text': () => '3' } : {}),
+      ...(content.trailingIcon ? { 'trailing-icon': () => '>' } : {}),
+    };
+    const { selected, ...rest } = props;
+    const screen = await render(Menu, {
+      props: menuProps,
+      slots: { default: () => h(SubMenu, { ...rest, modelValue: selected }, slots) },
+    });
+    const parent = createMenu({ props: () => menuProps, onChange: noop, onOpenChange: noop });
+    const api = createSubMenu({
+      props: () => props,
+      content: () => content,
+      menu: () => parent,
+      open: () => false,
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    // The item, then the submenu after it
+    const [item, menu] = rootOf(screen).children;
+    expectSkeleton(item!, menuItemSkeleton, api.item);
+    expectSkeleton(menu!, menuSkeleton, api.menu);
   });
 });
 

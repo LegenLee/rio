@@ -1,6 +1,6 @@
 # Menu
 
-`RioMenu`, `RioMenuItem`, `RioMenuGroup`, and `RioMenuDivider` from `@rio-m3e/vue`, built on `createMenu`, `createMenuItem`, `createMenuGroup`, `createMenuDivider`, and `attachMenu` from `@rio-m3e/core` and `@rio-m3e/styles/menu.css`. The menu floats in the top layer next to what opened it (see "Overlays" in [conventions.md](../conventions.md)). Statements are labeled Spec, Recommendations, and In Rio, as in [foundations.md](../foundations.md).
+`RioMenu`, `RioMenuItem`, `RioSubMenu`, `RioMenuGroup`, and `RioMenuDivider` from `@rio-m3e/vue`, built on `createMenu`, `createMenuItem`, `createSubMenu`, `createMenuGroup`, `createMenuDivider`, `attachMenu`, and `attachSubMenu` from `@rio-m3e/core` and `@rio-m3e/styles/menu.css`. The menu floats in the top layer next to what opened it (see "Overlays" in [conventions.md](../conventions.md)). Statements are labeled Spec, Recommendations, and In Rio, as in [foundations.md](../foundations.md).
 
 > Last verified: 2026-11-15.
 
@@ -10,6 +10,7 @@
 import Basic from './demos/menu/Basic.vue';
 import Context from './demos/menu/Context.vue';
 import Selection from './demos/menu/Selection.vue';
+import Submenu from './demos/menu/Submenu.vue';
 import Vibrant from './demos/menu/Vibrant.vue';
 </script>
 
@@ -31,6 +32,16 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 
 ::: details Code
 <<< ./demos/menu/Selection.vue
+:::
+
+### Submenus
+
+Rest the pointer on an item with an arrow, or focus it and press Right. The menu the pointer or the focus is in keeps the rounder corners.
+
+<Demo><Submenu /></Demo>
+
+::: details Code
+<<< ./demos/menu/Submenu.vue
 :::
 
 ### Vibrant
@@ -91,7 +102,10 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 | Icons, supporting text  | on-surface-variant    | on-tertiary-container        |
 | Selected item container | tertiary-container    | tertiary                     |
 | Selected item content   | on-tertiary-container | on-tertiary                  |
+| Active item state layer | on-surface at 8%      | on-tertiary-container at 8%  |
 | Disabled content        | on-surface at 38%     | on-tertiary-container at 38% |
+
+The active item is the one whose submenu is open; its state layer is the hovered one's.
 
 ### Behavior
 
@@ -100,6 +114,10 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 - "A menu expands when opened." "In dense products, such as on desktop, menus can open instantly to reduce motion."
 - "Menus can scroll when all menu items can't display at once."
 - "Single-select menus can have one item selected at a time." "Multi-select menus can have many selected items. They stay open until the person dismisses the menu."
+- "On web, menus can open submenus." Item states include "Active (main menu reveals submenu)". "Submenus are not currently available on Jetpack Compose."
+- Focus: "When a menu has multiple submenus, focus follows the current hovered or focused submenu."
+- Shape morphing: "As a person moves from one submenu to the next, the corners of the focused submenu become more rounded, while the unfocused submenu becomes less rounded." The tokens: active container corner-large, inactive corner-small.
+- The spec sets no delay for opening a submenu with the pointer, nor a way across other items to an open one.
 
 ### Accessibility
 
@@ -112,6 +130,7 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 ## Recommendations
 
 - "If a menu is in a position to be cut off, it should automatically reposition to appear to the left, right, or above the element that generates it."
+- "Submenus should open next to the parent menu item without overlapping it." "Position submenus to the side of the parent item."
 - "When a menu opens, focus should be placed on the first menu item."
 - "When a menu is opened, the corresponding button or icon button should remain the same visually, with the addition of a pressed state."
 - "When a menu item can only be used under specific conditions, it should appear disabled rather than be removed."
@@ -163,12 +182,39 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 | `value`    | `string \| number`: makes it selectable in a selecting menu | —       |
 | `disabled` | `boolean`                                                   | `false` |
 
-- Slots: `default` (the label), `icon` (gets `{ selected }`), `supporting-text`, `trailing-text` (such as a keyboard shortcut), and `trailing-icon`. Icons are hidden from assistive technology.
+`RioSubMenu`: the item that opens a submenu, and the submenu's items inside it (user's call, 2026-11-15).
+
+| Prop         | Type                                                             | Default  |
+| ------------ | ---------------------------------------------------------------- | -------- |
+| `label`      | `string`: the item's label, which also names the submenu         | —        |
+| `disabled`   | `boolean`: the item stays focusable but doesn't open the submenu | `false`  |
+| `selection`  | `'none' \| 'single' \| 'multiple'`: the submenu's own            | `'none'` |
+| `modelValue` | the submenu's selection, with `v-model`                          | —        |
+
+```vue
+<RioSubMenu v-model="sort" label="Sort by" selection="single">
+  <template #trailing-icon><ArrowRightIcon /></template>
+  <RioMenuItem value="name">Name</RioMenuItem>
+  <RioMenuItem value="date">Date</RioMenuItem>
+</RioSubMenu>
+```
+
+- Slots: `default` (the label), `icon` (gets `{ selected }`), `supporting-text`, `trailing-text` (such as a keyboard shortcut), and `trailing-icon`. Icons are hidden from assistive technology. `RioSubMenu` takes the same slots for its item, except the label, which is its `label` prop, and its `default` slot holds the submenu's items, groups, dividers, and submenus. Rio ships no icons, so the arrow the M3 Design Kit draws on such an item (`arrow_right`) goes in `trailing-icon`.
 - Events: `click` on the item, which a disabled item doesn't emit. `update:open` and `update:modelValue` on the menu. **The app owns `open` and the selection**: the menu asks for changes and waits.
 - `RioMenuGroup` takes a `label`, shown above its items and naming the group. `RioMenuDivider` is a separator.
 - **Give the menu a `label`**, usually the trigger's text. ARIA doesn't require a menu to be named, but a screen reader announces the name on entering it.
 - Trailing text is part of the item's name ("Cut Ctrl+X"). For a keyboard shortcut, also give the item `aria-keyshortcuts` (`<RioMenuItem aria-keyshortcuts="Control+X">`); attributes fall through to its `<button>`.
-- Markup: the menu is a `<div role="menu">` shown as a popover, and each item a `<button>` with the role `menuitem`, `menuitemradio` (`single`), or `menuitemcheckbox` (`multiple`), and `aria-checked`. Groups are `role="group"`, dividers `role="separator"`.
+- Markup: the menu is a `<div role="menu">` shown as a popover, and each item a `<button>` with the role `menuitem`, `menuitemradio` (`single`), or `menuitemcheckbox` (`multiple`), and `aria-checked`. Groups are `role="group"`, dividers `role="separator"`. A submenu's item is a `menuitem` with `aria-haspopup="menu"` and `aria-expanded`, followed by the submenu's `<div role="menu">`, named by the label. Attributes given to `RioSubMenu` go to its item.
+
+### Submenus
+
+- **The pointer opens a submenu after resting on its item for 100ms, and a click opens it at once** (user's call for the approach, 2026-11-15; the timings are Radix's). Pointing at another item closes it. **Heading for an open submenu, the pointer may cross other items**: for 300ms after it leaves the item, it keeps the submenu while it stays within the triangle from where it left to the submenu's near side and moves that way, as in Radix. A submenu that had no room beside its item, and went below or above it, gets the same way down or up. The spec sets neither; Material Web waits 400ms both ways instead. A touch has no hover: a tap opens the submenu.
+- **A click on the item of an open submenu keeps it open.** The item is the submenu's invoker (`popovertarget`), so that click isn't a click outside; the submenu still opens through `open`, not the browser.
+- **Keys**: Right (Left in right-to-left layouts), Enter, and Space on the item open the submenu with the focus on its first item, or its selected one; a space while letters are being typed is part of the search. Left (Right) and Escape close it and give the focus back to the item, one level at a time. Tab and a choice close the whole menu. A click without a pointer, as from assistive technology, moves the focus in like the keys.
+- **The focus follows the pointer into another open menu** (user's call, 2026-11-15), as the spec's "focus follows the current hovered or focused submenu" says: pointing at an item of a submenu, or back at one in the menu around it, moves the focus there, so the keys carry on where the pointer is. Opening a submenu with the pointer leaves the focus where it is, and within one menu, pointing doesn't move it. Heading for an open submenu across other items doesn't move it either.
+- **Active and inactive shapes**: with a submenu open, the menu the pointer or the focus was last in keeps corner-large, and the other open menus take corner-small, on the `fast-spatial` curve as Rio's choice (`data-inactive`). The active item, whose submenu is open, shows the hovered state layer, as the tokens say, where a menu button with its menu open shows the pressed one.
+- **Placement**: beside the item on the end side, 4px off the menu around it, with the submenu's first item lined up with the item (Rio's choice; the kit draws no open submenu). Without room, it opens on the start side, then follows the menu's fallbacks.
+- **A submenu keeps its own selection** (`selection`, `v-model`), as a menu does: choosing in a single-select one, or in one without a selection, closes the whole menu; a multi-select one stays open. Its color style and `instant` come from the menu around it.
 
 ### Opening and closing
 
@@ -187,7 +233,7 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 - Up and Down move between items, wrapping around. Home and End go to the ends. Letters move to the next item whose label starts with them; letters typed within 500ms add up, and repeating one letter cycles through its items.
 - **Tab closes the menu and moves on from the trigger**, as in the WAI-ARIA menu button pattern (user's call, 2026-11-15). The spec's keyboard table and prose disagree about Tab; Rio reads them as Tab reaching the menu's trigger. With a point anchor, or an anchor that can't take the focus, there is nothing to move on from: Tab closes the menu and the focus goes back to the start of the document.
 - Escape and choosing an item give the focus back to the anchor, or, for a point anchor, to whatever had it before. A click outside leaves the focus where the click put it.
-- Pointing at an item shows its hover state but doesn't move the focus.
+- Pointing at an item shows its hover state but doesn't move the focus, unless the focus is in another open menu (see Submenus).
 
 ### Shape and spacing
 
@@ -203,8 +249,8 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 
 ### Not yet
 
-- **Submenus**: the next step. The overlay record already nests them.
 - Opening a menu from its trigger with the arrow keys.
+- An alternative to submenus on compact screens, which the spec leaves to its adaptive guidance.
 - Gaps between groups ("not currently available on web"), horizontal menus, the baseline menu, density, and filtering.
 - `aria-controls` on the trigger, pointing at the menu.
 
@@ -215,5 +261,7 @@ A single-select menu closes when an item is chosen; a multi-select one stays ope
 - [M3 Menus – Guidelines](https://m3.material.io/components/menus/guidelines)
 - [M3 Menus – Accessibility](https://m3.material.io/components/menus/accessibility)
 - [Material Web component tokens @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/tokens/versions/latest/sass) (`_md-comp-menus.scss`, `_md-comp-menus-standard.scss`, `_md-comp-menus-vibrant.scss`, and the baseline `_md-comp-menu.scss`)
-- M3 Design Kit (Figma), Menu page: the vertical menu's item rows and insets
+- M3 Design Kit (Figma), Menu page: the vertical menu's item rows and insets, and the active item and its arrow
 - [WAI-ARIA Authoring Practices: Menu Button Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/)
+- [Material Web `sub-menu.ts` @ 37aa14b](https://github.com/material-components/material-web/blob/37aa14b843dcaeb3a46f898679fa6fcd109b1905/menu/internal/submenu/sub-menu.ts): 400ms hover delays, and the keys
+- [Radix Menu `menu.tsx` @ eb3a2b7](https://github.com/radix-ui/primitives/blob/eb3a2b7091293e27df8f9ba906632d8daa3d81a3/packages/react/menu/src/menu.tsx#L1127-L1172): the 100ms hover delay, and the 300ms way to an open submenu

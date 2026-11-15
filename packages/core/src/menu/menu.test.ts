@@ -4,9 +4,11 @@ import {
   createMenuDivider,
   createMenuGroup,
   createMenuItem,
+  createSubMenu,
   type MenuItemContent,
   type MenuItemProps,
   type MenuProps,
+  type SubMenuProps,
 } from './menu';
 
 const setupMenu = (props: MenuProps = {}) => {
@@ -155,6 +157,78 @@ describe('createMenuItem', () => {
       item.showsTrailingText(),
       item.showsTrailingIcon(),
     ]).toEqual([true, false, true, false]);
+  });
+});
+
+describe('createSubMenu', () => {
+  const setupSub = (props: SubMenuProps = {}, parentProps: MenuProps = {}, open = false) => {
+    const parent = setupMenu(parentProps);
+    const onChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const sub = createSubMenu({
+      props: () => props,
+      menu: () => parent.menu,
+      open: () => open,
+      onChange,
+      onOpenChange,
+    });
+    return { sub, parent, onChange, onOpenChange };
+  };
+
+  test('its item is a menuitem that says it opens a menu, and whether it is open', () => {
+    expect(setupSub({ label: 'Share' }).sub.item.parts.root()).toMatchObject({
+      class: 'rio-menu-item rio-state-layer rio-focus-ring',
+      role: 'menuitem',
+      'aria-haspopup': 'menu',
+      'aria-expanded': 'false',
+      'aria-checked': undefined,
+      'data-selected': undefined,
+    });
+    expect(setupSub({}, {}, true).sub.item.parts.root()).toMatchObject({ 'aria-expanded': 'true' });
+  });
+
+  test("the submenu is a menu named by the item's label, in the parent's style", () => {
+    const { sub } = setupSub({ label: 'Share' }, { variant: 'vibrant', instant: true });
+    expect(sub.menu.parts.root()).toEqual({
+      class: 'rio-menu',
+      role: 'menu',
+      'aria-label': 'Share',
+      'data-variant': 'vibrant',
+      'data-instant': '',
+    });
+  });
+
+  test('a click on the item opens the submenu rather than choosing', () => {
+    const { sub, parent, onOpenChange } = setupSub({}, { selection: 'single' });
+    sub.item.handleClick(click());
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(parent.onChange).not.toHaveBeenCalled();
+    expect(parent.onOpenChange).not.toHaveBeenCalled();
+  });
+
+  test('a disabled item does not open it', () => {
+    const { sub, onOpenChange } = setupSub({ disabled: true });
+    sub.item.handleClick(click());
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  test('a choice in the submenu keeps its own selection and closes the whole menu', () => {
+    const { sub, parent, onChange, onOpenChange } = setupSub({
+      selection: 'single',
+      selected: 'name',
+    });
+    sub.menu.choose('date');
+    expect(onChange).toHaveBeenCalledWith('date');
+    expect(parent.onChange).not.toHaveBeenCalled();
+    expect(parent.onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  test('multiple: a choice toggles the value and everything stays open', () => {
+    const { sub, parent, onChange } = setupSub({ selection: 'multiple', selected: ['a'] });
+    sub.menu.choose('a');
+    expect(onChange).toHaveBeenCalledWith([]);
+    expect(parent.onOpenChange).not.toHaveBeenCalled();
   });
 });
 

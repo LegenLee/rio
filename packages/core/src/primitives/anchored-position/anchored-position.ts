@@ -44,6 +44,12 @@ export interface AnchoredPositionOptions {
   align?: AnchoredAlign;
   /** Space between the anchor and the element, in px. Defaults to 0. */
   offset?: number;
+  /**
+   * Moves the element along the anchor, in px, once lined up: down beside the anchor, toward the
+   * end of the line above or below it. Defaults to 0. A submenu uses it to line its first item up
+   * with the item that opened it.
+   */
+  alignOffset?: number;
   /** Sides to try, in order, when the preferred one has no room. Defaults to the opposite side. */
   fallbacks?: readonly AnchoredSide[];
   /** Space kept from the edges of the window, in px. Defaults to 8. */
@@ -86,6 +92,7 @@ export function attachAnchoredPosition(
   const view = document.defaultView!;
   floating.dataset.anchored = '';
   const offset = options.offset ?? 0;
+  const alignOffset = options.alignOffset ?? 0;
   const padding = options.padding ?? 8;
   const preferred = options.side ?? 'bottom';
   const align = options.align ?? 'start';
@@ -196,20 +203,20 @@ export function attachAnchoredPosition(
       const startEdge = rtl ? anchor.right - size.width : anchor.left;
       const endEdge = rtl ? anchor.left : anchor.right - size.width;
       x =
-        align === 'center'
+        (align === 'center'
           ? anchor.left + (anchor.width - size.width) / 2
           : align === 'start'
             ? startEdge
-            : endEdge;
+            : endEdge) + (rtl ? -alignOffset : alignOffset);
     } else {
       x = at === 'right' ? anchor.right + offset : anchor.left - offset - size.width;
       const height = anchor.bottom - anchor.top;
       y =
-        align === 'center'
+        (align === 'center'
           ? anchor.top + (height - size.height) / 2
           : align === 'start'
             ? anchor.top
-            : anchor.bottom - size.height;
+            : anchor.bottom - size.height) + alignOffset;
     }
     // Keep it on screen. When it is larger than the window, its start stays visible: the left
     // edge, or the right one in right-to-left layouts.

@@ -82,9 +82,15 @@ export interface MenuApi {
   /**
    * An item was chosen. With a `value` in a selecting menu, the selection rules apply: `single`
    * selects it, `multiple` toggles it. Then the menu asks to close, except for `multiple`, which
-   * stays open until dismissed, as the spec says.
+   * stays open until dismissed.
    */
   choose: (value?: MenuValue) => void;
+  /** Asks the menu to close. In a submenu, the whole menu closes, as after a choice. */
+  close: () => void;
+  /** The color style, with the default filled in, which submenus take on. */
+  variant: () => MenuVariant;
+  /** Whether the menu opens without its motion, which submenus take on. */
+  instant: () => boolean;
 }
 
 const valuesOf = (selected: MenuSelected): MenuValue[] =>
@@ -127,6 +133,9 @@ export function createMenu(options: MenuOptions): MenuApi {
       }
       options.onOpenChange(false);
     },
+    close: () => options.onOpenChange(false),
+    variant: () => props().variant,
+    instant: () => props().instant,
   };
 }
 
@@ -135,7 +144,7 @@ export function createMenu(options: MenuOptions): MenuApi {
 export interface MenuItemProps {
   /** Makes the item selectable in a menu that keeps a selection. */
   value?: MenuValue;
-  /** Still focusable, as the spec says, but can't be chosen. */
+  /** Still focusable, but can't be chosen. */
   disabled?: boolean;
 }
 
@@ -163,6 +172,16 @@ export interface MenuItemOptions {
   menu?: () => Pick<MenuApi, 'selection' | 'isSelected' | 'choose'> | undefined;
   /** Called for a click on the item that isn't blocked, before the menu is told. */
   onClick: (event: MouseEvent) => void;
+  /**
+   * Makes it the item that opens a submenu (see `createSubMenu`): a click opens the submenu rather
+   * than choosing the item.
+   */
+  submenu?: {
+    /** Whether the submenu is open */
+    open: () => boolean;
+    /** Asks for the submenu to open. */
+    onOpen: () => void;
+  };
 }
 
 export interface MenuItemParts {
@@ -218,8 +237,10 @@ const NO_CONTENT: MenuItemContent = {
 export function createMenuItem(options: MenuItemOptions): MenuItemApi {
   const props = () => ({ ...menuItemDefaults, ...omitUndefined(options.props()) });
   const content = () => options.content?.() ?? NO_CONTENT;
-  // `menuitemradio` or `menuitemcheckbox` when the menu keeps a selection and the item has a value
+  // `menuitemradio` or `menuitemcheckbox` when the menu keeps a selection and the item has a value.
+  // An item that opens a submenu is never chosen, so it is neither.
   const kind = () => {
+    if (options.submenu) return undefined;
     const selection = options.menu?.()?.selection() ?? 'none';
     if (selection === 'none' || props().value === undefined) return undefined;
     return selection === 'single' ? 'radio' : 'checkbox';
@@ -241,7 +262,9 @@ export function createMenuItem(options: MenuItemOptions): MenuItemApi {
           // Focus moves with the arrow keys, so the items are left out of the Tab order.
           tabindex: '-1',
           'aria-checked': k ? String(selected()) : undefined,
-          // Not native `disabled`: the spec keeps disabled items focusable.
+          'aria-haspopup': options.submenu ? 'menu' : undefined,
+          'aria-expanded': options.submenu ? String(options.submenu.open()) : undefined,
+          // Not native `disabled`: disabled items stay focusable.
           'aria-disabled': p.disabled ? 'true' : undefined,
           'data-selected': k ? String(selected()) : undefined,
           'data-focus-ring': 'inner',
@@ -266,9 +289,80 @@ export function createMenuItem(options: MenuItemOptions): MenuItemApi {
         return;
       }
       options.onClick(event);
-      options.menu?.()?.choose(props().value);
+      if (options.submenu) options.submenu.onOpen();
+      else options.menu?.()?.choose(props().value);
     },
   };
+}
+
+// Submenus
+
+export interface SubMenuProps {
+  /** The label of the item that opens the submenu, which also names the submenu. */
+  label?: string;
+  /** The item stays focusable but doesn't open the submenu. */
+  disabled?: boolean;
+  /** As a menu's: a submenu keeps its own selection, such as a sort order. */
+  selection?: MenuSelection;
+  /** The selected value (`single`) or values (`multiple`). */
+  selected?: MenuSelected;
+}
+
+export interface SubMenuOptions {
+  props: () => SubMenuProps;
+  /** What the adapter put in the item that opens it. Without it, the item has only a label. */
+  content?: () => MenuItemContent;
+  /** The menu the submenu is in. Its color style and motion carry over, and choosing closes it. */
+  menu?: () => Pick<MenuApi, 'variant' | 'instant' | 'close'> | undefined;
+  /** Whether the submenu is open: the adapter owns it. */
+  open: () => boolean;
+  /** Called with the requested selection. */
+  onChange: (selected: MenuSelected) => void;
+  /** Called with the requested `open`: `true` for a click on its item. */
+  onOpenChange: (open: boolean) => void;
+}
+
+export interface SubMenuApi {
+  /** The item that opens the submenu, with the parts of a menu item (`menuItemSkeleton`) */
+  item: MenuItemApi;
+  /** The submenu, with the parts of a menu (`menuSkeleton`). Its items take it as their menu. */
+  menu: MenuApi;
+}
+
+/**
+ * A submenu and the item that opens it. The two render side by side in the menu, the item where it
+ * sits and the submenu after it; the submenu shows in the top layer next to the item.
+ */
+export function createSubMenu(options: SubMenuOptions): SubMenuApi {
+  const menu = createMenu({
+    props: () => {
+      const p = options.props();
+      const parent = options.menu?.();
+      return {
+        open: options.open(),
+        variant: parent?.variant(),
+        instant: parent?.instant(),
+        selection: p.selection,
+        selected: p.selected,
+        label: p.label,
+      };
+    },
+    onChange: options.onChange,
+    // A choice in a submenu closes the whole menu, not only the submenu.
+    onOpenChange: (open) => {
+      const parent = options.menu?.();
+      if (open) options.onOpenChange(true);
+      else if (parent) parent.close();
+      else options.onOpenChange(false);
+    },
+  });
+  const item = createMenuItem({
+    props: () => ({ disabled: options.props().disabled }),
+    content: options.content,
+    onClick: () => {},
+    submenu: { open: options.open, onOpen: () => options.onOpenChange(true) },
+  });
+  return { item, menu };
 }
 
 // Groups and dividers

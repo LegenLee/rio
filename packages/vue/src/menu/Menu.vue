@@ -11,7 +11,7 @@ import '@rio-m3e/styles/base/anchored-position.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/menu.css';
 import { onBeforeUnmount, onMounted, provide, useTemplateRef, watch } from 'vue';
-import { menuKey } from './context';
+import { menuContextOf, menuKey } from './context';
 
 // `v-model` without an argument binds `modelValue`; core calls the same thing `selected`.
 interface Props extends Omit<MenuProps, 'selected'> {
@@ -55,11 +55,7 @@ const menu = createMenu({
   onOpenChange: (next) => emit('update:open', next),
 });
 
-provide(menuKey, {
-  selection: menu.selection,
-  isSelected: menu.isSelected,
-  choose: menu.choose,
-});
+provide(menuKey, menuContextOf(menu));
 
 /** A component's root element, or the element or point itself */
 const anchorTarget = () =>

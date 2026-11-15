@@ -101,6 +101,16 @@ describe('attachAnchoredPosition', () => {
     expect(floating.dataset.side).toBe(side);
   });
 
+  test.each([
+    // [side, dir, left, top]: beside the anchor it moves down, above or below it toward the end
+    ['end', 'ltr', 264, 96],
+    ['bottom', 'ltr', 196, 134],
+    ['bottom', 'rtl', 164, 134],
+  ] as const)('alignOffset moves it along the anchor (%s, %s)', (side, dir, left, top) => {
+    const floating = place(anchorAt(200, 100, dir), { side, offset: 4, alignOffset: -4 });
+    expect(box(floating)).toMatchObject({ left, top });
+  });
+
   test('flips to the opposite side when there is no room', () => {
     const anchor = anchorAt(200, view().height - 40);
     const floating = place(anchor, { offset: 4 });

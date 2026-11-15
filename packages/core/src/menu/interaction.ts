@@ -5,13 +5,25 @@
 // - Opening places the menu, then focuses the selected item, or else the first.
 // - Up and Down move between the items, wrapping around, and Home and End go to the ends. Typing
 //   letters moves to the next item whose label starts with them.
-// - Disabled items take the focus too, as the spec says.
-// - Tab closes the menu and moves on from the element that opened it, as in the WAI-ARIA menu
-//   button pattern.
+// - Disabled items take the focus too.
+// - Tab closes the menu and moves on from the element that opened it.
 // - Closing after a choice or Escape gives the focus back to the anchor, or to whatever had it
 //   before. A click elsewhere leaves the focus where the click put it.
 //
-// Not yet: submenus, and opening from the keyboard with the arrow keys.
+// Submenus (`attachSubMenu`) are menus too, with these on top:
+// - The pointer opens one after resting on its item for a moment, and a click opens it at once.
+//   Heading for an open submenu, the pointer may cross other items without closing it, for a short
+//   while: within the triangle from where it left the item to the submenu's near side, and only
+//   while it moves that way. Pointing at another item closes it.
+// - The focus follows the pointer from one open menu into another. Within one menu, pointing
+//   doesn't move it.
+// - Right (left in right-to-left layouts), Enter, and Space on its item open it and focus its
+//   first item. Left and Escape close it and give the focus back to its item. Tab and a choice
+//   close the whole menu.
+// - The menu with the pointer or the focus has the active shape, and the other open menus around
+//   it the inactive one (`data-inactive`).
+//
+// Not yet: opening a menu from its trigger with the arrow keys.
 
 import {
   attachAnchoredPosition,
@@ -56,6 +68,20 @@ export interface MenuDomHandle {
   detach(): void;
 }
 
+export interface SubMenuDomOptions {
+  /**
+   * The submenu opens or closes on its own: the pointer, the arrow keys, Escape, or a click
+   * elsewhere. The adapter sets its `open` to match.
+   */
+  onOpenChange: (open: boolean) => void;
+}
+
+export interface SubMenuDomHandle {
+  /** Brings the submenu in line with `open`. Call it once attached, and whenever `open` changes. */
+  sync(open: boolean): void;
+  detach(): void;
+}
+
 /** Where to try next when the preferred side has no room: across, then to the sides. */
 const FALLBACKS: Record<AnchoredSide, AnchoredSide[]> = {
   bottom: ['top', 'end', 'start'],
@@ -66,6 +92,15 @@ const FALLBACKS: Record<AnchoredSide, AnchoredSide[]> = {
 
 /** How long typed letters add up to one search. */
 const TYPEAHEAD_MS = 500;
+/** How long the pointer rests on an item before its submenu opens */
+const HOVER_OPEN_MS = 100;
+/** How long the pointer may take to reach an open submenu across other items */
+const GRACE_MS = 300;
+/**
+ * A submenu goes beside its item, 4px off the menu around it (the item is inset 4px), with its
+ * first item lined up with the item (its own are inset 4px from its top).
+ */
+const SUBMENU_PLACEMENT = { side: 'end', align: 'start', offset: 8, alignOffset: -4 } as const;
 
 const isElement = (
   anchor: HTMLElement | MenuAnchorPoint | null | undefined,
@@ -75,8 +110,105 @@ const isElement = (
 const samePoint = (a: MenuAnchorPoint, b: MenuAnchorPoint) =>
   a.x === b.x && a.y === b.y && a.element === b.element;
 
+type Point = { x: number; y: number };
+
+/** Whether a point is inside a polygon, by casting a ray to the right and counting crossings */
+const isInside = ({ x, y }: Point, polygon: readonly Point[]) => {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const a = polygon[i]!;
+    const b = polygon[j]!;
+    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+};
+
+// What a menu shares with the submenus in it
+
+/** A submenu's item, as the menu it sits in drives it with the pointer */
+interface Opener {
+  /** The pointer is on the item: the submenu opens after a moment. */
+  hover(): void;
+  /** The pointer went to another item: the submenu closes. */
+  cancel(): void;
+}
+
+interface MenuState {
+  /** The submenus in the menu, by the item that opens each */
+  openers: Map<HTMLElement, Opener>;
+  /** Where the pointer may cross other items on its way to an open submenu, for a short while */
+  grace?: {
+    area: Point[];
+    /** Which way the submenu lies from its item: beside it, or below or above without room there */
+    toward: 'left' | 'right' | 'up' | 'down';
+    timer: ReturnType<typeof setTimeout>;
+  };
+  /** Whether letters typed a moment ago still add up, so a space is part of the search */
+  typing: () => boolean;
+}
+
+// Made by whichever comes first: a submenu inside mounts before the menu around it does.
+const menuStates = new WeakMap<HTMLElement, MenuState>();
+const stateOf = (menu: HTMLElement) => {
+  let state = menuStates.get(menu);
+  if (!state) {
+    state = { openers: new Map(), typing: () => false };
+    menuStates.set(menu, state);
+  }
+  return state;
+};
+const endGrace = (state: MenuState) => {
+  if (state.grace) clearTimeout(state.grace.timer);
+  state.grace = undefined;
+};
+
+// The open menus of one tree, a menu and its open submenus, share the active shape: the one the
+// pointer or the focus was last in has it, and the others get `data-inactive`. With one menu open,
+// it is simply active.
+const menuAround = (element: Element) => element.parentElement?.closest<HTMLElement>('.rio-menu');
+const topOf = (menu: HTMLElement) => {
+  let top = menu;
+  for (let up = menuAround(menu); up; up = menuAround(up)) top = up;
+  return top;
+};
+const activeMenus = new WeakMap<HTMLElement, HTMLElement>();
+const shapeTree = (menu: HTMLElement, active?: HTMLElement) => {
+  const top = topOf(menu);
+  if (active) activeMenus.set(top, active);
+  // Closed since: the nearest menu still open around it takes over.
+  let current: HTMLElement | null | undefined = activeMenus.get(top) ?? top;
+  while (current && !current.matches(':popover-open')) current = menuAround(current);
+  const open = [top, ...top.querySelectorAll<HTMLElement>('.rio-menu')].filter((each) =>
+    each.matches(':popover-open'),
+  );
+  for (const each of open)
+    each.toggleAttribute('data-inactive', open.length > 1 && each !== current);
+};
+
+type Placement = Pick<MenuProps, 'side' | 'align' | 'offset'> & { alignOffset?: number };
+
+/** What a submenu changes in its menu's behavior */
+interface Nested {
+  /** Whether opening moves the focus into it: from the keyboard, not the pointer */
+  focusOnShow: () => boolean;
+}
+
+type MenuDom = MenuDomHandle & {
+  /** Focuses the selected item, or else the first. */
+  focusFirst(): void;
+};
+
 export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomHandle {
+  return setup(root, options);
+}
+
+function setup(
+  root: HTMLElement,
+  options: Omit<MenuDomOptions, 'props'> & { props: () => Placement },
+  nested?: Nested,
+): MenuDom {
   const document = root.ownerDocument;
+  const view = document.defaultView!;
   // A menu moved to a new anchor during a press is closed by the browser when the press ends;
   // it opens again at the new anchor instead of telling the adapter (see `afterPress`).
   let reanchoring = false;
@@ -129,8 +261,8 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
   };
 
   const place = () => {
-    const p = { ...menuDefaults, ...omitUndefined(options.props()) };
-    const key = `${p.side} ${p.align} ${p.offset}`;
+    const p = { ...menuDefaults, alignOffset: 0, ...omitUndefined(options.props()) };
+    const key = `${p.side} ${p.align} ${p.offset} ${p.alignOffset}`;
     if (anchored && key === placement) return anchored;
     anchored?.detach();
     placement = key;
@@ -140,6 +272,7 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
       side: p.side,
       align: p.align,
       offset: p.offset,
+      alignOffset: p.alignOffset,
       fallbacks: FALLBACKS[p.side],
     });
     return anchored;
@@ -175,9 +308,30 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
     }
   };
 
+  const state = stateOf(root);
+  state.typing = () => typed !== '' && performance.now() - typedAt <= TYPEAHEAD_MS;
+
   const onKeydown = (event: KeyboardEvent) => {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    // Tab closes the whole menu, from a submenu too, so the outermost menu takes it.
+    if (event.key === 'Tab') {
+      if (nested) return;
+      // Not prevented: the browser moves on from the element that opened the menu.
+      options.onClose();
+      returnTarget()?.focus();
+      return;
+    }
+    // The keys pressed in a submenu are the submenu's.
+    if ((event.target as Element).closest('[role="menu"]') !== root) return;
+    // Keys make the menu they are pressed in the active one, as the focus moving in does. Not only
+    // through `focusin`: a window without the system's focus doesn't fire it.
+    if (activeMenus.get(topOf(root)) !== root) shapeTree(root, root);
     const handled = () => event.preventDefault();
+    if (nested && event.key === (isRtl() ? 'ArrowRight' : 'ArrowLeft')) {
+      handled();
+      options.onClose();
+      return;
+    }
     switch (event.key) {
       case 'ArrowDown':
         handled();
@@ -195,11 +349,6 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
         handled();
         focusAt(-1);
         return;
-      case 'Tab':
-        // Not prevented: the browser moves on from the element that opened the menu.
-        options.onClose();
-        returnTarget()?.focus();
-        return;
     }
     // A space with nothing typed yet presses the item.
     if (event.key.length === 1 && !(event.key === ' ' && !typed)) {
@@ -208,6 +357,55 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
     }
   };
   root.addEventListener('keydown', onKeydown);
+
+  const isRtl = () => view.getComputedStyle(root).direction === 'rtl';
+
+  // The pointer over the menu's own items opens the submenu of the one it rests on and closes the
+  // others, except while it heads for an open submenu across other items (`MenuState.grace`). Only
+  // a mouse: a touch has no hover, and a tap opens a submenu with its click.
+  //
+  // The focus follows the pointer from one open menu into another, a submenu or the menu around
+  // it, so the keys carry on where the pointer is. Within the menu that has the focus, pointing
+  // doesn't move it.
+  let last: Point | undefined;
+  /** Which way the pointer last moved, across and down */
+  const heading: { x?: 'left' | 'right'; y?: 'up' | 'down' } = {};
+  const onPointerMove = (event: PointerEvent) => {
+    if (event.pointerType !== 'mouse') return;
+    const target = event.target as Element;
+    if (target.closest('[role="menu"]') !== root) return;
+    const point = { x: event.clientX, y: event.clientY };
+    if (last && point.x !== last.x) heading.x = point.x > last.x ? 'right' : 'left';
+    if (last && point.y !== last.y) heading.y = point.y > last.y ? 'down' : 'up';
+    last = point;
+    if (activeMenus.get(topOf(root)) !== root) shapeTree(root, root);
+    const { grace } = state;
+    if (grace) {
+      const across = grace.toward === 'left' || grace.toward === 'right';
+      if ((across ? heading.x : heading.y) === grace.toward && isInside(point, grace.area)) return;
+    }
+    endGrace(state);
+    const item = target.closest<HTMLElement>('[role^="menuitem"]');
+    if (!item) return;
+    const focusedMenu = document.activeElement?.closest<HTMLElement>('[role="menu"]');
+    // Without scrolling: an item half shown at the edge would otherwise slide under the pointer.
+    if (focusedMenu && focusedMenu !== root && topOf(focusedMenu) === topOf(root)) {
+      item.focus({ preventScroll: true });
+    }
+    for (const [opener, control] of state.openers) if (opener !== item) control.cancel();
+    state.openers.get(item)?.hover();
+  };
+  root.addEventListener('pointermove', onPointerMove);
+  // The focus moving into the menu, from the keyboard, makes it the active one too.
+  const onFocusIn = (event: FocusEvent) => {
+    if ((event.target as Element).closest('[role="menu"]') === root) shapeTree(root, root);
+  };
+  root.addEventListener('focusin', onFocusIn);
+
+  const focusFirst = () => {
+    const all = items();
+    (all.find((item) => item.getAttribute('aria-checked') === 'true') ?? all[0])?.focus();
+  };
 
   /** What the menu last opened at: its anchor element or point, or null for none */
   let shownAt: HTMLElement | MenuAnchorPoint | null = null;
@@ -251,8 +449,11 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
       isElement(anchor) ? anchor : on instanceof document.defaultView!.HTMLElement ? on : undefined,
     );
     anchored.update();
-    const all = items();
-    (all.find((item) => item.getAttribute('aria-checked') === 'true') ?? all[0])?.focus();
+    // A menu that takes the focus becomes the active one; a submenu the pointer opened leaves the
+    // active shape where the pointer is.
+    const focusing = !nested || nested.focusOnShow();
+    shapeTree(root, focusing ? root : undefined);
+    if (focusing) focusFirst();
   };
 
   // A context menu is asked for while the button is still down, in Safari, Firefox, and Chromium on
@@ -261,8 +462,8 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
   // that comes with a button down until the press ends, opening or moving the menu waits, until a
   // task after the release, past the light dismiss. Other clicks and the keyboard never wait.
   // A release can go missing (the browser's own context menu takes it, or the window loses the
-  // focus mid-press), so the wait also ends on those, and after a second at most.
-  const view = document.defaultView!;
+  // focus mid-press), so the wait also ends on those, and after a second at most. A submenu never
+  // opens from a context menu's press, so it doesn't listen.
   let pressing = false;
   let afterPress: (() => void) | undefined;
   let pressTimer: ReturnType<typeof setTimeout> | undefined;
@@ -289,12 +490,14 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
       if (!event.defaultPrevented) release();
     });
   };
-  document.addEventListener('contextmenu', onContextMenu, { capture: true });
-  view.addEventListener('contextmenu', onContextMenuDone);
-  for (const type of ['pointerup', 'pointercancel']) {
-    document.addEventListener(type, release, { capture: true });
+  if (!nested) {
+    document.addEventListener('contextmenu', onContextMenu, { capture: true });
+    view.addEventListener('contextmenu', onContextMenuDone);
+    for (const type of ['pointerup', 'pointercancel']) {
+      document.addEventListener(type, release, { capture: true });
+    }
+    view.addEventListener('blur', release);
   }
-  view.addEventListener('blur', release);
 
   let wanted = false;
   return {
@@ -312,6 +515,7 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
         reanchoring = false;
         overlay.hide();
         typed = '';
+        shapeTree(root);
         if (hadFocus) returnTarget()?.focus();
       }
     },
@@ -345,8 +549,12 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
         place().update();
       }
     },
+    focusFirst,
     detach() {
       root.removeEventListener('keydown', onKeydown);
+      root.removeEventListener('pointermove', onPointerMove);
+      root.removeEventListener('focusin', onFocusIn);
+      endGrace(state);
       document.removeEventListener('contextmenu', onContextMenu, { capture: true });
       view.removeEventListener('contextmenu', onContextMenuDone);
       for (const type of ['pointerup', 'pointercancel']) {
@@ -358,6 +566,154 @@ export function attachMenu(root: HTMLElement, options: MenuDomOptions): MenuDomH
       afterPress = undefined;
       overlay.detach();
       anchored?.detach();
+    },
+  };
+}
+
+let submenuIds = 0;
+
+/**
+ * A submenu's behavior in the DOM: a menu (see `attachMenu`) that `item` opens, shown beside it.
+ * `item` sits in a menu that `attachMenu` or this function runs, and `root` follows it.
+ */
+export function attachSubMenu(
+  item: HTMLElement,
+  root: HTMLElement,
+  options: SubMenuDomOptions,
+): SubMenuDomHandle {
+  const view = item.ownerDocument.defaultView!;
+  const parent = item.closest<HTMLElement>('[role="menu"]');
+  let open = false;
+  /** Whether the opening asked for moves the focus in: from the keyboard, not the pointer */
+  let focusIn = false;
+  const request = (next: boolean, focus = false) => {
+    focusIn = focus;
+    options.onOpenChange(next);
+  };
+  const dom = setup(
+    root,
+    { anchor: () => item, props: () => SUBMENU_PLACEMENT, onClose: () => request(false) },
+    { focusOnShow: () => focusIn },
+  );
+  const disabled = () => item.getAttribute('aria-disabled') === 'true';
+
+  // The item invokes the submenu, so a click on it isn't a click outside, which would close the open
+  // submenu. The click opens it through the adapter (`handleClick`), not the browser, which is told
+  // to only ever show it, and is then stopped.
+  root.id ||= `rio-submenu-${++submenuIds}`;
+  item.setAttribute('popovertarget', root.id);
+  item.setAttribute('popovertargetaction', 'show');
+  // A click from the keyboard or assistive technology has no pointer behind it (`detail` 0), and
+  // moves the focus in, as the keys do.
+  const onClickFirst = (event: MouseEvent) => {
+    focusIn = event.detail === 0;
+  };
+  const onClick = (event: MouseEvent) => event.preventDefault();
+  item.addEventListener('click', onClickFirst, { capture: true });
+  item.addEventListener('click', onClick);
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const stopTimer = () => {
+    clearTimeout(timer);
+    timer = undefined;
+  };
+  const opener: Opener = {
+    hover() {
+      if (open || disabled() || timer !== undefined) return;
+      timer = setTimeout(() => {
+        timer = undefined;
+        // Not once the menu around it has closed
+        if (!parent || parent.matches(':popover-open')) request(true);
+      }, HOVER_OPEN_MS);
+    },
+    cancel() {
+      stopTimer();
+      if (open) request(false);
+    },
+  };
+  if (parent) stateOf(parent).openers.set(item, opener);
+
+  // Leaving the item for the open submenu: the pointer may cross the items between, inside the
+  // triangle from where it left to the submenu's near side (bled 5px back, so the start counts).
+  // The submenu lies beside the item, or below or above it when it had no room beside.
+  const onPointerLeave = (event: PointerEvent) => {
+    if (event.pointerType !== 'mouse') return;
+    stopTimer();
+    if (!open || !parent) return;
+    const state = stateOf(parent);
+    const box = root.getBoundingClientRect();
+    const from = item.getBoundingClientRect();
+    const toward =
+      box.top >= from.bottom - 1
+        ? 'down'
+        : box.bottom <= from.top + 1
+          ? 'up'
+          : box.left >= from.left
+            ? 'right'
+            : 'left';
+    const across = toward === 'left' || toward === 'right';
+    const bleed = toward === 'right' || toward === 'down' ? -5 : 5;
+    const exit = across
+      ? { x: event.clientX + bleed, y: event.clientY }
+      : { x: event.clientX, y: event.clientY + bleed };
+    const near = { right: box.left, left: box.right, down: box.top, up: box.bottom }[toward];
+    const far = { right: box.right, left: box.left, down: box.bottom, up: box.top }[toward];
+    endGrace(state);
+    state.grace = {
+      area: across
+        ? [
+            exit,
+            { x: near, y: box.top },
+            { x: far, y: box.top },
+            { x: far, y: box.bottom },
+            { x: near, y: box.bottom },
+          ]
+        : [
+            exit,
+            { x: box.left, y: near },
+            { x: box.left, y: far },
+            { x: box.right, y: far },
+            { x: box.right, y: near },
+          ],
+      toward,
+      timer: setTimeout(() => endGrace(state), GRACE_MS),
+    };
+  };
+  item.addEventListener('pointerleave', onPointerLeave);
+
+  // Right (left in right-to-left layouts), Enter, and Space open it with the focus on its first
+  // item. A space while letters are being typed is part of the search.
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    const forward = view.getComputedStyle(item).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+    const space = event.key === ' ' && !(parent && stateOf(parent).typing());
+    if (event.key !== forward && event.key !== 'Enter' && !space) return;
+    // Also keeps Enter and Space from clicking the item.
+    event.preventDefault();
+    if (disabled()) return;
+    if (open) dom.focusFirst();
+    else request(true, true);
+  };
+  item.addEventListener('keydown', onKeydown);
+
+  return {
+    sync(next) {
+      open = next;
+      if (!next) stopTimer();
+      dom.sync(next);
+    },
+    detach() {
+      stopTimer();
+      item.removeEventListener('click', onClickFirst, { capture: true });
+      item.removeEventListener('click', onClick);
+      item.removeEventListener('pointerleave', onPointerLeave);
+      item.removeEventListener('keydown', onKeydown);
+      item.removeAttribute('popovertarget');
+      item.removeAttribute('popovertargetaction');
+      if (parent && stateOf(parent).openers.get(item) === opener) {
+        stateOf(parent).openers.delete(item);
+      }
+      dom.detach();
     },
   };
 }
