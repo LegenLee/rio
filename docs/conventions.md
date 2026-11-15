@@ -104,6 +104,7 @@ packages/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     test/
+      setup.ts              fails a test during which Vue warns
       vrt.ts                shared setup for the screenshot tests
     contract.test.ts        every component against core's skeletons (see Testing)
     menu/                   a component family keeps its parts together
@@ -307,6 +308,7 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Test primitives on a plain element built in the test, by dispatching the events they listen to (see `ripple.test.ts`).
 - Playwright refuses to click elements with `aria-disabled="true"`, but real pointers can still click them. To test a disabled guard, use `click({ force: true })`.
 - Check focusability with `element.focus()` and `document.activeElement`, not with Tab. Where Tab lands depends on where the previous test left the focus, which can be outside the page, so Tab-based tests pass or fail depending on test order.
+- **A test during which Vue warns fails** (`packages/vue/src/test/setup.ts`, a setup file of the browser projects). Vue warns only in development, so nothing else would catch what it warns about. A warning that comes after a test has ended fails the next test, or the file.
 
 ### Markup contract
 
