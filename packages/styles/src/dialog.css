@@ -1,0 +1,201 @@
+/*
+ * M3 basic dialogs. `attachDialog` from `@rio-m3e/core` shows the `<dialog>` with `showModal()`,
+ * in the top layer above its scrim, centered in the window.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-dialog.scss`, Material 3 v34.0.21)
+ * and the spec page's measurements: 280px to 560px wide, 24px padding, 16px from the icon to the
+ * headline and from the headline to the content, 24px from the content to the buttons, 8px
+ * between buttons. The scrim's color and 32% opacity come from `_md-comp-scrim.scss`.
+ */
+
+/* How much of the container shows, from the top: it expands as the dialog opens. */
+@property --_dialog-reveal {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 100%;
+}
+
+.rio-dialog {
+  box-sizing: border-box;
+  flex-direction: column;
+  min-inline-size: 280px;
+  max-inline-size: min(560px, 100% - 48px);
+  max-block-size: calc(100% - 48px);
+  margin: auto;
+  padding: 24px 0;
+  border: 0;
+  border-radius: var(--rio-shape-corner-extra-large);
+  outline: none;
+  /* The container is drawn behind the content, so it can expand; its shadow reaches past the box. */
+  isolation: isolate;
+  overflow: visible;
+  background: transparent;
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-body-medium);
+  letter-spacing: var(--rio-typescale-body-medium-tracking);
+  overflow-wrap: break-word;
+  /* Closing */
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    --_dialog-reveal var(--rio-motion-fast-spatial),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+.rio-dialog::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  block-size: var(--_dialog-reveal);
+  border-radius: inherit;
+  background-color: var(--rio-color-surface-container-high);
+  box-shadow: var(--rio-elevation-level3);
+}
+
+/*
+ * Opening: the container expands downward from the top, and its content fades in once the
+ * container is under it. Closing fades it all out as the container collapses.
+ */
+.rio-dialog[open] {
+  display: flex;
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    --_dialog-reveal var(--rio-motion-default-spatial),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+.rio-dialog:not([open]) {
+  --_dialog-reveal: 35%;
+
+  opacity: 0;
+}
+
+.rio-dialog > * {
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+.rio-dialog[open] > * {
+  transition-delay: var(--rio-motion-fast-effects-duration);
+}
+
+@starting-style {
+  .rio-dialog[open] {
+    --_dialog-reveal: 35%;
+
+    opacity: 0;
+  }
+
+  .rio-dialog[open] > * {
+    opacity: 0;
+  }
+}
+
+/* Without spatial motion the container doesn't collapse at once as it starts fading out. */
+@media (prefers-reduced-motion: reduce) {
+  .rio-dialog:not([open]) {
+    --_dialog-reveal: 100%;
+  }
+}
+
+.rio-dialog::backdrop {
+  background-color: color-mix(in srgb, var(--rio-color-scrim) 32%, transparent);
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+.rio-dialog[open]::backdrop {
+  transition:
+    opacity var(--rio-motion-default-effects),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+.rio-dialog:not([open])::backdrop {
+  opacity: 0;
+}
+
+@starting-style {
+  .rio-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Parts */
+
+.rio-dialog__icon {
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+  inline-size: 24px;
+  block-size: 24px;
+  margin-block-end: 16px;
+  color: var(--rio-color-secondary);
+}
+
+.rio-dialog__icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.rio-dialog__headline {
+  flex: none;
+  margin: 0 0 16px;
+  padding-inline: 24px;
+  color: var(--rio-color-on-surface);
+  font: var(--rio-typescale-headline-small);
+  letter-spacing: var(--rio-typescale-headline-small-tracking);
+}
+
+.rio-dialog[data-icon] .rio-dialog__headline {
+  text-align: center;
+}
+
+/*
+ * The headline and the buttons stay put while the content scrolls. A divider shows at the edge
+ * the content scrolls past, where it meets the headline or the buttons.
+ */
+.rio-dialog__content {
+  --_divider-top: transparent;
+  --_divider-bottom: transparent;
+
+  flex: 1 1 auto;
+  min-block-size: 0;
+  padding-inline: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow:
+    0 -1px var(--_divider-top),
+    0 1px var(--_divider-bottom);
+}
+
+.rio-dialog__content[data-overflow-top]:not(:first-child) {
+  --_divider-top: var(--rio-color-outline);
+}
+
+.rio-dialog__content[data-overflow-bottom]:not(:last-child) {
+  --_divider-bottom: var(--rio-color-outline);
+}
+
+/*
+ * Buttons sit at the end, the confirming one last, nearest the edge. When they don't fit side by
+ * side, they stack with the confirming one on top.
+ */
+.rio-dialog__actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-block-start: 24px;
+  padding-inline: 24px;
+}
+
+@media (forced-colors: active) {
+  .rio-dialog {
+    outline: 2px solid CanvasText;
+  }
+}

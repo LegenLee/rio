@@ -36,6 +36,7 @@ import {
   mdiMagnify,
   mdiMenuRight,
   mdiPause,
+  mdiRestore,
   mdiShareVariant,
   mdiSkipNext,
   mdiSkipPrevious,
@@ -55,6 +56,7 @@ import {
 import {
   RioButton,
   RioButtonGroup,
+  RioDialog,
   RioIconButton,
   RioMenu,
   RioMenuDivider,
@@ -101,6 +103,28 @@ const menus = reactive({
 });
 const viewButton = useTemplateRef('viewButton');
 const persistentTip = ref(false);
+const dialogs = reactive({ discard: false, reset: false, ringtone: false, rename: false });
+const lastDialog = ref('');
+const RINGTONES = [
+  'None',
+  'Callisto',
+  'Ganymede',
+  'Luna',
+  'Oberon',
+  'Phobos',
+  'Dione',
+  'Europa',
+  'Io',
+  'Rhea',
+  'Titan',
+  'Triton',
+  'Umbriel',
+  'Miranda',
+  'Ariel',
+  'Charon',
+];
+const ringtone = ref('Callisto');
+const albumName = ref('Summer');
 const toolbar = [
   { action: 'Cut', icon: mdiContentCut },
   { action: 'Copy', icon: mdiContentCopy },
@@ -729,6 +753,76 @@ watchEffect(() => {
       </div>
     </section>
 
+    <section class="buttons dialogs">
+      <div class="controls">
+        <RioButton variant="tonal" @click="dialogs.discard = true">Discard draft</RioButton>
+        <RioButton variant="tonal" @click="dialogs.reset = true">Reset settings</RioButton>
+        <RioButton variant="tonal" @click="dialogs.ringtone = true">Ringtone</RioButton>
+        <RioButton variant="tonal" @click="dialogs.rename = true">Rename</RioButton>
+        <code>dialog={{ lastDialog }} ringtone={{ ringtone }}</code>
+      </div>
+      <RioDialog
+        v-model:open="dialogs.discard"
+        headline="Discard draft?"
+        @cancel="(event) => (lastDialog = `cancel: ${event.reason}`)"
+      >
+        Your draft and its two attachments will be lost.
+        <template #actions>
+          <RioButton variant="text" @click="dialogs.discard = false">Cancel</RioButton>
+          <RioButton variant="text" @click="((dialogs.discard = false), (lastDialog = 'discarded'))"
+            >Discard</RioButton
+          >
+        </template>
+      </RioDialog>
+      <RioDialog v-model:open="dialogs.reset" headline="Reset settings?">
+        <template #icon>
+          <svg viewBox="0 0 24 24"><path :d="mdiRestore" fill="currentColor" /></svg>
+        </template>
+        This will reset your app preferences back to their default settings. The following accounts
+        will also be signed out:
+        <template #actions>
+          <RioButton variant="text" @click="dialogs.reset = false">Cancel</RioButton>
+          <RioButton variant="text" @click="((dialogs.reset = false), (lastDialog = 'reset'))"
+            >Reset</RioButton
+          >
+        </template>
+      </RioDialog>
+      <RioDialog v-model:open="dialogs.ringtone" role="dialog" headline="Phone ringtone">
+        <label v-for="tone in RINGTONES" :key="tone" class="dialog-option">
+          <input v-model="ringtone" type="radio" name="ringtone" :value="tone" />
+          {{ tone }}
+        </label>
+        <template #actions>
+          <RioButton variant="text" @click="dialogs.ringtone = false">Cancel</RioButton>
+          <RioButton variant="text" @click="dialogs.ringtone = false">OK</RioButton>
+        </template>
+      </RioDialog>
+      <RioDialog
+        v-model:open="dialogs.rename"
+        role="dialog"
+        headline="Rename album"
+        @cancel="
+          (event) => {
+            if (albumName !== 'Summer') {
+              event.preventDefault();
+              lastDialog = `kept open: ${event.reason}`;
+            }
+          }
+        "
+      >
+        <p>Escape and the scrim keep the dialog open once the name changes.</p>
+        <input v-model="albumName" aria-label="Album name" />
+        <template #actions>
+          <RioButton variant="text" @click="((dialogs.rename = false), (albumName = 'Summer'))"
+            >Cancel</RioButton
+          >
+          <RioButton variant="text" @click="((dialogs.rename = false), (lastDialog = albumName))"
+            >Save</RioButton
+          >
+        </template>
+      </RioDialog>
+    </section>
+
     <section class="switches">
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.plain" />
@@ -834,6 +928,13 @@ main {
   display: grid;
   justify-items: start;
   gap: 8px;
+}
+
+.dialog-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  block-size: 48px;
 }
 
 .context-area {

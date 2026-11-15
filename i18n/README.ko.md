@@ -36,7 +36,7 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 
 - [x] 메뉴 (하위 메뉴 포함)
 - [x] 툴팁
-- [ ] 다이얼로그
+- [x] 다이얼로그
 
 ### 추후 로드맵
 

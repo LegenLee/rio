@@ -55,6 +55,10 @@ packages/
     button-group/
       button-group.ts       props and selection rules
       interaction.ts        arrow keys and pressed widths (DOM, tested through the Vue component)
+    dialog/
+      dialog.ts             props, parts, and the role
+      interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
+      dialog.test.ts
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
@@ -88,6 +92,7 @@ packages/
       state-layer.css
     button.css
     button-group.css
+    dialog.css
     icon-button.css         layered on top of button.css
     menu.css
     split-button.css        layered on top of button.css
@@ -99,6 +104,8 @@ packages/
     button-group/
       ButtonGroup.vue
       context.ts            what the group provides; buttons read it with useButtonGroupItem
+    dialog/
+      Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
     ripple/
@@ -209,6 +216,8 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
     - While a Rio overlay is open, even a tooltip, Escape arrives canceled. An app that handles Escape on `window` only when `defaultPrevented` is false doesn't see it then. That's accepted: closing a tooltip with Escape is what WCAG 1.4.13 asks for.
   - Closing an overlay closes the overlays opened from it. The browser does this for nested popovers but not for a popover opened from a dialog.
   - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
+  - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice, 2026-11-16).
+  - A `contain`ed overlay keeps clicks and presses in it, as tooltips and dialogs do (user's call for the place, 2026-11-16): the overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape.
   - Each document keeps its own record, so overlays in an iframe stack among themselves.
 - **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own (user's call, 2026-11-15):
   - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.

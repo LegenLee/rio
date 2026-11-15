@@ -4,8 +4,10 @@
 import {
   buttonGroupSkeleton,
   buttonSkeleton,
+  dialogSkeleton,
   createButton,
   createButtonGroup,
+  createDialog,
   createIconButton,
   createMenu,
   createMenuDivider,
@@ -26,6 +28,8 @@ import {
   tooltipTriggerSkeleton,
   type ButtonGroupProps,
   type ButtonProps,
+  type DialogContent,
+  type DialogProps,
   type IconButtonProps,
   type MenuItemContent,
   type MenuItemProps,
@@ -44,6 +48,7 @@ import { render } from 'vitest-browser-vue';
 import { h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
+import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
 import Menu from './menu/Menu.vue';
 import MenuDivider from './menu/MenuDivider.vue';
@@ -394,5 +399,48 @@ describe('RioTooltip', () => {
     expect(trigger.firstElementChild?.textContent).toBe('Target');
     expect(trigger.lastElementChild).toBe(root);
     expectSkeleton(root, tooltipSkeleton, api);
+  });
+});
+
+describe('RioDialog', () => {
+  test.each<[string, DialogProps & { headline?: string }, DialogContent]>([
+    ['with its content only', {}, { icon: false, headline: false, actions: false }],
+    // Every prop away from its default, with every slot
+    [
+      'a dialog with an icon, a headline, and actions',
+      { role: 'dialog', headline: 'Phone ringtone' },
+      { icon: true, headline: true, actions: true },
+    ],
+    [
+      'an alert dialog with a headline and actions',
+      { headline: 'Discard draft?' },
+      { icon: false, headline: true, actions: true },
+    ],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(Dialog, {
+      props,
+      slots: {
+        default: () => 'Text',
+        ...(content.icon ? { icon: () => h('svg') } : {}),
+        ...(content.actions ? { actions: () => h('button', null, 'OK') } : {}),
+      },
+    });
+    const root = rootOf(screen);
+    // A closed dialog renders none of its parts. It opens after the render: the test renderer
+    // moves what it renders into place, which would close it.
+    expect(root.children).toHaveLength(0);
+    await screen.rerender({ ...props, open: true });
+    await expect.poll(() => root.matches(':modal')).toBe(true);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('.rio-dialog__content')!.id.replace(/-content$/, '');
+    const api = createDialog({
+      props: () => props,
+      content: () => content,
+      ids: { headline: `${id}-headline`, content: `${id}-content` },
+    });
+    expectSkeleton(root, dialogSkeleton, api);
+    if (content.headline) {
+      expect(findPart(root, dialogSkeleton, 'headline', api)?.textContent).toBe(props.headline);
+    }
   });
 });
