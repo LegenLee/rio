@@ -128,6 +128,7 @@ A connected group is as wide as the space it's given. The first group keeps one 
 - **Buttons take the group's size and shape** unless they set their own. A button can still opt out, for the spec's hero moments.
 - **Selection**: with `selection` set, every button with a `value` becomes a toggle whose state the group keeps; its own `toggle`, `selected`, and `update:selected` are ignored. `single` turns the previous button off; `multiple` toggles each value in and out of an array. `required` keeps the last selected button on. Buttons without a `value` stay plain buttons. Selected buttons set `aria-pressed`.
 - The root is a `<div role="group">`. It isn't focusable.
+- A button may sit in a `RioTooltip`, as in a toolbar of icon buttons. The group looks through the tooltip's wrapper: the button counts for the arrow keys, the pressed widths, and a connected group's ends.
 
 ### Keyboard
 

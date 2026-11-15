@@ -34,6 +34,9 @@
  * ends of the row keep the group's shape; the facing corners are smaller, tighten when pressed,
  * and open up fully when the button is selected. Each button springs its two sides separately
  * (see base/shape-morph.css).
+ *
+ * A button may sit in a tooltip's wrapper (`tooltip.css`), which has no box, so each rule also
+ * reaches a button one level down in one.
  */
 
 .rio-button-group:where([data-variant='connected']) {
@@ -42,7 +45,8 @@
   display: flex;
 }
 
-.rio-button-group[data-variant='connected'] > .rio-button {
+.rio-button-group[data-variant='connected'] > .rio-button,
+.rio-button-group[data-variant='connected'] > .rio-tooltip-trigger > .rio-button {
   /* Small, medium, and extra small */
   --_inner: var(--rio-shape-corner-small);
   --_inner-pressed: var(--rio-shape-corner-extra-small);
@@ -58,41 +62,59 @@
   --rio-shape-morph-end-target: var(--_end);
 }
 
-.rio-button-group[data-variant='connected'] > .rio-button:where([data-size='large']) {
+.rio-button-group[data-variant='connected'] > .rio-button:where([data-size='large']),
+.rio-button-group[data-variant='connected']
+  > .rio-tooltip-trigger
+  > .rio-button:where([data-size='large']) {
   --_inner: var(--rio-shape-corner-large);
   --_inner-pressed: var(--rio-shape-corner-medium);
 }
 
-.rio-button-group[data-variant='connected'] > .rio-button:where([data-size='xlarge']) {
+.rio-button-group[data-variant='connected'] > .rio-button:where([data-size='xlarge']),
+.rio-button-group[data-variant='connected']
+  > .rio-tooltip-trigger
+  > .rio-button:where([data-size='xlarge']) {
   --_inner: var(--rio-shape-corner-large-increased);
   --_inner-pressed: var(--rio-shape-corner-large);
 }
 
 /* A square group's ends use the same radius as its facing corners. */
-.rio-button-group[data-variant='connected'] > .rio-button[data-shape='square'] {
+.rio-button-group[data-variant='connected'] > .rio-button[data-shape='square'],
+.rio-button-group[data-variant='connected']
+  > .rio-tooltip-trigger
+  > .rio-button[data-shape='square'] {
   --_outer: var(--_inner);
 }
 
-.rio-button-group[data-variant='connected'] > .rio-button:first-child {
+.rio-button-group[data-variant='connected'] > .rio-button:first-child,
+.rio-button-group[data-variant='connected'] > .rio-tooltip-trigger:first-child > .rio-button {
   --_start: var(--_outer);
 }
 
-.rio-button-group[data-variant='connected'] > .rio-button:last-child {
+.rio-button-group[data-variant='connected'] > .rio-button:last-child,
+.rio-button-group[data-variant='connected'] > .rio-tooltip-trigger:last-child > .rio-button {
   --_end: var(--_outer);
 }
 
-.rio-button-group[data-variant='connected'] > .rio-button[data-selected='true'] {
+.rio-button-group[data-variant='connected'] > .rio-button[data-selected='true'],
+.rio-button-group[data-variant='connected']
+  > .rio-tooltip-trigger
+  > .rio-button[data-selected='true'] {
   --_inner-now: var(--_round);
   --_outer: var(--_round);
 }
 
 /* After selected, so a pressed selected button still tightens its facing corners */
-.rio-button-group[data-variant='connected'] > .rio-button[data-pressed] {
+.rio-button-group[data-variant='connected'] > .rio-button[data-pressed],
+.rio-button-group[data-variant='connected'] > .rio-tooltip-trigger > .rio-button[data-pressed] {
   --_inner-now: var(--_inner-pressed);
 }
 
 /* Extra small and small icon buttons keep a 48px minimum width, matching their target. */
 .rio-button-group[data-variant='connected']
+  > .rio-icon-button:where([data-size='xsmall'], [data-size='small']),
+.rio-button-group[data-variant='connected']
+  > .rio-tooltip-trigger
   > .rio-icon-button:where([data-size='xsmall'], [data-size='small']) {
   min-inline-size: 48px;
 }
