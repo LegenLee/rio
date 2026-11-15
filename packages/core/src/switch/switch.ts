@@ -1,4 +1,4 @@
-import type { PartAttrs, PartNode } from '../parts';
+import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 
 export interface SwitchProps {
   /** Whether the switch is on. */
@@ -74,7 +74,7 @@ export interface SwitchApi {
   /** Whether the icon part shows the selected icon: the switch is on and has one. */
   showsSelectedIcon: () => boolean;
   /** Attach to the root element's `click`. */
-  handleClick: (event: MouseEvent) => void;
+  handleClick: (event: CancelableEvent) => void;
 }
 
 export function createSwitch(options: SwitchOptions): SwitchApi {

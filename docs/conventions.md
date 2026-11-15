@@ -4,14 +4,15 @@ How the Rio repository is organized and how code in it is written. Read this bef
 
 ## Packages
 
-| Package           | Contents                                                                                                                                                 | Depends on                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@rio-m3e/tokens` | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
-| `@rio-m3e/core`   | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
-| `@rio-m3e/styles` | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
-| `@rio-m3e/vue`    | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
-| `playground`      | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
-| `docs`            | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
+| Package            | Contents                                                                                                                                                 | Depends on                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@rio-m3e/tokens`  | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
+| `@rio-m3e/core`    | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
+| `@rio-m3e/styles`  | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
+| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
+| `@rio-m3e/testing` | Test helpers the adapters share, such as `expectSkeleton` for the contract tests. Private: never published, no build.                                    | `core`                                               |
+| `playground`       | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
+| `docs`             | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
 
@@ -69,7 +70,7 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
-    parts.ts                PartAttrs, the type of every part's attributes (see Core output)
+    parts.ts                PartAttrs, the type of every part's attributes, and CancelableEvent (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
     index.ts
@@ -103,7 +104,6 @@ packages/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     test/
-      contract.ts           expectSkeleton, for the contract tests
       vrt.ts                shared setup for the screenshot tests
     contract.test.ts        every component against core's skeletons (see Testing)
     menu/                   a component family keeps its parts together
@@ -114,6 +114,9 @@ packages/
       MenuDivider.vue
       context.ts            what a menu or submenu provides to what is inside it
     index.ts
+  testing/src/              private, shared by the adapters' tests
+    contract.ts             expectSkeleton and findPart, for the contract tests
+    index.ts
 ```
 
 - Inside a folder, the main file is named after the folder (`switch/switch.ts`, `color/color.ts`).
@@ -123,6 +126,7 @@ packages/
 
 - TypeScript and CSS files use kebab-case.
 - Vue SFCs use PascalCase without the `Rio` prefix (`Switch.vue`). They are exported with the prefix (`RioSwitch`).
+- Each adapter otherwise names its files the way its framework does: a React adapter's components would be PascalCase too (`Button.tsx`).
 - Tests sit next to the code they test: `switch.ts` → `switch.test.ts`.
 
 ## Public API
@@ -145,7 +149,8 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
   - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
   - More values: the value itself. `data-variant`, `data-size`, `data-shape`, `data-width`.
-- **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`, that take standard DOM events. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
+- **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
+  - A handler takes any event it can cancel (`CancelableEvent`, which only needs `preventDefault()`): a DOM event, or a framework's own, such as React's synthetic events. `core` hands the same event back where it reports one (`onClick(event)`), so the components are generic over the event's type, with `MouseEvent` as the default, and the app gets its framework's event.
 - **Callbacks to the adapter are named by what they report: `onChange` for state, the event's name for anything else.** A request to change the state the adapter owns is `onChange`, with the requested value, which the adapter may or may not accept: the `selected` of the button, the icon button, and the switch, and the button group's selection. Anything else gets its own name, such as the button's `onClick`. The adapter maps `onChange` to its framework's way of reporting state, such as `update:selected` for `v-model:selected` in Vue.
   - A component that owns more than one state keeps `onChange` for its main value and names the others `on<State>Change`: a menu would have `onChange` for its selection and `onOpenChange` for whether it is open. In Vue they become `v-model` and `v-model:open`.
 - **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
@@ -161,6 +166,8 @@ How an adapter turns `core`'s API into components.
 
 - **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
   - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
+- **Each adapter decides what belongs to its framework**: the framework versions it supports (its `peerDependencies`), how state and its callbacks are named in the framework's idiom (Vue's `v-model:selected`; in React, a controlled `selected` with `onSelectedChange`), and its file names (see File naming). Within one adapter, every component follows the same naming.
+- **Rio's CSS variables fit the framework's `style` types.** Apps put `createThemeVariables(…)` and Rio's public variables (`--rio-focus-ring-color`, `--rio-spring-targets`) in `style`. Vue's `CSSProperties` takes any `--*` key already. React's leaves custom properties out on purpose and points to module augmentation, so a React adapter adds `--rio-*` keys, and only those, to React's `CSSProperties`; `@rio-m3e/tokens` stays free of any framework's types.
 
 ## Primitives
 
@@ -303,7 +310,7 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 
 ### Markup contract
 
-- `packages/vue/src/contract.test.ts` renders every component in a few configurations and checks the DOM against the component's skeleton from `core` with `expectSkeleton` (`packages/vue/src/test/contract.ts`). For each configuration it builds the `core` API from the same props and content, and checks, part by part:
+- `packages/vue/src/contract.test.ts` renders every component in a few configurations and checks the DOM against the component's skeleton from `core` with `expectSkeleton` (`@rio-m3e/testing`). For each configuration it builds the `core` API from the same props and content, and checks, part by part:
   - the tag, and the order and nesting of the parts, with none missing and none extra, and no part whose decision is false;
   - every attribute `core` gives the part: class names as tokens, `undefined` as absent;
   - no text outside the parts that hold content, since it would end up in the accessible name;
@@ -311,7 +318,7 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Other extra attributes are allowed, such as `data-ripple` from a primitive, and so is anything on the root, which the app can pass attributes through to.
 - Which content fills a part (`showsSelectedIcon()`) is checked in the contract test itself, with `findPart`, since the skeleton doesn't look inside content.
 - Configurations cover each decision both ways (with and without an icon, on and off, toggles), disabled states, and one with every non-boolean prop away from its default, which catches a prop the adapter fails to pass on.
-- A new component gets a skeleton in `core` and a block in the contract test. A new adapter writes the same test against the same skeletons, and `expectSkeleton` moves to a place shared by the adapters' tests then. Never into a published package: it uses the DOM and Vitest.
+- A new component gets a skeleton in `core` and a block in the contract test. A new adapter writes the same test against the same skeletons, with the same `expectSkeleton` from `@rio-m3e/testing`, a private package that is never published, since it uses the DOM and Vitest.
 
 ### Visual regression
 

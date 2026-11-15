@@ -92,6 +92,27 @@ describe('handleClick', () => {
     expect(onChange).toHaveBeenCalledWith(true);
   });
 
+  test("takes a framework's own event, such as React's, and hands the same one back", () => {
+    interface SyntheticClick {
+      preventDefault(): void;
+      nativeEvent: string;
+    }
+    const onClick = vi.fn<(event: SyntheticClick) => void>();
+    const blocked = { softDisabled: false };
+    const button = createButton<SyntheticClick>({
+      props: () => blocked,
+      onClick,
+      onChange: () => {},
+    });
+    const event = { preventDefault: vi.fn(), nativeEvent: 'click' };
+    button.handleClick(event);
+    expect(onClick).toHaveBeenCalledWith(event);
+
+    blocked.softDisabled = true;
+    button.handleClick(event);
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+  });
+
   test.each<ButtonProps>([{ disabled: true }, { softDisabled: true }])(
     'blocks the click and its default action when %o',
     (props) => {

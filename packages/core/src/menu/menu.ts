@@ -2,7 +2,7 @@ import type {
   AnchoredAlign,
   AnchoredSide,
 } from '../primitives/anchored-position/anchored-position';
-import type { PartAttrs, PartNode } from '../parts';
+import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { omitUndefined } from '../utils/object';
 
 /** M3E vertical menu color styles: surface-based, or tertiary-based for more emphasis. */
@@ -164,14 +164,17 @@ export interface MenuItemContent {
   trailingIcon: boolean;
 }
 
-export interface MenuItemOptions {
+export interface MenuItemOptions<E extends CancelableEvent = MouseEvent> {
   props: () => MenuItemProps;
   /** Without it, the item has only a label. */
   content?: () => MenuItemContent;
   /** The menu around the item. Without one, the item acts as in a menu without a selection. */
   menu?: () => Pick<MenuApi, 'selection' | 'isSelected' | 'choose'> | undefined;
-  /** Called for a click on the item that isn't blocked, before the menu is told. */
-  onClick: (event: MouseEvent) => void;
+  /**
+   * Called for a click on the item that isn't blocked, before the menu is told, with the event
+   * `handleClick` got.
+   */
+  onClick: (event: E) => void;
   /**
    * Makes it the item that opens a submenu (see `createSubMenu`): a click opens the submenu rather
    * than choosing the item.
@@ -219,12 +222,15 @@ export const menuItemSkeleton: PartNode<keyof MenuItemParts, MenuItemWhen> = {
   ],
 };
 
-export interface MenuItemApi extends Record<MenuItemWhen, () => boolean> {
+export interface MenuItemApi<E extends CancelableEvent = MouseEvent> extends Record<
+  MenuItemWhen,
+  () => boolean
+> {
   parts: MenuItemParts;
   /** Whether the item is selected, in a menu that keeps a selection. */
   selected: () => boolean;
   /** Attach to the item's `click`. */
-  handleClick: (event: MouseEvent) => void;
+  handleClick: (event: E) => void;
 }
 
 const NO_CONTENT: MenuItemContent = {
@@ -234,7 +240,9 @@ const NO_CONTENT: MenuItemContent = {
   trailingIcon: false,
 };
 
-export function createMenuItem(options: MenuItemOptions): MenuItemApi {
+export function createMenuItem<E extends CancelableEvent = MouseEvent>(
+  options: MenuItemOptions<E>,
+): MenuItemApi<E> {
   const props = () => ({ ...menuItemDefaults, ...omitUndefined(options.props()) });
   const content = () => options.content?.() ?? NO_CONTENT;
   // `menuitemradio` or `menuitemcheckbox` when the menu keeps a selection and the item has a value.
@@ -323,8 +331,11 @@ export interface SubMenuOptions {
 }
 
 export interface SubMenuApi {
-  /** The item that opens the submenu, with the parts of a menu item (`menuItemSkeleton`) */
-  item: MenuItemApi;
+  /**
+   * The item that opens the submenu, with the parts of a menu item (`menuItemSkeleton`). A click on
+   * it reports no event, so its `handleClick` takes any event it can cancel.
+   */
+  item: MenuItemApi<CancelableEvent>;
   /** The submenu, with the parts of a menu (`menuSkeleton`). Its items take it as their menu. */
   menu: MenuApi;
 }
@@ -356,7 +367,7 @@ export function createSubMenu(options: SubMenuOptions): SubMenuApi {
       else options.onOpenChange(false);
     },
   });
-  const item = createMenuItem({
+  const item = createMenuItem<CancelableEvent>({
     props: () => ({ disabled: options.props().disabled }),
     content: options.content,
     onClick: () => {},
