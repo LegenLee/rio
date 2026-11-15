@@ -1,11 +1,11 @@
 // The button group's DOM behavior.
 //
-// - Arrow keys move the focus between the group's buttons, as the spec's keyboard table asks.
-//   Tab still reaches every button, so the arrows only add a shortcut.
+// - Arrow keys move the focus between the group's buttons. Tab still reaches every button, so
+//   the arrows only add a shortcut.
 // - In a standard group, a pressed button grows by 15% of its width and its neighbors shrink to
 //   make room, so the group keeps its width. The widths move on the `fast-spatial` spring and
 //   return when the press ends. The press comes from the ripple's `data-pressed` on each button.
-//   Connected groups skip this, as the spec says, and so does reduced motion.
+//   Connected groups skip this, and so does reduced motion.
 // - A change of size (a button's `data-size`, or an icon button's `data-width`) resets the widths
 //   at once, even mid-press. A label that changes while a button is pressed isn't noticed until
 //   the next press: with an inline width on the button, nothing reports its own width changing.

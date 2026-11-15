@@ -32,8 +32,8 @@ const slots = defineSlots<{
   /** The icon. Hidden from assistive technology; `label` names the button. */
   default?: () => unknown;
   /**
-   * The icon while a toggle button is on, typically the filled version of the default icon. The
-   * spec asks for selection to show in more than color alone.
+   * The icon while a toggle button is on, typically the filled version of the default icon, so
+   * the selection shows in more than color alone.
    */
   'selected-icon'?: () => unknown;
 }>();

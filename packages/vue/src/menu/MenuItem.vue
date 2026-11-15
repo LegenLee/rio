@@ -18,7 +18,7 @@ const slots = defineSlots<{
   default?: () => unknown;
   /**
    * A leading icon, hidden from assistive technology. In a selecting menu, `selected` lets it show
-   * a check mark, which the spec recommends next to the color and shape.
+   * a check mark next to the color and shape.
    */
   icon?: (props: { selected: boolean }) => unknown;
   /** Supporting text under the label */

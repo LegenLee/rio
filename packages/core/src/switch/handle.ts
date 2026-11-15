@@ -1,5 +1,5 @@
 // The switch handle's motion: where it sits and how big it is, both driven by the fast-spatial
-// spring, plus dragging it with touch or a pen, as the spec allows.
+// spring, plus dragging it with touch or a pen.
 //
 // The stylesheet (`@rio-m3e/styles/switch.css`) declares the targets for each state:
 // `--rio-switch-handle-x-target` (the handle's center) and `--rio-switch-handle-size-target`. The
