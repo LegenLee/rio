@@ -4,14 +4,15 @@ How the Rio repository is organized and how code in it is written. Read this bef
 
 ## Packages
 
-| Package           | Contents                                                                                                                                                 | Depends on                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@rio-m3e/tokens` | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
-| `@rio-m3e/core`   | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
-| `@rio-m3e/styles` | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
-| `@rio-m3e/vue`    | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
-| `playground`      | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
-| `docs`            | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
+| Package            | Contents                                                                                                                                                 | Depends on                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@rio-m3e/tokens`  | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
+| `@rio-m3e/core`    | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
+| `@rio-m3e/styles`  | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
+| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
+| `@rio-m3e/testing` | Test helpers the adapters share, such as `expectSkeleton` for the contract tests. Private: never published, no build.                                    | `core`                                               |
+| `playground`       | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
+| `docs`             | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
 
@@ -33,8 +34,12 @@ packages/
     index.ts
   core/src/
     primitives/             DOM behaviors shared across components
+      anchored-position/
+        anchored-position.ts  places a floating element next to an anchor (see Overlays)
       drag/
         drag.ts
+      overlay/
+        overlay.ts          the top layer and the order of Rio's overlays (see Overlays)
       ripple/
         ripple.ts
         ripple.test.ts
@@ -50,9 +55,17 @@ packages/
     button-group/
       button-group.ts       props and selection rules
       interaction.ts        arrow keys and pressed widths (DOM, tested through the Vue component)
+    dialog/
+      dialog.ts             props, parts, and the role
+      interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
+      dialog.test.ts
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    menu/
+      menu.ts               the menu, its items, submenus, groups, and dividers: props, parts, selection
+      interaction.ts        opening, placement, keyboard, focus, and submenus (DOM, tested through the Vue components)
+      menu.test.ts
     split-button/
       split-button.ts       two createButtons, and the trailing one's menu state
       menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
@@ -61,12 +74,17 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
-    parts.ts                PartAttrs, the type of every part's attributes (see Core output)
+    tooltip/
+      tooltip.ts            plain and rich tooltips: props, parts, roles, placement
+      interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
+      tooltip.test.ts
+    parts.ts                PartAttrs, the type of every part's attributes, and CancelableEvent (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
     index.ts
   styles/src/
     base/                   CSS shared across components
+      anchored-position.css pairs with core's primitives/anchored-position
       focus-ring.css
       reduced-motion.css    imported by every component that uses motion tokens
       ripple.css            pairs with core's primitives/ripple
@@ -74,15 +92,20 @@ packages/
       state-layer.css
     button.css
     button-group.css
+    dialog.css
     icon-button.css         layered on top of button.css
+    menu.css
     split-button.css        layered on top of button.css
     switch.css
+    tooltip.css
   vue/src/
     button/
       Button.vue
     button-group/
       ButtonGroup.vue
       context.ts            what the group provides; buttons read it with useButtonGroupItem
+    dialog/
+      Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
     ripple/
@@ -92,13 +115,22 @@ packages/
     switch/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
+    tooltip/
+      Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/
-      contract.ts           expectSkeleton, for the contract tests
+      setup.ts              fails a test during which Vue warns
       vrt.ts                shared setup for the screenshot tests
     contract.test.ts        every component against core's skeletons (see Testing)
     menu/                   a component family keeps its parts together
       Menu.vue
       MenuItem.vue
+      SubMenu.vue           an item and the submenu it opens
+      MenuGroup.vue
+      MenuDivider.vue
+      context.ts            what a menu or submenu provides to what is inside it
+    index.ts
+  testing/src/              private, shared by the adapters' tests
+    contract.ts             expectSkeleton and findPart, for the contract tests
     index.ts
 ```
 
@@ -109,6 +141,7 @@ packages/
 
 - TypeScript and CSS files use kebab-case.
 - Vue SFCs use PascalCase without the `Rio` prefix (`Switch.vue`). They are exported with the prefix (`RioSwitch`).
+- Each adapter otherwise names its files the way its framework does: a React adapter's components would be PascalCase too (`Button.tsx`).
 - Tests sit next to the code they test: `switch.ts` → `switch.test.ts`.
 
 ## Public API
@@ -131,7 +164,8 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
   - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
   - More values: the value itself. `data-variant`, `data-size`, `data-shape`, `data-width`.
-- **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`, that take standard DOM events. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
+- **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
+  - A handler takes any event it can cancel (`CancelableEvent`, which only needs `preventDefault()`): a DOM event, or a framework's own, such as React's synthetic events. `core` hands the same event back where it reports one (`onClick(event)`), so the components are generic over the event's type, with `MouseEvent` as the default, and the app gets its framework's event.
 - **Callbacks to the adapter are named by what they report: `onChange` for state, the event's name for anything else.** A request to change the state the adapter owns is `onChange`, with the requested value, which the adapter may or may not accept: the `selected` of the button, the icon button, and the switch, and the button group's selection. Anything else gets its own name, such as the button's `onClick`. The adapter maps `onChange` to its framework's way of reporting state, such as `update:selected` for `v-model:selected` in Vue.
   - A component that owns more than one state keeps `onChange` for its main value and names the others `on<State>Change`: a menu would have `onChange` for its selection and `onOpenChange` for whether it is open. In Vue they become `v-model` and `v-model:open`.
 - **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
@@ -147,6 +181,8 @@ How an adapter turns `core`'s API into components.
 
 - **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
   - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
+- **Each adapter decides what belongs to its framework**: the framework versions it supports (its `peerDependencies`), how state and its callbacks are named in the framework's idiom (Vue's `v-model:selected`; in React, a controlled `selected` with `onSelectedChange`), and its file names (see File naming). Within one adapter, every component follows the same naming.
+- **Rio's CSS variables fit the framework's `style` types.** Apps put `createThemeVariables(…)` and Rio's public variables (`--rio-focus-ring-color`, `--rio-spring-targets`) in `style`. Vue's `CSSProperties` takes any `--*` key already. React's leaves custom properties out on purpose and points to module augmentation, so a React adapter adds `--rio-*` keys, and only those, to React's `CSSProperties`; `@rio-m3e/tokens` stays free of any framework's types.
 
 ## Primitives
 
@@ -167,6 +203,31 @@ A primitive is a DOM behavior that several components share, such as the press r
   CSS can't add to a `transition` list, so components keep their spring targets in the public `--rio-spring-targets` and end their `transition` with `var(--rio-spring-targets)`. A stylesheet that springs more targets on an element extends the variable, as the split button's trailing button does, and an app that sets its own `transition` on one of these elements includes it. The variable is defined only on elements that spring, so it doesn't belong in a `transition` anywhere else: an undefined `var()` drops the whole declaration.
 
 - Primitives are tested in a real browser (see Testing).
+
+### Overlays
+
+Menus, tooltips, and dialogs float above the page. Two primitives carry them: `attachOverlay` shows them and keeps them in order, and `attachAnchoredPosition` places menus and tooltips next to what opened them. These are Rio's decisions (decided 2026-11-15); the spec only asks that "menus temporarily appear in front of all other permanent UI elements".
+
+- **Overlays live in the top layer, not on a z-index.** Menus and tooltips are popovers, and dialogs are `<dialog>` shown with `showModal()`. The top layer stacks them in the order they open, above the page, so a dialog covers a menu opened before it, and a menu opened from a dialog covers the dialog. No ancestor's `overflow` or `transform` clips them, and the app doesn't manage z-indexes. The cost: nothing outside the top layer can sit above an open Rio overlay. A top layer element the app opens later, such as its own dialog, does.
+- **Menus use the browser's popover stack** (`popover="auto"`). A popover inside another one, or shown from an element inside it (`show(source)`), keeps that one open; showing an unrelated one closes the rest; a click outside closes them all; and a modal dialog closes them as it opens. That is how nested menus behave, and it held in Chromium 158, WebKit 27.2, and Firefox 160.
+- **Rio fills in where the browser falls short or differs:**
+  - Escape closes only the topmost overlay. Firefox closes at once every popover that opened without a user activation, such as a submenu opened on hover, while Chromium and WebKit close the topmost. `attachOverlay` takes the keydown first (bubbling, so an element that handles Escape itself keeps it), cancels the browser's handling, and asks the topmost overlay to close.
+    - Escape aimed at a dialog or popover the app opened itself, with the focus inside it, is left to the browser. One case is left over: an auto popover of the app's own, above a Rio overlay and without the focus, doesn't get Escape.
+    - While a Rio overlay is open, even a tooltip, Escape arrives canceled. An app that handles Escape on `window` only when `defaultPrevented` is false doesn't see it then. That's accepted: closing a tooltip with Escape is what WCAG 1.4.13 asks for.
+  - Closing an overlay closes the overlays opened from it. The browser does this for nested popovers but not for a popover opened from a dialog.
+  - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
+  - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice, 2026-11-16).
+  - A `contain`ed overlay keeps clicks and presses in it, as tooltips and dialogs do (user's call for the place, 2026-11-16): the overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape.
+  - Each document keeps its own record, so overlays in an iframe stack among themselves.
+- **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own (user's call, 2026-11-15):
+  - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
+  - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.
+  - `'parent'`: the overlay it was opened from closed.
+  - `'replaced'`: another overlay opened, and this transient one gave way.
+
+  All but `'escape'` arrive after the overlay closed, so the adapter has to follow them. A component's own API still reports through `onChange` and `on<State>Change` (see Core output); the reason is the primitive's.
+
+- **Placing is done in JavaScript, not with CSS anchor positioning.** Anchor positioning reached every engine only in January 2026 (Chrome 125, Safari 26, Firefox 147), so older browsers would get no placement at all. JavaScript also tells the stylesheet which side the element ended up on (`data-side`), which the opening motion needs, and can anchor to a point, as context menus do. Revisit once anchor positioning is Baseline widely available (mid-2028).
 
 ## Shared helpers
 
@@ -263,10 +324,11 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Test primitives on a plain element built in the test, by dispatching the events they listen to (see `ripple.test.ts`).
 - Playwright refuses to click elements with `aria-disabled="true"`, but real pointers can still click them. To test a disabled guard, use `click({ force: true })`.
 - Check focusability with `element.focus()` and `document.activeElement`, not with Tab. Where Tab lands depends on where the previous test left the focus, which can be outside the page, so Tab-based tests pass or fail depending on test order.
+- **A test during which Vue warns fails** (`packages/vue/src/test/setup.ts`, a setup file of the browser projects). Vue warns only in development, so nothing else would catch what it warns about. A warning that comes after a test has ended fails the next test, or the file.
 
 ### Markup contract
 
-- `packages/vue/src/contract.test.ts` renders every component in a few configurations and checks the DOM against the component's skeleton from `core` with `expectSkeleton` (`packages/vue/src/test/contract.ts`). For each configuration it builds the `core` API from the same props and content, and checks, part by part:
+- `packages/vue/src/contract.test.ts` renders every component in a few configurations and checks the DOM against the component's skeleton from `core` with `expectSkeleton` (`@rio-m3e/testing`). For each configuration it builds the `core` API from the same props and content, and checks, part by part:
   - the tag, and the order and nesting of the parts, with none missing and none extra, and no part whose decision is false;
   - every attribute `core` gives the part: class names as tokens, `undefined` as absent;
   - no text outside the parts that hold content, since it would end up in the accessible name;
@@ -274,7 +336,7 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Other extra attributes are allowed, such as `data-ripple` from a primitive, and so is anything on the root, which the app can pass attributes through to.
 - Which content fills a part (`showsSelectedIcon()`) is checked in the contract test itself, with `findPart`, since the skeleton doesn't look inside content.
 - Configurations cover each decision both ways (with and without an icon, on and off, toggles), disabled states, and one with every non-boolean prop away from its default, which catches a prop the adapter fails to pass on.
-- A new component gets a skeleton in `core` and a block in the contract test. A new adapter writes the same test against the same skeletons, and `expectSkeleton` moves to a place shared by the adapters' tests then. Never into a published package: it uses the DOM and Vitest.
+- A new component gets a skeleton in `core` and a block in the contract test. A new adapter writes the same test against the same skeletons, with the same `expectSkeleton` from `@rio-m3e/testing`, a private package that is never published, since it uses the DOM and Vitest.
 
 ### Visual regression
 
@@ -313,7 +375,7 @@ Pixels differ across operating systems, fonts, and browser versions, so the comm
 
 Each version goes to npm and to a GitHub release, as the same four tarballs. The packages are published under the `@rio-m3e` scope, which belongs to the `rio-m3e` organization on npm.
 
-- **Versions move together.** Every package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Before 1.0, a minor version may break the API.
+- **Versions move together.** Every published package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Private packages, such as `testing`, keep `0.0.0`; the release scripts skip them. Before 1.0, a minor version may break the API.
 - **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section, followed by a `pnpm add` line.
 - **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
 - **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it.
@@ -339,5 +401,8 @@ npm can only trust a workflow for a package that already exists, so the first ve
 
 Then, shortly before the next release, set up each package on npmjs.com:
 
-1. **Settings → Trusted Publisher → GitHub Actions**: owner `LegenLee`, repository `rio`, workflow `publish.yml`, environment `npm`. A new trusted publisher expires if it doesn't publish within 2 days, so don't set it up long before a release.
+1. **Settings → Trusted Publisher → GitHub Actions**: owner `LegenLee`, repository `rio`, workflow `publish.yml`, environment `npm`. The label is optional. A new trusted publisher expires if it doesn't publish within 2 days, so don't set it up long before a release.
+   - **Allowed actions**: turn on **Allow npm publish**, and leave **Allow npm dist-tag** off. `npm stage publish` is always allowed, and new trusted publishers allow only that by default. A staged version waits in npmjs.com → Staged Packages until a maintainer approves it with the second factor, and the approval can't use OIDC. `publish.yml` publishes directly with `npm publish`, so it needs the publish permission. It sets the dist-tag while publishing (`--tag`), which worked for v0.2.0 without the dist-tag permission; that permission is for running `npm dist-tag` on its own.
+   - The provider and the required fields can't be changed later; to change them, delete the trusted publisher and create a new one.
+   - Editing a package's settings needs a session signed in with the second factor. If npmjs.com answers "Please configure 2FA to edit this package" although 2FA is on, sign in again where the passkey works (Chrome, or the phone).
 2. After the first release published this way, set **Settings → Publishing access** to "Require two-factor authentication and disallow tokens". Trusted publishing keeps working, because it doesn't use tokens.

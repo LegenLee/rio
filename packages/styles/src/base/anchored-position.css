@@ -1,0 +1,10 @@
+/*
+ * Pairs with `attachAnchoredPosition` from `@rio-m3e/core`, which marks the element with
+ * `data-anchored` and writes `left` and `top` in viewport coordinates. The element is shown in the
+ * top layer, as a popover, which browsers center by default; this lets the coordinates apply.
+ */
+:where([data-anchored]) {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+}

@@ -10,4 +10,6 @@ applyTheme(document.documentElement, { sourceColor: '#6750a4' });
 
 `createThemeCss` returns the same variables as a stylesheet, for server rendering or a static file.
 
+You can see the document page in [here](https://legenlee.github.io/rio/).
+
 Licensed under the Apache License 2.0. It bundles [material-color-utilities](https://github.com/material-foundation/material-color-utilities) by Google LLC, also under the Apache License 2.0; see `NOTICE`.

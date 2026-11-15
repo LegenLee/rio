@@ -1,16 +1,17 @@
 // The button group's DOM behavior.
 //
-// - Arrow keys move the focus between the group's buttons, as the spec's keyboard table asks.
-//   Tab still reaches every button, so the arrows only add a shortcut.
+// - Arrow keys move the focus between the group's buttons. Tab still reaches every button, so
+//   the arrows only add a shortcut.
 // - In a standard group, a pressed button grows by 15% of its width and its neighbors shrink to
 //   make room, so the group keeps its width. The widths move on the `fast-spatial` spring and
 //   return when the press ends. The press comes from the ripple's `data-pressed` on each button.
-//   Connected groups skip this, as the spec says, and so does reduced motion.
+//   Connected groups skip this, and so does reduced motion.
 // - A change of size (a button's `data-size`, or an icon button's `data-width`) resets the widths
 //   at once, even mid-press. A label that changes while a button is pressed isn't noticed until
 //   the next press: with an inline width on the button, nothing reports its own width changing.
 //
-// Every element child of the group counts as an item, in DOM order.
+// Every element child of the group counts as an item, in DOM order, or the element inside a
+// tooltip's wrapper, which has no box.
 
 import {
   createSpring,
@@ -38,7 +39,11 @@ export function attachButtonGroup(
   options: ButtonGroupInteractionOptions = {},
 ): ButtonGroupHandle {
   const ratio = options.pressedWidthRatio ?? PRESSED_WIDTH_RATIO;
-  const items = () => [...root.children].filter((el) => el instanceof HTMLElement);
+  // A tooltip's wrapper (`.rio-tooltip-trigger`) has no box: the item is the element inside it.
+  const items = () =>
+    [...root.children]
+      .map((el) => (el.classList.contains('rio-tooltip-trigger') ? el.firstElementChild : el))
+      .filter((el) => el instanceof HTMLElement);
 
   // Keyboard
 
@@ -132,7 +137,8 @@ export function attachButtonGroup(
   // A press animates. A change of size, the group's or a single button's, applies at once: the
   // button's height and padding change in one step, so its width shouldn't trail behind.
   const observer = new MutationObserver((mutations) => {
-    const own = mutations.filter((m) => m.target.parentElement === root);
+    const current = items();
+    const own = mutations.filter((m) => current.includes(m.target as HTMLElement));
     if (own.length > 0) layout(own.some((m) => m.attributeName !== 'data-pressed'));
   });
   observer.observe(root, {

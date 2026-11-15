@@ -2,7 +2,8 @@
 
 Material 3 Expressive의 Vue 구현체입니다.  
 [Nozomi](https://github.com/LegenLee/nozomi) 프로젝트의 Vuetify
-프레임워크를 대체하기 위해 작성하는 UI 라이브러리입니다.
+프레임워크를 대체하기 위해 작성하는 UI 라이브러리입니다.  
+문서 페이지는 [여기](https://legenlee.github.io/rio/)를 확인해주시기 바랍니다.
 
 ## 목적
 
@@ -31,10 +32,14 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 - [x] 분할 버튼
 - [x] 예제가 있는 문서 사이트
 
+### v0.3
+
+- [x] 메뉴 (하위 메뉴 포함)
+- [x] 툴팁
+- [x] 다이얼로그
+
 ### 추후 로드맵
 
-- [ ] 메뉴
-- [ ] 툴팁
 - [ ] 링크 버튼
 - [ ] 스위치의 폼 값
 - [ ] 언어별 줄 높이와 가변 글꼴 축

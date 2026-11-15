@@ -1,5 +1,5 @@
 import type { ButtonGroupValue } from '../button-group/button-group';
-import type { PartAttrs, PartNode } from '../parts';
+import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { omitUndefined } from '../utils/object';
 
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
@@ -59,13 +59,13 @@ export interface ButtonContent {
   icon: boolean;
 }
 
-export interface ButtonOptions {
+export interface ButtonOptions<E extends CancelableEvent = MouseEvent> {
   /** Returns the current prop values. The adapter owns the state. */
   props: () => ButtonProps;
   /** Returns what content the adapter has. Without it, the button has no icon. */
   content?: () => ButtonContent;
-  /** Called for a click that isn't blocked. */
-  onClick: (event: MouseEvent) => void;
+  /** Called for a click that isn't blocked, with the event `handleClick` got. */
+  onClick: (event: E) => void;
   /** Called after an unblocked click on a toggle button, with the requested value. */
   onChange: (selected: boolean) => void;
 }
@@ -92,12 +92,12 @@ export const buttonSkeleton: PartNode<keyof ButtonParts, 'showsIcon'> = {
   ],
 };
 
-export interface ButtonApi {
+export interface ButtonApi<E extends CancelableEvent = MouseEvent> {
   parts: ButtonParts;
   /** Whether to render the icon part. */
   showsIcon: () => boolean;
   /** Attach to the root element's `click`. */
-  handleClick: (event: MouseEvent) => void;
+  handleClick: (event: E) => void;
 }
 
 const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text';
@@ -105,7 +105,9 @@ const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text';
 /** Defaults under the given props, skipping props that are explicitly `undefined`. */
 const resolve = (props: ButtonProps) => ({ ...buttonDefaults, ...omitUndefined(props) });
 
-export function createButton(options: ButtonOptions): ButtonApi {
+export function createButton<E extends CancelableEvent = MouseEvent>(
+  options: ButtonOptions<E>,
+): ButtonApi<E> {
   return {
     parts: {
       root() {

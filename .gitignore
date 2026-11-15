@@ -6,10 +6,13 @@ coverage/
 .DS_Store
 .vite/
 .vitest/
-# VitePress's dev cache (its build output is dist/)
-.vitepress/cache/
+# VitePress's dev cache (its build output is dist/). The site's root is docs/; a pattern with a
+# slash inside would only match at the repository's root.
+docs/.vitepress/cache/
 
 # Release tarballs, and the copies scripts/pack.mjs puts in each package while packing
 release/
 packages/*/LICENSE
 packages/*/NOTICE
+
+.local

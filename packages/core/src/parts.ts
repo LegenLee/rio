@@ -7,6 +7,15 @@
 export type PartAttrs = Record<string, string | undefined>;
 
 /**
+ * An event a component's handler (`handleClick`) takes: a DOM event, or a framework's own, such
+ * as React's synthetic events. Core only cancels it, and hands the same event back to the adapter
+ * (`onClick`), so components are generic over its type, with `MouseEvent` as the default.
+ */
+export interface CancelableEvent {
+  preventDefault(): void;
+}
+
+/**
  * One node of a component's skeleton: the markup an adapter renders, part by part. Adapters
  * render it their own way; contract tests check what they rendered against it. Each component
  * exports its skeleton (`buttonSkeleton`, `switchSkeleton`, ...).

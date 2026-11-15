@@ -1,0 +1,93 @@
+/*
+ * M3 tooltips, plain and rich. `attachTooltip` from `@rio-m3e/core` shows the tooltip in the top
+ * layer as a popover and places it next to its element (`base/anchored-position.css`).
+ *
+ * Values come from Material Web's component tokens (`_md-comp-plain-tooltip.scss`,
+ * `_md-comp-rich-tooltip.scss`, Material 3 v34.0.21) and the spec page. Sizes the tokens leave out
+ * come from the M3 Design Kit: a plain tooltip at most 200px wide, a rich one at most 312px, with
+ * 4px between subhead and text and 12px from the text to the actions.
+ */
+
+/* Wraps the element and the tooltip without a box, so the element lays out as if unwrapped. */
+.rio-tooltip-trigger {
+  display: contents;
+}
+
+.rio-tooltip {
+  box-sizing: border-box;
+  max-inline-size: var(--rio-anchored-available-width, none);
+  border: 0;
+  overflow-wrap: break-word;
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+/* Only while open: a `display` here would override the browser's hiding of closed popovers. */
+.rio-tooltip:popover-open {
+  display: block;
+}
+
+.rio-tooltip:not(:popover-open) {
+  opacity: 0;
+}
+
+@starting-style {
+  .rio-tooltip:popover-open {
+    opacity: 0;
+  }
+}
+
+/* Plain: a brief label on the inverse surface, one 24px line high */
+
+.rio-tooltip[data-variant='plain'] {
+  max-inline-size: min(200px, var(--rio-anchored-available-width, 200px));
+  min-block-size: 24px;
+  padding: 4px 8px;
+  border-radius: var(--rio-shape-corner-extra-small);
+  background-color: var(--rio-color-inverse-surface);
+  color: var(--rio-color-inverse-on-surface);
+  font: var(--rio-typescale-body-small);
+  letter-spacing: var(--rio-typescale-body-small-tracking);
+}
+
+/* Rich: a card with an optional subhead, the text, and up to two text buttons */
+
+.rio-tooltip[data-variant='rich'] {
+  max-inline-size: min(312px, var(--rio-anchored-available-width, 312px));
+  padding: 12px 16px 8px;
+  border-radius: var(--rio-shape-corner-medium);
+  background-color: var(--rio-color-surface-container);
+  color: var(--rio-color-on-surface-variant);
+  box-shadow: var(--rio-elevation-level2);
+  font: var(--rio-typescale-body-medium);
+  letter-spacing: var(--rio-typescale-body-medium-tracking);
+}
+
+.rio-tooltip__subhead {
+  display: block;
+  margin-block-end: 4px;
+  font: var(--rio-typescale-title-small);
+  letter-spacing: var(--rio-typescale-title-small-tracking);
+}
+
+.rio-tooltip[data-variant='rich'] .rio-tooltip__supporting-text {
+  display: block;
+  padding-block-end: 4px;
+}
+
+/* The buttons sit 4px in from the container's edge. */
+.rio-tooltip__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 8px;
+  margin-inline: -12px;
+}
+
+@media (forced-colors: active) {
+  .rio-tooltip {
+    border: 1px solid CanvasText;
+  }
+}

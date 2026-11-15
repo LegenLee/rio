@@ -4,6 +4,40 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [0.3.0] - 2026-11-16
+
+Three components that float above the page: the menu, with submenus, the tooltip, and the dialog. Two new primitives carry them, one that shows them in the top layer and keeps them in order, and one that places them. Nothing breaks: core's click handlers now also take other frameworks' events.
+
+### Added
+
+- **`RioMenu`**, with `RioMenuItem`, `RioMenuGroup`, `RioMenuDivider`, and `RioSubMenu`, built on `createMenu`, `createMenuItem`, `createMenuGroup`, `createMenuDivider`, `createSubMenu`, `attachMenu`, and `attachSubMenu`.
+  - Standard and vibrant color styles, single and multi-select with `v-model`, and `v-model:open`.
+  - Anchored to an element, a Rio component, or a point for context menus. It opens on any side of the anchor, flips where there is no room, and follows the anchor as the page scrolls.
+  - Keyboard: arrow keys, Home and End, type-ahead, Escape, and Tab, as in the WAI-ARIA menu button pattern.
+  - Submenus open after the pointer rests 100ms, on a click, or with the arrow keys. The pointer may cross other items on its way to an open submenu, and each submenu keeps its own selection.
+  - A Rio button that opened a menu (`aria-haspopup` and `aria-expanded`) shows the pressed state layer while the menu is open. A split button's menu is a `RioMenu` anchored to `split.trailing`.
+- **`RioTooltip`**, with `createTooltip` and `attachTooltip`.
+  - Plain and rich tooltips. A rich one may have a subhead and up to two text buttons, and may be persistent: it opens on a click and stays.
+  - It shows after the pointer rests 500ms, at once on keyboard focus, and on a held touch, and hides 1.5s after the pointer and the focus leave.
+  - It describes its element (`aria-describedby`) unless the element's name already says the same.
+  - Button groups look through a tooltip's wrapper, so a button inside a tooltip still counts as one of the group's buttons.
+- **`RioDialog`**, with `createDialog` and `attachDialog`: basic dialogs.
+  - An alert dialog by default, or `role="dialog"` for lists and forms. It has an optional icon and headline, and up to two buttons, which stack with the confirming one on top when they don't fit side by side.
+  - Escape and a click on the scrim fire a cancelable `cancel` event. Tab stays inside the dialog. The focus starts at the first element and goes back where it was when the dialog closes.
+  - The content scrolls between the pinned headline and buttons, with dividers, and the page behind doesn't scroll while the dialog is open.
+  - A closed dialog renders no content.
+- **Primitives** in `@rio-m3e/core`:
+  - `attachOverlay` shows menus, tooltips, and dialogs in the top layer and keeps them in order. Escape closes only the topmost one, and closing one closes what it opened.
+  - `attachAnchoredPosition` places a floating element next to an anchor or a point.
+- **`CancelableEvent`** in `@rio-m3e/core`: `createButton`, `createIconButton`, `createSplitButton`, and `createMenuItem` are generic over the click event, `MouseEvent` by default, so an adapter can pass its framework's own events, such as React's synthetic events. `createSwitch`'s `handleClick` takes any cancelable event.
+
+### Not yet
+
+- Full-screen dialogs, which wait for a top app bar.
+- Opening a menu from its trigger with the arrow keys, horizontal menus, and filtering.
+- Link buttons (`href`), emphasized button labels, and a form value for the switch.
+- Language-specific line heights and variable font axes in the type scale.
+
 ## [0.2.0] - 2026-11-15
 
 Two new components, the button group and the split button, and a docs site with live examples. `@rio-m3e/core` changes how it hands markup to adapters, which breaks code built on it directly; the Vue components keep their props and events.
@@ -73,3 +107,4 @@ The first release: the M3E foundations and three components, the button, the ico
 
 [0.1.0]: https://github.com/LegenLee/rio/releases/tag/v0.1.0
 [0.2.0]: https://github.com/LegenLee/rio/releases/tag/v0.2.0
+[0.3.0]: https://github.com/LegenLee/rio/releases/tag/v0.3.0

@@ -1,5 +1,5 @@
 import { createButton, type ButtonSize } from '../button/button';
-import type { PartAttrs, PartNode } from '../parts';
+import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { omitUndefined } from '../utils/object';
 
 /** Split button colors: the button's, without text. */
@@ -54,13 +54,16 @@ export interface SplitButtonContent {
   label: boolean;
 }
 
-export interface SplitButtonOptions {
+export interface SplitButtonOptions<E extends CancelableEvent = MouseEvent> {
   /** Returns the current prop values. The adapter owns the state. */
   props: () => SplitButtonProps;
   /** Returns what content the adapter has. Without it, the leading button has only a label. */
   content?: () => SplitButtonContent;
-  /** Called for a click on the leading button that isn't blocked. */
-  onClick: (event: MouseEvent) => void;
+  /**
+   * Called for a click on the leading button that isn't blocked, with the event
+   * `handleLeadingClick` got.
+   */
+  onClick: (event: E) => void;
   /** Called with the requested `open` when the trailing button is clicked and isn't blocked. */
   onChange: (open: boolean) => void;
 }
@@ -108,19 +111,21 @@ export const splitButtonSkeleton: PartNode<keyof SplitButtonParts, 'showsIcon' |
   ],
 };
 
-export interface SplitButtonApi {
+export interface SplitButtonApi<E extends CancelableEvent = MouseEvent> {
   parts: SplitButtonParts;
   /** Whether to render the icon part. */
   showsIcon: () => boolean;
   /** Whether to render the label part. */
   showsLabel: () => boolean;
   /** Attach to the leading button's `click`. */
-  handleLeadingClick: (event: MouseEvent) => void;
+  handleLeadingClick: (event: E) => void;
   /** Attach to the trailing button's `click`. */
-  handleTrailingClick: (event: MouseEvent) => void;
+  handleTrailingClick: (event: E) => void;
 }
 
-export function createSplitButton(options: SplitButtonOptions): SplitButtonApi {
+export function createSplitButton<E extends CancelableEvent = MouseEvent>(
+  options: SplitButtonOptions<E>,
+): SplitButtonApi<E> {
   const props = () => ({ ...splitButtonDefaults, ...omitUndefined(options.props()) });
   const content = () => options.content?.() ?? { icon: false, label: true };
 
@@ -134,12 +139,12 @@ export function createSplitButton(options: SplitButtonOptions): SplitButtonApi {
       softDisabled: p.softDisabled,
     };
   };
-  const leading = createButton({
+  const leading = createButton<E>({
     props: () => ({ ...shared(), type: props().type }),
     onClick: options.onClick,
     onChange: () => {},
   });
-  const trailing = createButton({
+  const trailing = createButton<E>({
     props: () => ({ ...shared(), type: 'button' }),
     onClick: () => options.onChange(!props().open),
     onChange: () => {},

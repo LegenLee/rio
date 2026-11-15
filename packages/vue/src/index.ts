@@ -1,6 +1,13 @@
 export { default as RioButton } from './button/Button.vue';
 export { default as RioButtonGroup } from './button-group/ButtonGroup.vue';
+export { default as RioDialog } from './dialog/Dialog.vue';
 export { default as RioIconButton } from './icon-button/IconButton.vue';
+export { default as RioMenu } from './menu/Menu.vue';
+export { default as RioMenuDivider } from './menu/MenuDivider.vue';
+export { default as RioMenuGroup } from './menu/MenuGroup.vue';
+export { default as RioMenuItem } from './menu/MenuItem.vue';
+export { default as RioSubMenu } from './menu/SubMenu.vue';
 export { vRipple } from './ripple/ripple';
 export { default as RioSplitButton } from './split-button/SplitButton.vue';
 export { default as RioSwitch } from './switch/Switch.vue';
+export { default as RioTooltip } from './tooltip/Tooltip.vue';

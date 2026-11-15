@@ -5,6 +5,7 @@ import { render } from 'vitest-browser-vue';
 import { defineComponent, h, type VNode } from 'vue';
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
+import Tooltip from '../tooltip/Tooltip.vue';
 import ButtonGroup from './ButtonGroup.vue';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
@@ -318,6 +319,46 @@ describe('RioButtonGroup', () => {
       for (const button of screen.getByRole('button').elements()) {
         expect(width(button)).toBe(48);
       }
+    });
+  });
+
+  // A tooltip's wrapper has no box, and the group looks through it.
+  describe('buttons in tooltips', () => {
+    const tipped = (labels: string[]) => () =>
+      labels.map((label) => h(Tooltip, { text: `About ${label}` }, () => buttons([label])));
+
+    test('connected: the ends of the row and the sizes still go by the buttons', async () => {
+      const screen = await renderGroup({ variant: 'connected' }, tipped(['A', 'B', 'C']), {
+        themed: true,
+      });
+      const [a, b, c] = screen.getByRole('button').elements();
+      expect([corners(a!), corners(b!), corners(c!)]).toEqual([
+        [20, 8],
+        [8, 8],
+        [8, 20],
+      ]);
+      for (const button of [a!, b!, c!]) expect(width(button)).toBeCloseTo((600 - 2 * 2) / 3, 1);
+    });
+
+    test('arrow keys move between them', async () => {
+      const screen = await renderGroup({}, tipped(['A', 'B', 'C']));
+      const [a, b, c] = screen.getByRole('button').elements();
+      a!.focus();
+      await userEvent.keyboard('{ArrowRight}');
+      expect(document.activeElement).toBe(b);
+      await userEvent.keyboard('{ArrowRight}');
+      expect(document.activeElement).toBe(c);
+    });
+
+    test('a pressed one grows, and its neighbors make room', async () => {
+      const screen = await renderGroup({}, tipped(['One', 'Two', 'Six']));
+      const [one, two, six] = screen.getByRole('button').elements();
+      const before = [one!, two!, six!].map(width);
+      press(two!);
+      await vi.waitFor(() => expect(width(two!)).toBeCloseTo(before[1]! * 1.15, 0));
+      expect(width(one!)).toBeLessThan(before[0]!);
+      release(two!);
+      await vi.waitFor(() => expect([one!, two!, six!].map(width)).toEqual(before));
     });
   });
 });

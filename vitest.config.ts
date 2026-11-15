@@ -39,6 +39,8 @@ const browserProject = (name: string, include: string[], exclude: string[] = [])
     name,
     include,
     exclude: [...exclude, ...defaultExclude],
+    // A test during which Vue warns fails.
+    setupFiles: ['packages/vue/src/test/setup.ts'],
     browser: {
       enabled: true,
       provider: playwright(),

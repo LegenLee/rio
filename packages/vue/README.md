@@ -8,4 +8,6 @@ pnpm add @rio-m3e/vue @rio-m3e/tokens
 
 Apply the theme from `@rio-m3e/tokens` once, then use the components. Each component imports its own styles. See the [README](https://github.com/LegenLee/rio#usage) for setup and [docs/components](https://github.com/LegenLee/rio/tree/main/docs/components) for each component.
 
+You can see the document page in [here](https://legenlee.github.io/rio/).
+
 Licensed under the Apache License 2.0.

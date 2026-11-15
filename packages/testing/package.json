@@ -1,0 +1,24 @@
+{
+  "name": "@rio-m3e/testing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Test helpers the adapters share, such as the contract test against core's skeletons",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@rio-m3e/core": "workspace:^"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "vitest": "catalog:"
+  }
+}

@@ -5,7 +5,7 @@ import {
   type ButtonSize,
   type ButtonVariant,
 } from '../button/button';
-import type { PartAttrs, PartNode } from '../parts';
+import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 
 export const ICON_BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'standard'] as const;
 export type IconButtonVariant = (typeof ICON_BUTTON_VARIANTS)[number];
@@ -60,13 +60,13 @@ export interface IconButtonContent {
   selectedIcon: boolean;
 }
 
-export interface IconButtonOptions {
+export interface IconButtonOptions<E extends CancelableEvent = MouseEvent> {
   /** Returns the current prop values. The adapter owns the state. */
   props: () => IconButtonProps;
   /** Returns what content the adapter has. Without it, there is no selected icon. */
   content?: () => IconButtonContent;
-  /** Called for a click that isn't blocked. */
-  onClick: (event: MouseEvent) => void;
+  /** Called for a click that isn't blocked, with the event `handleClick` got. */
+  onClick: (event: E) => void;
   /** Called after an unblocked click on a toggle button, with the requested value. */
   onChange: (selected: boolean) => void;
 }
@@ -94,18 +94,20 @@ export const iconButtonSkeleton: PartNode<keyof IconButtonParts> = {
   ],
 };
 
-export interface IconButtonApi {
+export interface IconButtonApi<E extends CancelableEvent = MouseEvent> {
   parts: IconButtonParts;
   /** Whether the icon part shows the selected icon instead of the default one. */
   showsSelectedIcon: () => boolean;
   /** Attach to the root element's `click`. */
-  handleClick: (event: MouseEvent) => void;
+  handleClick: (event: E) => void;
 }
 
-export function createIconButton(options: IconButtonOptions): IconButtonApi {
+export function createIconButton<E extends CancelableEvent = MouseEvent>(
+  options: IconButtonOptions<E>,
+): IconButtonApi<E> {
   // An icon button behaves exactly like a button. The button only reads `variant` to write
   // `data-variant` and to keep text buttons from toggling, and no icon button variant is `text`.
-  const button = createButton({
+  const button = createButton<E>({
     props: () => ({ ...options.props(), variant: options.props().variant as ButtonVariant }),
     onClick: options.onClick,
     onChange: options.onChange,

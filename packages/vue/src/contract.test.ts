@@ -4,31 +4,60 @@
 import {
   buttonGroupSkeleton,
   buttonSkeleton,
+  dialogSkeleton,
   createButton,
   createButtonGroup,
+  createDialog,
   createIconButton,
+  createMenu,
+  createMenuDivider,
+  createMenuGroup,
+  createMenuItem,
+  createSubMenu,
   createSwitch,
+  createTooltip,
   createSplitButton,
   iconButtonSkeleton,
+  menuDividerSkeleton,
+  menuGroupSkeleton,
+  menuItemSkeleton,
+  menuSkeleton,
   splitButtonSkeleton,
   switchSkeleton,
+  tooltipSkeleton,
+  tooltipTriggerSkeleton,
   type ButtonGroupProps,
   type ButtonProps,
+  type DialogContent,
+  type DialogProps,
   type IconButtonProps,
+  type MenuItemContent,
+  type MenuItemProps,
+  type MenuProps,
   type SplitButtonContent,
   type SplitButtonProps,
+  type SubMenuProps,
   type SwitchContent,
   type SwitchProps,
+  type TooltipContent,
+  type TooltipProps,
 } from '@rio-m3e/core';
+import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, test } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
+import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
+import Menu from './menu/Menu.vue';
+import MenuDivider from './menu/MenuDivider.vue';
+import MenuGroup from './menu/MenuGroup.vue';
+import MenuItem from './menu/MenuItem.vue';
+import SubMenu from './menu/SubMenu.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
-import { expectSkeleton, findPart } from './test/contract';
+import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
 const rootOf = (screen: { container: Element }) => screen.container.firstElementChild!;
@@ -190,5 +219,228 @@ describe('RioSplitButton', () => {
     });
     expectSkeleton(rootOf(screen), splitButtonSkeleton, api);
     expect(findPart(rootOf(screen), splitButtonSkeleton, 'menuIcon', api)?.textContent).toBe('▾');
+  });
+});
+
+describe('RioMenu', () => {
+  test.each<[string, Omit<MenuProps, 'open' | 'selected'>]>([
+    ['a standard menu', {}],
+    // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
+    [
+      'vibrant, selecting, named, and placed elsewhere',
+      {
+        variant: 'vibrant',
+        selection: 'multiple',
+        label: 'Edit',
+        side: 'top',
+        align: 'end',
+        offset: 4,
+      },
+    ],
+    ['instant', { instant: true }],
+  ])('%s', async (_, props) => {
+    const screen = await render(Menu, { props, slots: { default: () => h(MenuItem, () => 'A') } });
+    const api = createMenu({ props: () => props, onChange: noop, onOpenChange: noop });
+    expectSkeleton(rootOf(screen), menuSkeleton, api);
+  });
+});
+
+describe('RioMenuItem', () => {
+  const none = { icon: false, supportingText: false, trailingText: false, trailingIcon: false };
+  const all = { icon: true, supportingText: true, trailingText: true, trailingIcon: true };
+
+  test.each<[string, MenuItemProps, MenuProps | undefined, MenuItemContent]>([
+    ['a label', {}, undefined, none],
+    ['with every slot', {}, undefined, all],
+    ['only an icon and trailing text', {}, undefined, { ...none, icon: true, trailingText: true }],
+    ['disabled', { disabled: true }, undefined, none],
+    [
+      'selected, in a single-select menu',
+      { value: 'a' },
+      { selection: 'single', selected: 'a' },
+      all,
+    ],
+    [
+      'unselected, in a multi-select menu',
+      { value: 'b' },
+      { selection: 'multiple', selected: ['a'] },
+      none,
+    ],
+    ['without a value, in a selecting menu', {}, { selection: 'single' }, none],
+  ])('%s', async (_, props, menuProps, content) => {
+    const slots = {
+      default: () => 'Label',
+      ...(content.icon ? { icon: () => '+' } : {}),
+      ...(content.supportingText ? { 'supporting-text': () => 'More' } : {}),
+      ...(content.trailingText ? { 'trailing-text': () => 'Ctrl+C' } : {}),
+      ...(content.trailingIcon ? { 'trailing-icon': () => '>' } : {}),
+    };
+    const item = () => h(MenuItem, props, slots);
+    const screen = menuProps
+      ? await render(Menu, {
+          props: { ...menuProps, modelValue: menuProps.selected },
+          slots: { default: item },
+        })
+      : await render(item);
+    const element = menuProps ? rootOf(screen).firstElementChild! : rootOf(screen);
+    const menu = menuProps
+      ? createMenu({ props: () => menuProps, onChange: noop, onOpenChange: noop })
+      : undefined;
+    const api = createMenuItem({
+      props: () => props,
+      content: () => content,
+      menu: () => menu,
+      onClick: noop,
+    });
+    expectSkeleton(element, menuItemSkeleton, api);
+  });
+});
+
+describe('RioSubMenu', () => {
+  const none = { icon: false, supportingText: false, trailingText: false, trailingIcon: false };
+  const all = { icon: true, supportingText: true, trailingText: true, trailingIcon: true };
+
+  test.each<[string, SubMenuProps, MenuProps, MenuItemContent]>([
+    ['a label', { label: 'Share' }, {}, none],
+    // Every prop away from its default, with every slot, in a menu whose style carries over
+    [
+      'disabled, selecting, with every slot, in a vibrant instant menu',
+      { label: 'Sort by', disabled: true, selection: 'single', selected: 'name' },
+      { variant: 'vibrant', instant: true },
+      all,
+    ],
+  ])('%s', async (_, props, menuProps, content) => {
+    const slots = {
+      default: () => h(MenuItem, { value: 'name' }, () => 'Name'),
+      ...(content.icon ? { icon: () => '+' } : {}),
+      ...(content.supportingText ? { 'supporting-text': () => 'More' } : {}),
+      ...(content.trailingText ? { 'trailing-text': () => '3' } : {}),
+      ...(content.trailingIcon ? { 'trailing-icon': () => '>' } : {}),
+    };
+    const { selected, ...rest } = props;
+    const screen = await render(Menu, {
+      props: menuProps,
+      slots: { default: () => h(SubMenu, { ...rest, modelValue: selected }, slots) },
+    });
+    const parent = createMenu({ props: () => menuProps, onChange: noop, onOpenChange: noop });
+    const api = createSubMenu({
+      props: () => props,
+      content: () => content,
+      menu: () => parent,
+      open: () => false,
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    // The item, then the submenu after it
+    const [item, menu] = rootOf(screen).children;
+    expectSkeleton(item!, menuItemSkeleton, api.item);
+    expectSkeleton(menu!, menuSkeleton, api.menu);
+  });
+});
+
+describe('RioMenuGroup and RioMenuDivider', () => {
+  test.each([
+    ['a group with a label', 'Share'],
+    ['a group without one', undefined],
+  ])('%s', async (_, label) => {
+    const screen = await render(MenuGroup, {
+      props: { label },
+      slots: { default: () => h(MenuItem, () => 'A') },
+    });
+    const api = createMenuGroup({ props: () => ({ label }) });
+    expectSkeleton(rootOf(screen), menuGroupSkeleton, api);
+  });
+
+  test('a divider', async () => {
+    const screen = await render(MenuDivider);
+    expectSkeleton(rootOf(screen), menuDividerSkeleton, createMenuDivider());
+  });
+});
+
+describe('RioTooltip', () => {
+  test.each<[string, TooltipProps & { subhead?: string }, TooltipContent]>([
+    ['plain', {}, { subhead: false, actions: false }],
+    // Every non-boolean prop away from its default, with every slot: a dialog
+    [
+      'rich and persistent, with a subhead and actions, placed elsewhere',
+      {
+        variant: 'rich',
+        persistent: true,
+        subhead: 'Albums',
+        side: 'end',
+        align: 'center',
+        offset: 8,
+      },
+      { subhead: true, actions: true },
+    ],
+    ['rich, with its text only', { variant: 'rich' }, { subhead: false, actions: false }],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(Tooltip, {
+      props: { ...props, text: 'Text' },
+      slots: {
+        default: () => h('button', null, 'Target'),
+        ...(content.actions ? { actions: () => h('button', null, 'Action') } : {}),
+      },
+    });
+    const trigger = rootOf(screen);
+    const root = trigger.querySelector<HTMLElement>('.rio-tooltip')!;
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const api = createTooltip({
+      props: () => props,
+      content: () => content,
+      ids: {
+        root: root.id,
+        subhead: `${root.id.replace(/-tooltip$/, '')}-subhead`,
+        supportingText: `${root.id.replace(/-tooltip$/, '')}-text`,
+      },
+    });
+    expectSkeleton(trigger, tooltipTriggerSkeleton, api);
+    // The app's element, then the tooltip
+    expect(trigger.firstElementChild?.textContent).toBe('Target');
+    expect(trigger.lastElementChild).toBe(root);
+    expectSkeleton(root, tooltipSkeleton, api);
+  });
+});
+
+describe('RioDialog', () => {
+  test.each<[string, DialogProps & { headline?: string }, DialogContent]>([
+    ['with its content only', {}, { icon: false, headline: false, actions: false }],
+    // Every prop away from its default, with every slot
+    [
+      'a dialog with an icon, a headline, and actions',
+      { role: 'dialog', headline: 'Phone ringtone' },
+      { icon: true, headline: true, actions: true },
+    ],
+    [
+      'an alert dialog with a headline and actions',
+      { headline: 'Discard draft?' },
+      { icon: false, headline: true, actions: true },
+    ],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(Dialog, {
+      props,
+      slots: {
+        default: () => 'Text',
+        ...(content.icon ? { icon: () => h('svg') } : {}),
+        ...(content.actions ? { actions: () => h('button', null, 'OK') } : {}),
+      },
+    });
+    const root = rootOf(screen);
+    // A closed dialog renders none of its parts. It opens after the render: the test renderer
+    // moves what it renders into place, which would close it.
+    expect(root.children).toHaveLength(0);
+    await screen.rerender({ ...props, open: true });
+    await expect.poll(() => root.matches(':modal')).toBe(true);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('.rio-dialog__content')!.id.replace(/-content$/, '');
+    const api = createDialog({
+      props: () => props,
+      content: () => content,
+      ids: { headline: `${id}-headline`, content: `${id}-content` },
+    });
+    expectSkeleton(root, dialogSkeleton, api);
+    if (content.headline) {
+      expect(findPart(root, dialogSkeleton, 'headline', api)?.textContent).toBe(props.headline);
+    }
   });
 });

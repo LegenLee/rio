@@ -21,6 +21,10 @@ import {
   mdiChevronDown,
   mdiClockOutline,
   mdiClose,
+  mdiContentCopy,
+  mdiContentCut,
+  mdiContentPaste,
+  mdiDotsVertical,
   mdiFormatAlignCenter,
   mdiFormatAlignLeft,
   mdiFormatAlignRight,
@@ -30,7 +34,10 @@ import {
   mdiHeart,
   mdiHeartOutline,
   mdiMagnify,
+  mdiMenuRight,
   mdiPause,
+  mdiRestore,
+  mdiShareVariant,
   mdiSkipNext,
   mdiSkipPrevious,
 } from '@mdi/js';
@@ -44,16 +51,24 @@ import {
   type ButtonSize,
   type ButtonVariant,
   type IconButtonVariant,
+  type MenuAnchorPoint,
 } from '@rio-m3e/core';
 import {
   RioButton,
   RioButtonGroup,
+  RioDialog,
   RioIconButton,
+  RioMenu,
+  RioMenuDivider,
+  RioMenuGroup,
+  RioMenuItem,
   RioSplitButton,
+  RioSubMenu,
   RioSwitch,
+  RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
-import { reactive, ref, watchEffect } from 'vue';
+import { reactive, ref, useTemplateRef, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
 const variant = ref<SchemeVariant>('tonal-spot');
@@ -76,6 +91,65 @@ const textStyles = ref<string[]>(['bold']);
 const splitSize = ref<ButtonSize>('small');
 const splitOpen = reactive<Record<string, boolean>>({});
 const moved = ref(false);
+const menus = reactive({
+  edit: false,
+  more: false,
+  sort: false,
+  filters: false,
+  split: false,
+  context: false,
+  long: false,
+  view: false,
+});
+const viewButton = useTemplateRef('viewButton');
+const persistentTip = ref(false);
+const dialogs = reactive({ discard: false, reset: false, ringtone: false, rename: false });
+const lastDialog = ref('');
+const RINGTONES = [
+  'None',
+  'Callisto',
+  'Ganymede',
+  'Luna',
+  'Oberon',
+  'Phobos',
+  'Dione',
+  'Europa',
+  'Io',
+  'Rhea',
+  'Titan',
+  'Triton',
+  'Umbriel',
+  'Miranda',
+  'Ariel',
+  'Charon',
+];
+const ringtone = ref('Callisto');
+const albumName = ref('Summer');
+const toolbar = [
+  { action: 'Cut', icon: mdiContentCut },
+  { action: 'Copy', icon: mdiContentCopy },
+  { action: 'Paste', icon: mdiContentPaste },
+  { action: 'Share', icon: mdiShareVariant },
+];
+const layout = ref<string | number | undefined>('grid');
+const sortBy = ref<string | number | undefined>('date');
+const filters = ref<(string | number)[] | string | number | undefined>(['photos']);
+const lastAction = ref('');
+const contextPoint = ref<MenuAnchorPoint | null>(null);
+const editButton = useTemplateRef('editButton');
+const moreButton = useTemplateRef('moreButton');
+const sortButton = useTemplateRef('sortButton');
+const filtersButton = useTemplateRef('filtersButton');
+const longButton = useTemplateRef('longButton');
+const saveSplit = useTemplateRef('saveSplit');
+const openContext = (event: MouseEvent) => {
+  contextPoint.value = {
+    x: event.clientX,
+    y: event.clientY,
+    element: event.currentTarget as Element,
+  };
+  menus.context = true;
+};
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
 
@@ -418,6 +492,337 @@ watchEffect(() => {
       </div>
     </section>
 
+    <section class="buttons menus">
+      <div class="controls">
+        <code class="row-label">menu</code>
+        <RioButton
+          ref="editButton"
+          variant="tonal"
+          aria-haspopup="menu"
+          :aria-expanded="menus.edit"
+          @click="menus.edit = !menus.edit"
+        >
+          Edit
+        </RioButton>
+        <RioMenu v-model:open="menus.edit" :anchor="editButton" label="Edit">
+          <RioMenuItem @click="lastAction = 'cut'">
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiContentCut" fill="currentColor" /></svg
+            ></template>
+            Cut
+            <template #trailing-text>Ctrl+X</template>
+          </RioMenuItem>
+          <RioMenuItem @click="lastAction = 'copy'">
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiContentCopy" fill="currentColor" /></svg
+            ></template>
+            Copy
+            <template #trailing-text>Ctrl+C</template>
+          </RioMenuItem>
+          <RioMenuItem disabled>
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiContentPaste" fill="currentColor" /></svg
+            ></template>
+            Paste
+            <template #trailing-text>Ctrl+V</template>
+          </RioMenuItem>
+          <RioMenuDivider />
+          <RioMenuGroup label="Share">
+            <RioMenuItem @click="lastAction = 'email'">Email</RioMenuItem>
+            <RioMenuItem @click="lastAction = 'link'">
+              Copy link
+              <template #supporting-text>Anyone with the link can view</template>
+            </RioMenuItem>
+          </RioMenuGroup>
+        </RioMenu>
+
+        <RioIconButton
+          ref="moreButton"
+          label="More"
+          aria-haspopup="menu"
+          :aria-expanded="menus.more"
+          @click="menus.more = !menus.more"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiDotsVertical" fill="currentColor" /></svg>
+        </RioIconButton>
+        <RioMenu
+          v-model:open="menus.more"
+          :anchor="moreButton"
+          variant="vibrant"
+          align="end"
+          label="More"
+        >
+          <RioMenuItem @click="lastAction = 'rename'">Rename</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'duplicate'">Duplicate</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'delete'">Delete</RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="sortButton"
+          variant="outlined"
+          aria-haspopup="menu"
+          :aria-expanded="menus.sort"
+          @click="menus.sort = !menus.sort"
+        >
+          Sort
+        </RioButton>
+        <RioMenu
+          v-model:open="menus.sort"
+          v-model="sortBy"
+          :anchor="sortButton"
+          selection="single"
+          label="Sort by"
+        >
+          <RioMenuItem v-for="by in ['name', 'date', 'size']" :key="by" :value="by">
+            <template #icon="{ selected }">
+              <svg v-if="selected" viewBox="0 0 24 24">
+                <path :d="mdiCheck" fill="currentColor" />
+              </svg>
+            </template>
+            {{ by }}
+          </RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="filtersButton"
+          variant="outlined"
+          aria-haspopup="menu"
+          :aria-expanded="menus.filters"
+          @click="menus.filters = !menus.filters"
+        >
+          Filters
+        </RioButton>
+        <RioMenu
+          v-model:open="menus.filters"
+          v-model="filters"
+          :anchor="filtersButton"
+          selection="multiple"
+          label="Filters"
+        >
+          <RioMenuItem v-for="kind in ['photos', 'videos', 'documents']" :key="kind" :value="kind">
+            <template #icon="{ selected }">
+              <svg v-if="selected" viewBox="0 0 24 24">
+                <path :d="mdiCheck" fill="currentColor" />
+              </svg>
+            </template>
+            {{ kind }}
+          </RioMenuItem>
+        </RioMenu>
+
+        <RioSplitButton ref="saveSplit" v-model:open="menus.split" menu-label="More save options">
+          Save
+          <template #menu-icon
+            ><svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg
+          ></template>
+        </RioSplitButton>
+        <RioMenu
+          v-model:open="menus.split"
+          :anchor="saveSplit?.trailing"
+          :offset="4"
+          align="end"
+          label="More save options"
+        >
+          <RioMenuItem @click="lastAction = 'save as'">Save as…</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'save copy'">Save a copy</RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="longButton"
+          variant="text"
+          aria-haspopup="menu"
+          :aria-expanded="menus.long"
+          @click="menus.long = !menus.long"
+        >
+          Long
+        </RioButton>
+        <RioMenu v-model:open="menus.long" :anchor="longButton" label="Long">
+          <RioMenuItem v-for="n in 30" :key="n">Item {{ n }}</RioMenuItem>
+        </RioMenu>
+
+        <RioButton
+          ref="viewButton"
+          variant="tonal"
+          aria-haspopup="menu"
+          :aria-expanded="menus.view"
+          @click="menus.view = !menus.view"
+        >
+          Submenus
+        </RioButton>
+        <RioMenu v-model:open="menus.view" :anchor="viewButton" label="View">
+          <RioMenuItem @click="lastAction = 'refresh'">Refresh</RioMenuItem>
+          <RioSubMenu v-model="layout" label="Layout" selection="single">
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem v-for="kind in ['grid', 'list', 'columns']" :key="kind" :value="kind">
+              <template #icon="{ selected }">
+                <svg v-if="selected" viewBox="0 0 24 24">
+                  <path :d="mdiCheck" fill="currentColor" />
+                </svg>
+              </template>
+              {{ kind }}
+            </RioMenuItem>
+          </RioSubMenu>
+          <RioSubMenu label="Share">
+            <template #icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiShareVariant" fill="currentColor" /></svg
+            ></template>
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem @click="lastAction = 'email'">Email</RioMenuItem>
+            <RioMenuItem @click="lastAction = 'link'">Copy link</RioMenuItem>
+            <RioSubMenu label="More apps">
+              <template #trailing-icon
+                ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+              ></template>
+              <RioMenuItem @click="lastAction = 'chat'">Chat</RioMenuItem>
+              <RioMenuItem @click="lastAction = 'notes'">Notes</RioMenuItem>
+            </RioSubMenu>
+          </RioSubMenu>
+          <RioSubMenu label="Export" disabled>
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem>PDF</RioMenuItem>
+          </RioSubMenu>
+          <RioMenuDivider />
+          <RioMenuItem @click="lastAction = 'settings'">Settings</RioMenuItem>
+        </RioMenu>
+      </div>
+      <div class="controls">
+        <div class="context-area" @contextmenu.prevent="openContext">Right-click here</div>
+        <RioMenu v-model:open="menus.context" :anchor="contextPoint" label="Context">
+          <RioMenuItem @click="lastAction = 'open'">Open</RioMenuItem>
+          <RioMenuItem @click="lastAction = 'download'">Download</RioMenuItem>
+          <RioSubMenu label="Open with">
+            <template #trailing-icon
+              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
+            ></template>
+            <RioMenuItem @click="lastAction = 'viewer'">Viewer</RioMenuItem>
+            <RioMenuItem @click="lastAction = 'editor'">Editor</RioMenuItem>
+          </RioSubMenu>
+        </RioMenu>
+        <code
+          >sort={{ sortBy }} filters={{ filters }} layout={{ layout }} action={{ lastAction }}</code
+        >
+      </div>
+    </section>
+
+    <section class="buttons tooltips">
+      <div class="controls">
+        <code class="row-label">plain</code>
+        <RioTooltip v-for="{ action, icon } in toolbar" :key="action" :text="action">
+          <RioIconButton :label="action" @click="lastAction = action.toLowerCase()">
+            <svg viewBox="0 0 24 24"><path :d="icon" fill="currentColor" /></svg>
+          </RioIconButton>
+        </RioTooltip>
+        <span
+          >Text with a
+          <RioTooltip text="Shown 8px off text, which has no visible edge" :offset="8">
+            <abbr tabindex="0">tooltip</abbr>
+          </RioTooltip></span
+        >
+      </div>
+      <div class="controls">
+        <code class="row-label">rich</code>
+        <RioTooltip variant="rich" subhead="Storage" text="You have 2 GB of 15 GB left.">
+          <RioButton variant="outlined">Storage</RioButton>
+        </RioTooltip>
+        <RioTooltip variant="rich" subhead="Backups">
+          <RioButton variant="outlined">Backups</RioButton>
+          <template #content>Photos back up every night while your phone charges.</template>
+          <template #actions>
+            <RioButton variant="text" @click="lastAction = 'learn more'">Learn more</RioButton>
+            <RioButton variant="text" @click="lastAction = 'settings'">Settings</RioButton>
+          </template>
+        </RioTooltip>
+        <RioTooltip
+          v-model:open="persistentTip"
+          variant="rich"
+          persistent
+          subhead="New: shared albums"
+          text="Invite people to add their photos to an album."
+        >
+          <RioButton variant="tonal">Albums</RioButton>
+          <template #actions>
+            <RioButton variant="text" @click="persistentTip = false">Got it</RioButton>
+          </template>
+        </RioTooltip>
+        <code>persistent={{ persistentTip }}</code>
+      </div>
+    </section>
+
+    <section class="buttons dialogs">
+      <div class="controls">
+        <RioButton variant="tonal" @click="dialogs.discard = true">Discard draft</RioButton>
+        <RioButton variant="tonal" @click="dialogs.reset = true">Reset settings</RioButton>
+        <RioButton variant="tonal" @click="dialogs.ringtone = true">Ringtone</RioButton>
+        <RioButton variant="tonal" @click="dialogs.rename = true">Rename</RioButton>
+        <code>dialog={{ lastDialog }} ringtone={{ ringtone }}</code>
+      </div>
+      <RioDialog
+        v-model:open="dialogs.discard"
+        headline="Discard draft?"
+        @cancel="(event) => (lastDialog = `cancel: ${event.reason}`)"
+      >
+        Your draft and its two attachments will be lost.
+        <template #actions>
+          <RioButton variant="text" @click="dialogs.discard = false">Cancel</RioButton>
+          <RioButton variant="text" @click="((dialogs.discard = false), (lastDialog = 'discarded'))"
+            >Discard</RioButton
+          >
+        </template>
+      </RioDialog>
+      <RioDialog v-model:open="dialogs.reset" headline="Reset settings?">
+        <template #icon>
+          <svg viewBox="0 0 24 24"><path :d="mdiRestore" fill="currentColor" /></svg>
+        </template>
+        This will reset your app preferences back to their default settings. The following accounts
+        will also be signed out:
+        <template #actions>
+          <RioButton variant="text" @click="dialogs.reset = false">Cancel</RioButton>
+          <RioButton variant="text" @click="((dialogs.reset = false), (lastDialog = 'reset'))"
+            >Reset</RioButton
+          >
+        </template>
+      </RioDialog>
+      <RioDialog v-model:open="dialogs.ringtone" role="dialog" headline="Phone ringtone">
+        <label v-for="tone in RINGTONES" :key="tone" class="dialog-option">
+          <input v-model="ringtone" type="radio" name="ringtone" :value="tone" />
+          {{ tone }}
+        </label>
+        <template #actions>
+          <RioButton variant="text" @click="dialogs.ringtone = false">Cancel</RioButton>
+          <RioButton variant="text" @click="dialogs.ringtone = false">OK</RioButton>
+        </template>
+      </RioDialog>
+      <RioDialog
+        v-model:open="dialogs.rename"
+        role="dialog"
+        headline="Rename album"
+        @cancel="
+          (event) => {
+            if (albumName !== 'Summer') {
+              event.preventDefault();
+              lastDialog = `kept open: ${event.reason}`;
+            }
+          }
+        "
+      >
+        <p>Escape and the scrim keep the dialog open once the name changes.</p>
+        <input v-model="albumName" aria-label="Album name" />
+        <template #actions>
+          <RioButton variant="text" @click="((dialogs.rename = false), (albumName = 'Summer'))"
+            >Cancel</RioButton
+          >
+          <RioButton variant="text" @click="((dialogs.rename = false), (lastDialog = albumName))"
+            >Save</RioButton
+          >
+        </template>
+      </RioDialog>
+    </section>
+
     <section class="switches">
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.plain" />
@@ -523,6 +928,23 @@ main {
   display: grid;
   justify-items: start;
   gap: 8px;
+}
+
+.dialog-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  block-size: 48px;
+}
+
+.context-area {
+  display: grid;
+  place-items: center;
+  inline-size: 240px;
+  block-size: 96px;
+  border: 1px dashed var(--rio-color-outline);
+  border-radius: 12px;
+  user-select: none;
 }
 
 .track {
