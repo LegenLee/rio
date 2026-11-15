@@ -33,6 +33,7 @@ import {
   type SwitchContent,
   type SwitchProps,
 } from '@rio-m3e/core';
+import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, test } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { h } from 'vue';
@@ -46,7 +47,6 @@ import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
-import { expectSkeleton, findPart } from './test/contract';
 
 const noop = () => {};
 const rootOf = (screen: { container: Element }) => screen.container.firstElementChild!;

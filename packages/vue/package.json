@@ -37,6 +37,7 @@
   "devDependencies": {
     "@fontsource/roboto": "catalog:",
     "@mdi/js": "catalog:",
+    "@rio-m3e/testing": "workspace:^",
     "@rio-m3e/tokens": "workspace:^",
     "tsdown": "catalog:",
     "typescript": "catalog:",
