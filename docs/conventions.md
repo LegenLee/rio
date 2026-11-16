@@ -217,9 +217,9 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
   - Closing an overlay closes the overlays opened from it. The browser does this for nested popovers but not for a popover opened from a dialog.
   - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
   - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice, 2026-11-16).
-  - A `contain`ed overlay keeps clicks and presses in it, as tooltips and dialogs do (user's call for the place, 2026-11-16): the overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape.
+  - A `contain`ed overlay keeps clicks and presses in it, as tooltips and dialogs do: the overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape.
   - Each document keeps its own record, so overlays in an iframe stack among themselves.
-- **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own (user's call, 2026-11-15):
+- **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own:
   - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
   - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.
   - `'parent'`: the overlay it was opened from closed.
