@@ -4,6 +4,35 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [0.4.0] - 2026-11-17
+
+Form controls: the checkbox, radio buttons, and the text field. Core no longer keeps clicks inside tooltips and dialogs, which hid them from frameworks such as React; adapters do it with their own events, which breaks code that passed `contain` to `attachOverlay`.
+
+### Added
+
+- **`RioCheckbox`**, with `createCheckbox` in `@rio-m3e/core`: a native checkbox with `v-model:selected`, `indeterminate`, an error state, and `disabled` or `softDisabled`. Indeterminate becomes checked on a press, for parent checkboxes.
+- **`RioRadioGroup`** and **`RioRadio`**, with `createRadioGroup`, `createRadio`, and `attachRadioGroup`: native radio buttons in a `role="radiogroup"` that holds the selection with `v-model` and gives them a shared `name`. The browser moves the arrow keys and the tab stop; where engines differ, the group follows the spec: the arrow keys wrap around at the ends, and Shift+Tab into a group with nothing selected lands on the last.
+- Both lay out at the 48px target, take their label from the app's `<label>`, submit their value with a form, and keep showing the app's state when it turns a change down.
+- `attachCheckable` in `@rio-m3e/core`: keeps a native checkbox or radio button in line with the adapter's state.
+- **`RioTextField`**, with `createTextField` and `attachTextField`: filled and outlined text fields with `v-model`, a label that moves to the top (into a gap in the outline for the outlined variant), leading and trailing icon slots, prefix and suffix text, supporting text, error text that takes its place and is announced, a counter for `maxlength`, `required`, `readonly`, and `disabled`. `multiline` makes it a text area, which the person can make taller from its corner.
+- `initialFocus` in `attachDialog`'s options: the element to focus as the dialog opens, ahead of `autofocus`. React, for one, doesn't leave `autoFocus` in the DOM.
+
+### Changed
+
+- **BREAKING**: `attachOverlay` no longer takes `contain`, and `attachTooltip` and `attachDialog` no longer keep clicks and presses in the overlay. A native `stopPropagation()` there hid every click inside from frameworks that handle events at the app's root, such as React. Adapters keep them in with their framework's own events; `RioTooltip` and `RioDialog` still do.
+
+### Fixed
+
+- With an adapter that applies `open` late, as React does for state set outside its own events, a press between asking a tooltip to open and its opening left it open afterward, and a submenu kept opening after the pointer had moved on. Both now go by the state they last asked for.
+
+### Not yet
+
+- Full-screen dialogs, which wait for a top app bar.
+- Text fields that grow with their text, and updating the value while an IME composes.
+- Opening a menu from its trigger with the arrow keys, horizontal menus, and filtering.
+- Link buttons (`href`), emphasized button labels, and a form value for the switch.
+- Language-specific line heights and variable font axes in the type scale.
+
 ## [0.3.0] - 2026-11-16
 
 Three components that float above the page: the menu, with submenus, the tooltip, and the dialog. Two new primitives carry them, one that shows them in the top layer and keeps them in order, and one that places them. Nothing breaks: core's click handlers now also take other frameworks' events.
@@ -108,3 +137,4 @@ The first release: the M3E foundations and three components, the button, the ico
 [0.1.0]: https://github.com/LegenLee/rio/releases/tag/v0.1.0
 [0.2.0]: https://github.com/LegenLee/rio/releases/tag/v0.2.0
 [0.3.0]: https://github.com/LegenLee/rio/releases/tag/v0.3.0
+[0.4.0]: https://github.com/LegenLee/rio/releases/tag/v0.4.0

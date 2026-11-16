@@ -171,30 +171,6 @@ describe('attachOverlay', () => {
     expect(dialog.handle.covered()).toBe(false);
   });
 
-  test('a contained overlay keeps clicks and presses in it, until detached', () => {
-    const card = element('div');
-    const heard: string[] = [];
-    for (const type of ['click', 'pointerdown', 'keydown']) {
-      card.addEventListener(type, () => heard.push(type));
-    }
-    const contained = overlay(element('div', card), { mode: 'manual', contain: true });
-    const plain = overlay(element('div', card), { mode: 'manual' });
-    const fire = (target: HTMLElement) => {
-      target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
-      target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
-    };
-    fire(contained.element);
-    expect(heard).toEqual(['keydown']);
-    heard.length = 0;
-    fire(plain.element);
-    expect(heard).toEqual(['click', 'pointerdown', 'keydown']);
-    heard.length = 0;
-    contained.handle.detach();
-    fire(contained.element);
-    expect(heard).toEqual(['click', 'pointerdown', 'keydown']);
-  });
-
   test('a modal overlay has to be a dialog', () => {
     expect(() => attachOverlay(element('div'), { mode: 'modal', onClose: () => {} })).toThrow(
       TypeError,

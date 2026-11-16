@@ -156,7 +156,7 @@ A connected group is as wide as the space it's given. The first group keeps one 
 
 ### Not yet
 
-- **Overflow menu**: collapsing trailing buttons into a menu needs the menu component.
+- **Overflow menu**: the group doesn't yet collapse trailing buttons into a menu when space runs out. Until it does, an app can end the group with an icon button that opens a [`RioMenu`](menu.md) holding the rest.
 - **Vertical groups**: Compose has a sample; the spec doesn't describe them.
 - A `disabled` prop for the whole group. Disable the buttons one by one for now.
 

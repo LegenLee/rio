@@ -56,19 +56,23 @@ import {
 import {
   RioButton,
   RioButtonGroup,
+  RioCheckbox,
   RioDialog,
   RioIconButton,
   RioMenu,
   RioMenuDivider,
   RioMenuGroup,
   RioMenuItem,
+  RioRadio,
+  RioRadioGroup,
   RioSplitButton,
   RioSubMenu,
   RioSwitch,
+  RioTextField,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
-import { reactive, ref, useTemplateRef, watchEffect } from 'vue';
+import { computed, reactive, ref, useTemplateRef, watchEffect } from 'vue';
 
 const sourceColor = ref('#6750a4');
 const variant = ref<SchemeVariant>('tonal-spot');
@@ -123,7 +127,28 @@ const RINGTONES = [
   'Ariel',
   'Charon',
 ];
-const ringtone = ref('Callisto');
+const ringtone = ref<string | number | undefined>('Callisto');
+const TOPPINGS = ['Cheese', 'Olives', 'Basil'] as const;
+const toppings = reactive<Record<(typeof TOPPINGS)[number], boolean>>({
+  Cheese: true,
+  Olives: false,
+  Basil: true,
+});
+const allToppings = computed(() => TOPPINGS.every((name) => toppings[name]));
+const someToppings = computed(() => TOPPINGS.some((name) => toppings[name]));
+const setToppings = (next: boolean) => TOPPINGS.forEach((name) => (toppings[name] = next));
+const terms = ref(false);
+const SIZES = ['S', 'M', 'L', 'XL'];
+const size = ref<string | number | undefined>('M');
+const fields = reactive({
+  name: '',
+  email: '',
+  search: '',
+  amount: '',
+  code: '',
+  notes: '',
+  bio: '',
+});
 const albumName = ref('Summer');
 const toolbar = [
   { action: 'Cut', icon: mdiContentCut },
@@ -788,10 +813,11 @@ watchEffect(() => {
         </template>
       </RioDialog>
       <RioDialog v-model:open="dialogs.ringtone" role="dialog" headline="Phone ringtone">
-        <label v-for="tone in RINGTONES" :key="tone" class="dialog-option">
-          <input v-model="ringtone" type="radio" name="ringtone" :value="tone" />
-          {{ tone }}
-        </label>
+        <RioRadioGroup v-model="ringtone" label="Ringtone">
+          <label v-for="tone in RINGTONES" :key="tone" class="dialog-option">
+            <RioRadio :value="tone" />{{ tone }}
+          </label>
+        </RioRadioGroup>
         <template #actions>
           <RioButton variant="text" @click="dialogs.ringtone = false">Cancel</RioButton>
           <RioButton variant="text" @click="dialogs.ringtone = false">OK</RioButton>
@@ -821,6 +847,89 @@ watchEffect(() => {
           >
         </template>
       </RioDialog>
+    </section>
+
+    <section class="text-fields">
+      <div class="controls">
+        <RioTextField v-model="fields.name" label="Name" supporting-text="As on your card" />
+        <RioTextField
+          v-model="fields.email"
+          variant="outlined"
+          label="Email"
+          type="email"
+          required
+        />
+        <RioTextField v-model="fields.search" label="Search" placeholder="Songs, albums">
+          <template #leading-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMagnify" fill="currentColor" />
+            </svg>
+          </template>
+          <template v-if="fields.search" #trailing-icon>
+            <RioIconButton label="Clear" variant="standard" @click="fields.search = ''">
+              <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+            </RioIconButton>
+          </template>
+        </RioTextField>
+      </div>
+      <div class="controls">
+        <RioTextField
+          v-model="fields.amount"
+          variant="outlined"
+          label="Amount"
+          prefix="$"
+          suffix="USD"
+        />
+        <RioTextField
+          v-model="fields.code"
+          label="Code"
+          :maxlength="6"
+          :error="fields.code.length > 0 && fields.code.length < 6"
+          error-text="Six characters"
+          supporting-text="From your email"
+        />
+        <RioTextField variant="outlined" label="Disabled" model-value="Can't change" disabled />
+      </div>
+      <div class="controls">
+        <RioTextField v-model="fields.notes" label="Notes" multiline :rows="3" />
+        <RioTextField
+          v-model="fields.bio"
+          variant="outlined"
+          label="Bio"
+          multiline
+          :maxlength="120"
+        />
+      </div>
+      <code>{{ fields }}</code>
+    </section>
+
+    <section class="selection">
+      <div class="selection-column">
+        <label class="selection-row">
+          <RioCheckbox
+            :selected="allToppings"
+            :indeterminate="someToppings && !allToppings"
+            @update:selected="setToppings"
+          />All toppings
+        </label>
+        <label v-for="name in TOPPINGS" :key="name" class="selection-row selection-child">
+          <RioCheckbox v-model:selected="toppings[name]" />{{ name }}
+        </label>
+      </div>
+      <div class="selection-column">
+        <label class="selection-row">
+          <RioCheckbox v-model:selected="terms" :error="!terms" />Accept the terms
+        </label>
+        <label class="selection-row"><RioCheckbox disabled />Disabled</label>
+        <label class="selection-row"><RioCheckbox selected disabled />Disabled, checked</label>
+        <label class="selection-row"><RioCheckbox soft-disabled />Soft-disabled</label>
+      </div>
+      <RioRadioGroup v-model="size" label="Size">
+        <label v-for="each in SIZES" :key="each" class="selection-row">
+          <RioRadio :value="each" :disabled="each === 'XL'" />{{ each }}
+        </label>
+      </RioRadioGroup>
+      <code>toppings={{ toppings }} terms={{ terms }} size={{ size }}</code>
     </section>
 
     <section class="switches">
@@ -933,8 +1042,28 @@ main {
 .dialog-option {
   display: flex;
   align-items: center;
-  gap: 16px;
-  block-size: 48px;
+  margin-inline-start: -14px;
+}
+
+.selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.selection-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.selection-row {
+  display: inline-flex;
+  align-items: center;
+}
+
+.selection-child {
+  padding-inline-start: 32px;
 }
 
 .context-area {

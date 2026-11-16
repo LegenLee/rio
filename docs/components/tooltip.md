@@ -101,7 +101,7 @@ A click opens it, and it stays until you interact with something else.
 
 ### API
 
-`RioTooltip` wraps the element it is for (user's call, 2026-11-16):
+`RioTooltip` wraps the element it is for:
 
 ```vue
 <RioTooltip text="Copy">
@@ -129,27 +129,27 @@ A click opens it, and it stays until you interact with something else.
 | `offset`     | `number`, in px, between the element and the tooltip                                    | `4`                              |
 
 - Slots: `default` (the element, one element), `content` (the text, in place of `text`), and `actions` (up to two text buttons, rich only).
-- **Both variants are in**, with transient and persistent rich tooltips (user's call, 2026-11-16).
+- **Both variants are in**, with transient and persistent rich tooltips.
 - Markup: the element and the tooltip sit in a `<span class="rio-tooltip-trigger">` with `display: contents`, so the element lays out as if unwrapped. The tooltip comes right after the element, shown as a popover; its parts are spans, so a tooltip may sit inside a paragraph.
-- **The wrapper is still in the DOM** (user's call to keep it, 2026-11-16): a parent that styles or counts its children (`> button`, `:first-child`, `.children`) meets the wrapper instead of the element. Rio's button group looks through it. An app's own child selectors need the wrapper too, as in `.toolbar > .rio-tooltip-trigger > button`. Keeping it puts the tooltip right after its element in the focus order, in every engine.
+- **The wrapper is still in the DOM**: a parent that styles or counts its children (`> button`, `:first-child`, `.children`) meets the wrapper instead of the element. Rio's button group looks through it. An app's own child selectors need the wrapper too, as in `.toolbar > .rio-tooltip-trigger > button`. Keeping it puts the tooltip right after its element in the focus order, in every engine.
 - **Clicks and presses in the tooltip stay in it**: they don't reach the app's markup around the element, such as a card with its own click. Keys go on, for Escape. Code that listens for clicks on the document doesn't get them either: a dropdown of the app's own that closes on a click outside stays open on a click in the tooltip.
 - Don't put a `RioTooltip` inside a link or a button: a tooltip with actions would then be an interactive element inside another.
 
 ### Showing and hiding
 
-- **The pointer resting on the element for 500ms shows the tooltip, and once a tooltip shows, the next one shows at once**, as the pointer moves along a toolbar: while one is shown, or within 300ms after it closed (user's call for the approach, 2026-11-16; the values are Rio's choice). A pointer passing over shows nothing. The spec sets no delay; Radix waits 700ms, and Compose none.
+- **The pointer resting on the element for 500ms shows the tooltip, and once a tooltip shows, the next one shows at once**, as the pointer moves along a toolbar: while one is shown, or within 300ms after it closed (the values are Rio's choice). A pointer passing over shows nothing. The spec sets no delay; Radix waits 700ms, and Compose none.
 - **It closes 1.5s after the pointer and the focus leave both the element and the tooltip**, as the spec says. The pointer may move onto the tooltip without it closing, as WCAG 1.4.13 asks.
 - It closes at once when the element is pressed, on Escape, and when another tooltip shows (Rio's choice for the press).
 - **Focus from the keyboard shows it at once** (`:focus-visible`); focus from a click shows nothing.
-- **Touch: a touch held for 500ms shows it, and the click it ends with is swallowed** (user's call, 2026-11-16), so a person checking what a button does doesn't press it. A touch that moves more than 10px isn't held. While the touch is held, the browser's own menu for it, such as a link's, stays away. Checked with synthetic touch events only.
+- **Touch: a touch held for 500ms shows it, and the click it ends with is swallowed**, so a person checking what a button does doesn't press it. A touch that moves more than 10px isn't held. While the touch is held, the browser's own menu for it, such as a link's, stays away. Checked with synthetic touch events only.
 - **Persistent**: a click on the element opens it, and another closes it. A click or the focus elsewhere, and Escape, close it too. The pointer doesn't open it. `v-model:open` opens it from the app, as when the page introduces a new feature.
 - Only one tooltip shows at a time: a transient tooltip gives way to any other overlay that opens (`attachOverlay`'s `transient`).
 - Checked with real input in Chromium, WebKit, and Firefox 160. The keyboard's focus only in Chromium and WebKit: headless Firefox fires no focus events.
 
 ### Assistive technology
 
-- A plain tooltip, or a rich one without actions, has the role `tooltip`, and **the element is described by it** (`aria-describedby`), as in the WAI-ARIA tooltip pattern. **When the element's name already says the same, as an icon button labeled with the tooltip's text does, the description is left out** (user's call, 2026-11-16), so a screen reader doesn't read it twice.
-- **A rich tooltip with actions is a non-modal dialog** (user's call, 2026-11-16), named by its subhead, or else its text, and the element is described by its text. The WAI-ARIA tooltip pattern says "Tooltip widgets do not receive focus" and "A hover that contains focusable elements can be made using a non-modal dialog"; the spec asks for the role "Tooltip, or similar". Tab moves from the element to the tooltip's buttons, the spec's "Focus lands on button", and the keyboard's focus in the tooltip keeps it open. Focus a click left on one of its buttons doesn't.
+- A plain tooltip, or a rich one without actions, has the role `tooltip`, and **the element is described by it** (`aria-describedby`), as in the WAI-ARIA tooltip pattern. **When the element's name already says the same, as an icon button labeled with the tooltip's text does, the description is left out**, so a screen reader doesn't read it twice.
+- **A rich tooltip with actions is a non-modal dialog**, named by its subhead, or else its text, and the element is described by its text. The WAI-ARIA tooltip pattern says "Tooltip widgets do not receive focus" and "A hover that contains focusable elements can be made using a non-modal dialog"; the spec asks for the role "Tooltip, or similar". Tab moves from the element to the tooltip's buttons, the spec's "Focus lands on button", and the keyboard's focus in the tooltip keeps it open. Focus a click left on one of its buttons doesn't.
 - A persistent tooltip's element has `aria-expanded`.
 - Rio adds these attributes to the app's element, and takes away only what it added. Whether the element's name repeats the text is checked when the tooltip renders; an element that changes its own name in between keeps the old answer until then.
 

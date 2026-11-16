@@ -140,29 +140,30 @@ Change the name, then press Escape or click outside the dialog.
 - Slots: `default` (the supporting text, or a list or a form), `icon` (above the headline), and `actions` (up to two buttons, usually text buttons).
 - Event: `cancel`, with a `DialogCancelEvent` (`reason`: `'escape'` or `'scrim'`). See below.
 - Fallthrough attributes, such as `class` or `aria-label`, go to the `<dialog>`.
-- **Basic dialogs only** (user's call, 2026-11-16). The full-screen dialog waits for the top app bar, which its header is.
+- **Basic dialogs only**. The full-screen dialog waits for the top app bar, which its header is.
 
 ### Opening and closing
 
 - The app owns `open`. Rio opens the `<dialog>` with `showModal()`: it sits in the top layer above a scrim, and the rest of the page is inert.
-- **Escape and a click on the scrim ask to close** (user's call, 2026-11-16). `cancel` fires first; the dialog closes unless a listener calls `preventDefault()`, as a dialog with unsaved changes might. The spec's "Basic dialogs require a person to take action before it will close" leaves the scrim open to reading; Compose (`DialogProperties.dismissOnClickOutside`, `true` by default) and Material Web close on it, and Rio does too.
+- **Escape and a click on the scrim ask to close**. `cancel` fires first; the dialog closes unless a listener calls `preventDefault()`, as a dialog with unsaved changes might. The spec's "Basic dialogs require a person to take action before it will close" leaves the scrim open to reading; Compose (`DialogProperties.dismissOnClickOutside`, `true` by default) and Material Web close on it, and Rio does too.
 - A click on the scrim while a menu or another dialog opened from this one is open closes only that one. A press that starts in the dialog and ends on the scrim, as selecting text may, doesn't count.
 - Buttons close the dialog through the app, by setting `open`. A `<form method="dialog">` inside closes it too, and `open` follows.
 - **Clicks and presses in the dialog stay in it** (Rio's choice): they don't reach the app's markup around the `RioDialog`, such as a card with its own click. Keys go on. Code that listens for clicks on the document doesn't get them either.
 - Opening a modal dialog closes the open menus, and a dialog closes with the overlay it sits in. Put a `RioDialog` outside a menu's markup, next to the menu rather than in an item.
-- **The content renders only while the dialog is open** (user's call, 2026-11-16): from opening until the closing motion ends, which `attachDialog` reports with `onClosed`. A closed dialog is an empty `<dialog>`, so no headline or ids stay in the page for a table of contents, a script, or the server-rendered HTML to find. Input that isn't bound to the app's state starts over at each opening, and so does the scroll position.
-- **The page behind doesn't scroll while a dialog is open** (user's call, 2026-11-16): the document's root gets `overflow: hidden`. A page that had a scrollbar keeps its space (`scrollbar-gutter: stable`), so the page doesn't shift sideways; a page that reserves it already is left as it is. The root's own inline styles come back when the last dialog closes. A page that scrolls inside an element of its own, rather than the document, still scrolls.
+- **The content renders only while the dialog is open**: from opening until the closing motion ends, which `attachDialog` reports with `onClosed`. A closed dialog is an empty `<dialog>`, so no headline or ids stay in the page for a table of contents, a script, or the server-rendered HTML to find. Input that isn't bound to the app's state starts over at each opening, and so does the scroll position.
+- **The page behind doesn't scroll while a dialog is open**: the document's root gets `overflow: hidden`. A page that had a scrollbar keeps its space (`scrollbar-gutter: stable`), so the page doesn't shift sideways; a page that reserves it already is left as it is. The root's own inline styles come back when the last dialog closes. A page that scrolls inside an element of its own, rather than the document, still scrolls.
 
 ### Focus and keyboard
 
 - **Opening moves the focus to the first element Tab reaches**: the first button, or a radio group's checked button. An element marked `autofocus` takes it instead. Browsers differ here on their own (Chromium focused a scrolling list, WebKit a group's first radio button), so Rio moves the focus itself (Rio's choice).
+- For other adapters, `attachDialog` takes `initialFocus`, which comes ahead of `autofocus`: React, for one, doesn't leave `autoFocus` in the DOM, and focuses the element as it mounts, while the dialog is still closed.
 - Closing returns the focus to where it was before, usually the button that opened the dialog. The browser does this.
 - **Tab and Shift+Tab go round the dialog**, as the spec's keyboard table says. A native modal dialog lets Tab leave for the browser's own UI after its last element. Elements inside shadow roots aren't counted.
 - **Content that scrolls, with nothing inside that takes the focus, takes it itself** (`tabindex="0"`, Rio's choice), so the keyboard can scroll it. Chromium does this for scrolling elements already; WebKit doesn't. When the dialog opens, the focus still goes to the first button.
 
 ### Assistive technology
 
-- **The role is `alertdialog` by default, and `role="dialog"` switches to a plain dialog** (user's call, 2026-11-16). The spec says "On web, basic dialogs should have the alert dialog role"; WAI-ARIA keeps `alertdialog` for messages that ask for a response, and a screen reader announces it as an alert. Use `role="dialog"` for a list, a picker, or a form.
+- **The role is `alertdialog` by default, and `role="dialog"` switches to a plain dialog**. The spec says "On web, basic dialogs should have the alert dialog role"; WAI-ARIA keeps `alertdialog` for messages that ask for a response, and a screen reader announces it as an alert. Use `role="dialog"` for a list, a picker, or a form.
 - An alert dialog is described by its content (`aria-describedby`), so its message is read with its name.
 - The headline names the dialog (`aria-labelledby`) and is an `<h2>`. Without a headline, give the dialog an `aria-label`.
 - The icon is hidden from assistive technology (`aria-hidden`): the headline says what the dialog is for.
@@ -172,7 +173,7 @@ Change the name, then press Escape or click outside the dialog.
 - The dialog sizes to its content between 280px and 560px wide, keeps 24px from the window's edges, and sits in the center. The app can move it with CSS on `.rio-dialog`, for the spec's custom positions.
 - **Buttons sit at the end, in the order the app gives them: the dismissing one first, then the confirming one, nearest the edge.** When they don't fit side by side, they stack with the confirming one on top. Right-to-left layouts mirror this. It is CSS only (`flex-wrap: wrap-reverse`), so it follows the DOM order.
 - The buttons' containers keep the 24px padding; text buttons' labels sit further in by the buttons' own padding.
-- **The content scrolls between the pinned headline and buttons, with dividers that show while it scrolls** (user's call, 2026-11-16), at the edge where more of it is hidden: below the headline once it has scrolled down, and above the buttons while there is more below. `attachDialog` marks the content with `data-overflow-top` and `data-overflow-bottom`. Scrolling stops at the content's ends rather than moving on to the page (`overscroll-behavior: contain`).
+- **The content scrolls between the pinned headline and buttons, with dividers that show while it scrolls**, at the edge where more of it is hidden: below the headline once it has scrolled down, and above the buttons while there is more below. `attachDialog` marks the content with `data-overflow-top` and `data-overflow-bottom`. Scrolling stops at the content's ends rather than moving on to the page (`overscroll-behavior: contain`).
 
 ### Motion
 

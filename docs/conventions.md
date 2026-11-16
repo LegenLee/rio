@@ -36,6 +36,8 @@ packages/
     primitives/             DOM behaviors shared across components
       anchored-position/
         anchored-position.ts  places a floating element next to an anchor (see Overlays)
+      checkable/
+        checkable.ts        keeps a native checkbox or radio button in line with the adapter's state
       drag/
         drag.ts
       overlay/
@@ -55,6 +57,9 @@ packages/
     button-group/
       button-group.ts       props and selection rules
       interaction.ts        arrow keys and pressed widths (DOM, tested through the Vue component)
+    checkbox/
+      checkbox.ts           props, parts, and what a change asks for
+      checkbox.test.ts
     dialog/
       dialog.ts             props, parts, and the role
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
@@ -66,6 +71,10 @@ packages/
       menu.ts               the menu, its items, submenus, groups, and dividers: props, parts, selection
       interaction.ts        opening, placement, keyboard, focus, and submenus (DOM, tested through the Vue components)
       menu.test.ts
+    radio/
+      radio.ts              the group and its radio buttons: props and parts
+      interaction.ts        Shift+Tab into a group with nothing selected (DOM, tested through the Vue components)
+      radio.test.ts
     split-button/
       split-button.ts       two createButtons, and the trailing one's menu state
       menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
@@ -74,6 +83,10 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
+    text-field/
+      text-field.ts         filled and outlined: props, parts, the label, errors, and the counter
+      interaction.ts        a press on the field focuses the input; a text area's least height (DOM, tested through the Vue component)
+      text-field.test.ts
     tooltip/
       tooltip.ts            plain and rich tooltips: props, parts, roles, placement
       interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
@@ -92,11 +105,14 @@ packages/
       state-layer.css
     button.css
     button-group.css
+    checkbox.css
     dialog.css
     icon-button.css         layered on top of button.css
     menu.css
+    radio.css               the radio buttons and their group
     split-button.css        layered on top of button.css
     switch.css
+    text-field.css
     tooltip.css
   vue/src/
     button/
@@ -104,10 +120,16 @@ packages/
     button-group/
       ButtonGroup.vue
       context.ts            what the group provides; buttons read it with useButtonGroupItem
+    checkbox/
+      Checkbox.vue          a native checkbox; class and style on the root, other attributes on the input
     dialog/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
+    radio/
+      RadioGroup.vue        holds the selection and gives the radio buttons their name
+      Radio.vue
+      context.ts            what the group provides to its radio buttons
     ripple/
       ripple.ts             the v-ripple directive
     shape-morph/
@@ -115,6 +137,8 @@ packages/
     switch/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
+    text-field/
+      TextField.vue         class and style on the root, other attributes on the input
     tooltip/
       Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/
@@ -206,7 +230,7 @@ A primitive is a DOM behavior that several components share, such as the press r
 
 ### Overlays
 
-Menus, tooltips, and dialogs float above the page. Two primitives carry them: `attachOverlay` shows them and keeps them in order, and `attachAnchoredPosition` places menus and tooltips next to what opened them. These are Rio's decisions (decided 2026-11-15); the spec only asks that "menus temporarily appear in front of all other permanent UI elements".
+Menus, tooltips, and dialogs float above the page. Two primitives carry them: `attachOverlay` shows them and keeps them in order, and `attachAnchoredPosition` places menus and tooltips next to what opened them. These are Rio's decisions; the spec only asks that "menus temporarily appear in front of all other permanent UI elements".
 
 - **Overlays live in the top layer, not on a z-index.** Menus and tooltips are popovers, and dialogs are `<dialog>` shown with `showModal()`. The top layer stacks them in the order they open, above the page, so a dialog covers a menu opened before it, and a menu opened from a dialog covers the dialog. No ancestor's `overflow` or `transform` clips them, and the app doesn't manage z-indexes. The cost: nothing outside the top layer can sit above an open Rio overlay. A top layer element the app opens later, such as its own dialog, does.
 - **Menus use the browser's popover stack** (`popover="auto"`). A popover inside another one, or shown from an element inside it (`show(source)`), keeps that one open; showing an unrelated one closes the rest; a click outside closes them all; and a modal dialog closes them as it opens. That is how nested menus behave, and it held in Chromium 158, WebKit 27.2, and Firefox 160.
@@ -216,16 +240,18 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
     - While a Rio overlay is open, even a tooltip, Escape arrives canceled. An app that handles Escape on `window` only when `defaultPrevented` is false doesn't see it then. That's accepted: closing a tooltip with Escape is what WCAG 1.4.13 asks for.
   - Closing an overlay closes the overlays opened from it. The browser does this for nested popovers but not for a popover opened from a dialog.
   - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
-  - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice, 2026-11-16).
-  - A `contain`ed overlay keeps clicks and presses in it, as tooltips and dialogs do (user's call for the place, 2026-11-16): the overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape.
+  - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice).
   - Each document keeps its own record, so overlays in an iframe stack among themselves.
-- **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own (user's call, 2026-11-15):
+- **Adapters keep clicks and presses in a tooltip or a dialog**, in their framework's own events. The overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape. Core can't do it: frameworks such as React handle events at the app's root, so a native `stopPropagation()` in the overlay would hide every click in it from the app. Vue stops them on the overlay's element (`@click.stop`); a React adapter would stop React's events where its portal begins.
+- **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own:
   - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
   - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.
   - `'parent'`: the overlay it was opened from closed.
   - `'replaced'`: another overlay opened, and this transient one gave way.
 
   All but `'escape'` arrive after the overlay closed, so the adapter has to follow them. A component's own API still reports through `onChange` and `on<State>Change` (see Core output); the reason is the primitive's.
+
+- **The adapter may apply `open` late, or not at all.** React, for one, renders state set outside its own events a task or more later. So `attachTooltip` and `attachSubMenu` go by the state they last asked for, or were synced to, rather than by what the DOM shows: a press between asking a tooltip to open and its opening still closes it, and moving on from an item closes the submenu it asked to open. An app may also turn a request down by leaving `open` as it is; the next event asks again. `attachDialog` asks at every Escape and click on the scrim, so a request turned down that way never blocks the next.
 
 - **Placing is done in JavaScript, not with CSS anchor positioning.** Anchor positioning reached every engine only in January 2026 (Chrome 125, Safari 26, Firefox 147), so older browsers would get no placement at all. JavaScript also tells the stylesheet which side the element ended up on (`data-side`), which the opening motion needs, and can anchor to a point, as context menus do. Revisit once anchor positioning is Baseline widely available (mid-2028).
 

@@ -67,7 +67,20 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <dialog ref="root" v-bind="dialog.parts.root()">
+  <!-- Clicks and presses stay in the dialog, so a card or a row around it doesn't take them. Keys go
+       on, for Escape. -->
+  <dialog
+    ref="root"
+    v-bind="dialog.parts.root()"
+    @click.stop
+    @auxclick.stop
+    @dblclick.stop
+    @pointerdown.stop
+    @pointerup.stop
+    @mousedown.stop
+    @mouseup.stop
+    @contextmenu.stop
+  >
     <template v-if="rendered">
       <div v-if="dialog.showsIcon()" v-bind="dialog.parts.icon()"><slot name="icon" /></div>
       <h2 v-if="dialog.showsHeadline()" v-bind="dialog.parts.headline()">{{ headline }}</h2>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RioButton, RioDialog } from '@rio-m3e/vue';
+import { RioButton, RioDialog, RioRadio, RioRadioGroup } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const TONES = [
@@ -18,8 +18,8 @@ const TONES = [
   'Umbriel',
 ];
 const open = ref(false);
-const tone = ref('Callisto');
-const picked = ref('Callisto');
+const tone = ref<string | number | undefined>('Callisto');
+const picked = ref<string | number | undefined>('Callisto');
 const show = () => {
   picked.value = tone.value;
   open.value = true;
@@ -30,10 +30,11 @@ const show = () => {
   <RioButton variant="tonal" @click="show">Ringtone: {{ tone }}</RioButton>
   <!-- A list is no alert: role="dialog" -->
   <RioDialog v-model:open="open" role="dialog" headline="Phone ringtone">
-    <label v-for="each in TONES" :key="each" class="tone">
-      <input v-model="picked" type="radio" name="tone" :value="each" />
-      {{ each }}
-    </label>
+    <RioRadioGroup v-model="picked" label="Ringtone">
+      <label v-for="each in TONES" :key="each" class="tone">
+        <RioRadio :value="each" />{{ each }}
+      </label>
+    </RioRadioGroup>
     <template #actions>
       <RioButton variant="text" @click="open = false">Cancel</RioButton>
       <RioButton variant="text" @click="((tone = picked), (open = false))">OK</RioButton>
@@ -45,7 +46,8 @@ const show = () => {
 .tone {
   display: flex;
   align-items: center;
-  gap: 16px;
-  block-size: 48px;
+  align-self: stretch;
+  /* The radio button's 48px target starts at the content's edge; its ring sits 14px in. */
+  margin-inline-start: -14px;
 }
 </style>

@@ -1,0 +1,461 @@
+/*
+ * M3 text fields, filled and outlined.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-filled-text-field.scss`,
+ * `_md-comp-outlined-text-field.scss`, Material 3 v34.0.21) and the spec page's measurements: a
+ * 56px container, 16px padding at each side (12px beside an icon), 16px between an icon and the
+ * text, and 4px above the supporting text. The outlined variant's gap for the label is Material
+ * Web's: the outline in three pieces, the middle one as wide as the label at its top size plus 4px
+ * at each side.
+ *
+ * The root carries `data-variant`, and `data-populated`, `data-label`, `data-leading-icon`,
+ * `data-trailing-icon`, `data-multiline`, `data-error`, and `data-disabled` when they apply. The
+ * label moves to the top while the field is populated or focused, and for inputs that always show
+ * something, such as dates.
+ */
+
+.rio-text-field {
+  --_leading-space: 16px;
+  --_trailing-space: 16px;
+  --_icon-gap: 16px;
+  /* Where the label's text starts, measured from the container's edge */
+  --_label-start: var(--_leading-space);
+  --_label-float-start: var(--_label-start);
+  --_label-float-top: 8px;
+
+  /* The label resting in the field. The rule for the label at the top changes these. */
+  --_label-top: 16px;
+  --_label-x: var(--_label-start);
+  --_label-size: var(--rio-typescale-body-large-size);
+  --_label-line-height: var(--rio-typescale-body-large-line-height);
+  --_label-tracking: var(--rio-typescale-body-large-tracking);
+  --_notch-top: var(--_line);
+  --_affix-opacity: 1;
+  --_placeholder: var(--rio-color-on-surface-variant);
+
+  /* Colors at rest */
+  --_label: var(--rio-color-on-surface-variant);
+  --_input: var(--rio-color-on-surface);
+  --_affix: var(--rio-color-on-surface-variant);
+  --_icon: var(--rio-color-on-surface-variant);
+  --_trailing: var(--rio-color-on-surface-variant);
+  --_supporting: var(--rio-color-on-surface-variant);
+  --_caret: var(--rio-color-primary);
+  --_line: var(--rio-color-on-surface-variant);
+  --_line-width: 1px;
+
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: top;
+  color: var(--_input);
+  font: var(--rio-typescale-body-large);
+  letter-spacing: var(--rio-typescale-body-large-tracking);
+}
+
+.rio-text-field[data-variant='outlined'] {
+  --_line: var(--rio-color-outline);
+}
+
+.rio-text-field[data-leading-icon] {
+  --_leading-space: 12px;
+  --_label-start: calc(var(--_leading-space) + 24px + var(--_icon-gap));
+}
+
+/* An outlined label moves up into the outline's gap, across the top edge, at the container's
+   start. */
+.rio-text-field[data-variant='outlined'] {
+  --_label-float-start: 16px;
+  --_label-float-top: calc(-1 * var(--rio-typescale-body-small-line-height) / 2);
+}
+
+/* While the label rests in the field, it covers the prefix, the suffix, and the placeholder. */
+.rio-text-field[data-label] {
+  --_affix-opacity: 0;
+  --_placeholder: transparent;
+}
+
+/*
+ * The label at the top: while populated, focused, or autofilled, and for inputs that always show
+ * something.
+ */
+.rio-text-field:is(
+  [data-populated],
+  :has(
+    .rio-text-field__input:is(
+      :focus,
+      :autofill,
+      [type='date'],
+      [type='datetime-local'],
+      [type='month'],
+      [type='time'],
+      [type='week']
+    )
+  )
+) {
+  --_label-top: var(--_label-float-top);
+  --_label-x: var(--_label-float-start);
+  --_label-size: var(--rio-typescale-body-small-size);
+  --_label-line-height: var(--rio-typescale-body-small-line-height);
+  --_label-tracking: var(--rio-typescale-body-small-tracking);
+  --_notch-top: transparent;
+  --_affix-opacity: 1;
+  --_placeholder: var(--rio-color-on-surface-variant);
+}
+
+.rio-text-field[data-trailing-icon] {
+  --_trailing-space: 12px;
+}
+
+/* Hovered */
+@media (hover: hover) {
+  .rio-text-field:not([data-disabled]):hover {
+    --_line: var(--rio-color-on-surface);
+  }
+
+  .rio-text-field[data-variant='outlined']:not([data-disabled]):hover {
+    --_label: var(--rio-color-on-surface);
+  }
+
+  .rio-text-field[data-variant='filled']:not([data-disabled]):hover
+    .rio-text-field__container::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+/* Focused */
+.rio-text-field:has(.rio-text-field__input:focus) {
+  --_label: var(--rio-color-primary);
+  --_line: var(--rio-color-primary);
+  --_line-width: 2px;
+}
+
+.rio-text-field[data-variant='outlined']:has(.rio-text-field__input:focus) {
+  --_line-width: 3px;
+}
+
+/* Error */
+.rio-text-field[data-error] {
+  --_label: var(--rio-color-error);
+  --_line: var(--rio-color-error);
+  --_trailing: var(--rio-color-error);
+  --_supporting: var(--rio-color-error);
+  --_caret: var(--rio-color-error);
+}
+
+@media (hover: hover) {
+  .rio-text-field[data-error]:not([data-disabled]):hover {
+    --_label: var(--rio-color-on-error-container);
+    --_line: var(--rio-color-on-error-container);
+    --_trailing: var(--rio-color-on-error-container);
+  }
+}
+
+.rio-text-field[data-error]:has(.rio-text-field__input:focus) {
+  --_label: var(--rio-color-error);
+  --_line: var(--rio-color-error);
+  --_trailing: var(--rio-color-error);
+}
+
+/* Disabled */
+.rio-text-field[data-disabled] {
+  --_label: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_input: var(--_label);
+  --_affix: var(--_label);
+  --_icon: var(--_label);
+  --_trailing: var(--_label);
+  --_supporting: var(--_label);
+  --_line: var(--_label);
+}
+
+.rio-text-field[data-variant='outlined'][data-disabled] {
+  --_line: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+}
+
+/* The frame holds the outline and the label over the container. */
+
+.rio-text-field__frame {
+  position: relative;
+  display: flex;
+  border-radius: var(--rio-shape-corner-extra-small);
+}
+
+.rio-text-field[data-variant='filled'] .rio-text-field__frame {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.rio-text-field__container {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--_icon-gap);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: 56px;
+  padding-inline: var(--_leading-space) var(--_trailing-space);
+  border-radius: inherit;
+  cursor: text;
+}
+
+/*
+ * A text area can be made taller from the corner, but never shorter than its rows:
+ * `attachTextField` sets `--rio-text-field-rows`, and the content's padding is 32px in all.
+ */
+.rio-text-field[data-multiline] .rio-text-field__container {
+  min-block-size: calc(var(--rio-text-field-rows, 3) * 1lh + 32px);
+}
+
+.rio-text-field[data-multiline]:not([data-disabled]) .rio-text-field__container {
+  overflow: hidden;
+  resize: vertical;
+}
+
+.rio-text-field[data-disabled] .rio-text-field__container {
+  cursor: default;
+}
+
+/* Filled: a fill with only its top corners rounded, the hover state layer, and the active
+   indicator along the bottom */
+.rio-text-field[data-variant='filled'] .rio-text-field__container {
+  background-color: var(--rio-color-surface-container-highest);
+  box-shadow: inset 0 calc(-1 * var(--_line-width)) var(--_line);
+  transition: box-shadow var(--rio-motion-fast-effects);
+}
+
+.rio-text-field[data-variant='filled'][data-disabled] .rio-text-field__container {
+  background-color: color-mix(in srgb, var(--rio-color-on-surface) 4%, transparent);
+}
+
+.rio-text-field[data-variant='filled'] .rio-text-field__container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--rio-color-on-surface);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+/* Outlined: the outline in three pieces, the middle one leaving a gap for the label */
+
+.rio-text-field__outline {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.rio-text-field__outline-start,
+.rio-text-field__outline-notch,
+.rio-text-field__outline-end {
+  box-sizing: border-box;
+  border: var(--_line-width) solid var(--_line);
+  transition:
+    border-color var(--rio-motion-fast-effects),
+    border-width var(--rio-motion-fast-effects);
+}
+
+.rio-text-field__outline-start {
+  flex: none;
+  inline-size: calc(var(--_label-float-start) - 4px);
+  border-inline-end: 0;
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
+}
+
+/* As wide as the label at its top size, which it holds, hidden, and 4px at each side */
+.rio-text-field__outline-notch {
+  flex: none;
+  max-inline-size: calc(100% - var(--_label-float-start) - var(--_trailing-space));
+  overflow: hidden;
+  padding-inline: 4px;
+  border-inline: 0;
+  color: transparent;
+  font: var(--rio-typescale-body-small);
+  letter-spacing: var(--rio-typescale-body-small-tracking);
+  white-space: nowrap;
+}
+
+.rio-text-field__outline-notch {
+  border-block-start-color: var(--_notch-top);
+}
+
+.rio-text-field:not([data-label]) .rio-text-field__outline-notch {
+  display: none;
+}
+
+.rio-text-field__outline-end {
+  flex: 1;
+  border-inline-start: 0;
+  border-start-end-radius: inherit;
+  border-end-end-radius: inherit;
+}
+
+/* Icons */
+
+.rio-text-field__leading-icon,
+.rio-text-field__trailing-icon {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  color: var(--_icon);
+}
+
+.rio-text-field__trailing-icon {
+  color: var(--_trailing);
+}
+
+.rio-text-field__leading-icon > :is(svg, img),
+.rio-text-field__trailing-icon > :is(svg, img) {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+/* An icon button's icon lines up where a plain icon would. */
+.rio-text-field__leading-icon:has(> .rio-icon-button) {
+  margin-inline-start: -8px;
+}
+
+.rio-text-field__trailing-icon:has(> .rio-icon-button) {
+  margin-inline-end: -8px;
+}
+
+/* A text area's container clips what reaches past it, so a focus ring stays 1px further in. */
+.rio-text-field[data-multiline] .rio-text-field__leading-icon:has(> .rio-icon-button) {
+  margin-inline-start: -7px;
+}
+
+.rio-text-field[data-multiline] .rio-text-field__trailing-icon:has(> .rio-icon-button) {
+  margin-inline-end: -7px;
+}
+
+/* The label, prefix, input, and suffix */
+
+.rio-text-field__content {
+  display: flex;
+  flex: 1;
+  align-self: stretch;
+  align-items: center;
+  min-inline-size: 0;
+  padding-block: 16px;
+}
+
+/* A filled label sits above the input, so the input moves down. */
+.rio-text-field[data-variant='filled'][data-label] .rio-text-field__content {
+  padding-block: 24px 8px;
+}
+
+.rio-text-field[data-multiline] .rio-text-field__content {
+  align-items: stretch;
+}
+
+.rio-text-field__input {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--_input);
+  caret-color: var(--_caret);
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+textarea.rio-text-field__input {
+  resize: none;
+}
+
+.rio-text-field__input::placeholder {
+  color: var(--_placeholder);
+  opacity: 1;
+}
+
+.rio-text-field__prefix,
+.rio-text-field__suffix {
+  flex: none;
+  color: var(--_affix);
+  white-space: nowrap;
+  opacity: var(--_affix-opacity);
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+.rio-text-field__prefix {
+  padding-inline-end: 2px;
+}
+
+.rio-text-field__suffix {
+  padding-inline-start: 2px;
+}
+
+.rio-text-field__label {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: var(--_label-top);
+  inset-inline-start: var(--_label-x);
+  max-inline-size: calc(100% - var(--_label-x) - var(--_trailing-space));
+  overflow: hidden;
+  color: var(--_label);
+  font: var(--rio-typescale-body-large);
+  font-size: var(--_label-size);
+  line-height: var(--_label-line-height);
+  letter-spacing: var(--_label-tracking);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    inset-block-start var(--rio-motion-fast-spatial),
+    inset-inline-start var(--rio-motion-fast-spatial),
+    font-size var(--rio-motion-fast-spatial),
+    line-height var(--rio-motion-fast-spatial),
+    color var(--rio-motion-fast-effects);
+}
+
+/* The line below: the supporting or error text, and the counter at the end */
+
+.rio-text-field__supporting {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 4px 16px 0;
+  color: var(--_supporting);
+  font: var(--rio-typescale-body-small);
+  letter-spacing: var(--rio-typescale-body-small-tracking);
+}
+
+.rio-text-field__supporting-text {
+  flex: 1;
+}
+
+/* A count, such as 12 / 20, reads left to right in every writing direction. */
+.rio-text-field__counter {
+  flex: none;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media (forced-colors: active) {
+  .rio-text-field {
+    --_line: CanvasText;
+  }
+
+  .rio-text-field:has(.rio-text-field__input:focus) {
+    --_line: Highlight;
+  }
+
+  .rio-text-field[data-disabled] {
+    --_line: GrayText;
+  }
+
+  .rio-text-field[data-variant='filled'] .rio-text-field__container {
+    border: 1px solid var(--_line);
+  }
+}

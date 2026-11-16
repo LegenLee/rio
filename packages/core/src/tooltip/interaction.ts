@@ -101,11 +101,19 @@ export function attachTooltip(
     return first instanceof view.HTMLElement && first !== root ? first : null;
   };
   const isOpen = () => root.matches(':popover-open');
-  const request = (open: boolean) => options.onOpenChange(open);
+  /**
+   * Whether the tooltip is meant to be open: the last state asked for, or `sync`ed. The events below
+   * go by it rather than by the DOM, since an adapter may show the tooltip some time after it is
+   * asked to, and a press in between has to close it.
+   */
+  let wanted = false;
+  const request = (open: boolean) => {
+    wanted = open;
+    options.onOpenChange(open);
+  };
 
   // A transient tooltip is a manual popover that gives way to any other overlay. A persistent one
-  // is an auto popover, which a click or another popover elsewhere closes. Either way, clicks and
-  // presses in it stay in it, so a card or a row around its element doesn't take them.
+  // is an auto popover, which a click or another popover elsewhere closes.
   let overlay: OverlayHandle | undefined;
   let overlayPersistent: boolean | undefined;
   /** When the pointer last went down on the element, whether the tooltip was open */
@@ -118,9 +126,7 @@ export function attachTooltip(
     const onClose = () => request(false);
     overlay = attachOverlay(
       root,
-      persistent
-        ? { mode: 'auto', contain: true, onClose }
-        : { mode: 'manual', transient: true, contain: true, onClose },
+      persistent ? { mode: 'auto', onClose } : { mode: 'manual', transient: true, onClose },
     );
     return overlay;
   };
@@ -195,7 +201,7 @@ export function attachTooltip(
   const onPointerEnter = (event: PointerEvent) => {
     if (event.pointerType !== 'mouse' || options.persistent()) return;
     stopHide();
-    if (isOpen() || showTimer !== undefined) return;
+    if (wanted || showTimer !== undefined) return;
     if (warm()) {
       request(true);
       return;
@@ -208,7 +214,7 @@ export function attachTooltip(
   const onPointerLeave = (event: PointerEvent) => {
     if (event.pointerType !== 'mouse' || options.persistent()) return;
     stopShow();
-    if (isOpen()) hideLater();
+    if (wanted) hideLater();
   };
 
   const onFocusIn = (event: FocusEvent) => {
@@ -218,7 +224,7 @@ export function attachTooltip(
     if (!root.contains(focused) && !focused.matches(':focus-visible')) return;
     stopShow();
     stopHide();
-    if (!isOpen()) request(true);
+    if (!wanted) request(true);
   };
   const onFocusOut = (event: FocusEvent) => {
     const next = event.relatedTarget as Node | null;
@@ -226,10 +232,10 @@ export function attachTooltip(
     if (options.persistent()) {
       // The focus moving to something else is an interaction with it. The window losing the focus
       // isn't.
-      if (next && isOpen()) request(false);
+      if (next && wanted) request(false);
       return;
     }
-    if (isOpen()) hideLater();
+    if (wanted) hideLater();
   };
 
   // A touch held on the element shows the tooltip, and the click it ends with is swallowed, so a
@@ -245,7 +251,7 @@ export function attachTooltip(
   const onPointerDown = (event: PointerEvent) => {
     const target = element();
     if (!target?.contains(event.target as Node)) return;
-    openAtPress = isOpen();
+    openAtPress = wanted;
     if (options.persistent()) return;
     stopShow();
     if (event.pointerType === 'touch') {
@@ -261,7 +267,7 @@ export function attachTooltip(
     }
     // Pressing the element closes its tooltip.
     stopHide();
-    if (isOpen()) request(false);
+    if (wanted) request(false);
   };
   // A touch that moves away, as a drag the browser leaves to the page does, isn't held.
   const onPointerMove = (event: PointerEvent) => {
@@ -275,7 +281,7 @@ export function attachTooltip(
     stopPress();
     if (swallowUntil === Infinity) {
       swallowUntil = performance.now() + SWALLOW_CLICK_MS;
-      if (isOpen()) hideLater();
+      if (wanted) hideLater();
     }
   };
   const onPointerCancel = () => {
@@ -298,7 +304,7 @@ export function attachTooltip(
     if (!options.persistent()) return;
     if (!element()?.contains(event.target as Node)) return;
     // A click from the keyboard has no press before it (`detail` 0).
-    request(!(event.detail === 0 ? isOpen() : openAtPress));
+    request(!(event.detail === 0 ? wanted : openAtPress));
   };
 
   trigger.addEventListener('pointerenter', onPointerEnter);
@@ -317,6 +323,7 @@ export function attachTooltip(
 
   return {
     sync(open) {
+      wanted = open;
       const showing = isOpen();
       if (open && !showing) {
         const target = element();
