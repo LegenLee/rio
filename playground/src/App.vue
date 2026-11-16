@@ -68,6 +68,7 @@ import {
   RioSplitButton,
   RioSubMenu,
   RioSwitch,
+  RioTextField,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
@@ -139,6 +140,15 @@ const setToppings = (next: boolean) => TOPPINGS.forEach((name) => (toppings[name
 const terms = ref(false);
 const SIZES = ['S', 'M', 'L', 'XL'];
 const size = ref<string | number | undefined>('M');
+const fields = reactive({
+  name: '',
+  email: '',
+  search: '',
+  amount: '',
+  code: '',
+  notes: '',
+  bio: '',
+});
 const albumName = ref('Summer');
 const toolbar = [
   { action: 'Cut', icon: mdiContentCut },
@@ -837,6 +847,60 @@ watchEffect(() => {
           >
         </template>
       </RioDialog>
+    </section>
+
+    <section class="text-fields">
+      <div class="controls">
+        <RioTextField v-model="fields.name" label="Name" supporting-text="As on your card" />
+        <RioTextField
+          v-model="fields.email"
+          variant="outlined"
+          label="Email"
+          type="email"
+          required
+        />
+        <RioTextField v-model="fields.search" label="Search" placeholder="Songs, albums">
+          <template #leading-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMagnify" fill="currentColor" />
+            </svg>
+          </template>
+          <template v-if="fields.search" #trailing-icon>
+            <RioIconButton label="Clear" variant="standard" @click="fields.search = ''">
+              <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+            </RioIconButton>
+          </template>
+        </RioTextField>
+      </div>
+      <div class="controls">
+        <RioTextField
+          v-model="fields.amount"
+          variant="outlined"
+          label="Amount"
+          prefix="$"
+          suffix="USD"
+        />
+        <RioTextField
+          v-model="fields.code"
+          label="Code"
+          :maxlength="6"
+          :error="fields.code.length > 0 && fields.code.length < 6"
+          error-text="Six characters"
+          supporting-text="From your email"
+        />
+        <RioTextField variant="outlined" label="Disabled" model-value="Can't change" disabled />
+      </div>
+      <div class="controls">
+        <RioTextField v-model="fields.notes" label="Notes" multiline :rows="3" />
+        <RioTextField
+          v-model="fields.bio"
+          variant="outlined"
+          label="Bio"
+          multiline
+          :maxlength="120"
+        />
+      </div>
+      <code>{{ fields }}</code>
     </section>
 
     <section class="selection">

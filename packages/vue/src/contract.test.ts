@@ -19,6 +19,7 @@ import {
   createRadioGroup,
   createSubMenu,
   createSwitch,
+  createTextField,
   createTooltip,
   createSplitButton,
   iconButtonSkeleton,
@@ -30,6 +31,7 @@ import {
   radioSkeleton,
   splitButtonSkeleton,
   switchSkeleton,
+  textFieldSkeleton,
   tooltipSkeleton,
   tooltipTriggerSkeleton,
   type ButtonGroupProps,
@@ -47,6 +49,8 @@ import {
   type SubMenuProps,
   type SwitchContent,
   type SwitchProps,
+  type TextFieldContent,
+  type TextFieldProps,
   type TooltipContent,
   type TooltipProps,
 } from '@rio-m3e/core';
@@ -68,6 +72,7 @@ import Radio from './radio/Radio.vue';
 import RadioGroup from './radio/RadioGroup.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
+import TextField from './text-field/TextField.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -495,5 +500,64 @@ describe('RioRadioGroup and RioRadio', () => {
     const name = root.querySelector('input')!.name;
     const api = createRadio({ props: () => props, name: () => name, value: () => 'luna' });
     expectSkeleton(root, radioSkeleton, api);
+  });
+});
+
+describe('RioTextField', () => {
+  test.each<[string, Omit<TextFieldProps, 'value'> & { modelValue?: string }, TextFieldContent]>([
+    ['filled, with its label only', { label: 'Name' }, { leadingIcon: false, trailingIcon: false }],
+    // Every prop away from its default, with every slot
+    [
+      'an outlined text area with everything',
+      {
+        variant: 'outlined',
+        label: 'Notes',
+        modelValue: 'Hello',
+        multiline: true,
+        rows: 5,
+        prefix: '$',
+        suffix: 'USD',
+        supportingText: 'Hint',
+        error: true,
+        errorText: 'Wrong',
+        maxlength: 20,
+        required: true,
+        disabled: true,
+        readonly: true,
+      },
+      { leadingIcon: true, trailingIcon: true },
+    ],
+    [
+      'without a label, with supporting text',
+      { supportingText: 'Hint' },
+      { leadingIcon: false, trailingIcon: false },
+    ],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(TextField, {
+      props,
+      slots: {
+        ...(content.leadingIcon ? { 'leading-icon': () => h('svg') } : {}),
+        ...(content.trailingIcon ? { 'trailing-icon': () => h('button', null, 'Clear') } : {}),
+      },
+    });
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('.rio-text-field__input')!.id.replace(/-input$/, '');
+    const { modelValue, ...rest } = props;
+    const api = createTextField({
+      props: () => ({ ...rest, value: modelValue }),
+      content: () => content,
+      ids: {
+        input: `${id}-input`,
+        prefix: `${id}-prefix`,
+        suffix: `${id}-suffix`,
+        supportingText: `${id}-supporting`,
+        counter: `${id}-counter`,
+      },
+    });
+    expectSkeleton(root, textFieldSkeleton, api);
+    if (props.label) {
+      expect(findPart(root, textFieldSkeleton, 'label', api)?.textContent).toBe(api.labelText());
+    }
   });
 });

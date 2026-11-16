@@ -12,6 +12,7 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 - **`RioRadioGroup`** and **`RioRadio`**, with `createRadioGroup`, `createRadio`, and `attachRadioGroup`: native radio buttons in a `role="radiogroup"` that holds the selection with `v-model` and gives them a shared `name`. The browser moves the arrow keys and the tab stop; where engines differ, the group follows the spec: the arrow keys wrap around at the ends, and Shift+Tab into a group with nothing selected lands on the last.
 - Both lay out at the 48px target, take their label from the app's `<label>`, submit their value with a form, and keep showing the app's state when it turns a change down.
 - `attachCheckable` in `@rio-m3e/core`: keeps a native checkbox or radio button in line with the adapter's state.
+- **`RioTextField`**, with `createTextField` and `attachTextField`: filled and outlined text fields with `v-model`, a label that moves to the top (into a gap in the outline for the outlined variant), leading and trailing icon slots, prefix and suffix text, supporting text, error text that takes its place and is announced, a counter for `maxlength`, `required`, `readonly`, and `disabled`. `multiline` makes it a text area, which the person can make taller from its corner.
 - `initialFocus` in `attachDialog`'s options: the element to focus as the dialog opens, ahead of `autofocus`. React, for one, doesn't leave `autoFocus` in the DOM.
 
 ### Changed

@@ -13,4 +13,5 @@ export { default as RioRadioGroup } from './radio/RadioGroup.vue';
 export { vRipple } from './ripple/ripple';
 export { default as RioSplitButton } from './split-button/SplitButton.vue';
 export { default as RioSwitch } from './switch/Switch.vue';
+export { default as RioTextField } from './text-field/TextField.vue';
 export { default as RioTooltip } from './tooltip/Tooltip.vue';

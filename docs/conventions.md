@@ -83,6 +83,10 @@ packages/
       switch.ts             props, attributes, click handling
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
+    text-field/
+      text-field.ts         filled and outlined: props, parts, the label, errors, and the counter
+      interaction.ts        a press on the field focuses the input; a text area's least height (DOM, tested through the Vue component)
+      text-field.test.ts
     tooltip/
       tooltip.ts            plain and rich tooltips: props, parts, roles, placement
       interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
@@ -108,6 +112,7 @@ packages/
     radio.css               the radio buttons and their group
     split-button.css        layered on top of button.css
     switch.css
+    text-field.css
     tooltip.css
   vue/src/
     button/
@@ -132,6 +137,8 @@ packages/
     switch/
       Switch.vue
       Switch.vrt.test.ts    screenshot test (see Visual regression)
+    text-field/
+      TextField.vue         class and style on the root, other attributes on the input
     tooltip/
       Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/

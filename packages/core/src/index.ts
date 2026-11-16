@@ -22,5 +22,7 @@ export * from './split-button/menu-icon';
 export * from './split-button/split-button';
 export * from './switch/handle';
 export * from './switch/switch';
+export * from './text-field/interaction';
+export * from './text-field/text-field';
 export * from './tooltip/interaction';
 export * from './tooltip/tooltip';

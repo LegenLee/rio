@@ -42,6 +42,7 @@ export default defineConfig({
           { text: 'Radio button', link: '/components/radio-button' },
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
+          { text: 'Text field', link: '/components/text-field' },
           { text: 'Tooltip', link: '/components/tooltip' },
         ],
       },
