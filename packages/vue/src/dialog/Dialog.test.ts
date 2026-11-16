@@ -1,5 +1,5 @@
 import { mdiDeleteOutline } from '@mdi/js';
-import type { DialogCancelEvent, DialogRole } from '@rio-m3e/core';
+import { attachDialog, type DialogCancelEvent, type DialogRole } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
@@ -438,6 +438,8 @@ describe('RioDialog', () => {
       ],
     });
     await long.open();
+    // At its narrowest, so they can't fit side by side whatever the font
+    long.dialog().style.maxInlineSize = '280px';
     const keep = long.button('Keep editing the draft for now').getBoundingClientRect();
     const drop = long.button('Discard the draft and every attachment').getBoundingClientRect();
     expect(drop.bottom).toBeLessThanOrEqual(keep.top);
@@ -550,5 +552,66 @@ describe('RioDialog', () => {
     await nextTick();
     expect(root.isConnected).toBe(false);
     expect(document.activeElement).toBe(opener);
+  });
+
+  test('an app that turns a request down by keeping it open still gets the next one', async () => {
+    // As a controlled app might: `open` stays as it is the first time.
+    const state = reactive({ open: false, requests: 0 });
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h('div', { style: theme }, [
+            h(
+              Dialog,
+              {
+                headline: 'Unsaved changes',
+                open: state.open,
+                'onUpdate:open': (next: boolean) => {
+                  if (!next && ++state.requests === 1) return;
+                  state.open = next;
+                },
+              },
+              { actions: () => h('button', null, 'OK') },
+            ),
+          ]),
+      ),
+    );
+    state.open = true;
+    const root = screen.container.querySelector('dialog')!;
+    await expect.poll(() => root.matches(':modal')).toBe(true);
+    await userEvent.keyboard('{Escape}');
+    expect([state.requests, root.open]).toEqual([1, true]);
+    await userEvent.keyboard('{Escape}');
+    expect(state.requests).toBe(2);
+    await expect.poll(() => root.open).toBe(false);
+  });
+});
+
+describe('attachDialog', () => {
+  const build = () => {
+    const root = document.body.appendChild(document.createElement('dialog'));
+    for (const name of ['First', 'Second', 'Third']) {
+      root.appendChild(document.createElement('button')).textContent = name;
+    }
+    root.children[2]!.setAttribute('autofocus', '');
+    return { root, buttons: [...root.children] as HTMLElement[] };
+  };
+
+  test('initialFocus picks what to focus as it opens, ahead of autofocus', () => {
+    const { root, buttons } = build();
+    const handle = attachDialog(root, { onOpenChange: () => {}, initialFocus: () => buttons[1] });
+    handle.sync(true);
+    expect(document.activeElement).toBe(buttons[1]);
+    handle.detach();
+    root.remove();
+  });
+
+  test('without an element from initialFocus, autofocus decides', () => {
+    const { root, buttons } = build();
+    const handle = attachDialog(root, { onOpenChange: () => {}, initialFocus: () => null });
+    handle.sync(true);
+    expect(document.activeElement).toBe(buttons[2]);
+    handle.detach();
+    root.remove();
   });
 });

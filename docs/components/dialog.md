@@ -156,6 +156,7 @@ Change the name, then press Escape or click outside the dialog.
 ### Focus and keyboard
 
 - **Opening moves the focus to the first element Tab reaches**: the first button, or a radio group's checked button. An element marked `autofocus` takes it instead. Browsers differ here on their own (Chromium focused a scrolling list, WebKit a group's first radio button), so Rio moves the focus itself (Rio's choice).
+- For other adapters, `attachDialog` takes `initialFocus`, which comes ahead of `autofocus`: React, for one, doesn't leave `autoFocus` in the DOM, and focuses the element as it mounts, while the dialog is still closed.
 - Closing returns the focus to where it was before, usually the button that opened the dialog. The browser does this.
 - **Tab and Shift+Tab go round the dialog**, as the spec's keyboard table says. A native modal dialog lets Tab leave for the browser's own UI after its last element. Elements inside shadow roots aren't counted.
 - **Content that scrolls, with nothing inside that takes the focus, takes it itself** (`tabindex="0"`, Rio's choice), so the keyboard can scroll it. Chromium does this for scrolling elements already; WebKit doesn't. When the dialog opens, the focus still goes to the first button.

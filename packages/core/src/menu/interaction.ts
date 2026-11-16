@@ -583,11 +583,18 @@ export function attachSubMenu(
 ): SubMenuDomHandle {
   const view = item.ownerDocument.defaultView!;
   const parent = item.closest<HTMLElement>('[role="menu"]');
+  /** Whether the submenu is open, as last `sync`ed */
   let open = false;
+  /**
+   * Whether it is meant to be open: the last state asked for, or `sync`ed. An adapter may open it
+   * some time after it is asked to; moving on to another item in between still closes it.
+   */
+  let wanted = false;
   /** Whether the opening asked for moves the focus in: from the keyboard, not the pointer */
   let focusIn = false;
   const request = (next: boolean, focus = false) => {
     focusIn = focus;
+    wanted = next;
     options.onOpenChange(next);
   };
   const dom = setup(
@@ -619,7 +626,7 @@ export function attachSubMenu(
   };
   const opener: Opener = {
     hover() {
-      if (open || disabled() || timer !== undefined) return;
+      if (wanted || disabled() || timer !== undefined) return;
       timer = setTimeout(() => {
         timer = undefined;
         // Not once the menu around it has closed
@@ -628,7 +635,7 @@ export function attachSubMenu(
     },
     cancel() {
       stopTimer();
-      if (open) request(false);
+      if (wanted) request(false);
     },
   };
   if (parent) stateOf(parent).openers.set(item, opener);
@@ -699,6 +706,7 @@ export function attachSubMenu(
   return {
     sync(next) {
       open = next;
+      wanted = next;
       if (!next) stopTimer();
       dom.sync(next);
     },

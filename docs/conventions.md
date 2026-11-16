@@ -217,8 +217,8 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
   - Closing an overlay closes the overlays opened from it. The browser does this for nested popovers but not for a popover opened from a dialog.
   - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
   - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice, 2026-11-16).
-  - A `contain`ed overlay keeps clicks and presses in it, as tooltips and dialogs do: the overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape.
   - Each document keeps its own record, so overlays in an iframe stack among themselves.
+- **Adapters keep clicks and presses in a tooltip or a dialog**, in their framework's own events. The overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape. Core can't do it: frameworks such as React handle events at the app's root, so a native `stopPropagation()` in the overlay would hide every click in it from the app. Vue stops them on the overlay's element (`@click.stop`); a React adapter would stop React's events where its portal begins.
 - **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own:
   - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
   - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.
@@ -226,6 +226,8 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
   - `'replaced'`: another overlay opened, and this transient one gave way.
 
   All but `'escape'` arrive after the overlay closed, so the adapter has to follow them. A component's own API still reports through `onChange` and `on<State>Change` (see Core output); the reason is the primitive's.
+
+- **The adapter may apply `open` late, or not at all.** React, for one, renders state set outside its own events a task or more later. So `attachTooltip` and `attachSubMenu` go by the state they last asked for, or were synced to, rather than by what the DOM shows: a press between asking a tooltip to open and its opening still closes it, and moving on from an item closes the submenu it asked to open. An app may also turn a request down by leaving `open` as it is; the next event asks again. `attachDialog` asks at every Escape and click on the scrim, so a request turned down that way never blocks the next.
 
 - **Placing is done in JavaScript, not with CSS anchor positioning.** Anchor positioning reached every engine only in January 2026 (Chrome 125, Safari 26, Firefox 147), so older browsers would get no placement at all. JavaScript also tells the stylesheet which side the element ended up on (`data-side`), which the opening motion needs, and can anchor to a point, as context menus do. Revisit once anchor positioning is Baseline widely available (mid-2028).
 

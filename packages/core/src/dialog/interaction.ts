@@ -2,8 +2,9 @@
 // top layer above a scrim, and the rest of the page is inert. Built on `attachOverlay` (see
 // "Overlays" in docs/conventions.md).
 //
-// - Opening moves the focus to the first element Tab reaches in the dialog, or to the one marked
-//   `autofocus`. Closing returns it to where it was, which the browser does.
+// - Opening moves the focus to `initialFocus`, or else to the element marked `autofocus`, or else
+//   to the first element Tab reaches in the dialog. Closing returns it to where it was, which the
+//   browser does.
 // - Tab and Shift+Tab go round the dialog's elements instead of leaving for the browser's own UI.
 //   Content that scrolls, with nothing inside that takes the focus, takes it itself
 //   (`tabindex="0"`), so the keyboard can scroll it.
@@ -13,7 +14,6 @@
 // - The content scrolls when the dialog doesn't fit the window. `data-overflow-top` and
 //   `data-overflow-bottom` on the content say where more of it is hidden, for the dividers. Each
 //   opening starts it at the top.
-// - Clicks and presses in it stay in it, so a card or a row around the dialog doesn't take them.
 // - The page behind doesn't scroll while a dialog is open: the document's root gets
 //   `overflow: hidden`. A page that had a scrollbar keeps its space (`scrollbar-gutter: stable`),
 //   so the page doesn't shift sideways.
@@ -41,6 +41,11 @@ export interface DialogDomOptions {
    * renders the content from opening until then.
    */
   onClosed?: () => void;
+  /**
+   * The element to focus as the dialog opens, read then. Without it, or when it returns nothing,
+   * the focus goes to the element marked `autofocus`, or else to the first element Tab reaches.
+   */
+  initialFocus?: () => HTMLElement | null | undefined;
 }
 
 export interface DialogDomHandle {
@@ -135,6 +140,8 @@ const unlockScroll = (document: Document) => {
 export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions): DialogDomHandle {
   const document = root.ownerDocument;
 
+  // Each Escape and click on the scrim asks again: the app may turn a request down by leaving
+  // `open` as it is, and then the next one has to reach it.
   const cancel = (reason: DialogCancelReason) => {
     let prevented = false;
     options.onCancel?.({
@@ -151,7 +158,6 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
 
   const overlay = attachOverlay(root, {
     mode: 'modal',
-    contain: true,
     onClose: (reason) => (reason === 'escape' ? cancel('escape') : options.onOpenChange(false)),
   });
 
@@ -245,6 +251,12 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
   // the first radio button of a group rather than the checked one.
 
   const focusFirst = () => {
+    const chosen = options.initialFocus?.();
+    if (chosen) {
+      chosen.focus();
+      return;
+    }
+    // The browser has focused it already.
     if (root.querySelector('[autofocus]')) return;
     const tabbables = tabbablesIn(root);
     // Something to act on comes before the content it would scroll.

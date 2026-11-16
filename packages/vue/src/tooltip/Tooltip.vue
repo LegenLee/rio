@@ -70,7 +70,20 @@ onBeforeUnmount(() => handle?.detach());
 <template>
   <span ref="trigger" v-bind="tooltip.parts.trigger()">
     <slot />
-    <span ref="root" v-bind="tooltip.parts.root()">
+    <!-- Clicks and presses stay in the tooltip, so a card or a row around its element doesn't take
+         them. Keys go on, for Escape. -->
+    <span
+      ref="root"
+      v-bind="tooltip.parts.root()"
+      @click.stop
+      @auxclick.stop
+      @dblclick.stop
+      @pointerdown.stop
+      @pointerup.stop
+      @mousedown.stop
+      @mouseup.stop
+      @contextmenu.stop
+    >
       <span v-if="tooltip.showsSubhead()" v-bind="tooltip.parts.subhead()">{{ subhead }}</span>
       <span v-bind="tooltip.parts.supportingText()"><slot name="content">{{ text }}</slot></span>
       <span v-if="tooltip.showsActions()" v-bind="tooltip.parts.actions()">

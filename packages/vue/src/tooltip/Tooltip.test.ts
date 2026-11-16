@@ -371,4 +371,38 @@ describe('RioTooltip', () => {
       host.remove();
     });
   });
+
+  test('an app that shows it late still has it closed by a press in between', async () => {
+    // State set outside the framework's own events can render a task or more later, as React's
+    // does: here 300ms later.
+    const open = ref(false);
+    const requests: boolean[] = [];
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h('div', { style: { ...theme, padding: '80px' } }, [
+            h(
+              Tooltip,
+              {
+                text: 'Saves a copy',
+                open: open.value,
+                'onUpdate:open': (next: boolean) => {
+                  requests.push(next);
+                  setTimeout(() => (open.value = next), 300);
+                },
+              },
+              () => h(Button, null, () => 'Save'),
+            ),
+          ]),
+      ),
+    );
+    const save = screen.container.querySelector('button')!;
+    await userEvent.hover(save);
+    await expect.poll(() => requests).toEqual([true]);
+    await userEvent.click(save);
+    expect(requests).toEqual([true, false]);
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(open.value).toBe(false);
+    expect(screen.container.querySelector('.rio-tooltip')!.matches(':popover-open')).toBe(false);
+  });
 });
