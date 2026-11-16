@@ -32,6 +32,11 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Tooltip
 - [x] Dialog
 
+### v0.4
+
+- [x] Checkbox and radio button
+- [x] Text field
+
 ### Later
 
 - [ ] Link buttons

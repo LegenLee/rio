@@ -4,7 +4,9 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
-## [Unreleased]
+## [0.4.0] - 2026-11-17
+
+Form controls: the checkbox, radio buttons, and the text field. Core no longer keeps clicks inside tooltips and dialogs, which hid them from frameworks such as React; adapters do it with their own events, which breaks code that passed `contain` to `attachOverlay`.
 
 ### Added
 
@@ -22,6 +24,14 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 ### Fixed
 
 - With an adapter that applies `open` late, as React does for state set outside its own events, a press between asking a tooltip to open and its opening left it open afterward, and a submenu kept opening after the pointer had moved on. Both now go by the state they last asked for.
+
+### Not yet
+
+- Full-screen dialogs, which wait for a top app bar.
+- Text fields that grow with their text, and updating the value while an IME composes.
+- Opening a menu from its trigger with the arrow keys, horizontal menus, and filtering.
+- Link buttons (`href`), emphasized button labels, and a form value for the switch.
+- Language-specific line heights and variable font axes in the type scale.
 
 ## [0.3.0] - 2026-11-16
 
@@ -127,3 +137,4 @@ The first release: the M3E foundations and three components, the button, the ico
 [0.1.0]: https://github.com/LegenLee/rio/releases/tag/v0.1.0
 [0.2.0]: https://github.com/LegenLee/rio/releases/tag/v0.2.0
 [0.3.0]: https://github.com/LegenLee/rio/releases/tag/v0.3.0
+[0.4.0]: https://github.com/LegenLee/rio/releases/tag/v0.4.0
