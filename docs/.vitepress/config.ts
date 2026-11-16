@@ -35,9 +35,11 @@ export default defineConfig({
         items: [
           { text: 'Button', link: '/components/button' },
           { text: 'Button group', link: '/components/button-group' },
+          { text: 'Checkbox', link: '/components/checkbox' },
           { text: 'Dialog', link: '/components/dialog' },
           { text: 'Icon button', link: '/components/icon-button' },
           { text: 'Menu', link: '/components/menu' },
+          { text: 'Radio button', link: '/components/radio-button' },
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
           { text: 'Tooltip', link: '/components/tooltip' },

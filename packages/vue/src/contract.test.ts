@@ -4,15 +4,19 @@
 import {
   buttonGroupSkeleton,
   buttonSkeleton,
+  checkboxSkeleton,
   dialogSkeleton,
   createButton,
   createButtonGroup,
+  createCheckbox,
   createDialog,
   createIconButton,
   createMenu,
   createMenuDivider,
   createMenuGroup,
   createMenuItem,
+  createRadio,
+  createRadioGroup,
   createSubMenu,
   createSwitch,
   createTooltip,
@@ -22,18 +26,22 @@ import {
   menuGroupSkeleton,
   menuItemSkeleton,
   menuSkeleton,
+  radioGroupSkeleton,
+  radioSkeleton,
   splitButtonSkeleton,
   switchSkeleton,
   tooltipSkeleton,
   tooltipTriggerSkeleton,
   type ButtonGroupProps,
   type ButtonProps,
+  type CheckboxProps,
   type DialogContent,
   type DialogProps,
   type IconButtonProps,
   type MenuItemContent,
   type MenuItemProps,
   type MenuProps,
+  type RadioProps,
   type SplitButtonContent,
   type SplitButtonProps,
   type SubMenuProps,
@@ -48,6 +56,7 @@ import { render } from 'vitest-browser-vue';
 import { h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
+import Checkbox from './checkbox/Checkbox.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
 import Menu from './menu/Menu.vue';
@@ -55,6 +64,8 @@ import MenuDivider from './menu/MenuDivider.vue';
 import MenuGroup from './menu/MenuGroup.vue';
 import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
+import Radio from './radio/Radio.vue';
+import RadioGroup from './radio/RadioGroup.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import Tooltip from './tooltip/Tooltip.vue';
@@ -442,5 +453,47 @@ describe('RioDialog', () => {
     if (content.headline) {
       expect(findPart(root, dialogSkeleton, 'headline', api)?.textContent).toBe(props.headline);
     }
+  });
+});
+
+describe('RioCheckbox', () => {
+  test.each<[string, CheckboxProps]>([
+    ['unchecked', {}],
+    // Every prop away from its default
+    [
+      'checked, indeterminate, in error, and disabled',
+      { selected: true, indeterminate: true, error: true, disabled: true },
+    ],
+    ['checked and soft-disabled', { selected: true, softDisabled: true }],
+  ])('%s', async (_, props) => {
+    const screen = await render(Checkbox, { props });
+    expectSkeleton(rootOf(screen), checkboxSkeleton, createCheckbox({ props: () => props }));
+  });
+});
+
+describe('RioRadioGroup and RioRadio', () => {
+  test.each<[string, RadioProps]>([
+    ['unselected', {}],
+    // Every prop away from its default
+    ['selected and disabled', { selected: true, disabled: true }],
+    ['soft-disabled', { softDisabled: true }],
+  ])('%s', async (_, props) => {
+    const screen = await render(RadioGroup, {
+      props: { label: 'Ringtone', modelValue: props.selected ? 'luna' : undefined },
+      slots: {
+        default: () =>
+          h(Radio, { value: 'luna', disabled: props.disabled, softDisabled: props.softDisabled }),
+      },
+    });
+    const group = rootOf(screen);
+    expectSkeleton(
+      group,
+      radioGroupSkeleton,
+      createRadioGroup({ props: () => ({ label: 'Ringtone' }) }),
+    );
+    const root = group.firstElementChild!;
+    const name = root.querySelector('input')!.name;
+    const api = createRadio({ props: () => props, name: () => name, value: () => 'luna' });
+    expectSkeleton(root, radioSkeleton, api);
   });
 });

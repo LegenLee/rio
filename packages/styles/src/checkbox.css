@@ -1,0 +1,234 @@
+/*
+ * M3 checkbox.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-checkbox.scss`, Material 3 v34.0.21),
+ * which match the spec page. The checkmark is Material Web's: two bars that turn from the
+ * checkmark's lowest point, and lie flat, one over the other, for the indeterminate dash.
+ *
+ * The root lays out at the 48px target. It carries `data-selected` ('true' or 'false'),
+ * `data-indeterminate`, `data-error`, and `data-disabled`. The invisible input over it takes the
+ * presses; the ripple marks it and the state circle with `data-pressed`.
+ */
+
+.rio-checkbox {
+  /* Unselected */
+  --_outline: var(--rio-color-on-surface-variant);
+  --_outline-active: var(--rio-color-on-surface);
+  --_container: var(--rio-color-primary);
+  --_icon: var(--rio-color-on-primary);
+  /* The pressed color is the one the press leads to. */
+  --_state-layer: var(--rio-color-on-surface);
+  --_state-layer-pressed: var(--rio-color-primary);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  block-size: 48px;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rio-checkbox:is([data-selected='true'], [data-indeterminate]) {
+  --_state-layer: var(--rio-color-primary);
+  --_state-layer-pressed: var(--rio-color-on-surface);
+}
+
+.rio-checkbox[data-error] {
+  --_outline: var(--rio-color-error);
+  --_outline-active: var(--rio-color-error);
+  --_container: var(--rio-color-error);
+  --_icon: var(--rio-color-on-error);
+  --_state-layer: var(--rio-color-error);
+  --_state-layer-pressed: var(--rio-color-error);
+}
+
+.rio-checkbox[data-disabled] {
+  --_outline: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_outline-active: var(--_outline);
+  --_container: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_icon: var(--rio-color-surface);
+}
+
+.rio-checkbox__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rio-checkbox[data-disabled] .rio-checkbox__input {
+  cursor: default;
+}
+
+/* The 40px circle: the state layer on ::before, the ripple on ::after */
+.rio-checkbox__state {
+  position: absolute;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--rio-shape-corner-full);
+  color: var(--_state-layer);
+  pointer-events: none;
+}
+
+.rio-checkbox__state[data-pressed] {
+  color: var(--_state-layer-pressed);
+}
+
+.rio-checkbox__state::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+@media (hover: hover) {
+  .rio-checkbox__input:hover ~ .rio-checkbox__state::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+
+  .rio-checkbox__input:hover ~ .rio-checkbox__container {
+    border-color: var(--_outline-active);
+  }
+}
+
+.rio-checkbox__input:focus-visible ~ .rio-checkbox__state::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+.rio-checkbox__input:focus-visible ~ .rio-checkbox__state {
+  outline: var(--rio-state-focus-indicator-thickness) solid
+    var(--rio-focus-ring-color, var(--rio-color-secondary));
+  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+}
+
+.rio-checkbox__input:is(:focus-visible, [data-pressed]) ~ .rio-checkbox__container {
+  border-color: var(--_outline-active);
+}
+
+.rio-checkbox[data-disabled] .rio-checkbox__state {
+  display: none;
+}
+
+/* The box: an outline, and a fill that grows in from 60% when checked */
+
+.rio-checkbox__container {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 18px;
+  block-size: 18px;
+  border: 2px solid var(--_outline);
+  border-radius: 2px;
+  pointer-events: none;
+  transition: border-color var(--rio-motion-fast-effects);
+}
+
+.rio-checkbox__container::before,
+.rio-checkbox__icon {
+  position: absolute;
+  inset: -2px;
+  opacity: 0;
+  scale: 0.6;
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    scale var(--rio-motion-fast-spatial);
+}
+
+.rio-checkbox__container::before {
+  content: '';
+  border-radius: inherit;
+  background-color: var(--_container);
+}
+
+.rio-checkbox:is([data-selected='true'], [data-indeterminate]) .rio-checkbox__container {
+  border-color: transparent;
+}
+
+.rio-checkbox:is([data-selected='true'], [data-indeterminate]) .rio-checkbox__container::before,
+.rio-checkbox:is([data-selected='true'], [data-indeterminate]) .rio-checkbox__icon {
+  opacity: 1;
+  scale: 1;
+}
+
+/*
+ * The marks, measured in the 18px box from its top-left corner, in physical directions: a
+ * checkmark is drawn the same way in every writing direction. The short end is ::before, the long
+ * end ::after. Each turns about its own top-left corner, which the transforms move to the
+ * checkmark's lowest point, (7px, 14px). Unchecked, the marks keep the checkmark's turn with the
+ * long end at no length, so checking draws it out from that point.
+ */
+.rio-checkbox__icon::before,
+.rio-checkbox__icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  transform: scaleY(-1) translate(7px, -14px) rotate(45deg);
+  background-color: var(--_icon);
+  transition:
+    transform var(--rio-motion-fast-spatial),
+    width var(--rio-motion-fast-spatial),
+    height var(--rio-motion-fast-spatial);
+}
+
+.rio-checkbox__icon::before {
+  width: 2px;
+  height: 2px;
+}
+
+.rio-checkbox__icon::after {
+  width: 0;
+  height: 2px;
+}
+
+/* Checked: the short end is √(4² + 4²) long, the long end √(8² + 8²). */
+.rio-checkbox[data-selected='true'] .rio-checkbox__icon::before {
+  height: 5.657px;
+}
+
+.rio-checkbox[data-selected='true'] .rio-checkbox__icon::after {
+  width: 11.314px;
+}
+
+/* Indeterminate: both lie flat across the middle, the short end hidden under the long one. */
+.rio-checkbox[data-indeterminate] .rio-checkbox__icon::before,
+.rio-checkbox[data-indeterminate] .rio-checkbox__icon::after {
+  transform: scaleY(-1) translate(4px, -10px) rotate(0deg);
+}
+
+.rio-checkbox[data-indeterminate] .rio-checkbox__icon::after {
+  width: 10px;
+}
+
+@media (forced-colors: active) {
+  .rio-checkbox {
+    forced-color-adjust: none;
+    --_outline: CanvasText;
+    --_outline-active: CanvasText;
+    --_container: Highlight;
+    --_icon: HighlightText;
+  }
+
+  .rio-checkbox[data-disabled] {
+    --_outline: GrayText;
+    --_container: GrayText;
+    --_icon: Canvas;
+  }
+
+  .rio-checkbox__state::before,
+  .rio-checkbox__state::after {
+    display: none;
+  }
+
+  .rio-checkbox__input:focus-visible ~ .rio-checkbox__state {
+    outline-color: Highlight;
+  }
+}

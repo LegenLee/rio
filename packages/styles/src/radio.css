@@ -1,0 +1,175 @@
+/*
+ * M3 radio buttons, and the group that stacks them.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-radio-button.scss`, Material 3
+ * v34.0.21), which match the spec page. The ring and the dot are Material Web's: a 20px ring with
+ * a 2px stroke, and a 10px dot that grows in when selected.
+ *
+ * The root lays out at the 48px target. It carries `data-selected` ('true' or 'false') and
+ * `data-disabled`. The invisible input over it takes the presses; the ripple marks it and the
+ * state circle with `data-pressed`.
+ */
+
+.rio-radio-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.rio-radio {
+  /* Unselected */
+  --_ring: var(--rio-color-on-surface-variant);
+  --_ring-active: var(--rio-color-on-surface);
+  --_dot: var(--rio-color-primary);
+  /* The pressed color is the one the press leads to. */
+  --_state-layer: var(--rio-color-on-surface);
+  --_state-layer-pressed: var(--rio-color-primary);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  block-size: 48px;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rio-radio[data-selected='true'] {
+  --_ring: var(--rio-color-primary);
+  --_ring-active: var(--rio-color-primary);
+  --_state-layer: var(--rio-color-primary);
+  --_state-layer-pressed: var(--rio-color-on-surface);
+}
+
+.rio-radio[data-disabled] {
+  --_ring: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_ring-active: var(--_ring);
+  --_dot: var(--_ring);
+}
+
+.rio-radio__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rio-radio[data-disabled] .rio-radio__input {
+  cursor: default;
+}
+
+/* The 40px circle: the state layer on ::before, the ripple on ::after */
+.rio-radio__state {
+  position: absolute;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--rio-shape-corner-full);
+  color: var(--_state-layer);
+  pointer-events: none;
+}
+
+.rio-radio__state[data-pressed] {
+  color: var(--_state-layer-pressed);
+}
+
+.rio-radio__state::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+@media (hover: hover) {
+  .rio-radio__input:hover ~ .rio-radio__state::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+
+  .rio-radio__input:hover ~ .rio-radio__icon {
+    border-color: var(--_ring-active);
+  }
+}
+
+.rio-radio__input:focus-visible ~ .rio-radio__state::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+.rio-radio__input:focus-visible ~ .rio-radio__state {
+  outline: var(--rio-state-focus-indicator-thickness) solid
+    var(--rio-focus-ring-color, var(--rio-color-secondary));
+  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+}
+
+.rio-radio__input:is(:focus-visible, [data-pressed]) ~ .rio-radio__icon {
+  border-color: var(--_ring-active);
+}
+
+.rio-radio[data-disabled] .rio-radio__state {
+  display: none;
+}
+
+/* The ring, and the dot inside it on ::after */
+
+.rio-radio__icon {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  border: 2px solid var(--_ring);
+  border-radius: var(--rio-shape-corner-full);
+  pointer-events: none;
+  transition: border-color var(--rio-motion-fast-effects);
+}
+
+.rio-radio__icon::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background-color: var(--_dot);
+  opacity: 0;
+  scale: 0;
+  transition:
+    opacity var(--rio-motion-fast-effects),
+    scale var(--rio-motion-fast-spatial);
+}
+
+.rio-radio[data-selected='true'] .rio-radio__icon::after {
+  opacity: 1;
+  scale: 1;
+}
+
+@media (forced-colors: active) {
+  .rio-radio {
+    forced-color-adjust: none;
+    --_ring: CanvasText;
+    --_ring-active: CanvasText;
+    --_dot: CanvasText;
+  }
+
+  .rio-radio[data-selected='true'] {
+    --_ring: Highlight;
+    --_ring-active: Highlight;
+    --_dot: Highlight;
+  }
+
+  .rio-radio[data-disabled] {
+    --_ring: GrayText;
+    --_dot: GrayText;
+  }
+
+  .rio-radio__state::before,
+  .rio-radio__state::after {
+    display: none;
+  }
+
+  .rio-radio__input:focus-visible ~ .rio-radio__state {
+    outline-color: Highlight;
+  }
+}
