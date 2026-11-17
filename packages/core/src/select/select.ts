@@ -72,7 +72,7 @@ export interface SelectOptions {
   ids: { field: string; label: string; listbox: string; supportingText: string };
   /**
    * The name the app gave the field itself, without a `label`: its `aria-label`, or the ids in its
-   * `aria-labelledby`. The list takes the same name.
+   * `aria-labelledby`. The list, which the app's attributes don't reach, takes the same name.
    */
   appName?: () => { label?: string; labelledBy?: string };
   /** Called with the requested selection. */
@@ -278,7 +278,7 @@ export function createSelect(options: SelectOptions): SelectApi {
           id: ids.field,
           role: 'combobox',
           tabindex: p.disabled ? undefined : '0',
-          'aria-labelledby': showsLabel() ? ids.label : options.appName?.().labelledBy,
+          'aria-labelledby': showsLabel() ? ids.label : undefined,
           'aria-haspopup': 'listbox',
           'aria-expanded': String(p.open),
           'aria-controls': ids.listbox,

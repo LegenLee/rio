@@ -2,6 +2,7 @@
 import {
   attachSelect,
   createSelect,
+  mergePartAttrs,
   type SelectDomHandle,
   type SelectProps,
   type SelectSelected,
@@ -180,7 +181,12 @@ onBeforeUnmount(() => handle?.detach());
         <div v-bind="select.parts.content()">
           <div
             ref="field"
-            v-bind="{ ...$attrs, class: undefined, style: undefined, ...select.parts.field() }"
+            v-bind="
+              mergePartAttrs(
+                { ...$attrs, class: undefined, style: undefined },
+                select.parts.field(),
+              )
+            "
           >
             <span v-bind="select.parts.value()">
               <slot

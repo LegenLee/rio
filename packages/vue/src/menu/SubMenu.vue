@@ -2,6 +2,7 @@
 import {
   attachSubMenu,
   createSubMenu,
+  mergePartAttrs,
   type MenuSelected,
   type SubMenuDomHandle,
   type SubMenuProps,
@@ -11,16 +12,7 @@ import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/menu.css';
-import {
-  inject,
-  mergeProps,
-  onBeforeUnmount,
-  onMounted,
-  provide,
-  ref,
-  useTemplateRef,
-  watch,
-} from 'vue';
+import { inject, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue';
 import { vRipple } from '../ripple/ripple';
 import { menuContextOf, menuKey } from './context';
 
@@ -95,7 +87,9 @@ onBeforeUnmount(() => handle?.detach());
   <button
     ref="itemElement"
     v-ripple
-    v-bind="mergeProps($attrs, item.parts.root())"
+    v-bind="mergePartAttrs({ ...$attrs, class: undefined, style: undefined }, item.parts.root())"
+    :class="$attrs.class"
+    :style="$attrs.style"
     @click="item.handleClick"
   >
     <span v-bind="item.parts.touch()" />

@@ -14,6 +14,7 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 
 ### Fixed
 
+- Attributes the app gives `RioTextField`, `RioSelect`, `RioCheckbox`, `RioRadio`, or `RioSubMenu`, such as `aria-describedby` or `aria-invalid`, were dropped wherever Rio had no value of its own for them. They now stay. Rio's own values still win, and `aria-describedby` and `aria-labelledby` list the app's ids first, then Rio's. Adapters merge them with the new `mergePartAttrs` in `@rio-m3e/core`.
 - In a menu, once letters had moved the focus to an item, Space no longer pressed items until the menu closed, even after typing had stopped. It now presses the item once the letters typed stop adding up, after 500ms.
 
 ## [0.4.0] - 2026-11-17

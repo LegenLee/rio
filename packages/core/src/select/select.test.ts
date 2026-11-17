@@ -88,8 +88,8 @@ describe('createSelect', () => {
       'aria-label': undefined,
       'aria-labelledby': 'heading',
     });
-    expect(select({ labelledBy: 'heading' }).parts.field()['aria-labelledby']).toBe('heading');
-    expect(select({}).parts.field()['aria-labelledby']).toBeUndefined();
+    // The field keeps the app's own, which `mergePartAttrs` leaves in place.
+    expect(select({ labelledBy: 'heading' }).parts.field()['aria-labelledby']).toBeUndefined();
     // With a label, the label names both.
     expect(setup().select.parts.listbox()['aria-label']).toBeUndefined();
   });
