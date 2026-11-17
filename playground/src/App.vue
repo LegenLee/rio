@@ -17,8 +17,11 @@ import {
 import {
   mdiBookmark,
   mdiBookmarkOutline,
+  mdiCalendar,
   mdiCheck,
   mdiChevronDown,
+  mdiChevronLeft,
+  mdiChevronRight,
   mdiClockOutline,
   mdiClose,
   mdiContentCopy,
@@ -34,9 +37,11 @@ import {
   mdiHeart,
   mdiHeartOutline,
   mdiMagnify,
+  mdiMenuDown,
   mdiMenuRight,
   mdiOpenInNew,
   mdiPause,
+  mdiPencil,
   mdiRestore,
   mdiShareVariant,
   mdiSkipNext,
@@ -59,6 +64,8 @@ import {
   RioButton,
   RioButtonGroup,
   RioCheckbox,
+  RioDatePicker,
+  RioDatePickerDialog,
   RioDialog,
   RioIconButton,
   RioMenu,
@@ -165,6 +172,10 @@ const selects = reactive<{ size?: SelectSelected; font: SelectSelected; toppings
 );
 const PIZZA_TOPPINGS = { cheese: 'Cheese', mushroom: 'Mushroom', olive: 'Olive', basil: 'Basil' };
 const selectSent = ref('');
+const dates = reactive<{ docked?: string; modal?: string; korean?: string; dialog?: string }>({
+  korean: '2026-11-27',
+});
+const dateDialogOpen = ref(false);
 const submitSelects = (event: SubmitEvent) => {
   const data = new FormData(event.target as HTMLFormElement);
   selectSent.value = [...data].map(([key, value]) => `${key}=${String(value)}`).join(' ');
@@ -982,6 +993,70 @@ watchEffect(() => {
         <RioButton type="reset" variant="text">Reset</RioButton>
       </form>
       <code>{{ selects }} {{ selectSent }}</code>
+    </section>
+
+    <section class="text-fields">
+      <div class="controls">
+        <RioDatePicker v-model="dates.docked" label="Departure" clearable min="2026-01-01">
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+          <template #previous-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronLeft" fill="currentColor" />
+            </svg>
+          </template>
+          <template #next-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronRight" fill="currentColor" />
+            </svg>
+          </template>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDatePicker>
+        <RioDatePicker v-model="dates.modal" variant="modal" label="Event date">
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+          <template #edit-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiPencil" fill="currentColor" />
+            </svg>
+          </template>
+          <template #previous-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronLeft" fill="currentColor" />
+            </svg>
+          </template>
+          <template #next-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronRight" fill="currentColor" />
+            </svg>
+          </template>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDatePicker>
+        <RioDatePicker v-model="dates.korean" label="출발일" locale="ko-KR">
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDatePicker>
+        <RioButton variant="tonal" @click="dateDialogOpen = true">Due date</RioButton>
+        <RioDatePickerDialog v-model="dates.dialog" v-model:open="dateDialogOpen" />
+      </div>
+      <code>{{ dates }}</code>
     </section>
 
     <section class="selection">

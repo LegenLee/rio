@@ -5,7 +5,15 @@ import {
   buttonGroupSkeleton,
   buttonLinkSkeleton,
   buttonSkeleton,
+  calendarSkeleton,
   checkboxSkeleton,
+  createCalendar,
+  createDatePicker,
+  createDatePickerDialog,
+  datePickerDialogSkeleton,
+  datePickerSkeleton,
+  initialPickerState,
+  messagesFor,
   dialogSkeleton,
   createButton,
   createButtonGroup,
@@ -66,12 +74,15 @@ import {
   type TooltipProps,
 } from '@rio-m3e/core';
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
-import { h } from 'vue';
+import { createApp, h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
 import Checkbox from './checkbox/Checkbox.vue';
+import DatePicker from './date-picker/DatePicker.vue';
+import DatePickerCalendar from './date-picker/DatePickerCalendar.vue';
+import DatePickerDialog from './date-picker/DatePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
 import Menu from './menu/Menu.vue';
@@ -708,5 +719,119 @@ describe('RioSelectOption', () => {
       select: () => select,
     });
     expectSkeleton(element, selectOptionSkeleton, api);
+  });
+});
+
+describe('RioDatePicker', () => {
+  const messages = () => messagesFor('en').datePicker;
+
+  test.each([
+    ['docked, submitting with a form', { name: 'when', modelValue: '2026-11-27' }],
+    ['modal', { variant: 'modal' as const }],
+  ])('%s', async (_, props) => {
+    const screen = await render(DatePicker, { props: { locale: 'en-US', ...props } });
+    const value = 'modelValue' in props ? props.modelValue : undefined;
+    const api = createDatePicker({
+      props: () => ({
+        variant: 'variant' in props ? props.variant : undefined,
+        name: 'name' in props ? props.name : undefined,
+        value,
+        locale: 'en-US',
+      }),
+      messages,
+      state: () => initialPickerState(value, 'en-US'),
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+    expectSkeleton(rootOf(screen), datePickerSkeleton, api);
+  });
+});
+
+describe('the date pickers’ calendar', () => {
+  test.each([
+    ['docked, the days', 'docked' as const, 'days' as const],
+    ['docked, the months', 'docked' as const, 'months' as const],
+    ['modal, the years', 'modal' as const, 'years' as const],
+  ])('%s', async (_, variant, view) => {
+    const props = {
+      variant,
+      selected: '2026-11-27',
+      month: '2026-11',
+      focused: '2026-11-27',
+      view,
+      locale: 'en-US',
+      min: '2026-11-05',
+    };
+    const screen = await render(DatePickerCalendar, {
+      props: { ...props, messages: messagesFor('en').datePicker },
+    });
+    const api = createCalendar({
+      props: () => props,
+      messages: () => messagesFor('en').datePicker,
+      onSelect: noop,
+      onMonthChange: noop,
+      onFocusChange: noop,
+      onViewChange: noop,
+    });
+    const root = rootOf(screen);
+    expectSkeleton(root, calendarSkeleton, api);
+    // The days carry the attributes core gives each.
+    if (view === 'days') {
+      for (const date of ['2026-11-27', '2026-11-01', '2026-12-01']) {
+        const day = root.querySelector(`[data-date="${date}"]`)!;
+        for (const [name, value] of Object.entries(api.parts.day(date))) {
+          if (name === 'class') continue;
+          expect(day.getAttribute(name), `${date} ${name}`).toBe(value ?? null);
+        }
+      }
+    }
+  });
+});
+
+describe('RioDatePickerDialog', () => {
+  test('closed, it renders nothing inside', async () => {
+    const screen = await render(DatePickerDialog, { props: { locale: 'en-US' } });
+    const root = rootOf(screen);
+    const api = createDatePickerDialog({
+      props: () => ({ locale: 'en-US', rendered: false }),
+      messages: () => messagesFor('en').datePicker,
+      state: () => initialPickerState(undefined, 'en-US'),
+      ids: { title: 'x', headline: 'y' },
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+    expectSkeleton(root, datePickerDialogSkeleton, {
+      ...api,
+      parts: { ...api.parts, root: () => ({ class: api.parts.root().class }) },
+    });
+  });
+
+  // Mounted with `createApp`: vitest-browser-vue moves what it renders into place afterwards,
+  // which closes a dialog that is open by then.
+  test.each(['calendar', 'input'] as const)('open, in the %s', async (mode) => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const app = createApp(() =>
+      h(DatePickerDialog, { locale: 'en-US', open: true, initialMode: mode }),
+    );
+    app.mount(host);
+    onTestFinished(() => {
+      app.unmount();
+      host.remove();
+    });
+    const root = host.querySelector('dialog')!;
+    await vi.waitFor(() => expect(root.open).toBe(true));
+    const title = root.querySelector('.rio-date-picker-dialog__title')!.id;
+    const api = createDatePickerDialog({
+      props: () => ({ locale: 'en-US', rendered: true }),
+      messages: () => messagesFor('en').datePicker,
+      state: () => ({ ...initialPickerState(undefined, 'en-US'), mode }),
+      ids: { title, headline: title.replace(/-title$/, '-headline') },
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+    expectSkeleton(root, datePickerDialogSkeleton, api);
   });
 });

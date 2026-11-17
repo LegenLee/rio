@@ -1,8 +1,12 @@
 export { default as RioButton } from './button/Button.vue';
 export { default as RioButtonGroup } from './button-group/ButtonGroup.vue';
 export { default as RioCheckbox } from './checkbox/Checkbox.vue';
+export { default as RioDatePicker } from './date-picker/DatePicker.vue';
+export { default as RioDatePickerDialog } from './date-picker/DatePickerDialog.vue';
 export { default as RioDialog } from './dialog/Dialog.vue';
 export { default as RioIconButton } from './icon-button/IconButton.vue';
+export { localeKey, rioLocale, useLocale, type RioLocaleOptions } from './locale/locale';
+export { default as RioLocaleProvider } from './locale/LocaleProvider.vue';
 export { default as RioMenu } from './menu/Menu.vue';
 export { default as RioMenuDivider } from './menu/MenuDivider.vue';
 export { default as RioMenuGroup } from './menu/MenuGroup.vue';

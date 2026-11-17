@@ -60,6 +60,12 @@ packages/
     checkbox/
       checkbox.ts           props, parts, and what a change asks for
       checkbox.test.ts
+    date-picker/
+      date.ts               ISO dates and months, and writing and reading them as a language does
+      date-picker.ts        the calendar, the field's reading, and the docked and modal pickers' parts
+      interaction.ts        the calendar's keys and focus; the docked calendar's popover (DOM, tested through the Vue components)
+      date.test.ts
+      date-picker.test.ts
     dialog/
       dialog.ts             props, parts, and the role
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
@@ -67,6 +73,11 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    locale/
+      locale.ts             the language a component uses, and the first day of its week (see docs/guide/languages.md)
+      messages.ts           the message tables' shape, lookup, and placeholders
+      messages/             one table per language: en.ts, ko.ts
+      locale.test.ts
     menu/
       menu.ts               the menu, its items, submenus, groups, and dividers: props, parts, selection
       interaction.ts        opening, placement, keyboard, focus, and submenus (DOM, tested through the Vue components)
@@ -91,7 +102,7 @@ packages/
       tooltip.ts            plain and rich tooltips: props, parts, roles, placement
       interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
       tooltip.test.ts
-    parts.ts                PartAttrs, the type of every part's attributes, and CancelableEvent (see Core output)
+    parts.ts                PartAttrs, CancelableEvent, and mergePartAttrs (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
       typeahead.ts          moving by typing the start of a label, for menu and select
@@ -196,6 +207,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
 - **The app's attributes and a part's meet in `mergePartAttrs`**, wherever an adapter passes the app's attributes to an element of the component's own, such as a text field's input. A part's `undefined` means Rio sets nothing there, not that the app's value goes, so the app's value stays. A value the part sets wins, except in an id list (`aria-describedby`, `aria-labelledby`, ...), where the app's ids come first and the part's follow: an app's own description of an input and Rio's supporting text both reach assistive technology. In `aria-labelledby` the names add up too: an app's own label and Rio's `label` make one name. `class` and `style` are merged the framework's way. `packages/vue/src/attrs.test.ts` holds every such component to it.
   - On a component's root, the framework's own way of passing attributes on applies instead. In Vue, its fallthrough lets the app's values win there, Rio's included, id lists too: an app's `aria-labelledby` on a dialog replaces the headline's id rather than adding to it.
+- **Text a component shows comes from `core`'s message tables** (`locale/messages/`), in the language the adapter resolves: the component's own `locale`, or one provided the framework's way (in Vue, `RioLocaleProvider` and the `rioLocale` plugin, through `provide`; in React, a context), with `resolveLocale` filling in the rest. A component's `messages` prop replaces any of its text. Dates and numbers go through `Intl` in the same language. See `docs/guide/languages.md`.
 - **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
 
 For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`.

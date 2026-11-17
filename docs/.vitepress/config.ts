@@ -24,7 +24,10 @@ export default defineConfig({
     sidebar: [
       {
         text: 'Guide',
-        items: [{ text: 'Getting started', link: '/guide/getting-started' }],
+        items: [
+          { text: 'Getting started', link: '/guide/getting-started' },
+          { text: 'Languages', link: '/guide/languages' },
+        ],
       },
       {
         text: 'Foundations',
@@ -36,6 +39,7 @@ export default defineConfig({
           { text: 'Button', link: '/components/button' },
           { text: 'Button group', link: '/components/button-group' },
           { text: 'Checkbox', link: '/components/checkbox' },
+          { text: 'Date picker', link: '/components/date-picker' },
           { text: 'Dialog', link: '/components/dialog' },
           { text: 'Icon button', link: '/components/icon-button' },
           { text: 'Menu', link: '/components/menu' },
