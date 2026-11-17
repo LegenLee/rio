@@ -70,8 +70,11 @@ describe('messages', () => {
   });
 
   test('every language has every message', () => {
-    const keys = (locale: string) => Object.keys(messagesFor(locale).datePicker).sort();
-    expect(keys('ko')).toEqual(keys('en'));
+    const keys = (locale: string) =>
+      Object.entries(messagesFor(locale)).flatMap(([group, messages]) =>
+        Object.keys(messages).map((key) => `${group}.${key}`),
+      );
+    expect(keys('ko').sort()).toEqual(keys('en').sort());
   });
 
   test('placeholders are filled in, and unknown ones left', () => {

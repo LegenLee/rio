@@ -42,6 +42,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Link buttons
 - [x] Select
 - [x] Date picker
+- [x] Time picker
 
 ### Later
 

@@ -46,8 +46,41 @@ export interface DatePickerMessages {
   unavailable: string;
 }
 
+/** The time picker's text */
+export interface TimePickerMessages {
+  /** The dialog's name on the dial */
+  selectTime: string;
+  /** The dialog's name in the text input */
+  enterTime: string;
+  /** The hour field's name, and its supporting text in the text input */
+  hour: string;
+  minute: string;
+  /** The dial's hour toggle, with the hour it holds; `{hour}` is the hour as the clock shows it */
+  hourToggle: string;
+  /** The dial's minute toggle; `{minute}` is the minute */
+  minuteToggle: string;
+  /** A dial's hour on a 12-hour clock; `{hour}` is the hour */
+  dialHour12: string;
+  /** A dial's hour on a 24-hour clock */
+  dialHour24: string;
+  /** A dial's minute; `{minute}` is the minute */
+  dialMinute: string;
+  /** Names the AM and PM buttons together */
+  period: string;
+  /** The dialog's mode button on the dial, and in the text input */
+  switchToInput: string;
+  switchToDial: string;
+  cancel: string;
+  ok: string;
+  /** Typed hours outside 1 to 12, or 0 to 23 */
+  invalidHour12: string;
+  invalidHour24: string;
+  invalidMinute: string;
+}
+
 export interface RioMessages {
   datePicker: DatePickerMessages;
+  timePicker: TimePickerMessages;
 }
 
 const TABLES: Record<string, RioMessages> = { en, ko };

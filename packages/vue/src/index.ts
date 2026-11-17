@@ -20,4 +20,6 @@ export { default as RioSelectOption } from './select/SelectOption.vue';
 export { default as RioSplitButton } from './split-button/SplitButton.vue';
 export { default as RioSwitch } from './switch/Switch.vue';
 export { default as RioTextField } from './text-field/TextField.vue';
+export { default as RioTimeInput } from './time-picker/TimeInput.vue';
+export { default as RioTimePickerDialog } from './time-picker/TimePickerDialog.vue';
 export { default as RioTooltip } from './tooltip/Tooltip.vue';

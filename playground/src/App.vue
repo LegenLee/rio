@@ -36,6 +36,7 @@ import {
   mdiFormatUnderline,
   mdiHeart,
   mdiHeartOutline,
+  mdiKeyboardOutline,
   mdiMagnify,
   mdiMenuDown,
   mdiMenuRight,
@@ -80,6 +81,8 @@ import {
   RioSubMenu,
   RioSwitch,
   RioTextField,
+  RioTimeInput,
+  RioTimePickerDialog,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
@@ -176,6 +179,13 @@ const dates = reactive<{ docked?: string; modal?: string; korean?: string; dialo
   korean: '2026-11-27',
 });
 const dateDialogOpen = ref(false);
+const times = reactive<{ inline?: string; german?: string; dialog?: string; horizontal?: string }>({
+  inline: '07:30',
+  german: '19:05',
+  horizontal: '14:00',
+});
+const timeDialogOpen = ref(false);
+const timeHorizontalOpen = ref(false);
 const submitSelects = (event: SubmitEvent) => {
   const data = new FormData(event.target as HTMLFormElement);
   selectSent.value = [...data].map(([key, value]) => `${key}=${String(value)}`).join(' ');
@@ -1077,6 +1087,45 @@ watchEffect(() => {
         <RioDatePickerDialog v-model="dates.dialog" v-model:open="dateDialogOpen" />
       </div>
       <code>{{ dates }}</code>
+    </section>
+
+    <section class="text-fields">
+      <div class="controls">
+        <RioTimeInput v-model="times.inline" />
+        <RioTimeInput v-model="times.german" locale="de-DE" />
+        <RioButton variant="tonal" @click="timeDialogOpen = true">Alarm</RioButton>
+        <RioTimePickerDialog v-model="times.dialog" v-model:open="timeDialogOpen">
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #clock-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiClockOutline" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimePickerDialog>
+        <RioButton variant="tonal" @click="timeHorizontalOpen = true">Start, 24 hours</RioButton>
+        <RioTimePickerDialog
+          v-model="times.horizontal"
+          v-model:open="timeHorizontalOpen"
+          :hour-cycle="24"
+          layout="horizontal"
+        >
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #clock-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiClockOutline" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimePickerDialog>
+      </div>
+      <code>{{ times }}</code>
     </section>
 
     <section class="selection">

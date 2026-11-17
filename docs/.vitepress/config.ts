@@ -48,6 +48,7 @@ export default defineConfig({
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
           { text: 'Text field', link: '/components/text-field' },
+          { text: 'Time picker', link: '/components/time-picker' },
           { text: 'Tooltip', link: '/components/tooltip' },
         ],
       },

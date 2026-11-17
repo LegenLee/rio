@@ -31,5 +31,8 @@ export * from './switch/handle';
 export * from './switch/switch';
 export * from './text-field/interaction';
 export * from './text-field/text-field';
+export * from './time-picker/interaction';
+export * from './time-picker/time';
+export * from './time-picker/time-picker';
 export * from './tooltip/interaction';
 export * from './tooltip/tooltip';

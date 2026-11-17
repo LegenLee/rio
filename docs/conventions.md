@@ -98,6 +98,12 @@ packages/
       text-field.ts         filled and outlined: props, parts, the label, errors, and the counter
       interaction.ts        a press on the field focuses the input; a text area's least height (DOM, tested through the Vue component)
       text-field.test.ts
+    time-picker/
+      time.ts               HH:MM times, and a language's clock and its AM and PM
+      time-picker.ts        the input picker and the dialog: their parts, the dial's numbers, and reading typed times
+      interaction.ts        the dial's pointer and keys, and AM and PM's arrow keys (DOM, tested through the Vue components)
+      time.test.ts
+      time-picker.test.ts
     tooltip/
       tooltip.ts            plain and rich tooltips: props, parts, roles, placement
       interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
@@ -196,6 +202,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **Bundles are HTML attributes**, as `setAttribute` would take them:
   - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
+  - `style` carries only Rio's own custom properties, as `name: value` declarations separated by `;` (the time picker's `--rio-time-picker-angle`), for values the stylesheet can't select on.
 - **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
   - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
@@ -204,7 +211,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
   - A handler takes any event it can cancel (`CancelableEvent`, which only needs `preventDefault()`): a DOM event, or a framework's own, such as React's synthetic events. `core` hands the same event back where it reports one (`onClick(event)`), so the components are generic over the event's type, with `MouseEvent` as the default, and the app gets its framework's event.
 - **Callbacks to the adapter are named by what they report: `onChange` for state, the event's name for anything else.** A request to change the state the adapter owns is `onChange`, with the requested value, which the adapter may or may not accept: the `selected` of the button, the icon button, and the switch, and the button group's selection. Anything else gets its own name, such as the button's `onClick`. The adapter maps `onChange` to its framework's way of reporting state, such as `update:selected` for `v-model:selected` in Vue.
   - A component that owns more than one state keeps `onChange` for its main value and names the others `on<State>Change`: a menu would have `onChange` for its selection and `onOpenChange` for whether it is open. In Vue they become `v-model` and `v-model:open`.
-- **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
+- **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, `style` to an object, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
 - **The app's attributes and a part's meet in `mergePartAttrs`**, wherever an adapter passes the app's attributes to an element of the component's own, such as a text field's input. A part's `undefined` means Rio sets nothing there, not that the app's value goes, so the app's value stays. A value the part sets wins, except in an id list (`aria-describedby`, `aria-labelledby`, ...), where the app's ids come first and the part's follow: an app's own description of an input and Rio's supporting text both reach assistive technology. In `aria-labelledby` the names add up too: an app's own label and Rio's `label` make one name. `class` and `style` are merged the framework's way. `packages/vue/src/attrs.test.ts` holds every such component to it.
   - On a component's root, the framework's own way of passing attributes on applies instead. In Vue, its fallthrough lets the app's values win there, Rio's included, id lists too: an app's `aria-labelledby` on a dialog replaces the headline's id rather than adding to it.
 - **Text a component shows comes from `core`'s message tables** (`locale/messages/`), in the language the adapter resolves: the component's own `locale`, or one provided the framework's way (in Vue, `RioLocaleProvider` and the `rioLocale` plugin, through `provide`; in React, a context), with `resolveLocale` filling in the rest. A component's `messages` prop replaces any of its text. Dates and numbers go through `Intl` in the same language. See `docs/guide/languages.md`.

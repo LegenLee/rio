@@ -9,6 +9,14 @@ import {
   checkboxSkeleton,
   createCalendar,
   createDatePicker,
+  createTimePicker,
+  initialTimeState,
+  timePickerDialogSkeleton,
+  timePickerSkeleton,
+  type PartAttrs,
+  type TimePickerApi,
+  type TimePickerProps,
+  type TimePickerState,
   createDatePickerDialog,
   datePickerDialogSkeleton,
   datePickerSkeleton,
@@ -76,6 +84,7 @@ import {
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
+import { userEvent } from 'vitest/browser';
 import { createApp, h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
@@ -97,6 +106,8 @@ import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import TextField from './text-field/TextField.vue';
+import TimeInput from './time-picker/TimeInput.vue';
+import TimePickerDialog from './time-picker/TimePickerDialog.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -833,5 +844,168 @@ describe('RioDatePickerDialog', () => {
       onStateChange: noop,
     });
     expectSkeleton(root, datePickerDialogSkeleton, api);
+  });
+});
+
+/** An element inside a part that holds content, against the attributes core gives it */
+const expectPart = (
+  element: Element | null | undefined,
+  tag: keyof HTMLElementTagNameMap,
+  attrs: PartAttrs,
+) => {
+  expect(element, `${tag}.${attrs.class}`).toBeTruthy();
+  expectSkeleton<'part', never>(
+    element!,
+    { part: 'part', tag, content: true },
+    { parts: { part: () => attrs } },
+  );
+};
+
+/** What the time pickers' fields, AM and PM, and dial hold */
+const expectTimePickerContent = (root: Element, api: TimePickerApi) => {
+  const fields = root.querySelector('.rio-time-picker__fields')!;
+  if (api.textInput()) {
+    const [hour, separator, minute] = fields.children;
+    expectPart(hour, 'span', api.parts.unit());
+    expectPart(hour!.children[0], 'input', api.parts.hourField());
+    expectPart(hour!.children[1], 'span', api.parts.hourLabel());
+    expectPart(separator, 'span', api.parts.separator());
+    expectPart(minute, 'span', api.parts.unit());
+    expectPart(minute!.children[0], 'input', api.parts.minuteField());
+    expectPart(minute!.children[1], 'span', api.parts.minuteLabel());
+    expect(fields.children).toHaveLength(3);
+  } else {
+    const [hour, separator, minute] = fields.children;
+    expectPart(hour, 'button', api.parts.hourField());
+    expectPart(separator, 'span', api.parts.separator());
+    expectPart(minute, 'button', api.parts.minuteField());
+    expect(fields.children).toHaveLength(3);
+  }
+  const period = root.querySelector('.rio-time-picker__period');
+  if (api.showsPeriod()) {
+    const [am, pm] = period!.children;
+    expectPart(am, 'button', api.parts.am());
+    expectPart(pm, 'button', api.parts.pm());
+    expect(period!.children).toHaveLength(2);
+    for (const button of [am!, pm!]) {
+      expectPart(button.querySelector(':scope > span'), 'span', api.parts.periodTouch());
+    }
+  }
+  const dial = root.querySelector('.rio-time-picker__dial');
+  if (api.showsDial()) {
+    const [track, handle, center, ...numbers] = dial!.children;
+    expectPart(track, 'span', api.parts.dialTrack());
+    expectPart(handle, 'span', api.parts.dialHandle());
+    expectPart(center, 'span', api.parts.dialCenter());
+    const items = api.dialItems();
+    expect(numbers).toHaveLength(items.length);
+    items.forEach((item, i) => expectPart(numbers[i], 'button', api.parts.dialItem(item)));
+  }
+};
+
+const timePicker = (
+  variant: 'inline' | 'dialog',
+  props: TimePickerProps,
+  state: TimePickerState,
+  error = 'error',
+) =>
+  createTimePicker({
+    variant,
+    props: () => props,
+    messages: () => messagesFor('en').timePicker,
+    state: () => state,
+    ids: { error },
+    onChange: noop,
+    onOpenChange: noop,
+    onStateChange: noop,
+  });
+
+describe('RioTimeInput', () => {
+  test.each([
+    ['12 hours, with AM and PM', 'en-US'],
+    ['24 hours', 'de-DE'],
+  ])('%s', async (_, locale) => {
+    const screen = await render(TimeInput, { props: { locale, modelValue: '19:05' } });
+    const twelve = locale === 'en-US';
+    const api = timePicker(
+      'inline',
+      { locale, value: '19:05' },
+      {
+        ...initialTimeState('19:05'),
+        mode: 'input',
+        hourText: twelve ? '07' : '19',
+        minuteText: '05',
+      },
+    );
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+
+  test('with an error', async () => {
+    const screen = await render(TimeInput, { props: { locale: 'en-US', modelValue: '19:05' } });
+    await userEvent.fill(screen.getByRole('textbox', { name: 'Hour' }), '13');
+    await userEvent.keyboard('{Enter}');
+    const alert = await vi.waitFor(() => rootOf(screen).querySelector('[role="alert"]')!);
+    const api = timePicker(
+      'inline',
+      { locale: 'en-US', value: '19:05' },
+      {
+        ...initialTimeState('19:05'),
+        mode: 'input',
+        hourText: '13',
+        minuteText: '05',
+        invalid: 'hour',
+      },
+      alert.id,
+    );
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+});
+
+describe('RioTimePickerDialog', () => {
+  test('closed, it renders nothing inside', async () => {
+    const screen = await render(TimePickerDialog, { props: { locale: 'en-US' } });
+    const api = timePicker(
+      'dialog',
+      { locale: 'en-US', rendered: false },
+      initialTimeState(undefined),
+    );
+    expectSkeleton(rootOf(screen), timePickerDialogSkeleton, api);
+  });
+
+  // Mounted with `createApp`: vitest-browser-vue moves what it renders into place afterwards,
+  // which closes a dialog that is open by then.
+  test.each<[string, Partial<TimePickerProps>, Partial<TimePickerState>]>([
+    ['the dial, on the hours', {}, {}],
+    ['the dial, on the minutes', {}, { selection: 'minute' }],
+    [
+      'the text input, 24 hours, horizontal',
+      { hourCycle: 24, layout: 'horizontal', initialMode: 'input' },
+      { mode: 'input', hourText: '07', minuteText: '30' },
+    ],
+    ['the dial, 24 hours', { hourCycle: 24 }, {}],
+  ])('open: %s', async (_, props, state) => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const app = createApp(() =>
+      h(TimePickerDialog, { locale: 'en-US', modelValue: '07:30', open: true, ...props }),
+    );
+    app.mount(host);
+    onTestFinished(() => {
+      app.unmount();
+      host.remove();
+    });
+    const root = host.querySelector('dialog')!;
+    await vi.waitFor(() => expect(root.open).toBe(true));
+    if (state.selection === 'minute') {
+      await userEvent.click(root.querySelector('.rio-time-picker__field[data-field="minute"]')!);
+    }
+    const api = timePicker(
+      'dialog',
+      { locale: 'en-US', value: '07:30', open: true, rendered: true, ...props },
+      { ...initialTimeState('07:30'), hourText: '07', minuteText: '30', ...state },
+    );
+    expectSkeleton(root, timePickerDialogSkeleton, api);
+    expectTimePickerContent(root, api);
   });
 });
