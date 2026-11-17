@@ -126,7 +126,7 @@ The menu's keyboard table, for web:
 
 - Values are strings or numbers. `v-model` takes the option's own `value`, a number stays a number. The hidden native `<select>` holds them as text, so they must differ as text too (`1` and `'1'` don't), and without `multiple`, `''` stands for no selection there.
 - **Without `label`**, name the select with `aria-label` or `aria-labelledby`. It goes to the field, and the list takes the same name.
-- `RioSelect` slots: the default slot holds the `RioSelectOption`s, `leading-icon` goes before the selection, and `value` shows the selection the app's way (see Multiple selection).
+- `RioSelect` slots: the default slot holds the `RioSelectOption`s, `leading-icon` goes before the selection, `dropdown-icon` is the arrow at the end, and `value` shows the selection the app's way (see Multiple selection).
 - `RioSelectOption` slots, as a menu item's: the default slot is the label, which the field shows while the option is selected. `icon` gets `{ selected }`, for a check mark next to the color and shape. Then `supporting-text`, `trailing-text`, and `trailing-icon`.
 - Events: `update:modelValue` and `update:open`. **The app owns the selection**: the select asks for a change and waits.
 - `class` and `style` go to the root. Every other attribute, such as `id` or `aria-label`, and every listener goes to the field. An `id` given to the select stays the field's.
@@ -138,7 +138,7 @@ M3 leaves the select as a pattern, a text field and a menu, rather than a compon
 
 - **The field is a text field's markup and stylesheet** with a `combobox` in place of the input. It looks like a text field in every state: the label moves to the top once something is selected, and while the list is open the field keeps its focused look (`data-focused`), since the focus is in the list.
 - **The list is a menu's surface and items** (M3E vertical menu), with the `listbox` and `option` roles. `menuVariant="vibrant"` and `instant` work as on a menu. A selected option gets the menu's selected color and shape, and `aria-selected`. Compose's official select sample uses the same M3E menu.
-- The dropdown arrow is drawn by the stylesheet: the arrow_drop_down icon, turned over while the list is open, as Compose turns its `TrailingIcon`. It takes the primary color while focused, as Material Web's select tokens give it.
+- **The dropdown arrow is the app's**, in the `dropdown-icon` slot, as arrow_drop_down: Rio ships no icons. Rio turns it over while the list is open, as Compose turns its `TrailingIcon`, and gives it the primary color while focused, as Material Web's select tokens do.
 - **Markup**: the field is a `<div role="combobox">` named by the label (`aria-labelledby`), with `aria-haspopup="listbox"`, `aria-expanded`, `aria-controls`, `aria-required`, and `aria-invalid`. The list is a `<div role="listbox">`, named by the label too, or without one, by the name the app gave the field, with `aria-multiselectable` for `multiple`. Each option is a `<button role="option">` with `aria-selected`.
 
 > **Not the native customizable select** (Rio's choice). `appearance: base-select` lets a page style a native `<select>` and its picker. It ships in Chrome and Edge 135 and Safari 27, but Firefox has it only behind a flag, with no date to turn it on; it isn't Baseline or part of Interop 2026. Firefox would show the browser's plain select there. Rio builds the select on its own overlay and placement instead, as it builds the menu, and keeps a native `<select>` hidden inside for forms (see Forms).

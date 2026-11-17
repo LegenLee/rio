@@ -1,4 +1,4 @@
-import { mdiCheck, mdiRuler } from '@mdi/js';
+import { mdiCheck, mdiMenuDown, mdiRuler } from '@mdi/js';
 import { describe, expect, test, vi } from 'vitest';
 import { defineComponent, h, reactive } from 'vue';
 import { icon, renderGallery, SCHEMES } from '../test/vrt';
@@ -21,23 +21,25 @@ const options = () =>
     ),
   );
 
+const slots = { default: options, 'dropdown-icon': () => icon(mdiMenuDown) };
+
 const row = (variant: 'filled' | 'outlined') => [
-  h(Select, { variant, label: 'Empty' }, options),
-  h(Select, { variant, label: 'Size', modelValue: 'Medium' }, options),
+  h(Select, { variant, label: 'Empty' }, slots),
+  h(Select, { variant, label: 'Size', modelValue: 'Medium' }, slots),
   h(
     Select,
     { variant, label: 'Sizes', multiple: true, modelValue: ['Small', 'Medium', 'Extra large'] },
-    { default: options, 'leading-icon': () => icon(mdiRuler) },
+    { ...slots, 'leading-icon': () => icon(mdiRuler) },
   ),
   h(
     Select,
     { variant, label: 'Size', required: true, error: true, errorText: 'Choose a size' },
-    options,
+    slots,
   ),
   h(
     Select,
     { variant, label: 'Disabled', modelValue: 'Small', supportingText: 'Fixed', disabled: true },
-    options,
+    slots,
   ),
 ];
 
@@ -67,7 +69,7 @@ describe('RioSelect', () => {
               open: open.value,
               'onUpdate:open': (next: boolean) => (open.value = next),
             },
-            options,
+            slots,
           ),
         ]),
     );

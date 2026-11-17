@@ -51,13 +51,18 @@
   grid-area: 1 / 1;
 }
 
-/* The dropdown arrow (arrow_drop_down): a 10 × 5px triangle in a 24px box, turned over while open */
+/* The app's dropdown arrow icon, 24px, turned over while open */
 .rio-select__arrow {
+  display: inline-flex;
   flex: none;
   inline-size: 24px;
   block-size: 24px;
-  background-color: var(--_trailing);
-  clip-path: polygon(7px 10px, 17px 10px, 12px 15px);
+  color: var(--_trailing);
+}
+
+.rio-select__arrow > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
 }
 
 .rio-select[data-open] .rio-select__arrow {
@@ -92,16 +97,5 @@
   .rio-text-field.rio-select[data-variant='filled']:has(> .rio-select__listbox:hover)
     .rio-text-field__container::before {
     opacity: 0;
-  }
-}
-
-@media (forced-colors: active) {
-  .rio-select__arrow {
-    background-color: CanvasText;
-    forced-color-adjust: none;
-  }
-
-  .rio-select[data-disabled] .rio-select__arrow {
-    background-color: GrayText;
   }
 }

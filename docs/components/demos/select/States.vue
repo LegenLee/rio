@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiEarth } from '@mdi/js';
+import { mdiEarth, mdiMenuDown } from '@mdi/js';
 import type { SelectSelected } from '@rio-m3e/core';
 import { RioSelect, RioSelectOption } from '@rio-m3e/vue';
 import { ref, watch } from 'vue';
@@ -23,6 +23,9 @@ const plan = ref<SelectSelected>('free');
     :error="touched && !region"
     error-text="Choose where your data is kept"
   >
+    <template #dropdown-icon>
+      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+    </template>
     <template #leading-icon>
       <svg viewBox="0 0 24 24"><path :d="mdiEarth" fill="currentColor" /></svg>
     </template>
@@ -31,6 +34,9 @@ const plan = ref<SelectSelected>('free');
     <RioSelectOption value="asia">Asia Pacific</RioSelectOption>
   </RioSelect>
   <RioSelect v-model="plan" variant="outlined" label="Plan" supporting-text="Change it at any time">
+    <template #dropdown-icon>
+      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+    </template>
     <RioSelectOption value="free">Free</RioSelectOption>
     <RioSelectOption value="team">
       Team
@@ -42,6 +48,9 @@ const plan = ref<SelectSelected>('free');
     </RioSelectOption>
   </RioSelect>
   <RioSelect label="Disabled" model-value="a" disabled>
+    <template #dropdown-icon>
+      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+    </template>
     <RioSelectOption value="a">Fixed</RioSelectOption>
   </RioSelect>
 </template>

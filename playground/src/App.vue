@@ -957,12 +957,22 @@ watchEffect(() => {
     <section class="text-fields">
       <form class="controls" @submit.prevent="submitSelects">
         <RioSelect v-model="selects.size" label="Size" name="size" required>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
           <RioSelectOption value="s">Small</RioSelectOption>
           <RioSelectOption value="m">Medium</RioSelectOption>
           <RioSelectOption value="l" disabled>Large</RioSelectOption>
           <RioSelectOption value="xl">Extra large</RioSelectOption>
         </RioSelect>
         <RioSelect v-model="selects.font" variant="outlined" label="Font" name="font">
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
           <RioSelectOption value="roboto">Roboto</RioSelectOption>
           <RioSelectOption value="roboto-flex">Roboto Flex</RioSelectOption>
           <RioSelectOption value="roboto-serif">
@@ -977,6 +987,11 @@ watchEffect(() => {
           multiple
           menu-variant="vibrant"
         >
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
           <RioSelectOption v-for="(name, value) in PIZZA_TOPPINGS" :key="value" :value="value">
             {{ name }}
             <template #icon="{ selected }">
@@ -987,6 +1002,11 @@ watchEffect(() => {
           </RioSelectOption>
         </RioSelect>
         <RioSelect label="Disabled" model-value="a" disabled>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
           <RioSelectOption value="a">Fixed</RioSelectOption>
         </RioSelect>
         <RioButton type="submit">Submit</RioButton>

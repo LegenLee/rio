@@ -107,7 +107,7 @@ export interface SelectParts {
    * them, as a native `<select>` is as wide as its widest option.
    */
   sizer: () => PartAttrs;
-  /** The dropdown arrow, which turns over while the list is open */
+  /** Holds the app's dropdown arrow icon, which turns over while the list is open. */
   arrow: () => PartAttrs;
   /** The line below the field */
   supporting: () => PartAttrs;
@@ -165,7 +165,7 @@ export const selectSkeleton: PartNode<keyof SelectParts, SelectWhen> = {
                 },
               ],
             },
-            { part: 'arrow', tag: 'span' },
+            { part: 'arrow', tag: 'span', content: true },
             { part: 'native', tag: 'select', content: true },
           ],
         },

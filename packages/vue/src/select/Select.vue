@@ -56,6 +56,8 @@ const slots = defineSlots<{
   default?: () => unknown;
   /** An icon before the selection */
   'leading-icon'?: () => unknown;
+  /** The dropdown arrow, such as arrow_drop_down. It turns over while the list is open. */
+  'dropdown-icon'?: () => unknown;
   /**
    * The selection as the field shows it, in place of the selected options' labels separated by
    * commas. `labels` are in the order of the options.
@@ -201,7 +203,7 @@ onBeforeUnmount(() => handle?.detach());
             </span>
           </div>
         </div>
-        <span v-bind="select.parts.arrow()" />
+        <span v-bind="select.parts.arrow()"><slot name="dropdown-icon" /></span>
         <select ref="native" v-bind="select.parts.native()">
           <option v-if="!select.multiple()" value="" />
           <option

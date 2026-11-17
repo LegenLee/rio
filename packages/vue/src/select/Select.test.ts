@@ -247,6 +247,18 @@ describe('RioSelect', () => {
     expect(press.defaultPrevented).toBe(true);
   });
 
+  test('the app’s dropdown icon sits at the end, and turns over while the list is open', async () => {
+    const { root, opened } = await setup({
+      slots: { 'dropdown-icon': () => h('svg', { viewBox: '0 0 24 24' }) },
+    });
+    const arrow = root.querySelector<HTMLElement>('.rio-select__arrow')!;
+    expect(arrow.getAttribute('aria-hidden')).toBe('true');
+    expect(arrow.querySelector('svg')!.getBoundingClientRect().width).toBe(24);
+    expect(getComputedStyle(arrow).rotate).toBe('none');
+    await opened();
+    expect(getComputedStyle(arrow).rotate).toBe('180deg');
+  });
+
   test('a press on the label or the arrow opens it too', async () => {
     const { root, isOpen, state } = await setup();
     await userEvent.click(root.querySelector('.rio-select__arrow')!);
