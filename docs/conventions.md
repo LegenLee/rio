@@ -60,6 +60,12 @@ packages/
     checkbox/
       checkbox.ts           props, parts, and what a change asks for
       checkbox.test.ts
+    date-picker/
+      date.ts               ISO dates and months, and writing and reading them as a language does
+      date-picker.ts        the calendar, the field's reading, and the docked and modal pickers' parts
+      interaction.ts        the calendar's keys and focus; the docked calendar's popover (DOM, tested through the Vue components)
+      date.test.ts
+      date-picker.test.ts
     dialog/
       dialog.ts             props, parts, and the role
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
@@ -67,6 +73,11 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    locale/
+      locale.ts             the language a component uses, and the first day of its week (see docs/guide/languages.md)
+      messages.ts           the message tables' shape, lookup, and placeholders
+      messages/             one table per language: en.ts, ko.ts
+      locale.test.ts
     menu/
       menu.ts               the menu, its items, submenus, groups, and dividers: props, parts, selection
       interaction.ts        opening, placement, keyboard, focus, and submenus (DOM, tested through the Vue components)
@@ -87,13 +98,20 @@ packages/
       text-field.ts         filled and outlined: props, parts, the label, errors, and the counter
       interaction.ts        a press on the field focuses the input; a text area's least height (DOM, tested through the Vue component)
       text-field.test.ts
+    time-picker/
+      time.ts               HH:MM times, and a language's clock and its AM and PM
+      time-picker.ts        the input picker and the dialog: their parts, the dial's numbers, and reading typed times
+      interaction.ts        the dial's pointer and keys, and AM and PM's arrow keys (DOM, tested through the Vue components)
+      time.test.ts
+      time-picker.test.ts
     tooltip/
       tooltip.ts            plain and rich tooltips: props, parts, roles, placement
       interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
       tooltip.test.ts
-    parts.ts                PartAttrs, the type of every part's attributes, and CancelableEvent (see Core output)
+    parts.ts                PartAttrs, CancelableEvent, and mergePartAttrs (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
+      typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/
     base/                   CSS shared across components
@@ -139,6 +157,8 @@ packages/
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     text-field/
       TextField.vue         class and style on the root, other attributes on the input
+    rio/
+      rio.ts                createRio: the theme and the language for the whole app
     tooltip/
       Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/
@@ -184,6 +204,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **Bundles are HTML attributes**, as `setAttribute` would take them:
   - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
+  - `style` carries only Rio's own custom properties, as `name: value` declarations separated by `;` (the time picker's `--rio-time-picker-angle`), for values the stylesheet can't select on.
 - **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
   - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
@@ -192,12 +213,15 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
   - A handler takes any event it can cancel (`CancelableEvent`, which only needs `preventDefault()`): a DOM event, or a framework's own, such as React's synthetic events. `core` hands the same event back where it reports one (`onClick(event)`), so the components are generic over the event's type, with `MouseEvent` as the default, and the app gets its framework's event.
 - **Callbacks to the adapter are named by what they report: `onChange` for state, the event's name for anything else.** A request to change the state the adapter owns is `onChange`, with the requested value, which the adapter may or may not accept: the `selected` of the button, the icon button, and the switch, and the button group's selection. Anything else gets its own name, such as the button's `onClick`. The adapter maps `onChange` to its framework's way of reporting state, such as `update:selected` for `v-model:selected` in Vue.
   - A component that owns more than one state keeps `onChange` for its main value and names the others `on<State>Change`: a menu would have `onChange` for its selection and `onOpenChange` for whether it is open. In Vue they become `v-model` and `v-model:open`.
-- **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
+- **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, `style` to an object, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
+- **The app's attributes and a part's meet in `mergePartAttrs`**, wherever an adapter passes the app's attributes to an element of the component's own, such as a text field's input. A part's `undefined` means Rio sets nothing there, not that the app's value goes, so the app's value stays. A value the part sets wins, except in an id list (`aria-describedby`, `aria-labelledby`, ...), where the app's ids come first and the part's follow: an app's own description of an input and Rio's supporting text both reach assistive technology. In `aria-labelledby` the names add up too: an app's own label and Rio's `label` make one name. `class` and `style` are merged the framework's way. `packages/vue/src/attrs.test.ts` holds every such component to it.
+  - On a component's root, the framework's own way of passing attributes on applies instead. In Vue, its fallthrough lets the app's values win there, Rio's included, id lists too: an app's `aria-labelledby` on a dialog replaces the headline's id rather than adding to it.
+- **Text a component shows comes from `core`'s message tables** (`locale/messages/`), in the language the adapter resolves: the component's own `locale`, or one provided the framework's way (in Vue, `RioLocaleProvider` and `createRio`, through `provide`; in React, a context), with `resolveLocale` filling in the rest. The app's own tables and fallback language reach `messagesFor` the same way. A component's `messages` prop replaces any of its text. Dates and numbers go through `Intl` in the same language. See `docs/guide/languages.md`.
 - **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
 
 For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`.
 
-Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tree): which part sits inside which, what element each one is, which render only on a decision such as `showsIcon`, and which hold content. It is the machine-readable form of the contract, which the contract tests check every adapter against (see Testing).
+Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tree): which part sits inside which, what element each one is, which render only on a decision such as `showsIcon`, and which hold content. It is the machine-readable form of the contract, which the contract tests check every adapter against (see Testing). When the props change which element a part is, the component exports a skeleton for each, and a decision that says which applies: a button with `href` is `buttonLinkSkeleton`, an `<a>`, while `isLink()` is true.
 
 ## Adapters
 

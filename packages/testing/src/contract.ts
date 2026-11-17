@@ -16,7 +16,8 @@ const isAccessibility = (name: string) =>
 /**
  * Walks the rendered element and the skeleton together and checks, at every part:
  * - the tag;
- * - every attribute of the part's bundle: class names as tokens, `undefined` as absent;
+ * - every attribute of the part's bundle: class names as tokens, `style` declaration by
+ *   declaration, `undefined` as absent;
  * - on parts inside the root, no `aria-*`, `role`, or `tabindex` that core didn't give. The root
  *   may carry more, since the app can pass attributes through to it. Other extra attributes, such
  *   as a primitive's `data-ripple`, are allowed everywhere;
@@ -53,6 +54,15 @@ function check<P extends string, W extends string>(
       }
     } else if (value === undefined) {
       expect(element.hasAttribute(name), `${path}: no ${name}`).toBe(false);
+    } else if (name === 'style') {
+      // The browser writes `style` back its own way, so each declaration is read from it.
+      for (const declaration of value.split(';').filter((part) => part.trim())) {
+        const [property, ...rest] = declaration.split(':');
+        const style = (element as HTMLElement).style;
+        expect(style.getPropertyValue(property!.trim()).trim(), `${path}: style ${property}`).toBe(
+          rest.join(':').trim(),
+        );
+      }
     } else {
       expect(element.getAttribute(name), `${path}: ${name}`).toBe(value);
     }

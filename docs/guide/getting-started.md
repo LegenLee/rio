@@ -5,52 +5,69 @@ Rio is in early development. Before 1.0, any minor version may break the API.
 ## Install
 
 ```sh
-pnpm add @rio-m3e/vue @rio-m3e/tokens
+pnpm add @rio-m3e/vue
 ```
 
-`@rio-m3e/vue` needs Vue 3.5 or later, and it installs `@rio-m3e/core` and `@rio-m3e/styles` for you.
+`@rio-m3e/vue` needs Vue 3.5 or later, and it installs `@rio-m3e/core`, `@rio-m3e/styles`, and `@rio-m3e/tokens` for you.
 
-## Apply a theme
+## Set up Rio
 
-`@rio-m3e/tokens` writes the theme as `--rio-*` CSS variables. Apply it once, **before** mounting the app:
+`createRio` sets the theme and the language for the whole app. Install it **before** mounting the app:
 
 ```ts
 // main.ts
-import { applyTheme } from '@rio-m3e/tokens';
+import { createRio } from '@rio-m3e/vue';
 import { createApp } from 'vue';
 import App from './App.vue';
 
-const root = document.documentElement;
-applyTheme(root, { sourceColor: '#6750a4' });
-root.style.colorScheme = 'light dark'; // follow the system's light or dark mode
+const rio = createRio({
+  theme: { sourceColor: '#6750a4' }, // follows the system's light or dark mode
+  locale: 'en', // only to fix one: otherwise the page's <html lang>, then the browser's
+});
 
-createApp(App).mount('#app');
+createApp(App).use(rio).mount('#app');
 ```
 
-Components spring their shapes toward targets that the theme sets. A theme applied after they mount moves those targets, so every shape springs into place once at load.
+| Option           | Type                                                                           | Default                     |
+| ---------------- | ------------------------------------------------------------------------------ | --------------------------- |
+| `theme`          | The theme below, or a ref or getter to one                                     | No theme                    |
+| `locale`         | `string`, a language tag, or a ref or getter to one                            | The page's or the browser's |
+| `fallbackLocale` | `string`: for a language Rio has no messages for, the one that fills in        | `'en'`                      |
+| `messages`       | Message tables by language: `{ ja: { datePicker: { cancel: 'キャンセル' } } }` | —                           |
 
-Each color variable holds a light and a dark value in `light-dark()`, so the `color-scheme` of the element that uses it picks one. Set `'light'` or `'dark'` instead of `'light dark'` to pick one yourself.
+The language options are in [Languages](./languages.md).
+
+### The theme
+
+The theme is written as `--rio-*` CSS variables on the page's root as the app installs Rio. Components spring their shapes toward targets that the theme sets, so a theme in place before they mount keeps them from springing at load. Given as a ref or a getter, the theme is written again whenever it changes, and the shapes spring once into the new targets. Unmounting the app takes it off.
 
 | Option        | Type                                                     | Default          |
 | ------------- | -------------------------------------------------------- | ---------------- |
 | `sourceColor` | `string`, as `#rgb` or `#rrggbb`. Required.              | —                |
 | `variant`     | `'tonal-spot' \| 'neutral' \| 'vibrant' \| 'expressive'` | `'tonal-spot'`   |
 | `contrast`    | `number`, from -1 (reduced) through 0 to 1 (high)        | `0`              |
+| `colorScheme` | `'light dark' \| 'light' \| 'dark' \| false`             | `'light dark'`   |
 | `motion`      | `'expressive' \| 'standard'`                             | `'expressive'`   |
 | `shapes`      | Corner radius steps to resize, in px: `{ medium: 16 }`   | The spec's scale |
 | `typefaces`   | Font families: `{ brand: '"Roboto Flex", sans-serif' }`  | Roboto           |
+
+Each color variable holds a light and a dark value in `light-dark()`, so the `color-scheme` of the element that uses it picks one. `colorScheme` sets the root's: `'light dark'` follows the system, `'light'` or `'dark'` picks one, and `false` leaves it to the app, as for an app whose own dark mode sets `color-scheme`. An app that then sets none leaves it at `normal`, where every color takes its light value.
+
+Give a theme to one app per page: the theme is the page's root's, so a second app's would replace it, and unmounting either app takes it off.
 
 What each token means, and where Rio's values come from, is in [Foundations](../foundations.md).
 
 ### Server rendering
 
-`createThemeCss` returns the same variables as a stylesheet, for server rendering or a static file. It sets `color-scheme: light dark` on the selector, which defaults to `:root`:
+On the server there is no page to write the theme on. `rio.css` holds it as a stylesheet, `:root` with the theme's `color-scheme`; put it in the page's `<head>`, so the first paint has Rio's colors:
 
 ```ts
-import { createThemeCss } from '@rio-m3e/tokens';
+const rio = createRio({ theme: { sourceColor: '#6750a4' } });
 
-const css = createThemeCss({ sourceColor: '#6750a4' });
+const head = `<style>${rio.css}</style>`;
 ```
+
+Without Vue, `@rio-m3e/tokens` does the same: `applyTheme(element, options)` writes the variables on an element, and `createThemeCss(options)` returns the stylesheet.
 
 ## Load Roboto
 

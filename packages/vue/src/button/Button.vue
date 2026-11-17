@@ -10,7 +10,7 @@ import { vShapeMorph } from '../shape-morph/shape-morph';
 
 // No defaults here: core fills them in, after a surrounding button group has filled in its size
 // and shape.
-const { variant, size, shape, toggle, selected, disabled, softDisabled, type, value } =
+const { variant, size, shape, toggle, selected, disabled, softDisabled, type, value, href } =
   defineProps<ButtonProps>();
 const emit = defineEmits<{
   click: [event: MouseEvent];
@@ -36,6 +36,7 @@ const item = useButtonGroupItem(
       softDisabled,
       type,
       value,
+      href,
     }) satisfies Record<keyof ButtonProps, unknown>,
   (next) => emit('update:selected', next),
 );
@@ -48,9 +49,15 @@ const button = createButton({
 </script>
 
 <template>
-  <button v-ripple v-shape-morph v-bind="button.parts.root()" @click="button.handleClick">
+  <component
+    :is="button.isLink() ? 'a' : 'button'"
+    v-ripple
+    v-shape-morph
+    v-bind="button.parts.root()"
+    @click="button.handleClick"
+  >
     <span v-bind="button.parts.touch()" />
     <span v-if="button.showsIcon()" v-bind="button.parts.icon()"><slot name="icon" /></span>
     <span v-bind="button.parts.label()"><slot /></span>
-  </button>
+  </component>
 </template>

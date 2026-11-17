@@ -36,6 +36,11 @@ export interface ButtonProps {
   /** Defaults to `'button'`, so a button inside a form doesn't submit it by accident. */
   type?: 'button' | 'submit' | 'reset';
   /**
+   * Makes it a link to this address, an `<a>` that looks the same. A link can't toggle, and `type`
+   * doesn't apply. Disabled, it keeps no `href`, so nothing can follow it.
+   */
+  href?: string;
+  /**
    * Identifies the button inside a button group that keeps a selection. Such a group makes the
    * button a toggle and decides whether it is selected.
    */
@@ -51,7 +56,7 @@ export const buttonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Omit<Required<ButtonProps>, 'value'>;
+} satisfies Omit<Required<ButtonProps>, 'value' | 'href'>;
 
 /** What the adapter has to put in the button, which only the adapter can see. */
 export interface ButtonContent {
@@ -92,15 +97,24 @@ export const buttonSkeleton: PartNode<keyof ButtonParts, 'showsIcon'> = {
   ],
 };
 
+/** The same parts in an `<a>`, while `isLink()` */
+export const buttonLinkSkeleton: PartNode<keyof ButtonParts, 'showsIcon'> = {
+  ...buttonSkeleton,
+  tag: 'a',
+};
+
 export interface ButtonApi<E extends CancelableEvent = MouseEvent> {
   parts: ButtonParts;
   /** Whether to render the icon part. */
   showsIcon: () => boolean;
+  /** Whether the root is an `<a>` (`buttonLinkSkeleton`) rather than a `<button>`. */
+  isLink: () => boolean;
   /** Attach to the root element's `click`. */
   handleClick: (event: E) => void;
 }
 
-const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text';
+const isLink = (p: ButtonProps) => p.href !== undefined;
+const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text' && !isLink(p);
 
 /** Defaults under the given props, skipping props that are explicitly `undefined`. */
 const resolve = (props: ButtonProps) => ({ ...buttonDefaults, ...omitUndefined(props) });
@@ -112,6 +126,21 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
     parts: {
       root() {
         const p = resolve(options.props());
+        if (isLink(p)) {
+          const unavailable = p.disabled || p.softDisabled;
+          return {
+            class: 'rio-button rio-state-layer rio-focus-ring',
+            href: unavailable ? undefined : p.href,
+            // Without `href`, an `<a>` is a placeholder; the role makes it a link again, disabled.
+            role: unavailable ? 'link' : undefined,
+            'aria-disabled': unavailable ? 'true' : undefined,
+            // Only the soft variant keeps the focus.
+            tabindex: p.softDisabled && !p.disabled ? '0' : undefined,
+            'data-variant': p.variant,
+            'data-size': p.size,
+            'data-shape': p.shape,
+          };
+        }
         const toggle = isToggle(p);
         return {
           class: 'rio-button rio-state-layer rio-focus-ring',
@@ -132,6 +161,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
       label: () => ({ class: 'rio-button__label' }),
     },
     showsIcon: () => !!options.content?.().icon,
+    isLink: () => isLink(options.props()),
     handleClick(event) {
       const p = options.props();
       if (p.disabled || p.softDisabled) {

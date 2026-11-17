@@ -1,6 +1,6 @@
 {
   "name": "@rio-m3e/vue",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Vue components for Rio, a Material 3 Expressive implementation",
   "license": "Apache-2.0",
   "author": "LegenLee",
@@ -32,13 +32,13 @@
   },
   "dependencies": {
     "@rio-m3e/core": "workspace:^",
-    "@rio-m3e/styles": "workspace:^"
+    "@rio-m3e/styles": "workspace:^",
+    "@rio-m3e/tokens": "workspace:^"
   },
   "devDependencies": {
     "@fontsource/roboto": "catalog:",
     "@mdi/js": "catalog:",
     "@rio-m3e/testing": "workspace:^",
-    "@rio-m3e/tokens": "workspace:^",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unplugin-vue": "catalog:",

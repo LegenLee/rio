@@ -3,8 +3,25 @@
 // adapter writes the same test against the same skeletons.
 import {
   buttonGroupSkeleton,
+  buttonLinkSkeleton,
   buttonSkeleton,
+  calendarSkeleton,
   checkboxSkeleton,
+  createCalendar,
+  createDatePicker,
+  createTimePicker,
+  initialTimeState,
+  timePickerDialogSkeleton,
+  timePickerSkeleton,
+  type PartAttrs,
+  type TimePickerApi,
+  type TimePickerProps,
+  type TimePickerState,
+  createDatePickerDialog,
+  datePickerDialogSkeleton,
+  datePickerSkeleton,
+  initialPickerState,
+  messagesFor,
   dialogSkeleton,
   createButton,
   createButtonGroup,
@@ -17,11 +34,14 @@ import {
   createMenuItem,
   createRadio,
   createRadioGroup,
+  createSelect,
+  createSelectOption,
   createSubMenu,
   createSwitch,
   createTextField,
   createTooltip,
   createSplitButton,
+  iconButtonLinkSkeleton,
   iconButtonSkeleton,
   menuDividerSkeleton,
   menuGroupSkeleton,
@@ -29,6 +49,8 @@ import {
   menuSkeleton,
   radioGroupSkeleton,
   radioSkeleton,
+  selectOptionSkeleton,
+  selectSkeleton,
   splitButtonSkeleton,
   switchSkeleton,
   textFieldSkeleton,
@@ -44,6 +66,11 @@ import {
   type MenuItemProps,
   type MenuProps,
   type RadioProps,
+  type SelectContent,
+  type SelectOptionContent,
+  type SelectOptionProps,
+  type SelectProps,
+  type SelectSelected,
   type SplitButtonContent,
   type SplitButtonProps,
   type SubMenuProps,
@@ -55,12 +82,16 @@ import {
   type TooltipProps,
 } from '@rio-m3e/core';
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
-import { h } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { createApp, h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
 import Checkbox from './checkbox/Checkbox.vue';
+import DatePicker from './date-picker/DatePicker.vue';
+import DatePickerCalendar from './date-picker/DatePickerCalendar.vue';
+import DatePickerDialog from './date-picker/DatePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
 import Menu from './menu/Menu.vue';
@@ -70,9 +101,13 @@ import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
 import Radio from './radio/Radio.vue';
 import RadioGroup from './radio/RadioGroup.vue';
+import Select from './select/Select.vue';
+import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import TextField from './text-field/TextField.vue';
+import TimeInput from './time-picker/TimeInput.vue';
+import TimePickerDialog from './time-picker/TimePickerDialog.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -93,6 +128,10 @@ describe('RioButton', () => {
     ['a text button asked to toggle', { variant: 'text', toggle: true }, false],
     ['disabled, with an icon', { disabled: true }, true],
     ['soft-disabled', { softDisabled: true }, false],
+    ['a link', { href: '/settings' }, true],
+    ['a link asked to toggle', { href: '/settings', toggle: true, selected: true }, false],
+    ['a disabled link', { href: '/settings', disabled: true }, false],
+    ['a soft-disabled link', { href: '/settings', softDisabled: true }, false],
   ])('%s', async (_, props, icon) => {
     const screen = await render(Button, {
       props,
@@ -104,7 +143,7 @@ describe('RioButton', () => {
       onClick: noop,
       onChange: noop,
     });
-    expectSkeleton(rootOf(screen), buttonSkeleton, api);
+    expectSkeleton(rootOf(screen), api.isLink() ? buttonLinkSkeleton : buttonSkeleton, api);
   });
 });
 
@@ -129,6 +168,8 @@ describe('RioIconButton', () => {
     ],
     ['narrow and standard', { label: 'Go', width: 'narrow', variant: 'standard' }, false],
     ['disabled', { label: 'Go', disabled: true }, false],
+    ['a link asked to toggle', { label: 'Go', href: '/go', toggle: true, selected: true }, true],
+    ['a soft-disabled link', { label: 'Go', href: '/go', softDisabled: true }, false],
   ])('%s', async (_, props, selectedIcon) => {
     const screen = await render(IconButton, {
       props,
@@ -140,9 +181,10 @@ describe('RioIconButton', () => {
       onClick: noop,
       onChange: noop,
     });
-    expectSkeleton(rootOf(screen), iconButtonSkeleton, api);
+    const skeleton = api.isLink() ? iconButtonLinkSkeleton : iconButtonSkeleton;
+    expectSkeleton(rootOf(screen), skeleton, api);
     // Which icon fills the icon part is core's call too.
-    const icon = findPart(rootOf(screen), iconButtonSkeleton, 'icon', api);
+    const icon = findPart(rootOf(screen), skeleton, 'icon', api);
     expect(icon?.textContent).toBe(api.showsSelectedIcon() ? '♥' : '♡');
   });
 });
@@ -559,5 +601,411 @@ describe('RioTextField', () => {
     if (props.label) {
       expect(findPart(root, textFieldSkeleton, 'label', api)?.textContent).toBe(api.labelText());
     }
+  });
+});
+
+describe('RioSelect', () => {
+  const OPTIONS = [
+    { value: 's', label: 'Small' },
+    { value: 2, label: 'Large' },
+  ];
+  const plain = { leadingIcon: false };
+
+  // The last item says whether the app shows the selection itself, in the `value` slot.
+  test.each<
+    [
+      string,
+      Omit<SelectProps, 'open' | 'selected'> & { modelValue?: SelectSelected },
+      SelectContent,
+      boolean,
+    ]
+  >([
+    ['filled, with its label only', { label: 'Size' }, plain, false],
+    // Every prop away from its default, with every slot
+    [
+      'an outlined multi-select with everything',
+      {
+        variant: 'outlined',
+        label: 'Sizes',
+        multiple: true,
+        modelValue: ['s', 2],
+        supportingText: 'Hint',
+        error: true,
+        errorText: 'Wrong',
+        required: true,
+        disabled: true,
+        name: 'size',
+        autocomplete: 'off',
+        menuVariant: 'vibrant',
+        instant: true,
+      },
+      { leadingIcon: true },
+      false,
+    ],
+    [
+      'without a label, one selected, shown the app’s way',
+      { modelValue: 2, supportingText: 'Hint' },
+      plain,
+      true,
+    ],
+  ])('%s', async (_, props, content, custom) => {
+    const screen = await render(Select, {
+      props,
+      slots: {
+        default: () =>
+          OPTIONS.map((option) => h(SelectOption, { value: option.value }, () => option.label)),
+        ...(content.leadingIcon ? { 'leading-icon': () => h('svg') } : {}),
+        ...(custom ? { value: () => 'Custom' } : {}),
+      },
+    });
+    // The options' labels reach the field after they render.
+    await new Promise((resolve) => setTimeout(resolve));
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('[role="combobox"]')!.id.replace(/-field$/, '');
+    const { modelValue, ...rest } = props;
+    const api = createSelect({
+      props: () => ({ ...rest, selected: modelValue }),
+      options: () => OPTIONS,
+      content: () => content,
+      ids: {
+        field: `${id}-field`,
+        label: `${id}-label`,
+        listbox: `${id}-listbox`,
+        supportingText: `${id}-supporting`,
+      },
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    expectSkeleton(root, selectSkeleton, api);
+    // What fills the content parts is core's call too.
+    const value = findPart(root, selectSkeleton, 'value', api)!.textContent!.trim();
+    expect(value).toBe(custom ? 'Custom' : api.valueText());
+    const sizer = findPart(root, selectSkeleton, 'sizer', api)!;
+    expect([...sizer.children].map((each) => each.textContent)).toEqual(api.sizerTexts());
+    const native = findPart(root, selectSkeleton, 'native', api) as HTMLSelectElement;
+    expect([...native.options].map((option) => option.value)).toEqual([
+      ...(api.multiple() ? [] : ['']),
+      ...OPTIONS.map((option) => api.nativeValue(option.value)),
+    ]);
+  });
+});
+
+describe('RioSelectOption', () => {
+  const none = { icon: false, supportingText: false, trailingText: false, trailingIcon: false };
+  const all = { icon: true, supportingText: true, trailingText: true, trailingIcon: true };
+
+  test.each<[string, SelectOptionProps, SelectProps, SelectOptionContent]>([
+    ['a label', { value: 'a' }, {}, none],
+    ['selected, with every slot', { value: 'a' }, { selected: 'a' }, all],
+    [
+      'disabled, in a multi-select',
+      { value: 'b', disabled: true },
+      { multiple: true, selected: ['a'] },
+      none,
+    ],
+  ])('%s', async (_, props, selectProps, content) => {
+    const slots = {
+      default: () => 'Label',
+      ...(content.icon ? { icon: () => '+' } : {}),
+      ...(content.supportingText ? { 'supporting-text': () => 'More' } : {}),
+      ...(content.trailingText ? { 'trailing-text': () => 'S' } : {}),
+      ...(content.trailingIcon ? { 'trailing-icon': () => '>' } : {}),
+    };
+    const screen = await render(Select, {
+      props: { ...selectProps, modelValue: selectProps.selected },
+      slots: { default: () => h(SelectOption, props, slots) },
+    });
+    const element = rootOf(screen).querySelector('[role="listbox"]')!.firstElementChild!;
+    const select = createSelect({
+      props: () => selectProps,
+      options: () => [],
+      ids: { field: '', label: '', listbox: '', supportingText: '' },
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    const api = createSelectOption({
+      props: () => props,
+      content: () => content,
+      select: () => select,
+    });
+    expectSkeleton(element, selectOptionSkeleton, api);
+  });
+});
+
+describe('RioDatePicker', () => {
+  const messages = () => messagesFor('en').datePicker;
+
+  test.each([
+    ['docked, submitting with a form', { name: 'when', modelValue: '2026-11-27' }],
+    ['modal', { variant: 'modal' as const }],
+  ])('%s', async (_, props) => {
+    const screen = await render(DatePicker, { props: { locale: 'en-US', ...props } });
+    const value = 'modelValue' in props ? props.modelValue : undefined;
+    const api = createDatePicker({
+      props: () => ({
+        variant: 'variant' in props ? props.variant : undefined,
+        name: 'name' in props ? props.name : undefined,
+        value,
+        locale: 'en-US',
+      }),
+      messages,
+      state: () => initialPickerState(value, 'en-US'),
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+    expectSkeleton(rootOf(screen), datePickerSkeleton, api);
+  });
+});
+
+describe('the date pickers’ calendar', () => {
+  test.each([
+    ['docked, the days', 'docked' as const, 'days' as const],
+    ['docked, the months', 'docked' as const, 'months' as const],
+    ['modal, the years', 'modal' as const, 'years' as const],
+  ])('%s', async (_, variant, view) => {
+    const props = {
+      variant,
+      selected: '2026-11-27',
+      month: '2026-11',
+      focused: '2026-11-27',
+      view,
+      locale: 'en-US',
+      min: '2026-11-05',
+    };
+    const screen = await render(DatePickerCalendar, {
+      props: { ...props, messages: messagesFor('en').datePicker },
+    });
+    const api = createCalendar({
+      props: () => props,
+      messages: () => messagesFor('en').datePicker,
+      onSelect: noop,
+      onMonthChange: noop,
+      onFocusChange: noop,
+      onViewChange: noop,
+    });
+    const root = rootOf(screen);
+    expectSkeleton(root, calendarSkeleton, api);
+    // The days carry the attributes core gives each.
+    if (view === 'days') {
+      for (const date of ['2026-11-27', '2026-11-01', '2026-12-01']) {
+        const day = root.querySelector(`[data-date="${date}"]`)!;
+        for (const [name, value] of Object.entries(api.parts.day(date))) {
+          if (name === 'class') continue;
+          expect(day.getAttribute(name), `${date} ${name}`).toBe(value ?? null);
+        }
+      }
+    }
+  });
+});
+
+describe('RioDatePickerDialog', () => {
+  test('closed, it renders nothing inside', async () => {
+    const screen = await render(DatePickerDialog, { props: { locale: 'en-US' } });
+    const root = rootOf(screen);
+    const api = createDatePickerDialog({
+      props: () => ({ locale: 'en-US', rendered: false }),
+      messages: () => messagesFor('en').datePicker,
+      state: () => initialPickerState(undefined, 'en-US'),
+      ids: { title: 'x', headline: 'y' },
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+    expectSkeleton(root, datePickerDialogSkeleton, {
+      ...api,
+      parts: { ...api.parts, root: () => ({ class: api.parts.root().class }) },
+    });
+  });
+
+  // Mounted with `createApp`: vitest-browser-vue moves what it renders into place afterwards,
+  // which closes a dialog that is open by then.
+  test.each(['calendar', 'input'] as const)('open, in the %s', async (mode) => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const app = createApp(() =>
+      h(DatePickerDialog, { locale: 'en-US', open: true, initialMode: mode }),
+    );
+    app.mount(host);
+    onTestFinished(() => {
+      app.unmount();
+      host.remove();
+    });
+    const root = host.querySelector('dialog')!;
+    await vi.waitFor(() => expect(root.open).toBe(true));
+    const title = root.querySelector('.rio-date-picker-dialog__title')!.id;
+    const api = createDatePickerDialog({
+      props: () => ({ locale: 'en-US', rendered: true }),
+      messages: () => messagesFor('en').datePicker,
+      state: () => ({ ...initialPickerState(undefined, 'en-US'), mode }),
+      ids: { title, headline: title.replace(/-title$/, '-headline') },
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+    expectSkeleton(root, datePickerDialogSkeleton, api);
+  });
+});
+
+/** An element inside a part that holds content, against the attributes core gives it */
+const expectPart = (
+  element: Element | null | undefined,
+  tag: keyof HTMLElementTagNameMap,
+  attrs: PartAttrs,
+) => {
+  expect(element, `${tag}.${attrs.class}`).toBeTruthy();
+  expectSkeleton<'part', never>(
+    element!,
+    { part: 'part', tag, content: true },
+    { parts: { part: () => attrs } },
+  );
+};
+
+/** What the time pickers' fields, AM and PM, and dial hold */
+const expectTimePickerContent = (root: Element, api: TimePickerApi) => {
+  const fields = root.querySelector('.rio-time-picker__fields')!;
+  if (api.textInput()) {
+    const [hour, separator, minute] = fields.children;
+    expectPart(hour, 'span', api.parts.unit());
+    expectPart(hour!.children[0], 'input', api.parts.hourField());
+    expectPart(hour!.children[1], 'span', api.parts.hourLabel());
+    expectPart(separator, 'span', api.parts.separator());
+    expectPart(minute, 'span', api.parts.unit());
+    expectPart(minute!.children[0], 'input', api.parts.minuteField());
+    expectPart(minute!.children[1], 'span', api.parts.minuteLabel());
+    expect(fields.children).toHaveLength(3);
+  } else {
+    const [hour, separator, minute] = fields.children;
+    expectPart(hour, 'button', api.parts.hourField());
+    expectPart(separator, 'span', api.parts.separator());
+    expectPart(minute, 'button', api.parts.minuteField());
+    expect(fields.children).toHaveLength(3);
+  }
+  const period = root.querySelector('.rio-time-picker__period');
+  if (api.showsPeriod()) {
+    const [am, pm] = period!.children;
+    expectPart(am, 'button', api.parts.am());
+    expectPart(pm, 'button', api.parts.pm());
+    expect(period!.children).toHaveLength(2);
+    for (const button of [am!, pm!]) {
+      expectPart(button.querySelector(':scope > span'), 'span', api.parts.periodTouch());
+    }
+  }
+  const dial = root.querySelector('.rio-time-picker__dial');
+  if (api.showsDial()) {
+    const [track, handle, center, ...numbers] = dial!.children;
+    expectPart(track, 'span', api.parts.dialTrack());
+    expectPart(handle, 'span', api.parts.dialHandle());
+    expectPart(center, 'span', api.parts.dialCenter());
+    const items = api.dialItems();
+    expect(numbers).toHaveLength(items.length);
+    items.forEach((item, i) => expectPart(numbers[i], 'button', api.parts.dialItem(item)));
+  }
+};
+
+const timePicker = (
+  variant: 'inline' | 'dialog',
+  props: TimePickerProps,
+  state: TimePickerState,
+  error = 'error',
+) =>
+  createTimePicker({
+    variant,
+    props: () => props,
+    messages: () => messagesFor('en').timePicker,
+    state: () => state,
+    ids: { error },
+    onChange: noop,
+    onOpenChange: noop,
+    onStateChange: noop,
+  });
+
+describe('RioTimeInput', () => {
+  test.each([
+    ['12 hours, with AM and PM', 'en-US'],
+    ['24 hours', 'de-DE'],
+  ])('%s', async (_, locale) => {
+    const screen = await render(TimeInput, { props: { locale, modelValue: '19:05' } });
+    const twelve = locale === 'en-US';
+    const api = timePicker(
+      'inline',
+      { locale, value: '19:05' },
+      {
+        ...initialTimeState('19:05'),
+        mode: 'input',
+        hourText: twelve ? '07' : '19',
+        minuteText: '05',
+      },
+    );
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+
+  test('with an error', async () => {
+    const screen = await render(TimeInput, { props: { locale: 'en-US', modelValue: '19:05' } });
+    await userEvent.fill(screen.getByRole('textbox', { name: 'Hour' }), '13');
+    await userEvent.keyboard('{Enter}');
+    const alert = await vi.waitFor(() => rootOf(screen).querySelector('[role="alert"]')!);
+    const api = timePicker(
+      'inline',
+      { locale: 'en-US', value: '19:05' },
+      {
+        ...initialTimeState('19:05'),
+        mode: 'input',
+        hourText: '13',
+        minuteText: '05',
+        invalid: 'hour',
+      },
+      alert.id,
+    );
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+});
+
+describe('RioTimePickerDialog', () => {
+  test('closed, it renders nothing inside', async () => {
+    const screen = await render(TimePickerDialog, { props: { locale: 'en-US' } });
+    const api = timePicker(
+      'dialog',
+      { locale: 'en-US', rendered: false },
+      initialTimeState(undefined),
+    );
+    expectSkeleton(rootOf(screen), timePickerDialogSkeleton, api);
+  });
+
+  // Mounted with `createApp`: vitest-browser-vue moves what it renders into place afterwards,
+  // which closes a dialog that is open by then.
+  test.each<[string, Partial<TimePickerProps>, Partial<TimePickerState>]>([
+    ['the dial, on the hours', {}, {}],
+    ['the dial, on the minutes', {}, { selection: 'minute' }],
+    [
+      'the text input, 24 hours, horizontal',
+      { hourCycle: 24, layout: 'horizontal', initialMode: 'input' },
+      { mode: 'input', hourText: '07', minuteText: '30' },
+    ],
+    ['the dial, 24 hours', { hourCycle: 24 }, {}],
+  ])('open: %s', async (_, props, state) => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const app = createApp(() =>
+      h(TimePickerDialog, { locale: 'en-US', modelValue: '07:30', open: true, ...props }),
+    );
+    app.mount(host);
+    onTestFinished(() => {
+      app.unmount();
+      host.remove();
+    });
+    const root = host.querySelector('dialog')!;
+    await vi.waitFor(() => expect(root.open).toBe(true));
+    if (state.selection === 'minute') {
+      await userEvent.click(root.querySelector('.rio-time-picker__field[data-field="minute"]')!);
+    }
+    const api = timePicker(
+      'dialog',
+      { locale: 'en-US', value: '07:30', open: true, rendered: true, ...props },
+      { ...initialTimeState('07:30'), hourText: '07', minuteText: '30', ...state },
+    );
+    expectSkeleton(root, timePickerDialogSkeleton, api);
+    expectTimePickerContent(root, api);
   });
 });

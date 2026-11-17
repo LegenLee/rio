@@ -1,11 +1,30 @@
 import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { userEvent, type Locator } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h } from 'vue';
 import Button from './Button.vue';
 
 const label = { slots: { default: () => 'Save' } };
+
+/**
+ * Clicks and reports whether anything canceled the click's default action, which on a link is
+ * following it. A listener on the window cancels it afterwards either way, so the page stays put.
+ */
+const canceled = async (target: Locator) => {
+  let prevented: boolean | undefined;
+  const look = (event: Event) => {
+    prevented = event.defaultPrevented;
+    event.preventDefault();
+  };
+  window.addEventListener('click', look);
+  try {
+    await target.click();
+  } finally {
+    window.removeEventListener('click', look);
+  }
+  return prevented;
+};
 
 describe('RioButton', () => {
   test('renders a native button with its label', async () => {
@@ -71,6 +90,81 @@ describe('RioButton', () => {
     await expect.element(button).toHaveAttribute('aria-pressed', 'false');
     await screen.rerender({ selected: true });
     await expect.element(button).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  describe('as a link', () => {
+    test('renders an <a> with the href, and passes target and rel on', async () => {
+      const screen = await render(Button, {
+        ...label,
+        props: { href: '/settings' },
+        attrs: { target: '_blank', rel: 'noopener' },
+      });
+      const link = screen.getByRole('link', { name: 'Save' });
+      await expect.element(link).toHaveAttribute('href', '/settings');
+      await expect.element(link).toHaveAttribute('target', '_blank');
+      await expect.element(link).toHaveAttribute('rel', 'noopener');
+      await expect.element(link).not.toHaveAttribute('type');
+      expect(getComputedStyle(link.element()).textDecorationLine).toBe('none');
+    });
+
+    test('emits click and leaves the navigation alone', async () => {
+      const screen = await render(Button, { ...label, props: { href: '#saved' } });
+      expect(await canceled(screen.getByRole('link'))).toBe(false);
+      expect(screen.emitted('click')).toHaveLength(1);
+    });
+
+    test("the app's click listener can take the navigation over", async () => {
+      // A router's `navigate`: it lets clicks that open elsewhere through and cancels the rest.
+      const seen: (EventTarget | null)[] = [];
+      const navigate = vi.fn((event: MouseEvent) => {
+        seen.push(event.currentTarget);
+        const anchor = event.currentTarget as HTMLAnchorElement;
+        if (event.defaultPrevented || event.ctrlKey || anchor.target === '_blank') return;
+        event.preventDefault();
+      });
+      const screen = await render(Button, {
+        ...label,
+        props: { href: '#routed', onClick: navigate },
+      });
+      const link = screen.getByRole('link');
+      expect(await canceled(link)).toBe(true);
+      // The listener runs while the click is still at the <a>, which is where it reads `target`.
+      expect(seen).toEqual([link.element()]);
+    });
+
+    test('disabled has no href, is not focusable, and emits nothing', async () => {
+      const screen = await render(Button, { ...label, props: { href: '/s', disabled: true } });
+      const link = screen.getByRole('link', { name: 'Save' });
+      await expect.element(link).not.toHaveAttribute('href');
+      await expect.element(link).toHaveAttribute('aria-disabled', 'true');
+      (link.element() as HTMLElement).focus();
+      expect(document.activeElement).not.toBe(link.element());
+      await link.click({ force: true });
+      expect(screen.emitted('click')).toBeUndefined();
+    });
+
+    test('softDisabled has no href but stays focusable, and emits nothing', async () => {
+      const screen = await render(Button, { ...label, props: { href: '/s', softDisabled: true } });
+      const link = screen.getByRole('link', { name: 'Save' });
+      await expect.element(link).not.toHaveAttribute('href');
+      await expect.element(link).toHaveAttribute('aria-disabled', 'true');
+      (link.element() as HTMLElement).focus();
+      expect(document.activeElement).toBe(link.element());
+      await userEvent.keyboard('{Enter}');
+      await link.click({ force: true });
+      expect(screen.emitted('click')).toBeUndefined();
+    });
+
+    test('ignores toggle', async () => {
+      const screen = await render(Button, {
+        ...label,
+        props: { href: '#on', toggle: true, selected: true },
+      });
+      const link = screen.getByRole('link');
+      await expect.element(link).not.toHaveAttribute('aria-pressed');
+      await canceled(link);
+      expect(screen.emitted('update:selected')).toBeUndefined();
+    });
   });
 
   test('hides the icon from assistive technology', async () => {

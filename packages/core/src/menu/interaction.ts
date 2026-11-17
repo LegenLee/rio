@@ -33,6 +33,7 @@ import {
 } from '../primitives/anchored-position/anchored-position';
 import { attachOverlay } from '../primitives/overlay/overlay';
 import { omitUndefined } from '../utils/object';
+import { createTypeahead } from '../utils/typeahead';
 import { menuDefaults, type MenuProps } from './menu';
 
 /**
@@ -90,8 +91,6 @@ const FALLBACKS: Record<AnchoredSide, AnchoredSide[]> = {
   start: ['end', 'bottom', 'top'],
 };
 
-/** How long typed letters add up to one search. */
-const TYPEAHEAD_MS = 500;
 /** How long the pointer rests on an item before its submenu opens */
 const HOVER_OPEN_MS = 100;
 /** How long the pointer may take to reach an open submenu across other items */
@@ -284,32 +283,17 @@ function setup(
     return opener?.isConnected && !root.contains(opener) ? opener : null;
   };
 
-  let typed = '';
-  let typedAt = 0;
+  const search = createTypeahead();
   const typeahead = (key: string) => {
-    const now = performance.now();
-    typed = now - typedAt > TYPEAHEAD_MS ? key : typed + key;
-    typedAt = now;
     const all = items();
-    const labelOf = (item: HTMLElement) =>
-      (item.querySelector('.rio-menu-item__label')?.textContent ?? item.textContent ?? '')
-        .trim()
-        .toLowerCase();
-    // Repeating one letter cycles through the items that start with it. A single letter looks from
-    // the next item on; a longer search may still match the focused one.
-    const search = [...typed].every((letter) => letter === typed[0]) ? typed[0]! : typed;
-    const start = focused() + (search.length === 1 ? 1 : 0);
-    for (let step = 0; step < all.length; step++) {
-      const item = all[(Math.max(start, 0) + step) % all.length]!;
-      if (labelOf(item).startsWith(search)) {
-        item.focus();
-        return;
-      }
-    }
+    const labels = all.map(
+      (item) => item.querySelector('.rio-menu-item__label')?.textContent ?? item.textContent ?? '',
+    );
+    all[search.find(key, labels, focused())]?.focus();
   };
 
   const state = stateOf(root);
-  state.typing = () => typed !== '' && performance.now() - typedAt <= TYPEAHEAD_MS;
+  state.typing = search.typing;
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -350,10 +334,10 @@ function setup(
         focusAt(-1);
         return;
     }
-    // A space with nothing typed yet presses the item.
-    if (event.key.length === 1 && !(event.key === ' ' && !typed)) {
+    // A space presses the item, unless letters typed a moment ago are still adding up.
+    if (event.key.length === 1 && !(event.key === ' ' && !search.typing())) {
       handled();
-      typeahead(event.key.toLowerCase());
+      typeahead(event.key);
     }
   };
   root.addEventListener('keydown', onKeydown);
@@ -514,7 +498,7 @@ function setup(
         afterPress = undefined;
         reanchoring = false;
         overlay.hide();
-        typed = '';
+        search.reset();
         shapeTree(root);
         if (hadFocus) returnTarget()?.focus();
       }

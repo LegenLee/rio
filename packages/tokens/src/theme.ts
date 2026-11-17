@@ -27,6 +27,12 @@ export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
 export type ThemeVar = ColorVar | ElevationVar | MotionVar | ShapeVar | StateVar | TypographyVar;
 
 /**
+ * The `color-scheme` that picks each color's light or dark value: `'light dark'` follows the
+ * system. `false` writes none, for an app that sets it itself.
+ */
+export type ThemeColorScheme = 'light dark' | 'light' | 'dark' | false;
+
+/**
  * Every CSS variable in the theme.
  * - Colors: light and dark values are combined with `light-dark()`. Which one applies depends on the
  *   `color-scheme` of the element that uses the variable.
@@ -55,11 +61,17 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
   );
 }
 
-/** A CSS string for SSR or static stylesheets. Includes `color-scheme: light dark`. */
-export function createThemeCss(options: ThemeOptions & { selector?: string }): string {
-  const { selector = ':root', ...rest } = options;
+/**
+ * A CSS string for SSR or static stylesheets, with a `color-scheme`, `'light dark'` unless
+ * `colorScheme` says otherwise.
+ */
+export function createThemeCss(
+  options: ThemeOptions & { selector?: string; colorScheme?: ThemeColorScheme },
+): string {
+  const { selector = ':root', colorScheme = 'light dark', ...rest } = options;
   const lines = Object.entries(createThemeVariables(rest)).map(([k, v]) => `  ${k}: ${v};`);
-  return `${selector} {\n  color-scheme: light dark;\n${lines.join('\n')}\n}\n`;
+  if (colorScheme) lines.unshift(`  color-scheme: ${colorScheme};`);
+  return `${selector} {\n${lines.join('\n')}\n}\n`;
 }
 
 /**

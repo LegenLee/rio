@@ -57,4 +57,21 @@ describe('createIconButton', () => {
     expect(event.preventDefault).toHaveBeenCalled();
     expect(button.parts.root()['aria-disabled']).toBe('true');
   });
+
+  test('as a link: an <a> named by its label, which never shows the selected icon', () => {
+    const { button, onChange } = setup(
+      { href: '/favorites', toggle: true, selected: true },
+      { selectedIcon: true },
+    );
+    expect(button.isLink()).toBe(true);
+    expect(button.parts.root()).toMatchObject({
+      href: '/favorites',
+      'aria-label': 'Add to favorites',
+    });
+    expect(button.parts.root()).not.toHaveProperty('type');
+    expect(button.parts.root()).not.toHaveProperty('aria-pressed');
+    expect(button.showsSelectedIcon()).toBe(false);
+    button.handleClick(click());
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

@@ -24,7 +24,10 @@ export default defineConfig({
     sidebar: [
       {
         text: 'Guide',
-        items: [{ text: 'Getting started', link: '/guide/getting-started' }],
+        items: [
+          { text: 'Getting started', link: '/guide/getting-started' },
+          { text: 'Languages', link: '/guide/languages' },
+        ],
       },
       {
         text: 'Foundations',
@@ -36,13 +39,16 @@ export default defineConfig({
           { text: 'Button', link: '/components/button' },
           { text: 'Button group', link: '/components/button-group' },
           { text: 'Checkbox', link: '/components/checkbox' },
+          { text: 'Date picker', link: '/components/date-picker' },
           { text: 'Dialog', link: '/components/dialog' },
           { text: 'Icon button', link: '/components/icon-button' },
           { text: 'Menu', link: '/components/menu' },
           { text: 'Radio button', link: '/components/radio-button' },
+          { text: 'Select', link: '/components/select' },
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
           { text: 'Text field', link: '/components/text-field' },
+          { text: 'Time picker', link: '/components/time-picker' },
           { text: 'Tooltip', link: '/components/tooltip' },
         ],
       },

@@ -1,0 +1,417 @@
+/*
+ * M3 Expressive time pickers: the input time picker on the page, and the dial time picker in a
+ * modal dialog, which switches to the text input. The dialog has a basic dialog's container and
+ * motion (`dialog.css`); the mode button and the actions are an icon button and text buttons.
+ *
+ * Values come from the spec page's Expressive tokens: fields 100 × 120px (132px wide on a 24-hour
+ * vertical dial) on `surface-container-lowest`, a 16px separator, AM and PM 56px wide in a dialog,
+ * 40px inline, and 100px on a horizontal dial, `primary-container` when selected; a 256px dial with
+ * a 48px handle, an 8px center, and a 2px track; and the dialog on `surface-container`. The
+ * separator is emphasized display large; AM and PM are title medium, emphasized when selected.
+ * The spec page's image of the scroll time picker gives the rest: AM and PM 40px tall on the
+ * page and 56px in a dialog, round, and when selected 12px and 16px corners, as a selected
+ * button of that height has them; and the buttons 16px from the dialog's sides and bottom.
+ * Vertically, AM and PM sit 8px beside the fields, the dial 12px below them, with 12px padding;
+ * horizontally, AM and PM sit 16px below the fields, the dial 52px beside them, with 24px padding.
+ * The numbers sit 102px from the dial's center, and 74px on a 24-hour dial's inner ring, as the
+ * M3 Design Kit has them.
+ */
+
+.rio-time-picker {
+  --_field-width: 100px;
+  --_field-height: 120px;
+  --_period-width: 40px;
+  --_period-height: 40px;
+  --_period-selected: var(--rio-shape-corner-medium);
+  --_outer: calc(102 / 256 * var(--_dial));
+  --_inner: calc(74 / 256 * var(--_dial));
+  --_dial: 256px;
+
+  color: var(--rio-color-on-surface);
+}
+
+/* The input picker on the page. The dialog's display is dialog.css's, so it hides when closed. */
+.rio-time-picker:not(.rio-dialog) {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: top;
+}
+
+/* The fields, AM and PM beside them, and the dial below */
+.rio-time-picker__body {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-items: start;
+  gap: 12px 8px;
+}
+
+.rio-time-picker[data-hour-cycle='24'] .rio-time-picker__body {
+  grid-template-columns: auto;
+}
+
+.rio-time-picker__fields {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* A time reads hours, then minutes, left to right in right-to-left languages too. */
+.rio-time-picker__fields:dir(rtl) {
+  flex-direction: row-reverse;
+}
+
+/* The hour and minute: toggles in the dial mode, inputs in the text input */
+.rio-time-picker__field {
+  box-sizing: border-box;
+  inline-size: var(--_field-width);
+  block-size: var(--_field-height);
+  margin: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--rio-shape-corner-large);
+  background-color: var(--rio-color-surface-container-lowest);
+  color: var(--rio-color-on-surface);
+  font: var(--rio-typescale-display-large);
+  letter-spacing: var(--rio-typescale-display-large-tracking);
+  text-align: center;
+  cursor: pointer;
+}
+
+.rio-time-picker__field[data-selected] {
+  color: var(--rio-color-primary);
+}
+
+.rio-time-picker__input {
+  cursor: text;
+}
+
+.rio-time-picker__input:focus {
+  outline: none;
+  border-color: var(--rio-color-primary);
+  color: var(--rio-color-primary);
+}
+
+.rio-time-picker__input[aria-invalid='true'] {
+  border-color: var(--rio-color-error);
+  color: var(--rio-color-error);
+}
+
+.rio-time-picker__unit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rio-time-picker__label {
+  padding-inline: 4px;
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-body-small);
+  letter-spacing: var(--rio-typescale-body-small-tracking);
+}
+
+.rio-time-picker__separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 16px;
+  block-size: var(--_field-height);
+  font: var(--rio-typescale-emphasized-display-large);
+  letter-spacing: var(--rio-typescale-emphasized-display-large-tracking);
+}
+
+/* AM and PM: round, and the selected one squarer, morphing as a selected button does */
+.rio-time-picker__period {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rio-time-picker__period-button {
+  /* Round is half the height rather than corner-full, so it springs into the selected shape. */
+  --rio-shape-morph-target: calc(var(--_period-height) / 2);
+  --rio-shape-morph-start-target: var(--rio-shape-morph-target);
+  --rio-shape-morph-end-target: var(--rio-shape-morph-target);
+
+  flex: none;
+  inline-size: var(--_period-width);
+  block-size: var(--_period-height);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-start-start-radius: var(--rio-shape-morph-start-target);
+  border-end-start-radius: var(--rio-shape-morph-start-target);
+  border-start-end-radius: var(--rio-shape-morph-end-target);
+  border-end-end-radius: var(--rio-shape-morph-end-target);
+  background-color: var(--rio-color-surface-container-lowest);
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-title-medium);
+  letter-spacing: var(--rio-typescale-title-medium-tracking);
+  cursor: pointer;
+  /* The corners move with a spring (base/shape-morph.css); its targets change at once. */
+  transition:
+    background-color var(--rio-motion-fast-effects),
+    color var(--rio-motion-fast-effects),
+    --rio-shape-morph-start-target 1ms step-end,
+    --rio-shape-morph-end-target 1ms step-end;
+}
+
+/* The target reaches 48px, past the 40px buttons. Physical, like `translate`. */
+.rio-time-picker__touch {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: max(100%, 48px);
+  block-size: max(100%, 48px);
+  translate: -50% -50%;
+}
+
+.rio-time-picker__period-button[data-selected] {
+  --rio-shape-morph-target: var(--_period-selected);
+
+  background-color: var(--rio-color-primary-container);
+  color: var(--rio-color-on-primary-container);
+  font: var(--rio-typescale-emphasized-title-medium);
+  letter-spacing: var(--rio-typescale-emphasized-title-medium-tracking);
+}
+
+/*
+ * The dial: the numbers around the face, the selector from the center to the handle. A clock face
+ * keeps its sides in right-to-left layouts, so what is on it is placed with physical properties.
+ */
+.rio-time-picker__dial {
+  position: relative;
+  cursor: pointer;
+  grid-column: 1 / -1;
+  justify-self: center;
+  inline-size: var(--_dial);
+  block-size: var(--_dial);
+  border-radius: 50%;
+  background-color: var(--rio-color-surface-container-lowest);
+  touch-action: none;
+  user-select: none;
+}
+
+.rio-time-picker__dial :is(.rio-time-picker__number, .rio-time-picker__handle) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: 48px;
+  block-size: 48px;
+  translate: -50% -50%;
+  transform: rotate(var(--rio-time-picker-angle)) translateY(calc(-1 * var(--_ring)))
+    rotate(calc(-1 * var(--rio-time-picker-angle)));
+  border-radius: 50%;
+}
+
+.rio-time-picker__number {
+  z-index: 1;
+  /* The numbers overlap: the dial takes the pointer, and marks the nearest one hovered. */
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--rio-color-on-surface);
+  font: var(--rio-typescale-body-large);
+  letter-spacing: var(--rio-typescale-body-large-tracking);
+}
+
+.rio-time-picker__number[data-selected] {
+  color: var(--rio-color-on-primary);
+}
+
+@media (hover: hover) {
+  .rio-time-picker__number[data-hovered]::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-time-picker__handle {
+  background-color: var(--rio-color-primary);
+}
+
+.rio-time-picker__track {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: 2px;
+  block-size: var(--_ring);
+  translate: -50% -100%;
+  transform-origin: 50% 100%;
+  transform: rotate(var(--rio-time-picker-angle));
+  background-color: var(--rio-color-primary);
+}
+
+.rio-time-picker__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: 8px;
+  block-size: 8px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background-color: var(--rio-color-primary);
+}
+
+/* The ring of each number, and the selector's: on a 24-hour clock, 12 to 23 sit on the inner one */
+:is(.rio-time-picker__dial, .rio-time-picker__number) {
+  --_ring: var(--_outer);
+}
+
+:is(.rio-time-picker__dial, .rio-time-picker__number)[data-inner] {
+  --_ring: var(--_inner);
+}
+
+/* Without a time yet, no selector shows. */
+.rio-time-picker__dial[data-empty] :is(.rio-time-picker__track, .rio-time-picker__handle) {
+  display: none;
+}
+
+.rio-time-picker__error {
+  padding-block-start: 8px;
+  color: var(--rio-color-error);
+  font: var(--rio-typescale-body-small);
+  letter-spacing: var(--rio-typescale-body-small-tracking);
+}
+
+/* A row as tall as the buttons' 48px targets, its buttons 4px inside the padding at the sides */
+.rio-time-picker__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-block-size: 48px;
+  padding-inline: 4px;
+}
+
+.rio-time-picker__actions > :first-child {
+  margin-inline-end: auto;
+}
+
+/* The dialog: a basic dialog's container, as wide as the horizontal dial needs */
+
+.rio-dialog.rio-time-picker-dialog {
+  --_period-width: 56px;
+  --_period-height: 56px;
+  --_period-selected: var(--rio-shape-corner-large);
+
+  inline-size: fit-content;
+  min-inline-size: 0;
+  max-inline-size: calc(100% - 48px);
+  padding: 12px;
+  /* Not on [open]: the layout holds while the dialog closes, as dialog.css keeps it displayed. */
+  gap: 12px;
+  color: var(--rio-color-on-surface);
+}
+
+.rio-dialog.rio-time-picker-dialog::before {
+  background-color: var(--rio-color-surface-container);
+}
+
+.rio-time-picker-dialog[data-hour-cycle='24'][data-mode='dial'] {
+  --_field-width: 132px;
+}
+
+/* Horizontal: the fields over AM and PM, centered beside the dial */
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'] {
+  --_period-width: 100px;
+  --_period-height: 40px;
+  --_period-selected: var(--rio-shape-corner-medium);
+  --_field-width: 100px;
+
+  gap: 24px;
+  padding: 24px;
+}
+
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'] .rio-time-picker__body {
+  grid-template-columns: auto auto;
+  /* Room above and below the fields and AM and PM, which center on the dial */
+  grid-template-rows: 1fr auto auto 1fr;
+  gap: 16px 52px;
+}
+
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'][data-hour-cycle='24']
+  .rio-time-picker__body {
+  grid-template-rows: 1fr auto 1fr;
+}
+
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'] .rio-time-picker__fields {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'] .rio-time-picker__period {
+  grid-row: 3;
+  grid-column: 1;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'] .rio-time-picker__dial {
+  grid-row: 1 / -1;
+  grid-column: 2;
+}
+
+/* The mode icon lines up with the fields' start, and OK's end with the dial's */
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial'] .rio-time-picker__actions {
+  padding-inline: 0;
+}
+
+.rio-time-picker-dialog[data-layout='horizontal'][data-mode='dial']
+  .rio-time-picker__actions
+  > :first-child {
+  margin-inline-start: -8px;
+}
+
+/* Automatic: horizontal where the window is too short for the dial below the fields */
+@media (max-height: 559px) {
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'] {
+    --_period-width: 100px;
+    --_period-height: 40px;
+    --_period-selected: var(--rio-shape-corner-medium);
+    --_field-width: 100px;
+
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'] .rio-time-picker__body {
+    grid-template-columns: auto auto;
+    /* Room above and below the fields and AM and PM, which center on the dial */
+    grid-template-rows: 1fr auto auto 1fr;
+    gap: 16px 52px;
+  }
+
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'][data-hour-cycle='24']
+    .rio-time-picker__body {
+    grid-template-rows: 1fr auto 1fr;
+  }
+
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'] .rio-time-picker__fields {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'] .rio-time-picker__period {
+    grid-row: 3;
+    grid-column: 1;
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'] .rio-time-picker__dial {
+    grid-row: 1 / -1;
+    grid-column: 2;
+  }
+
+  /* The mode icon lines up with the fields' start, and OK's end with the dial's */
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial'] .rio-time-picker__actions {
+    padding-inline: 0;
+  }
+
+  .rio-time-picker-dialog[data-layout='auto'][data-mode='dial']
+    .rio-time-picker__actions
+    > :first-child {
+    margin-inline-start: -8px;
+  }
+}

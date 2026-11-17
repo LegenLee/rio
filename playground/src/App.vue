@@ -2,7 +2,6 @@
 import {
   COLOR_ROLES,
   ELEVATION_LEVELS,
-  applyTheme,
   colorVar,
   elevationVar,
   motionVar,
@@ -10,15 +9,16 @@ import {
   TYPE_STYLES,
   shapeVar,
   typescaleVar,
-  type MotionScheme,
   type MotionToken,
-  type SchemeVariant,
 } from '@rio-m3e/tokens';
 import {
   mdiBookmark,
   mdiBookmarkOutline,
+  mdiCalendar,
   mdiCheck,
   mdiChevronDown,
+  mdiChevronLeft,
+  mdiChevronRight,
   mdiClockOutline,
   mdiClose,
   mdiContentCopy,
@@ -33,9 +33,13 @@ import {
   mdiFormatUnderline,
   mdiHeart,
   mdiHeartOutline,
+  mdiKeyboardOutline,
   mdiMagnify,
+  mdiMenuDown,
   mdiMenuRight,
+  mdiOpenInNew,
   mdiPause,
+  mdiPencil,
   mdiRestore,
   mdiShareVariant,
   mdiSkipNext,
@@ -52,11 +56,14 @@ import {
   type ButtonVariant,
   type IconButtonVariant,
   type MenuAnchorPoint,
+  type SelectSelected,
 } from '@rio-m3e/core';
 import {
   RioButton,
   RioButtonGroup,
   RioCheckbox,
+  RioDatePicker,
+  RioDatePickerDialog,
   RioDialog,
   RioIconButton,
   RioMenu,
@@ -65,24 +72,27 @@ import {
   RioMenuItem,
   RioRadio,
   RioRadioGroup,
+  RioSelect,
+  RioSelectOption,
   RioSplitButton,
   RioSubMenu,
   RioSwitch,
   RioTextField,
+  RioTimeInput,
+  RioTimePickerDialog,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
-import { computed, reactive, ref, useTemplateRef, watchEffect } from 'vue';
+import { computed, reactive, ref, useTemplateRef } from 'vue';
+import { theme } from './theme';
 
-const sourceColor = ref('#6750a4');
-const variant = ref<SchemeVariant>('tonal-spot');
-const contrast = ref(0);
-const mode = ref<'light dark' | 'light' | 'dark'>('light dark');
-const motion = ref<MotionScheme>('expressive');
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
 const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
+// Bound rather than written in the template: vue-tsc 3.3.14 misreads a `//` in a component's static
+// attribute and reports errors further down the template (vuejs/language-tools#6240).
+const M3_URL = 'https://m3.material.io';
 const toggles = reactive<Partial<Record<ButtonVariant, boolean>>>({});
 const iconShape = ref<ButtonShape>('round');
 const favorites = reactive<Partial<Record<IconButtonVariant, boolean>>>({ standard: true });
@@ -150,6 +160,29 @@ const fields = reactive({
   bio: '',
 });
 const albumName = ref('Summer');
+const selects = reactive<{ size?: SelectSelected; font: SelectSelected; toppings: SelectSelected }>(
+  {
+    font: 'roboto',
+    toppings: ['cheese', 'basil'],
+  },
+);
+const PIZZA_TOPPINGS = { cheese: 'Cheese', mushroom: 'Mushroom', olive: 'Olive', basil: 'Basil' };
+const selectSent = ref('');
+const dates = reactive<{ docked?: string; modal?: string; korean?: string; dialog?: string }>({
+  korean: '2026-11-27',
+});
+const dateDialogOpen = ref(false);
+const times = reactive<{ inline?: string; german?: string; dialog?: string; horizontal?: string }>({
+  inline: '07:30',
+  german: '19:05',
+  horizontal: '14:00',
+});
+const timeDialogOpen = ref(false);
+const timeHorizontalOpen = ref(false);
+const submitSelects = (event: SubmitEvent) => {
+  const data = new FormData(event.target as HTMLFormElement);
+  selectSent.value = [...data].map(([key, value]) => `${key}=${String(value)}`).join(' ');
+};
 const toolbar = [
   { action: 'Cut', icon: mdiContentCut },
   { action: 'Copy', icon: mdiContentCopy },
@@ -177,17 +210,6 @@ const openContext = (event: MouseEvent) => {
 };
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
-
-watchEffect(() => {
-  const root = document.documentElement;
-  applyTheme(root, {
-    sourceColor: sourceColor.value,
-    variant: variant.value,
-    contrast: contrast.value,
-    motion: motion.value,
-  });
-  root.style.colorScheme = mode.value;
-});
 </script>
 
 <template>
@@ -195,10 +217,10 @@ watchEffect(() => {
     <h1>Rio Playground</h1>
 
     <section class="controls">
-      <label>Source color <input v-model="sourceColor" type="color" /></label>
+      <label>Source color <input v-model="theme.sourceColor" type="color" /></label>
       <label>
         Variant
-        <select v-model="variant">
+        <select v-model="theme.variant">
           <option value="tonal-spot">Tonal Spot</option>
           <option value="neutral">Neutral</option>
           <option value="vibrant">Vibrant</option>
@@ -207,12 +229,12 @@ watchEffect(() => {
       </label>
       <label>
         Contrast
-        <input v-model.number="contrast" type="range" min="-1" max="1" step="0.5" />
-        {{ contrast }}
+        <input v-model.number="theme.contrast" type="range" min="-1" max="1" step="0.5" />
+        {{ theme.contrast }}
       </label>
       <label>
         Mode
-        <select v-model="mode">
+        <select v-model="theme.colorScheme">
           <option value="light dark">System</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -220,7 +242,7 @@ watchEffect(() => {
       </label>
       <label>
         Motion
-        <select v-model="motion">
+        <select v-model="theme.motion">
           <option value="expressive">Expressive</option>
           <option value="standard">Standard</option>
         </select>
@@ -278,6 +300,27 @@ watchEffect(() => {
         <RioButton variant="outlined" disabled>Disabled outlined</RioButton>
         <RioButton soft-disabled>Soft-disabled (Tab to it)</RioButton>
         <div v-ripple class="demo-card rio-state-layer">Any element can ripple</div>
+      </div>
+      <div class="controls">
+        <RioButton :href="M3_URL" target="_blank" rel="noopener">
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+          </template>
+          Link (new tab)
+        </RioButton>
+        <RioButton :href="M3_URL" variant="outlined" disabled> Disabled link </RioButton>
+        <RioButton :href="M3_URL" variant="outlined" soft-disabled>
+          Soft-disabled link (Tab to it)
+        </RioButton>
+        <RioIconButton
+          label="Material 3 (link)"
+          :href="M3_URL"
+          target="_blank"
+          rel="noopener"
+          variant="tonal"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+        </RioIconButton>
       </div>
     </section>
 
@@ -901,6 +944,170 @@ watchEffect(() => {
         />
       </div>
       <code>{{ fields }}</code>
+    </section>
+
+    <section class="text-fields">
+      <form class="controls" @submit.prevent="submitSelects">
+        <RioSelect v-model="selects.size" label="Size" name="size" required>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+          <RioSelectOption value="s">Small</RioSelectOption>
+          <RioSelectOption value="m">Medium</RioSelectOption>
+          <RioSelectOption value="l" disabled>Large</RioSelectOption>
+          <RioSelectOption value="xl">Extra large</RioSelectOption>
+        </RioSelect>
+        <RioSelect v-model="selects.font" variant="outlined" label="Font" name="font">
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+          <RioSelectOption value="roboto">Roboto</RioSelectOption>
+          <RioSelectOption value="roboto-flex">Roboto Flex</RioSelectOption>
+          <RioSelectOption value="roboto-serif">
+            Roboto Serif
+            <template #supporting-text>With serifs</template>
+          </RioSelectOption>
+        </RioSelect>
+        <RioSelect
+          v-model="selects.toppings"
+          label="Toppings"
+          name="toppings"
+          multiple
+          menu-variant="vibrant"
+        >
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+          <RioSelectOption v-for="(name, value) in PIZZA_TOPPINGS" :key="value" :value="value">
+            {{ name }}
+            <template #icon="{ selected }">
+              <svg v-if="selected" viewBox="0 0 24 24" aria-hidden="true">
+                <path :d="mdiCheck" fill="currentColor" />
+              </svg>
+            </template>
+          </RioSelectOption>
+        </RioSelect>
+        <RioSelect label="Disabled" model-value="a" disabled>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+          <RioSelectOption value="a">Fixed</RioSelectOption>
+        </RioSelect>
+        <RioButton type="submit">Submit</RioButton>
+        <RioButton type="reset" variant="text">Reset</RioButton>
+      </form>
+      <code>{{ selects }} {{ selectSent }}</code>
+    </section>
+
+    <section class="text-fields">
+      <div class="controls">
+        <RioDatePicker v-model="dates.docked" label="Departure" clearable min="2026-01-01">
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+          <template #previous-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronLeft" fill="currentColor" />
+            </svg>
+          </template>
+          <template #next-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronRight" fill="currentColor" />
+            </svg>
+          </template>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDatePicker>
+        <RioDatePicker v-model="dates.modal" variant="modal" label="Event date">
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+          <template #edit-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiPencil" fill="currentColor" />
+            </svg>
+          </template>
+          <template #previous-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronLeft" fill="currentColor" />
+            </svg>
+          </template>
+          <template #next-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronRight" fill="currentColor" />
+            </svg>
+          </template>
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMenuDown" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDatePicker>
+        <RioDatePicker v-model="dates.korean" label="출발일" locale="ko-KR">
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDatePicker>
+        <RioButton variant="tonal" @click="dateDialogOpen = true">Due date</RioButton>
+        <RioDatePickerDialog v-model="dates.dialog" v-model:open="dateDialogOpen" />
+      </div>
+      <code>{{ dates }}</code>
+    </section>
+
+    <section class="text-fields">
+      <div class="controls">
+        <RioTimeInput v-model="times.inline" />
+        <RioTimeInput v-model="times.german" locale="de-DE" />
+        <RioButton variant="tonal" @click="timeDialogOpen = true">Alarm</RioButton>
+        <RioTimePickerDialog v-model="times.dialog" v-model:open="timeDialogOpen">
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #clock-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiClockOutline" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimePickerDialog>
+        <RioButton variant="tonal" @click="timeHorizontalOpen = true">Start, 24 hours</RioButton>
+        <RioTimePickerDialog
+          v-model="times.horizontal"
+          v-model:open="timeHorizontalOpen"
+          :hour-cycle="24"
+          layout="horizontal"
+        >
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #clock-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiClockOutline" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimePickerDialog>
+      </div>
+      <code>{{ times }}</code>
     </section>
 
     <section class="selection">

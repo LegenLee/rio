@@ -1,0 +1,313 @@
+/*
+ * M3 date pickers: the docked one, a calendar below its field, and the modal one, a calendar in a
+ * dialog. The field is a text field (`text-field.css`), the dialog a basic dialog's container and
+ * motion (`dialog.css`), and the arrows and actions are icon buttons and text buttons.
+ *
+ * Values come from Material Web's component tokens (`_md-comp-date-picker-docked.scss`,
+ * `_md-comp-date-picker-modal.scss`, `_md-comp-date-input-modal.scss`, Material 3 v34.0.21):
+ * 360px wide; docked 16px corners, modal 28px; a 40px circle for each day, primary when selected,
+ * a primary outline for today; the days of the months around at 38% in the docked calendar; years
+ * in 72 × 36px pills. The paddings come from the M3 Design Kit: 12px at the sides of the
+ * calendar, none at the sides of the docked header, the modal title 16px from the top and 24px
+ * from the start, and the buttons 12px from the sides, 4px below the calendar, and 8px (modal) or
+ * 4px (docked) from the bottom. The kit measures icon buttons by their 48px target, and an icon
+ * button's 40px box sits 4px inside it, so those spaces grow by 4px here.
+ */
+
+.rio-date-picker {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: top;
+}
+
+/* The calendar, in either picker */
+
+.rio-date-picker__calendar {
+  --_cell: 48px;
+
+  display: flex;
+  flex-direction: column;
+  padding-inline: 12px;
+  color: var(--rio-color-on-surface);
+  font: var(--rio-typescale-body-large);
+  letter-spacing: var(--rio-typescale-body-large-tracking);
+}
+
+.rio-date-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  block-size: 64px;
+}
+
+.rio-date-picker__calendar[data-variant='modal'] .rio-date-picker__header {
+  block-size: 56px;
+  padding-inline-end: 4px;
+}
+
+/* No space at the sides: the arrows' 48px targets reach the container's edges. */
+.rio-date-picker__calendar[data-variant='docked'] .rio-date-picker__header {
+  margin-inline: -8px;
+}
+
+.rio-date-picker__menu-group {
+  display: flex;
+  align-items: center;
+}
+
+/* The month and year buttons, with their dropdown arrow */
+.rio-date-picker__menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  block-size: 40px;
+  padding-inline: 12px 8px;
+  border: 0;
+  border-radius: var(--rio-shape-corner-full);
+  background: none;
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-label-large);
+  letter-spacing: var(--rio-typescale-label-large-tracking);
+  cursor: pointer;
+}
+
+.rio-date-picker__menu-button:disabled {
+  color: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  cursor: default;
+}
+
+.rio-date-picker__dropdown-icon {
+  display: inline-flex;
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.rio-date-picker__dropdown-icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.rio-date-picker__menu-button[aria-expanded='true'] .rio-date-picker__dropdown-icon {
+  rotate: 180deg;
+}
+
+/* The grid of days */
+
+.rio-date-picker__grid {
+  border-collapse: collapse;
+  table-layout: fixed;
+  inline-size: calc(7 * var(--_cell));
+}
+
+.rio-date-picker__weekday {
+  block-size: var(--_cell);
+  padding: 0;
+  font: inherit;
+  font-weight: inherit;
+  text-align: center;
+}
+
+.rio-date-picker__cell {
+  inline-size: var(--_cell);
+  block-size: var(--_cell);
+  padding: 0;
+  text-align: center;
+}
+
+.rio-date-picker__day {
+  --_day: var(--rio-color-on-surface);
+
+  inline-size: 40px;
+  block-size: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--rio-shape-corner-full);
+  background: none;
+  color: var(--_day);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.rio-date-picker__day[aria-current='date'] {
+  --_day: var(--rio-color-primary);
+
+  box-shadow: inset 0 0 0 1px var(--rio-color-primary);
+}
+
+.rio-date-picker__day[data-outside] {
+  --_day: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+}
+
+.rio-date-picker__day[data-selected]:not([data-outside]) {
+  --_day: var(--rio-color-on-primary);
+
+  background-color: var(--rio-color-primary);
+  box-shadow: none;
+}
+
+.rio-date-picker__day[aria-disabled='true'] {
+  --_day: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+
+  cursor: default;
+}
+
+.rio-date-picker__day[aria-disabled='true'][data-selected] {
+  background-color: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+}
+
+.rio-date-picker__day.rio-state-layer[aria-disabled='true']::before {
+  opacity: 0;
+}
+
+/* The lists of months (docked) and years */
+
+/* Positioned, so its options' offsets count from it, for scrolling to the one shown */
+.rio-date-picker__list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  block-size: calc(7 * var(--_cell));
+  margin-inline: -12px;
+  overflow-y: auto;
+}
+
+.rio-date-picker__option {
+  display: flex;
+  flex: none;
+  align-items: center;
+  block-size: 48px;
+  margin: 0;
+  padding-inline: 16px;
+  border: 0;
+  background: none;
+  color: var(--rio-color-on-surface);
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rio-date-picker__option[data-selected] {
+  background-color: var(--rio-color-surface-variant);
+}
+
+.rio-date-picker__option[aria-disabled='true'] {
+  color: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  cursor: default;
+}
+
+/* The modal calendar's years: three to a row, as pills */
+.rio-date-picker__calendar[data-variant='modal'] .rio-date-picker__list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: start;
+  row-gap: 16px;
+  margin-inline: 0;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--rio-color-outline-variant);
+}
+
+.rio-date-picker__calendar[data-variant='modal'] .rio-date-picker__option {
+  justify-content: center;
+  justify-self: center;
+  inline-size: 72px;
+  block-size: 36px;
+  padding: 0;
+  border-radius: var(--rio-shape-corner-full);
+  color: var(--rio-color-on-surface-variant);
+}
+
+.rio-date-picker__calendar[data-variant='modal'] .rio-date-picker__option[data-selected] {
+  background-color: var(--rio-color-primary);
+  color: var(--rio-color-on-primary);
+}
+
+/* The text buttons under a calendar */
+.rio-date-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 12px 8px;
+}
+
+.rio-date-picker__menu .rio-date-picker__actions {
+  padding-block-end: 4px;
+}
+
+.rio-date-picker__actions > :first-child:not(:only-child, :nth-last-child(2)) {
+  margin-inline-end: auto;
+}
+
+/* The docked calendar */
+
+.rio-date-picker__menu {
+  box-sizing: border-box;
+  flex-direction: column;
+  inline-size: 360px;
+  max-inline-size: var(--rio-anchored-available-width, 360px);
+  max-block-size: var(--rio-anchored-available-height, none);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  border-radius: var(--rio-shape-corner-large);
+  background-color: var(--rio-color-surface-container-high);
+  color: var(--rio-color-on-surface);
+  box-shadow: var(--rio-elevation-level3);
+}
+
+.rio-date-picker__menu:popover-open {
+  display: flex;
+}
+
+/* The modal dialog: a basic dialog's container, 360px wide, without its padding */
+
+.rio-dialog.rio-date-picker-dialog {
+  inline-size: 360px;
+  min-inline-size: 0;
+  max-inline-size: min(360px, 100% - 48px);
+  padding: 0;
+  color: var(--rio-color-on-surface);
+}
+
+.rio-date-picker-dialog[open] {
+  display: flex;
+}
+
+.rio-date-picker-dialog__header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  min-block-size: 120px;
+  box-sizing: border-box;
+  padding: 16px 16px 12px 24px;
+  color: var(--rio-color-on-surface-variant);
+}
+
+.rio-date-picker-dialog__title {
+  grid-column: 1 / -1;
+  align-self: start;
+  font: var(--rio-typescale-label-large);
+  letter-spacing: var(--rio-typescale-label-large-tracking);
+}
+
+.rio-date-picker-dialog__headline {
+  font: var(--rio-typescale-headline-large);
+  letter-spacing: var(--rio-typescale-headline-large-tracking);
+}
+
+.rio-date-picker-dialog__divider {
+  border-block-start: 1px solid var(--rio-color-outline-variant);
+}
+
+.rio-date-picker-dialog__input {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 24px 0;
+}
+
+.rio-date-picker-dialog__input > .rio-text-field {
+  inline-size: 100%;
+}

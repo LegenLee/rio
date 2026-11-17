@@ -41,3 +41,48 @@ export interface PartNode<Part extends string = string, When extends string = ne
   readonly content?: true;
   readonly children?: readonly PartNode<Part, When>[];
 }
+
+/**
+ * ARIA attributes that hold a list of ids, where the app's and the part's add up. `aria-errormessage`
+ * holds one id in ARIA 1.2 and a list in 1.3.
+ */
+const ID_LISTS = new Set([
+  'aria-controls',
+  'aria-describedby',
+  'aria-details',
+  'aria-errormessage',
+  'aria-flowto',
+  'aria-labelledby',
+  'aria-owns',
+]);
+
+/**
+ * Puts a part's attributes over the ones the app gave the same element, for an adapter that passes
+ * the app's attributes to an element of the component's own (see "Core output" in
+ * docs/conventions.md):
+ * - An attribute the part leaves out (`undefined`) keeps the app's value.
+ * - One the part sets wins, except an id list (`aria-describedby`, `aria-labelledby`, ...), which
+ *   takes the app's ids first and then the part's, each once.
+ * - Everything else the app gave, such as listeners, passes through.
+ *
+ * `class` and `style` aren't merged: a part's `class` replaces the app's. Leave them out of `app`
+ * and merge them the framework's way, as Vue does with `:class` next to `v-bind`.
+ */
+export function mergePartAttrs(
+  app: Readonly<Record<string, unknown>>,
+  part: PartAttrs,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...app };
+  for (const [name, value] of Object.entries(part)) {
+    const own = app[name];
+    if (value === undefined) {
+      if (own === undefined || own === null) merged[name] = undefined;
+    } else if (ID_LISTS.has(name) && typeof own === 'string') {
+      const ids = [...own.split(/\s+/), ...value.split(/\s+/)].filter(Boolean);
+      merged[name] = [...new Set(ids)].join(' ');
+    } else {
+      merged[name] = value;
+    }
+  }
+  return merged;
+}

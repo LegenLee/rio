@@ -2,6 +2,7 @@
 import {
   attachTextField,
   createTextField,
+  mergePartAttrs,
   type TextFieldDomHandle,
   type TextFieldProps,
 } from '@rio-m3e/core';
@@ -106,13 +107,20 @@ onBeforeUnmount(() => handle?.detach());
             v-if="field.singleLine()"
             ref="input"
             v-model="model"
-            v-bind="{ ...$attrs, class: undefined, style: undefined, ...field.parts.input() }"
+            v-bind="
+              mergePartAttrs({ ...$attrs, class: undefined, style: undefined }, field.parts.input())
+            "
           />
           <textarea
             v-else
             ref="input"
             v-model="model"
-            v-bind="{ ...$attrs, class: undefined, style: undefined, ...field.parts.textarea() }"
+            v-bind="
+              mergePartAttrs(
+                { ...$attrs, class: undefined, style: undefined },
+                field.parts.textarea(),
+              )
+            "
           />
           <span v-if="field.showsSuffix()" v-bind="field.parts.suffix()">{{ suffix }}</span>
         </div>

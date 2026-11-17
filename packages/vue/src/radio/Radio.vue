@@ -3,6 +3,7 @@ import {
   attachCheckable,
   attachRipple,
   createRadio,
+  mergePartAttrs,
   type CheckableHandle,
   type RadioProps,
   type RadioValue,
@@ -65,7 +66,9 @@ onBeforeUnmount(() => {
   <span v-bind="radio.parts.root()" :class="$attrs.class" :style="$attrs.style">
     <input
       ref="input"
-      v-bind="{ ...$attrs, class: undefined, style: undefined, ...radio.parts.input() }"
+      v-bind="
+        mergePartAttrs({ ...$attrs, class: undefined, style: undefined }, radio.parts.input())
+      "
     />
     <span ref="state" v-bind="radio.parts.state()" />
     <span v-bind="radio.parts.icon()" />

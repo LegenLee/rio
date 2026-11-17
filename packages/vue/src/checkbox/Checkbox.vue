@@ -3,6 +3,7 @@ import {
   attachCheckable,
   attachRipple,
   createCheckbox,
+  mergePartAttrs,
   type CheckableHandle,
   type CheckboxProps,
   type RippleHandle,
@@ -56,7 +57,9 @@ onBeforeUnmount(() => {
   <span v-bind="checkbox.parts.root()" :class="$attrs.class" :style="$attrs.style">
     <input
       ref="input"
-      v-bind="{ ...$attrs, class: undefined, style: undefined, ...checkbox.parts.input() }"
+      v-bind="
+        mergePartAttrs({ ...$attrs, class: undefined, style: undefined }, checkbox.parts.input())
+      "
     />
     <span ref="state" v-bind="checkbox.parts.state()" />
     <span v-bind="checkbox.parts.container()">

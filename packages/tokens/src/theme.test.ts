@@ -56,6 +56,15 @@ describe('createThemeCss', () => {
     expect(css).toContain('--rio-color-surface: light-dark(');
     expect(css).toContain('--rio-elevation-level0: none;');
   });
+
+  test('colorScheme picks the scheme, or leaves it out', () => {
+    expect(createThemeCss({ ...options, colorScheme: 'dark' })).toContain(
+      ':root {\n  color-scheme: dark;\n',
+    );
+    const css = createThemeCss({ ...options, colorScheme: false });
+    expect(css).not.toContain('color-scheme');
+    expect(css.startsWith(':root {\n  --rio-')).toBe(true);
+  });
 });
 
 describe('applyTheme', () => {

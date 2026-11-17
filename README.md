@@ -37,31 +37,38 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Checkbox and radio button
 - [x] Text field
 
+### v0.5
+
+- [x] Link buttons
+- [x] Select
+- [x] Date picker
+- [x] Time picker
+
 ### Later
 
-- [ ] Link buttons
 - [ ] Form value for the switch
 - [ ] Language-specific line heights and variable font axes
 
 ## Usage
 
 ```sh
-pnpm add @rio-m3e/vue @rio-m3e/tokens
+pnpm add @rio-m3e/vue
 ```
 
-`@rio-m3e/tokens` sets the theme as CSS variables. Apply it once **BEFORE** mounting the app.
+`createRio` sets the theme, as CSS variables on the page, and the language of Rio's components. Install it **BEFORE** mounting the app.
 
 ```ts
 // main.ts
-import { applyTheme } from '@rio-m3e/tokens';
+import { createRio } from '@rio-m3e/vue';
 import { createApp } from 'vue';
 import App from './App.vue';
 
-const root = document.documentElement;
-applyTheme(root, { sourceColor: '#6750a4' });
-root.style.colorScheme = 'light dark'; // follow the system's light or dark mode
+const rio = createRio({
+  theme: { sourceColor: '#6750a4' }, // follows the system's light or dark mode
+  locale: 'en', // only to fix one: otherwise the page's <html lang>, then the browser's
+});
 
-createApp(App).mount('#app');
+createApp(App).use(rio).mount('#app');
 ```
 
 Each component brings its own styles. Rio ships no icons, so bring your own.

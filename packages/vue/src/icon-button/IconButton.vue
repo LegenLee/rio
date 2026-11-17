@@ -23,6 +23,7 @@ const {
   softDisabled,
   type,
   value,
+  href,
 } = defineProps<IconButtonProps>();
 const emit = defineEmits<{
   click: [event: MouseEvent];
@@ -53,6 +54,7 @@ const item = useButtonGroupItem(
       softDisabled,
       type,
       value,
+      href,
     }) satisfies Record<keyof IconButtonProps, unknown>,
   (next) => emit('update:selected', next),
 );
@@ -65,11 +67,17 @@ const button = createIconButton({
 </script>
 
 <template>
-  <button v-ripple v-shape-morph v-bind="button.parts.root()" @click="button.handleClick">
+  <component
+    :is="button.isLink() ? 'a' : 'button'"
+    v-ripple
+    v-shape-morph
+    v-bind="button.parts.root()"
+    @click="button.handleClick"
+  >
     <span v-bind="button.parts.touch()" />
     <span v-bind="button.parts.icon()">
       <slot v-if="button.showsSelectedIcon()" name="selected-icon" />
       <slot v-else />
     </span>
-  </button>
+  </component>
 </template>

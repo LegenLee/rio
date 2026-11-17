@@ -4,6 +4,25 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [0.5.0] - 2026-11-18
+
+### Added
+
+- **Link buttons**: `href` on `RioButton` and `RioIconButton` (and `createButton` and `createIconButton`) renders the same button as an `<a href>`, with `buttonLinkSkeleton`, `iconButtonLinkSkeleton`, and `isLink()` for adapters. A link can't toggle. Disabled, it keeps no `href` and takes `role="link"` with `aria-disabled="true"`; `softDisabled` keeps it focusable. A router's link works through its `custom` slot, passing `href` and `navigate`.
+- **`RioSelect`** and **`RioSelectOption`**, with `createSelect`, `createSelectOption`, and `attachSelect` in `@rio-m3e/core`: a text field that opens a list of options, filled or outlined, with `v-model`. The list is an M3E menu (standard or vibrant), placed below the field and at least as wide. `multiple` keeps the list open, and the field lists the selected options separated by commas, unless the app shows the selection itself in the `value` slot. The focus moves into the list, and the keys follow the menu's. A hidden native `<select>` submits the selection under `name` and checks `required`, and a change the browser makes to it, as autofill would, comes back through `v-model`. Without a width from the app, the field is as wide as its widest option. The app brings the dropdown arrow, in a slot.
+- **`RioDatePicker`** and **`RioDatePickerDialog`**, with `createCalendar`, `createDatePicker`, `createDatePickerDialog`, `attachCalendar`, and `attachDatePickerMenu` in `@rio-m3e/core`: the docked date picker, a calendar below a text field, and the modal one, a calendar in a dialog that switches to a text input. Dates are ISO strings, `YYYY-MM-DD`. Typed dates are read on Enter and on leaving the field, in any separators, and written back in the language's format. Choosing a day waits for OK; Enter on a day chooses and confirms. `min`, `max`, `isDateDisabled`, an opt-in Clear, a month list and a year list, and `name` for forms. The app brings the icons, in slots.
+- **`RioTimeInput`** and **`RioTimePickerDialog`**, with `createTimePicker` and `attachTimePicker` in `@rio-m3e/core`: the M3 Expressive input time picker, on the page, and the dial time picker in a dialog, which switches to the text input. Times are `HH:MM` on a 24-hour clock. The clock, 12 hours with the language's AM and PM or 24 with an inner ring, comes from the language, or `hourCycle`. The dial picks with the pointer, following a drag, and goes on to the minutes after an hour; from the keyboard, Enter on the hour or minute moves onto it. The dialog lays the dial out below the fields, or beside them in a short window, or as `layout` says. The app opens the dialog with its own button, and brings the mode button's icons in slots.
+- `style` in a core part's attributes, for Rio's own custom properties; the contract tests compare it declaration by declaration.
+- **`createRio`** in `@rio-m3e/vue`, one plugin for the whole app: `app.use(createRio({ theme, locale }))`. It writes the theme on the page's root before the app mounts, again whenever a ref or getter to it changes, and takes it off when the app unmounts; `rio.css` holds the theme as a stylesheet, for server rendering. It sets the app's language, adds the app's own message tables (`messages`), and names the language that fills in for one Rio has no table for (`fallbackLocale`). `@rio-m3e/vue` now installs `@rio-m3e/tokens`.
+- **Languages**: `RioLocaleProvider`, `useLocale`, and `useMessages` in `@rio-m3e/vue`, and `resolveLocale`, `firstDayOfWeek`, `messagesFor`, and `formatMessage` in `@rio-m3e/core`, with message tables in English and Korean. A component takes its language from its own `locale`, the nearest provider, `createRio`, the document's `lang`, the browser's language, or English, and its `messages` prop replaces any of its text.
+- `colorScheme` in `createThemeCss` (`@rio-m3e/tokens`): another `color-scheme` than `light dark`, or `false` for none.
+- `data-focused` on a text field's root makes it look focused while the focus is elsewhere, as a select's is while its list is open.
+
+### Fixed
+
+- Attributes the app gives `RioTextField`, `RioSelect`, `RioCheckbox`, `RioRadio`, or `RioSubMenu`, such as `aria-describedby` or `aria-invalid`, were dropped wherever Rio had no value of its own for them. They now stay. Rio's own values still win, and `aria-describedby` and `aria-labelledby` list the app's ids first, then Rio's. Adapters merge them with the new `mergePartAttrs` in `@rio-m3e/core`.
+- In a menu, once letters had moved the focus to an item, Space no longer pressed items until the menu closed, even after typing had stopped. It now presses the item once the letters typed stop adding up, after 500ms.
+
 ## [0.4.0] - 2026-11-17
 
 Form controls: the checkbox, radio buttons, and the text field. Core no longer keeps clicks inside tooltips and dialogs, which hid them from frameworks such as React; adapters do it with their own events, which breaks code that passed `contain` to `attachOverlay`.

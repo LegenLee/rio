@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DialogCancelEvent } from '@rio-m3e/core';
-import { RioButton, RioDialog } from '@rio-m3e/vue';
+import { RioButton, RioDialog, RioTextField } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const open = ref(false);
@@ -23,7 +23,7 @@ const onCancel = (event: DialogCancelEvent) => {
 <template>
   <RioButton variant="tonal" @click="show">Rename “{{ name }}”</RioButton>
   <RioDialog v-model:open="open" role="dialog" headline="Rename album" @cancel="onCancel">
-    <input v-model="draft" aria-label="Album name" />
+    <RioTextField v-model="draft" label="Album name" style="inline-size: 100%" />
     <p v-if="note" role="status">{{ note }}</p>
     <template #actions>
       <RioButton variant="text" @click="open = false">Cancel</RioButton>

@@ -35,6 +35,17 @@ describe('RioButton', () => {
     await expect.element(gallery).toMatchScreenshot(`states-${scheme}`);
   });
 
+  // A link looks like the button it stands in for: no underline, no link color.
+  test('links', async () => {
+    const gallery = await renderGallery('light', () => [
+      BUTTON_VARIANTS.map((variant) => h(Button, { variant, href: '#link' }, () => 'Link')),
+      BUTTON_VARIANTS.map((variant) =>
+        h(Button, { variant, href: '#link', disabled: true }, () => 'Disabled'),
+      ),
+    ]);
+    await expect.element(gallery).toMatchScreenshot('links');
+  });
+
   test('keyboard focus and hover', async () => {
     const gallery = await renderGallery('light', () => [
       [h(Button, { variant: 'outlined' }, () => 'Focused'), h(Button, () => 'Hovered')],
