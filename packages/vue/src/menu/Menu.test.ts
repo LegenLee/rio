@@ -161,6 +161,18 @@ describe('RioMenu', () => {
     expect(focusedText()).toBe('Copy');
   });
 
+  test('after a pause in typing, Space presses the item the letters moved to', async () => {
+    clicks.length = 0;
+    const { state, opened } = await setup();
+    await opened();
+    await userEvent.keyboard('d');
+    expect(focusedText()).toBe('Delete');
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await userEvent.keyboard(' ');
+    expect(clicks).toEqual(['delete']);
+    await vi.waitFor(() => expect(state.open).toBe(false));
+  });
+
   test('Tab closes it and moves on from the anchor', async () => {
     const { state, opened } = await setup();
     await opened();
