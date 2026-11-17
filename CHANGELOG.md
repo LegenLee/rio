@@ -4,7 +4,7 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-18
 
 ### Added
 

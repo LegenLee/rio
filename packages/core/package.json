@@ -1,6 +1,6 @@
 {
   "name": "@rio-m3e/core",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Framework-agnostic state, props and behaviors for Rio",
   "license": "Apache-2.0",
   "author": "LegenLee",
