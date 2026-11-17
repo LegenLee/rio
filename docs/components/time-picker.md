@@ -145,7 +145,7 @@ import Layout from './demos/time-picker/Layout.vue';
 
 ### Languages
 
-Every text and the clock come from the language: the picker's `locale`, or a `RioLocaleProvider` or the `rioLocale` plugin, or the document's `lang`, or the browser's language (see [Languages](../guide/languages.md)).
+Every text and the clock come from the language: the picker's `locale`, or a `RioLocaleProvider` or `createRio`, or the document's `lang`, or the browser's language (see [Languages](../guide/languages.md)).
 
 ### Values and their sources
 

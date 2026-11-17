@@ -2,7 +2,6 @@
 import {
   COLOR_ROLES,
   ELEVATION_LEVELS,
-  applyTheme,
   colorVar,
   elevationVar,
   motionVar,
@@ -10,9 +9,7 @@ import {
   TYPE_STYLES,
   shapeVar,
   typescaleVar,
-  type MotionScheme,
   type MotionToken,
-  type SchemeVariant,
 } from '@rio-m3e/tokens';
 import {
   mdiBookmark,
@@ -86,13 +83,9 @@ import {
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
-import { computed, reactive, ref, useTemplateRef, watchEffect } from 'vue';
+import { computed, reactive, ref, useTemplateRef } from 'vue';
+import { theme } from './theme';
 
-const sourceColor = ref('#6750a4');
-const variant = ref<SchemeVariant>('tonal-spot');
-const contrast = ref(0);
-const mode = ref<'light dark' | 'light' | 'dark'>('light dark');
-const motion = ref<MotionScheme>('expressive');
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
 const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
@@ -217,17 +210,6 @@ const openContext = (event: MouseEvent) => {
 };
 
 const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial'];
-
-watchEffect(() => {
-  const root = document.documentElement;
-  applyTheme(root, {
-    sourceColor: sourceColor.value,
-    variant: variant.value,
-    contrast: contrast.value,
-    motion: motion.value,
-  });
-  root.style.colorScheme = mode.value;
-});
 </script>
 
 <template>
@@ -235,10 +217,10 @@ watchEffect(() => {
     <h1>Rio Playground</h1>
 
     <section class="controls">
-      <label>Source color <input v-model="sourceColor" type="color" /></label>
+      <label>Source color <input v-model="theme.sourceColor" type="color" /></label>
       <label>
         Variant
-        <select v-model="variant">
+        <select v-model="theme.variant">
           <option value="tonal-spot">Tonal Spot</option>
           <option value="neutral">Neutral</option>
           <option value="vibrant">Vibrant</option>
@@ -247,12 +229,12 @@ watchEffect(() => {
       </label>
       <label>
         Contrast
-        <input v-model.number="contrast" type="range" min="-1" max="1" step="0.5" />
-        {{ contrast }}
+        <input v-model.number="theme.contrast" type="range" min="-1" max="1" step="0.5" />
+        {{ theme.contrast }}
       </label>
       <label>
         Mode
-        <select v-model="mode">
+        <select v-model="theme.colorScheme">
           <option value="light dark">System</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -260,7 +242,7 @@ watchEffect(() => {
       </label>
       <label>
         Motion
-        <select v-model="motion">
+        <select v-model="theme.motion">
           <option value="expressive">Expressive</option>
           <option value="standard">Standard</option>
         </select>

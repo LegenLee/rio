@@ -73,6 +73,7 @@ export {
   applyTheme,
   createThemeCss,
   createThemeVariables,
+  type ThemeColorScheme,
   type ThemeOptions,
   type ThemeVar,
 } from './theme';

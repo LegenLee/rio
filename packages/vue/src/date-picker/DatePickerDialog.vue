@@ -3,7 +3,6 @@ import {
   attachDialog,
   createDatePickerDialog,
   initialPickerState,
-  messagesFor,
   type DatePickerDialogProps,
   type DatePickerMessages,
   type DialogDomHandle,
@@ -27,7 +26,7 @@ import {
 } from 'vue';
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
-import { useLocale } from '../locale/locale';
+import { useLocale, useMessages } from '../locale/locale';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 
@@ -67,7 +66,7 @@ defineSlots<{
 }>();
 
 const locale = useLocale(() => props.locale);
-const messages = computed(() => ({ ...messagesFor(locale.value).datePicker, ...props.messages }));
+const messages = useMessages('datePicker', locale, () => props.messages);
 const state = reactive<PickerState>(initialPickerState(model.value, locale.value, props));
 // The content renders from opening until the closing motion ends.
 const rendered = ref(open.value);

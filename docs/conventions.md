@@ -157,6 +157,8 @@ packages/
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     text-field/
       TextField.vue         class and style on the root, other attributes on the input
+    rio/
+      rio.ts                createRio: the theme and the language for the whole app
     tooltip/
       Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/
@@ -214,7 +216,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **One normalize function per adapter** turns a bundle into its framework's props. For Vue it changes nothing, since `v-bind` takes HTML attributes as they are. A React adapter would map `class` to `className`, `tabindex` to `tabIndex`, `style` to an object, and `''` booleans to `true`. How an adapter reads a bundle is its own business; only the bundle's shape is fixed.
 - **The app's attributes and a part's meet in `mergePartAttrs`**, wherever an adapter passes the app's attributes to an element of the component's own, such as a text field's input. A part's `undefined` means Rio sets nothing there, not that the app's value goes, so the app's value stays. A value the part sets wins, except in an id list (`aria-describedby`, `aria-labelledby`, ...), where the app's ids come first and the part's follow: an app's own description of an input and Rio's supporting text both reach assistive technology. In `aria-labelledby` the names add up too: an app's own label and Rio's `label` make one name. `class` and `style` are merged the framework's way. `packages/vue/src/attrs.test.ts` holds every such component to it.
   - On a component's root, the framework's own way of passing attributes on applies instead. In Vue, its fallthrough lets the app's values win there, Rio's included, id lists too: an app's `aria-labelledby` on a dialog replaces the headline's id rather than adding to it.
-- **Text a component shows comes from `core`'s message tables** (`locale/messages/`), in the language the adapter resolves: the component's own `locale`, or one provided the framework's way (in Vue, `RioLocaleProvider` and the `rioLocale` plugin, through `provide`; in React, a context), with `resolveLocale` filling in the rest. A component's `messages` prop replaces any of its text. Dates and numbers go through `Intl` in the same language. See `docs/guide/languages.md`.
+- **Text a component shows comes from `core`'s message tables** (`locale/messages/`), in the language the adapter resolves: the component's own `locale`, or one provided the framework's way (in Vue, `RioLocaleProvider` and `createRio`, through `provide`; in React, a context), with `resolveLocale` filling in the rest. The app's own tables and fallback language reach `messagesFor` the same way. A component's `messages` prop replaces any of its text. Dates and numbers go through `Intl` in the same language. See `docs/guide/languages.md`.
 - **Why HTML**: HTML attributes are the DOM standard rather than any framework's convention, so `core` stays framework-neutral, and each adapter's normalize function absorbs the differences.
 
 For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`.

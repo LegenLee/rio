@@ -162,6 +162,9 @@ importers:
       '@rio-m3e/styles':
         specifier: workspace:^
         version: link:../styles
+      '@rio-m3e/tokens':
+        specifier: workspace:^
+        version: link:../tokens
     devDependencies:
       '@fontsource/roboto':
         specifier: 'catalog:'
@@ -172,9 +175,6 @@ importers:
       '@rio-m3e/testing':
         specifier: workspace:^
         version: link:../testing
-      '@rio-m3e/tokens':
-        specifier: workspace:^
-        version: link:../tokens
       tsdown:
         specifier: 'catalog:'
         version: 0.23.7(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))

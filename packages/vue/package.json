@@ -32,13 +32,13 @@
   },
   "dependencies": {
     "@rio-m3e/core": "workspace:^",
-    "@rio-m3e/styles": "workspace:^"
+    "@rio-m3e/styles": "workspace:^",
+    "@rio-m3e/tokens": "workspace:^"
   },
   "devDependencies": {
     "@fontsource/roboto": "catalog:",
     "@mdi/js": "catalog:",
     "@rio-m3e/testing": "workspace:^",
-    "@rio-m3e/tokens": "workspace:^",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unplugin-vue": "catalog:",

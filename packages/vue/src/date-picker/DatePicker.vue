@@ -3,7 +3,6 @@ import {
   attachDatePickerMenu,
   createDatePicker,
   initialPickerState,
-  messagesFor,
   type DatePickerMenuDomHandle,
   type DatePickerMessages,
   type DatePickerProps,
@@ -17,7 +16,7 @@ import '@rio-m3e/styles/date-picker.css';
 import { computed, onBeforeUnmount, onMounted, reactive, useTemplateRef, watch } from 'vue';
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
-import { useLocale } from '../locale/locale';
+import { useLocale, useMessages } from '../locale/locale';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
@@ -73,7 +72,7 @@ defineSlots<{
 }>();
 
 const locale = useLocale(() => props.locale);
-const messages = computed(() => ({ ...messagesFor(locale.value).datePicker, ...props.messages }));
+const messages = useMessages('datePicker', locale, () => props.messages);
 const state = reactive<PickerState>(initialPickerState(model.value, locale.value, props));
 const picker = createDatePicker({
   // `satisfies` fails the build if a prop added to DatePickerProps is missing here.

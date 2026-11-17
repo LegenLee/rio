@@ -4,7 +4,6 @@ import {
   attachTimePicker,
   createTimePicker,
   initialTimeState,
-  messagesFor,
   type DialogDomHandle,
   type HourCycle,
   type TimePickerDomHandle,
@@ -31,7 +30,7 @@ import {
 } from 'vue';
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
-import { useLocale } from '../locale/locale';
+import { useLocale, useMessages } from '../locale/locale';
 import TimePickerBody from './TimePickerBody.vue';
 
 const props = defineProps<{
@@ -58,7 +57,7 @@ defineSlots<{
 }>();
 
 const locale = useLocale(() => props.locale);
-const messages = computed(() => ({ ...messagesFor(locale.value).timePicker, ...props.messages }));
+const messages = useMessages('timePicker', locale, () => props.messages);
 const state = reactive<TimePickerState>(initialTimeState(model.value));
 // The content renders from opening until the closing motion ends.
 const rendered = ref(open.value);

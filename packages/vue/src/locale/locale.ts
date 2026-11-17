@@ -1,31 +1,11 @@
-import { resolveLocale } from '@rio-m3e/core';
-import {
-  computed,
-  inject,
-  toRef,
-  type InjectionKey,
-  type MaybeRef,
-  type Plugin,
-  type Ref,
-} from 'vue';
+import { resolveLocale, messagesFor, type MessageOptions, type RioMessages } from '@rio-m3e/core';
+import { computed, inject, type ComputedRef, type InjectionKey, type Ref } from 'vue';
 
-/** The language a `RioLocaleProvider` or the `rioLocale` plugin gives the components inside */
+/** The language a `RioLocaleProvider` or `createRio` gives the components inside */
 export const localeKey: InjectionKey<Ref<string | undefined>> = Symbol('RioLocale');
 
-export interface RioLocaleOptions {
-  /** A language tag, such as `ko` or `en-GB`, or a ref to one, to change it later. */
-  locale?: MaybeRef<string | undefined>;
-}
-
-/**
- * Sets the language of Rio's components for the whole app: `app.use(rioLocale, { locale: 'ko' })`.
- * A `RioLocaleProvider` inside, or a component's own `locale`, takes over from it.
- */
-export const rioLocale: Plugin<[RioLocaleOptions?]> = {
-  install(app, options = {}) {
-    app.provide(localeKey, toRef(options.locale));
-  },
-};
+/** The app's message tables and fallback language, from `createRio` */
+export const messagesKey: InjectionKey<Ref<MessageOptions>> = Symbol('RioMessages');
 
 /**
  * The language a component uses: its own `locale`, or the nearest one provided, or the document's,
@@ -34,4 +14,17 @@ export const rioLocale: Plugin<[RioLocaleOptions?]> = {
 export function useLocale(own: () => string | undefined) {
   const provided = inject(localeKey, undefined);
   return computed(() => resolveLocale(own() ?? provided?.value));
+}
+
+/**
+ * A component's messages in its language: Rio's tables and the app's (`createRio`), with the
+ * component's own `messages` over them. Call it in `setup`.
+ */
+export function useMessages<Group extends keyof RioMessages>(
+  group: Group,
+  locale: Ref<string>,
+  own: () => Partial<RioMessages[Group]> | undefined,
+): ComputedRef<RioMessages[Group]> {
+  const options = inject(messagesKey, undefined);
+  return computed(() => ({ ...messagesFor(locale.value, options?.value)[group], ...own() }));
 }

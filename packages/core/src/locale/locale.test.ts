@@ -77,6 +77,44 @@ describe('messages', () => {
     expect(keys('ko').sort()).toEqual(keys('en').sort());
   });
 
+  test('Rio’s own tables come back as they are', () => {
+    expect(messagesFor('ko')).toBe(messagesFor('ko-KR'));
+    expect(messagesFor('sw')).toBe(messagesFor('en'));
+  });
+
+  test('a fallback language stands in for a language without a table', () => {
+    expect(messagesFor('de', { fallbackLocale: 'ko' }).timePicker.ok).toBe('확인');
+    // A language with a table keeps it.
+    expect(messagesFor('en-US', { fallbackLocale: 'ko' }).timePicker.ok).toBe('OK');
+  });
+
+  test('the app’s tables add languages, fill the rest from the fallback, and replace Rio’s text', () => {
+    const messages = {
+      ja: { timePicker: { ok: 'OK!', cancel: 'キャンセル' } },
+      en: { datePicker: { cancel: 'Dismiss' } },
+      'en-GB': { datePicker: { cancel: 'Close' } },
+    };
+    const japanese = messagesFor('ja-JP', { messages, fallbackLocale: 'ko' });
+    expect([japanese.timePicker.ok, japanese.timePicker.cancel]).toEqual(['OK!', 'キャンセル']);
+    expect(japanese.timePicker.hour).toBe('시');
+    // Without a fallback, English, with the app's own English over Rio's
+    expect(messagesFor('ja', { messages }).timePicker.hour).toBe('Hour');
+    expect(messagesFor('ja', { messages }).datePicker.cancel).toBe('Dismiss');
+    expect(messagesFor('en-US', { messages }).datePicker.cancel).toBe('Dismiss');
+    expect(messagesFor('en-gb', { messages }).datePicker.cancel).toBe('Close');
+    expect(messagesFor('ko', { messages }).datePicker.cancel).toBe('취소');
+    // The tables given are left as they were.
+    expect(messagesFor('en').datePicker.cancel).toBe('Cancel');
+  });
+
+  test('a message given as undefined, as a lookup that found nothing gives it, leaves the one under it', () => {
+    const messages = { ja: { timePicker: { ok: undefined, cancel: 'キャンセル' } } };
+    expect(messagesFor('ja', { messages }).timePicker.ok).toBe('OK');
+    expect(
+      messagesFor('ko', { messages: { ko: { timePicker: { ok: undefined } } } }).timePicker.ok,
+    ).toBe('확인');
+  });
+
   test('placeholders are filled in, and unknown ones left', () => {
     expect(formatMessage('Choose {min} or {other}', { min: '1/2/2026' })).toBe(
       'Choose 1/2/2026 or {other}',

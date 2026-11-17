@@ -85,8 +85,69 @@ export interface RioMessages {
 
 const TABLES: Record<string, RioMessages> = { en, ko };
 
-/** The table for a language, or English's when there is none */
-export const messagesFor = (locale: string): RioMessages => TABLES[languageOf(locale)] ?? en;
+/** Any of the messages, as an app gives them for one language */
+export type PartialMessages = { [Group in keyof RioMessages]?: Partial<RioMessages[Group]> };
+
+export interface MessageOptions {
+  /**
+   * The app's tables, by language tag (`ja`, `en-GB`): languages Rio has no table for, or messages
+   * that replace Rio's. A tag with a region, such as `en-GB`, goes over its language's table.
+   */
+  messages?: Record<string, PartialMessages>;
+  /**
+   * For a language Rio has no table for, the language whose messages stand in for those the app's
+   * tables leave out. Defaults to English.
+   */
+  fallbackLocale?: string;
+}
+
+const canonical = (tag: string) => {
+  try {
+    return Intl.getCanonicalLocales(tag)[0] ?? tag;
+  } catch {
+    return tag;
+  }
+};
+
+/** The tables for a language, the later ones going over the earlier: Rio's, then the app's */
+function tablesFor(locale: string, apps: MessageOptions['messages'] = {}): PartialMessages[] {
+  const tag = canonical(locale);
+  const language = languageOf(tag);
+  const app = (wanted: string) =>
+    Object.entries(apps).find(([key]) => canonical(key) === wanted)?.[1];
+  return [TABLES[language], app(language), tag === language ? undefined : app(tag)].filter(
+    (table) => table !== undefined,
+  );
+}
+
+/**
+ * The messages for a language: Rio's table, with the app's over it. A language Rio has no table
+ * for takes what the app's tables leave out from the fallback language, then from English, so
+ * every message has a text.
+ */
+export function messagesFor(locale: string, options: MessageOptions = {}): RioMessages {
+  // Rio's own tables have every message, so only a language without one needs the fallback's.
+  const under = TABLES[languageOf(canonical(locale))]
+    ? []
+    : tablesFor(options.fallbackLocale ?? 'en', options.messages);
+  const tables = [...under, ...tablesFor(locale, options.messages)];
+  const last = tables.at(-1);
+  if (!last) return en;
+  if (tables.length === 1 && Object.values(TABLES).includes(last as RioMessages)) {
+    return last as RioMessages;
+  }
+  const merged = structuredClone(en);
+  for (const table of tables) {
+    for (const group of Object.keys(merged) as (keyof RioMessages)[]) {
+      // A message given as undefined leaves the one under it.
+      const given = Object.entries(table[group] ?? {}).filter(
+        ([, message]) => message !== undefined,
+      );
+      Object.assign(merged[group], Object.fromEntries(given));
+    }
+  }
+  return merged;
+}
 
 /** Fills in the `{name}` placeholders of a message. */
 export const formatMessage = (message: string, values: Record<string, string>) =>

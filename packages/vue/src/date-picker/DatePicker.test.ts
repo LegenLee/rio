@@ -4,7 +4,7 @@ import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { createApp, defineComponent, h, reactive, ref } from 'vue';
 import LocaleProvider from '../locale/LocaleProvider.vue';
-import { rioLocale } from '../locale/locale';
+import { createRio } from '../rio/rio';
 import DatePicker from './DatePicker.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
 
@@ -425,13 +425,13 @@ describe('languages', () => {
     );
   });
 
-  test('the rioLocale plugin sets it for the app, and a ref changes it', async () => {
+  test('createRio sets it for the app, and a ref changes it', async () => {
     const locale = ref('de-DE');
     const host = document.body.appendChild(document.createElement('div'));
     const app = createApp(
       defineComponent(() => () => h(DatePicker, { label: 'Datum', modelValue: '2026-11-27' })),
     );
-    app.use(rioLocale, { locale });
+    app.use(createRio({ locale }));
     app.mount(host);
     onTestFinished(() => {
       app.unmount();

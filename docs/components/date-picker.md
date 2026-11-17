@@ -159,7 +159,7 @@ Type a date, or press the field or its calendar button.
 
 ### Languages
 
-Every text, the format, the names of months and days, and the first day of the week come from the language: the picker's `locale`, or a `RioLocaleProvider` or the `rioLocale` plugin, or the document's `lang`, or the browser's language (see [Languages](../guide/languages.md)). Dates are always Gregorian, and the field reads and writes Latin digits.
+Every text, the format, the names of months and days, and the first day of the week come from the language: the picker's `locale`, or a `RioLocaleProvider` or `createRio`, or the document's `lang`, or the browser's language (see [Languages](../guide/languages.md)). Dates are always Gregorian, and the field reads and writes Latin digits.
 
 ### Values and their sources
 

@@ -3,7 +3,6 @@ import {
   attachTimePicker,
   createTimePicker,
   initialTimeState,
-  messagesFor,
   type HourCycle,
   type TimePickerDomHandle,
   type TimePickerMessages,
@@ -14,7 +13,7 @@ import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/time-picker.css';
 import { computed, onBeforeUnmount, onMounted, reactive, useId, useTemplateRef, watch } from 'vue';
-import { useLocale } from '../locale/locale';
+import { useLocale, useMessages } from '../locale/locale';
 import TimePickerBody from './TimePickerBody.vue';
 
 const props = defineProps<{
@@ -29,7 +28,7 @@ const props = defineProps<{
 const model = defineModel<string | undefined>();
 
 const locale = useLocale(() => props.locale);
-const messages = computed(() => ({ ...messagesFor(locale.value).timePicker, ...props.messages }));
+const messages = useMessages('timePicker', locale, () => props.messages);
 const state = reactive<TimePickerState>({ ...initialTimeState(model.value), mode: 'input' });
 const id = useId();
 const picker = createTimePicker({

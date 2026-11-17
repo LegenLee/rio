@@ -58,23 +58,24 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 ## 사용법
 
 ```sh
-pnpm add @rio-m3e/vue @rio-m3e/tokens
+pnpm add @rio-m3e/vue
 ```
 
-앱을 **마운트하기 전**에 `applyTheme`를 호출하여 테마를 적용합니다.
-테마는 `@rio-m3e/tokens`에서 CSS 변수로 제공됩니다.
+`createRio`로 테마(페이지의 CSS 변수)와 Rio 컴포넌트의 언어를 정합니다.
+앱을 **마운트하기 전**에 Vue 플러그인으로 등록합니다.
 
 ```ts
 // main.ts
-import { applyTheme } from '@rio-m3e/tokens';
+import { createRio } from '@rio-m3e/vue';
 import { createApp } from 'vue';
 import App from './App.vue';
 
-const root = document.documentElement;
-applyTheme(root, { sourceColor: '#6750a4' });
-root.style.colorScheme = 'light dark'; // 시스템 설정을 따라 라이트·다크 전환
+const rio = createRio({
+  theme: { sourceColor: '#6750a4' }, // 시스템 설정을 따라 라이트·다크 전환
+  locale: 'ko', // 언어를 고정할 때 채움, 없으면 페이지의 <html lang>, 그다음 브라우저 언어
+});
 
-createApp(App).mount('#app');
+createApp(App).use(rio).mount('#app');
 ```
 
 컴포넌트 스타일은 컴포넌트를 import하면 따라옵니다.
