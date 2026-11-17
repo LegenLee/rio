@@ -53,6 +53,7 @@ import {
   type ButtonVariant,
   type IconButtonVariant,
   type MenuAnchorPoint,
+  type SelectSelected,
 } from '@rio-m3e/core';
 import {
   RioButton,
@@ -66,6 +67,8 @@ import {
   RioMenuItem,
   RioRadio,
   RioRadioGroup,
+  RioSelect,
+  RioSelectOption,
   RioSplitButton,
   RioSubMenu,
   RioSwitch,
@@ -154,6 +157,18 @@ const fields = reactive({
   bio: '',
 });
 const albumName = ref('Summer');
+const selects = reactive<{ size?: SelectSelected; font: SelectSelected; toppings: SelectSelected }>(
+  {
+    font: 'roboto',
+    toppings: ['cheese', 'basil'],
+  },
+);
+const PIZZA_TOPPINGS = { cheese: 'Cheese', mushroom: 'Mushroom', olive: 'Olive', basil: 'Basil' };
+const selectSent = ref('');
+const submitSelects = (event: SubmitEvent) => {
+  const data = new FormData(event.target as HTMLFormElement);
+  selectSent.value = [...data].map(([key, value]) => `${key}=${String(value)}`).join(' ');
+};
 const toolbar = [
   { action: 'Cut', icon: mdiContentCut },
   { action: 'Copy', icon: mdiContentCopy },
@@ -926,6 +941,47 @@ watchEffect(() => {
         />
       </div>
       <code>{{ fields }}</code>
+    </section>
+
+    <section class="text-fields">
+      <form class="controls" @submit.prevent="submitSelects">
+        <RioSelect v-model="selects.size" label="Size" name="size" required>
+          <RioSelectOption value="s">Small</RioSelectOption>
+          <RioSelectOption value="m">Medium</RioSelectOption>
+          <RioSelectOption value="l" disabled>Large</RioSelectOption>
+          <RioSelectOption value="xl">Extra large</RioSelectOption>
+        </RioSelect>
+        <RioSelect v-model="selects.font" variant="outlined" label="Font" name="font">
+          <RioSelectOption value="roboto">Roboto</RioSelectOption>
+          <RioSelectOption value="roboto-flex">Roboto Flex</RioSelectOption>
+          <RioSelectOption value="roboto-serif">
+            Roboto Serif
+            <template #supporting-text>With serifs</template>
+          </RioSelectOption>
+        </RioSelect>
+        <RioSelect
+          v-model="selects.toppings"
+          label="Toppings"
+          name="toppings"
+          multiple
+          menu-variant="vibrant"
+        >
+          <RioSelectOption v-for="(name, value) in PIZZA_TOPPINGS" :key="value" :value="value">
+            {{ name }}
+            <template #icon="{ selected }">
+              <svg v-if="selected" viewBox="0 0 24 24" aria-hidden="true">
+                <path :d="mdiCheck" fill="currentColor" />
+              </svg>
+            </template>
+          </RioSelectOption>
+        </RioSelect>
+        <RioSelect label="Disabled" model-value="a" disabled>
+          <RioSelectOption value="a">Fixed</RioSelectOption>
+        </RioSelect>
+        <RioButton type="submit">Submit</RioButton>
+        <RioButton type="reset" variant="text">Reset</RioButton>
+      </form>
+      <code>{{ selects }} {{ selectSent }}</code>
     </section>
 
     <section class="selection">

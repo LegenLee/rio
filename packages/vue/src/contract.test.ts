@@ -18,6 +18,8 @@ import {
   createMenuItem,
   createRadio,
   createRadioGroup,
+  createSelect,
+  createSelectOption,
   createSubMenu,
   createSwitch,
   createTextField,
@@ -31,6 +33,8 @@ import {
   menuSkeleton,
   radioGroupSkeleton,
   radioSkeleton,
+  selectOptionSkeleton,
+  selectSkeleton,
   splitButtonSkeleton,
   switchSkeleton,
   textFieldSkeleton,
@@ -46,6 +50,11 @@ import {
   type MenuItemProps,
   type MenuProps,
   type RadioProps,
+  type SelectContent,
+  type SelectOptionContent,
+  type SelectOptionProps,
+  type SelectProps,
+  type SelectSelected,
   type SplitButtonContent,
   type SplitButtonProps,
   type SubMenuProps,
@@ -72,6 +81,8 @@ import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
 import Radio from './radio/Radio.vue';
 import RadioGroup from './radio/RadioGroup.vue';
+import Select from './select/Select.vue';
+import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import TextField from './text-field/TextField.vue';
@@ -568,5 +579,134 @@ describe('RioTextField', () => {
     if (props.label) {
       expect(findPart(root, textFieldSkeleton, 'label', api)?.textContent).toBe(api.labelText());
     }
+  });
+});
+
+describe('RioSelect', () => {
+  const OPTIONS = [
+    { value: 's', label: 'Small' },
+    { value: 2, label: 'Large' },
+  ];
+  const plain = { leadingIcon: false };
+
+  // The last item says whether the app shows the selection itself, in the `value` slot.
+  test.each<
+    [
+      string,
+      Omit<SelectProps, 'open' | 'selected'> & { modelValue?: SelectSelected },
+      SelectContent,
+      boolean,
+    ]
+  >([
+    ['filled, with its label only', { label: 'Size' }, plain, false],
+    // Every prop away from its default, with every slot
+    [
+      'an outlined multi-select with everything',
+      {
+        variant: 'outlined',
+        label: 'Sizes',
+        multiple: true,
+        modelValue: ['s', 2],
+        supportingText: 'Hint',
+        error: true,
+        errorText: 'Wrong',
+        required: true,
+        disabled: true,
+        name: 'size',
+        autocomplete: 'off',
+        menuVariant: 'vibrant',
+        instant: true,
+      },
+      { leadingIcon: true },
+      false,
+    ],
+    [
+      'without a label, one selected, shown the app’s way',
+      { modelValue: 2, supportingText: 'Hint' },
+      plain,
+      true,
+    ],
+  ])('%s', async (_, props, content, custom) => {
+    const screen = await render(Select, {
+      props,
+      slots: {
+        default: () =>
+          OPTIONS.map((option) => h(SelectOption, { value: option.value }, () => option.label)),
+        ...(content.leadingIcon ? { 'leading-icon': () => h('svg') } : {}),
+        ...(custom ? { value: () => 'Custom' } : {}),
+      },
+    });
+    // The options' labels reach the field after they render.
+    await new Promise((resolve) => setTimeout(resolve));
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('[role="combobox"]')!.id.replace(/-field$/, '');
+    const { modelValue, ...rest } = props;
+    const api = createSelect({
+      props: () => ({ ...rest, selected: modelValue }),
+      options: () => OPTIONS,
+      content: () => content,
+      ids: {
+        field: `${id}-field`,
+        label: `${id}-label`,
+        listbox: `${id}-listbox`,
+        supportingText: `${id}-supporting`,
+      },
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    expectSkeleton(root, selectSkeleton, api);
+    // What fills the content parts is core's call too.
+    const value = findPart(root, selectSkeleton, 'value', api)!.textContent!.trim();
+    expect(value).toBe(custom ? 'Custom' : api.valueText());
+    const sizer = findPart(root, selectSkeleton, 'sizer', api)!;
+    expect([...sizer.children].map((each) => each.textContent)).toEqual(api.sizerTexts());
+    const native = findPart(root, selectSkeleton, 'native', api) as HTMLSelectElement;
+    expect([...native.options].map((option) => option.value)).toEqual([
+      ...(api.multiple() ? [] : ['']),
+      ...OPTIONS.map((option) => api.nativeValue(option.value)),
+    ]);
+  });
+});
+
+describe('RioSelectOption', () => {
+  const none = { icon: false, supportingText: false, trailingText: false, trailingIcon: false };
+  const all = { icon: true, supportingText: true, trailingText: true, trailingIcon: true };
+
+  test.each<[string, SelectOptionProps, SelectProps, SelectOptionContent]>([
+    ['a label', { value: 'a' }, {}, none],
+    ['selected, with every slot', { value: 'a' }, { selected: 'a' }, all],
+    [
+      'disabled, in a multi-select',
+      { value: 'b', disabled: true },
+      { multiple: true, selected: ['a'] },
+      none,
+    ],
+  ])('%s', async (_, props, selectProps, content) => {
+    const slots = {
+      default: () => 'Label',
+      ...(content.icon ? { icon: () => '+' } : {}),
+      ...(content.supportingText ? { 'supporting-text': () => 'More' } : {}),
+      ...(content.trailingText ? { 'trailing-text': () => 'S' } : {}),
+      ...(content.trailingIcon ? { 'trailing-icon': () => '>' } : {}),
+    };
+    const screen = await render(Select, {
+      props: { ...selectProps, modelValue: selectProps.selected },
+      slots: { default: () => h(SelectOption, props, slots) },
+    });
+    const element = rootOf(screen).querySelector('[role="listbox"]')!.firstElementChild!;
+    const select = createSelect({
+      props: () => selectProps,
+      options: () => [],
+      ids: { field: '', label: '', listbox: '', supportingText: '' },
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    const api = createSelectOption({
+      props: () => props,
+      content: () => content,
+      select: () => select,
+    });
+    expectSkeleton(element, selectOptionSkeleton, api);
   });
 });

@@ -9,6 +9,12 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 ### Added
 
 - **Link buttons**: `href` on `RioButton` and `RioIconButton` (and `createButton` and `createIconButton`) renders the same button as an `<a href>`, with `buttonLinkSkeleton`, `iconButtonLinkSkeleton`, and `isLink()` for adapters. A link can't toggle. Disabled, it keeps no `href` and takes `role="link"` with `aria-disabled="true"`; `softDisabled` keeps it focusable. A router's link works through its `custom` slot, passing `href` and `navigate`.
+- **`RioSelect`** and **`RioSelectOption`**, with `createSelect`, `createSelectOption`, and `attachSelect` in `@rio-m3e/core`: a text field that opens a list of options, filled or outlined, with `v-model`. The list is an M3E menu (standard or vibrant), placed below the field and at least as wide. `multiple` keeps the list open, and the field lists the selected options separated by commas, unless the app shows the selection itself in the `value` slot. The focus moves into the list, and the keys follow the menu's. A hidden native `<select>` submits the selection under `name` and checks `required`, and a change the browser makes to it, as autofill would, comes back through `v-model`. Without a width from the app, the field is as wide as its widest option.
+- `data-focused` on a text field's root makes it look focused while the focus is elsewhere, as a select's is while its list is open.
+
+### Fixed
+
+- In a menu, once letters had moved the focus to an item, Space no longer pressed items until the menu closed, even after typing had stopped. It now presses the item once the letters typed stop adding up, after 500ms.
 
 ## [0.4.0] - 2026-11-17
 

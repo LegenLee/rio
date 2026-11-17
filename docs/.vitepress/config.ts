@@ -40,6 +40,7 @@ export default defineConfig({
           { text: 'Icon button', link: '/components/icon-button' },
           { text: 'Menu', link: '/components/menu' },
           { text: 'Radio button', link: '/components/radio-button' },
+          { text: 'Select', link: '/components/select' },
           { text: 'Split button', link: '/components/split-button' },
           { text: 'Switch', link: '/components/switch' },
           { text: 'Text field', link: '/components/text-field' },

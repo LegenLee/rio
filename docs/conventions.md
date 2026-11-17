@@ -94,6 +94,7 @@ packages/
     parts.ts                PartAttrs, the type of every part's attributes, and CancelableEvent (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       object.ts             omitUndefined, for button and button-group
+      typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/
     base/                   CSS shared across components

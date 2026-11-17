@@ -9,9 +9,10 @@
  * at each side.
  *
  * The root carries `data-variant`, and `data-populated`, `data-label`, `data-leading-icon`,
- * `data-trailing-icon`, `data-multiline`, `data-error`, and `data-disabled` when they apply. The
- * label moves to the top while the field is populated or focused, and for inputs that always show
- * something, such as dates.
+ * `data-trailing-icon`, `data-multiline`, `data-error`, and `data-disabled` when they apply.
+ * `data-focused` makes the field look focused while the focus is elsewhere, as a select's is while
+ * its list is open. The label moves to the top while the field is populated or focused, and for
+ * inputs that always show something, such as dates.
  */
 
 .rio-text-field {
@@ -80,6 +81,7 @@
  */
 .rio-text-field:is(
   [data-populated],
+  [data-focused],
   :has(
     .rio-text-field__input:is(
       :focus,
@@ -123,13 +125,13 @@
 }
 
 /* Focused */
-.rio-text-field:has(.rio-text-field__input:focus) {
+.rio-text-field:is([data-focused], :has(.rio-text-field__input:focus)) {
   --_label: var(--rio-color-primary);
   --_line: var(--rio-color-primary);
   --_line-width: 2px;
 }
 
-.rio-text-field[data-variant='outlined']:has(.rio-text-field__input:focus) {
+.rio-text-field[data-variant='outlined']:is([data-focused], :has(.rio-text-field__input:focus)) {
   --_line-width: 3px;
 }
 
@@ -150,7 +152,7 @@
   }
 }
 
-.rio-text-field[data-error]:has(.rio-text-field__input:focus) {
+.rio-text-field[data-error]:is([data-focused], :has(.rio-text-field__input:focus)) {
   --_label: var(--rio-color-error);
   --_line: var(--rio-color-error);
   --_trailing: var(--rio-color-error);
@@ -447,7 +449,7 @@ textarea.rio-text-field__input {
     --_line: CanvasText;
   }
 
-  .rio-text-field:has(.rio-text-field__input:focus) {
+  .rio-text-field:is([data-focused], :has(.rio-text-field__input:focus)) {
     --_line: Highlight;
   }
 

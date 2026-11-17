@@ -11,6 +11,8 @@ export { default as RioSubMenu } from './menu/SubMenu.vue';
 export { default as RioRadio } from './radio/Radio.vue';
 export { default as RioRadioGroup } from './radio/RadioGroup.vue';
 export { vRipple } from './ripple/ripple';
+export { default as RioSelect } from './select/Select.vue';
+export { default as RioSelectOption } from './select/SelectOption.vue';
 export { default as RioSplitButton } from './split-button/SplitButton.vue';
 export { default as RioSwitch } from './switch/Switch.vue';
 export { default as RioTextField } from './text-field/TextField.vue';
