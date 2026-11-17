@@ -197,7 +197,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 
 For example, `createButton` returns `parts.root()`, `parts.touch()`, `parts.icon()`, and `parts.label()`, plus `showsIcon()`. The adapter tells `core` what content it has through `content` (`{ icon: true }` when the icon slot is filled), because only the adapter can see its slots or children; `core` turns that into attributes such as the switch's `data-icon`.
 
-Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tree): which part sits inside which, what element each one is, which render only on a decision such as `showsIcon`, and which hold content. It is the machine-readable form of the contract, which the contract tests check every adapter against (see Testing).
+Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tree): which part sits inside which, what element each one is, which render only on a decision such as `showsIcon`, and which hold content. It is the machine-readable form of the contract, which the contract tests check every adapter against (see Testing). When the props change which element a part is, the component exports a skeleton for each, and a decision that says which applies: a button with `href` is `buttonLinkSkeleton`, an `<a>`, while `isLink()` is true.
 
 ## Adapters
 

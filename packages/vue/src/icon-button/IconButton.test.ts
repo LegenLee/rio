@@ -77,6 +77,29 @@ describe('RioIconButton', () => {
     expect(screen.emitted('click')).toBeUndefined();
   });
 
+  test('as a link: an <a> named by its label, which keeps the unselected icon', async () => {
+    const screen = await render(IconButton, {
+      props: { label: 'Favorites', href: '/favorites', toggle: true, selected: true },
+      slots: { default: () => '♡', 'selected-icon': () => '♥' },
+    });
+    const link = screen.getByRole('link', { name: 'Favorites' });
+    await expect.element(link).toHaveAttribute('href', '/favorites');
+    await expect.element(link).not.toHaveAttribute('aria-pressed');
+    await expect.element(link).toHaveTextContent('♡');
+  });
+
+  test('a disabled link has no href and is not focusable', async () => {
+    const screen = await render(IconButton, {
+      ...icon,
+      props: { label: 'C', href: '/c', disabled: true },
+    });
+    const link = screen.getByRole('link', { name: 'C' });
+    await expect.element(link).not.toHaveAttribute('href');
+    await expect.element(link).toHaveAttribute('aria-disabled', 'true');
+    (link.element() as HTMLElement).focus();
+    expect(document.activeElement).not.toBe(link.element());
+  });
+
   test('extra small icon buttons still have a 48px touch target', async () => {
     const screen = await render(IconButton, {
       ...icon,

@@ -125,3 +125,62 @@ describe('handleClick', () => {
     },
   );
 });
+
+describe('as a link', () => {
+  test('an <a> with the href, and no type', () => {
+    const { button } = setup({ href: '/settings' });
+    expect(button.isLink()).toBe(true);
+    expect(button.parts.root()).toEqual({
+      class: 'rio-button rio-state-layer rio-focus-ring',
+      href: '/settings',
+      role: undefined,
+      'aria-disabled': undefined,
+      tabindex: undefined,
+      'data-variant': 'filled',
+      'data-size': 'small',
+      'data-shape': 'round',
+    });
+    expect(setup().button.isLink()).toBe(false);
+  });
+
+  test('disabled, it loses the href and takes the link role back', () => {
+    expect(setup({ href: '/s', disabled: true }).button.parts.root()).toMatchObject({
+      href: undefined,
+      role: 'link',
+      'aria-disabled': 'true',
+      tabindex: undefined,
+    });
+  });
+
+  test('soft-disabled, it loses the href too but stays focusable', () => {
+    expect(setup({ href: '/s', softDisabled: true }).button.parts.root()).toMatchObject({
+      href: undefined,
+      role: 'link',
+      'aria-disabled': 'true',
+      tabindex: '0',
+    });
+    // Both at once is plain disabled.
+    expect(
+      setup({ href: '/s', disabled: true, softDisabled: true }).button.parts.root().tabindex,
+    ).toBeUndefined();
+  });
+
+  test('can’t toggle', () => {
+    const { button, onClick, onChange } = setup({ href: '/s', toggle: true, selected: true });
+    expect(button.parts.root()['aria-pressed']).toBeUndefined();
+    expect(button.parts.root()['data-selected']).toBeUndefined();
+    const event = click();
+    button.handleClick(event);
+    expect(onClick).toHaveBeenCalledWith(event);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
+
+  test('a soft-disabled link’s click is canceled and not reported', () => {
+    const { button, onClick } = setup({ href: '/s', softDisabled: true });
+    const event = click();
+    button.handleClick(event);
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+});

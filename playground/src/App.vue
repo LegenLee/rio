@@ -35,6 +35,7 @@ import {
   mdiHeartOutline,
   mdiMagnify,
   mdiMenuRight,
+  mdiOpenInNew,
   mdiPause,
   mdiRestore,
   mdiShareVariant,
@@ -83,6 +84,9 @@ const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false }
 const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
+// Bound rather than written in the template: vue-tsc 3.3.14 misreads a `//` in a component's static
+// attribute and reports errors further down the template (vuejs/language-tools#6240).
+const M3_URL = 'https://m3.material.io';
 const toggles = reactive<Partial<Record<ButtonVariant, boolean>>>({});
 const iconShape = ref<ButtonShape>('round');
 const favorites = reactive<Partial<Record<IconButtonVariant, boolean>>>({ standard: true });
@@ -278,6 +282,27 @@ watchEffect(() => {
         <RioButton variant="outlined" disabled>Disabled outlined</RioButton>
         <RioButton soft-disabled>Soft-disabled (Tab to it)</RioButton>
         <div v-ripple class="demo-card rio-state-layer">Any element can ripple</div>
+      </div>
+      <div class="controls">
+        <RioButton :href="M3_URL" target="_blank" rel="noopener">
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+          </template>
+          Link (new tab)
+        </RioButton>
+        <RioButton :href="M3_URL" variant="outlined" disabled> Disabled link </RioButton>
+        <RioButton :href="M3_URL" variant="outlined" soft-disabled>
+          Soft-disabled link (Tab to it)
+        </RioButton>
+        <RioIconButton
+          label="Material 3 (link)"
+          :href="M3_URL"
+          target="_blank"
+          rel="noopener"
+          variant="tonal"
+        >
+          <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+        </RioIconButton>
       </div>
     </section>
 

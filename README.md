@@ -37,9 +37,12 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Checkbox and radio button
 - [x] Text field
 
+### v0.5
+
+- [x] Link buttons
+
 ### Later
 
-- [ ] Link buttons
 - [ ] Form value for the switch
 - [ ] Language-specific line heights and variable font axes
 

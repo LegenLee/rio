@@ -4,6 +4,12 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [Unreleased]
+
+### Added
+
+- **Link buttons**: `href` on `RioButton` and `RioIconButton` (and `createButton` and `createIconButton`) renders the same button as an `<a href>`, with `buttonLinkSkeleton`, `iconButtonLinkSkeleton`, and `isLink()` for adapters. A link can't toggle. Disabled, it keeps no `href` and takes `role="link"` with `aria-disabled="true"`; `softDisabled` keeps it focusable. A router's link works through its `custom` slot, passing `href` and `navigate`.
+
 ## [0.4.0] - 2026-11-17
 
 Form controls: the checkbox, radio buttons, and the text field. Core no longer keeps clicks inside tooltips and dialogs, which hid them from frameworks such as React; adapters do it with their own events, which breaks code that passed `contain` to `attachOverlay`.

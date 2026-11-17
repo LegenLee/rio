@@ -8,6 +8,7 @@
 
 <script setup>
 import Disabled from './demos/icon-button/Disabled.vue';
+import Link from './demos/icon-button/Link.vue';
 import Sizes from './demos/icon-button/Sizes.vue';
 import Toggle from './demos/icon-button/Toggle.vue';
 import Variants from './demos/icon-button/Variants.vue';
@@ -44,6 +45,14 @@ import Widths from './demos/icon-button/Widths.vue';
 
 ::: details Code
 <<< ./demos/icon-button/Toggle.vue
+:::
+
+### Link
+
+<Demo><Link /></Demo>
+
+::: details Code
+<<< ./demos/icon-button/Link.vue
 :::
 
 ### Disabled
@@ -158,6 +167,7 @@ The container is as tall as the button of the same size. Its width is the icon s
 | `softDisabled` | `boolean`                                                | `false`     |
 | `type`         | `'button' \| 'submit' \| 'reset'`                        | `'button'`  |
 | `value`        | `string \| number`, for button groups                    | —           |
+| `href`         | `string`, which makes it a link                          | —           |
 
 - Events: `click` (only when not blocked), and `update:selected` (toggle buttons).
 - Slots: the default slot is the icon. `selected-icon` replaces it while a toggle button is selected, for the filled icon the guidelines ask for. **Rio ships no icons**; apps bring their own. Both slots are hidden from assistive technology.
@@ -166,6 +176,7 @@ The container is as tall as the button of the same size. Its width is the icon s
 - **The default is filled**, as the spec says. Material Web's `<md-icon-button>` and Compose's `IconButton` are the standard style, with filled, tonal, and outlined as separate components, so code ported from them should set `variant="standard"`.
 - Everything else works as on the button: a native `<button>` with the ripple, the state layer, and the focus ring; `type` defaults to `'button'`; a toggle sets `aria-pressed`; and `disabled` and `softDisabled` are the same two props. See [button.md](button.md) for the `softDisabled` deviation note.
 - Inside a [button group](button-group.md), `size` and `shape` default to the group's, and a group that keeps a selection owns the state of icon buttons with a `value`, including which icon they show.
+- **`href` makes it a link**, as on the button: an `<a>` named by `label`, followed with Enter, which works with a router's `custom` slot and keeps no `href` while disabled. A link can't toggle, so it always shows the default slot's icon. See [the button's Links section](button.md#links).
 
 ### Built on the button
 
@@ -177,10 +188,6 @@ The container is as tall as the button of the same size. Its width is the icon s
 
 - Sizes, widths, shapes, and colors come from Material Web's component tokens (`_md-comp-icon-button.scss`, `_md-comp-icon-button-{filled,tonal,outlined,standard}.scss`, `_md-comp-icon-button-{xsmall,small,medium,large,xlarge}.scss`, Material 3 v34.0.21). They match the spec page's corner radius table and color tables.
 - The spec page shows the widths only as images; the leading and trailing spaces come from those token files.
-
-### Not yet
-
-- **Link icon buttons** (`href`), as with the button.
 
 ## Sources
 

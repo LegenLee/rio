@@ -38,6 +38,8 @@ export interface IconButtonProps {
   softDisabled?: boolean;
   /** Defaults to `'button'`, so it doesn't submit a form by accident. */
   type?: 'button' | 'submit' | 'reset';
+  /** Makes it a link to this address, as on the button. */
+  href?: string;
   /** Identifies the button inside a button group that keeps a selection, as on the button. */
   value?: ButtonGroupValue;
 }
@@ -52,7 +54,7 @@ export const iconButtonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Omit<Required<IconButtonProps>, 'label' | 'value'>;
+} satisfies Omit<Required<IconButtonProps>, 'label' | 'value' | 'href'>;
 
 /** What the adapter has to put in the icon button, which only the adapter can see. */
 export interface IconButtonContent {
@@ -94,10 +96,18 @@ export const iconButtonSkeleton: PartNode<keyof IconButtonParts> = {
   ],
 };
 
+/** The same parts in an `<a>`, while `isLink()` */
+export const iconButtonLinkSkeleton: PartNode<keyof IconButtonParts> = {
+  ...iconButtonSkeleton,
+  tag: 'a',
+};
+
 export interface IconButtonApi<E extends CancelableEvent = MouseEvent> {
   parts: IconButtonParts;
   /** Whether the icon part shows the selected icon instead of the default one. */
   showsSelectedIcon: () => boolean;
+  /** Whether the root is an `<a>` (`iconButtonLinkSkeleton`) rather than a `<button>`. */
+  isLink: () => boolean;
   /** Attach to the root element's `click`. */
   handleClick: (event: E) => void;
 }
@@ -131,8 +141,10 @@ export function createIconButton<E extends CancelableEvent = MouseEvent>(
     },
     showsSelectedIcon() {
       const p = options.props();
-      return !!(p.toggle && p.selected && options.content?.().selectedIcon);
+      // A link can't toggle.
+      return !!(p.toggle && p.selected && !button.isLink() && options.content?.().selectedIcon);
     },
+    isLink: button.isLink,
     handleClick: button.handleClick,
   };
 }

@@ -3,6 +3,7 @@
 // adapter writes the same test against the same skeletons.
 import {
   buttonGroupSkeleton,
+  buttonLinkSkeleton,
   buttonSkeleton,
   checkboxSkeleton,
   dialogSkeleton,
@@ -22,6 +23,7 @@ import {
   createTextField,
   createTooltip,
   createSplitButton,
+  iconButtonLinkSkeleton,
   iconButtonSkeleton,
   menuDividerSkeleton,
   menuGroupSkeleton,
@@ -93,6 +95,10 @@ describe('RioButton', () => {
     ['a text button asked to toggle', { variant: 'text', toggle: true }, false],
     ['disabled, with an icon', { disabled: true }, true],
     ['soft-disabled', { softDisabled: true }, false],
+    ['a link', { href: '/settings' }, true],
+    ['a link asked to toggle', { href: '/settings', toggle: true, selected: true }, false],
+    ['a disabled link', { href: '/settings', disabled: true }, false],
+    ['a soft-disabled link', { href: '/settings', softDisabled: true }, false],
   ])('%s', async (_, props, icon) => {
     const screen = await render(Button, {
       props,
@@ -104,7 +110,7 @@ describe('RioButton', () => {
       onClick: noop,
       onChange: noop,
     });
-    expectSkeleton(rootOf(screen), buttonSkeleton, api);
+    expectSkeleton(rootOf(screen), api.isLink() ? buttonLinkSkeleton : buttonSkeleton, api);
   });
 });
 
@@ -129,6 +135,8 @@ describe('RioIconButton', () => {
     ],
     ['narrow and standard', { label: 'Go', width: 'narrow', variant: 'standard' }, false],
     ['disabled', { label: 'Go', disabled: true }, false],
+    ['a link asked to toggle', { label: 'Go', href: '/go', toggle: true, selected: true }, true],
+    ['a soft-disabled link', { label: 'Go', href: '/go', softDisabled: true }, false],
   ])('%s', async (_, props, selectedIcon) => {
     const screen = await render(IconButton, {
       props,
@@ -140,9 +148,10 @@ describe('RioIconButton', () => {
       onClick: noop,
       onChange: noop,
     });
-    expectSkeleton(rootOf(screen), iconButtonSkeleton, api);
+    const skeleton = api.isLink() ? iconButtonLinkSkeleton : iconButtonSkeleton;
+    expectSkeleton(rootOf(screen), skeleton, api);
     // Which icon fills the icon part is core's call too.
-    const icon = findPart(rootOf(screen), iconButtonSkeleton, 'icon', api);
+    const icon = findPart(rootOf(screen), skeleton, 'icon', api);
     expect(icon?.textContent).toBe(api.showsSelectedIcon() ? '♥' : '♡');
   });
 });

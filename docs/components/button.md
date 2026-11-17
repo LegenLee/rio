@@ -9,6 +9,7 @@
 <script setup>
 import Disabled from './demos/button/Disabled.vue';
 import Icon from './demos/button/Icon.vue';
+import Link from './demos/button/Link.vue';
 import Shapes from './demos/button/Shapes.vue';
 import Sizes from './demos/button/Sizes.vue';
 import Toggle from './demos/button/Toggle.vue';
@@ -55,6 +56,16 @@ Press and hold to see the corners spring toward the pressed shape.
 
 ::: details Code
 <<< ./demos/button/Toggle.vue
+:::
+
+### Link
+
+With `href`, the button is a link. Disabled, it keeps no address; the soft-disabled one stays focusable.
+
+<Demo><Link /></Demo>
+
+::: details Code
+<<< ./demos/button/Link.vue
 :::
 
 ### Disabled
@@ -141,6 +152,8 @@ Toggle buttons replace those colors:
 </RioButton>
 
 <RioButton v-model:selected="bold" toggle>Bold</RioButton>
+
+<RioButton href="/settings" variant="text">Settings</RioButton>
 ```
 
 | Prop           | Type                                                        | Default    |
@@ -154,10 +167,11 @@ Toggle buttons replace those colors:
 | `softDisabled` | `boolean`                                                   | `false`    |
 | `type`         | `'button' \| 'submit' \| 'reset'`                           | `'button'` |
 | `value`        | `string \| number`, for button groups                       | —          |
+| `href`         | `string`, which makes it a link                             | —          |
 
 - Events: `click` (only when not blocked), and `update:selected` (toggle buttons).
 - Slots: the default slot is the label, and `icon` is a leading icon. The icon is hidden from assistive technology, so the label must stand on its own.
-- The root is a native `<button>`, with the ripple (`v-ripple`), the state layer, and the focus ring.
+- The root is a native `<button>`, or an `<a>` with `href` (see [Links](#links)), with the ripple (`v-ripple`), the state layer, and the focus ring.
 - `type` defaults to `'button'`, so a button inside a form doesn't submit it by accident.
 - `toggle` on a text button is ignored, because the spec has no tokens for it. A toggle button sets `aria-pressed`.
 - Inside a [button group](button-group.md), `size` and `shape` default to the group's. In a group that keeps a selection, a button with a `value` is a toggle whose state the group owns.
@@ -168,6 +182,35 @@ Toggle buttons replace those colors:
 - `softDisabled` sets `aria-disabled="true"` instead. The button looks disabled but stays focusable. The component blocks clicks itself: it doesn't emit `click` or `update:selected`, and it calls `preventDefault()`, so a soft-disabled submit button doesn't submit its form. `pointer-events: none` isn't used, because it leaves keyboard activation working, lets clicks fall through to the element underneath, and hides the hover that makes a focusable disabled button useful.
 
 > **Deviation from the spec.** The spec says disabled components can't be focused. `softDisabled` keeps the button focusable so that keyboard and screen reader users can find it and learn why it is unavailable, for example in a toolbar. Material Web offers the same option as `soft-disabled`, citing the WAI-ARIA Authoring Practices on focusability of disabled controls. It is opt-in; `disabled` follows the spec.
+
+### Links
+
+**The spec has no link button**: its accessibility page says only "Use a button to perform an action." Rio adds `href` for buttons that take the person somewhere (Rio's choice). The root becomes an `<a href>` that looks the same, so browsers and assistive technology treat it as the link it is: a screen reader announces a link, and the person can open it in a new tab or copy its address.
+
+- **Keyboard**: Enter follows the link, and Space scrolls the page, as on any link.
+- **`toggle` is ignored**, because a link can't be on or off, and `type` doesn't apply.
+- Other link attributes, such as `target`, `rel`, `download`, and `aria-current`, go on the `<a>` as they are.
+- `click` is emitted with the native event, before the browser follows the link, so a listener can call `preventDefault()` to stop it.
+
+**With a router**, give the button the router's `href` and `navigate` through its `custom` slot. Rio doesn't depend on a router. With Vue Router:
+
+```vue
+<RouterLink v-slot="{ href, navigate, isExactActive }" to="/settings" custom>
+  <RioButton :href="href" :aria-current="isExactActive ? 'page' : undefined" @click="navigate">
+    Settings
+  </RioButton>
+</RouterLink>
+```
+
+`navigate` leaves the clicks that open the link elsewhere (with a modifier key, or `target="_blank"`) to the browser and handles the rest itself. Nuxt's `NuxtLink` takes the same `custom` slot; there it leaves prefetching to the slot as well, which its docs show how to do.
+
+**A disabled link keeps no `href`** (Rio's choice). HTML has no disabled link: `<a>` takes no `disabled` attribute. Without `href`, nothing can follow it: not a click, Enter, a middle click, or "Open link in new tab". An `<a>` without `href` is a placeholder rather than a link, so the root also gets `role="link"` and `aria-disabled="true"`, and is announced as a disabled link.
+
+- `disabled` leaves it out of the tab order, as on the button.
+- `softDisabled` adds `tabindex="0"`, so it stays focusable.
+- Both block clicks as the button does: no `click`, and `preventDefault()`.
+
+This is what Scott O'Hara's "Disabling a link" recommends, and Bootstrap's docs also say a disabled `<a>` "should not include the `href` attribute". Material Web, Angular Material, and MUI keep `href` instead, set `aria-disabled`, take the link out of the tab order with `tabindex="-1"`, and cancel clicks in script.
 
 ### Values and their sources
 
@@ -184,7 +227,6 @@ Toggle buttons replace those colors:
 
 ### Not yet
 
-- **Link buttons** (`href` rendering an `<a>`) are deferred.
 - **Emphasized labels** for primary actions: there's no prop for them yet.
 - Icon-only buttons are the separate icon button component.
 
@@ -195,4 +237,6 @@ Toggle buttons replace those colors:
 - [Material Web `button/internal/button.ts` @ d872455](https://github.com/material-components/material-web/blob/d872455c4be56022da2095349b30ef46e0b55bc3/button/internal/button.ts): `soft-disabled` (implementation reference, not spec)
 - [Compose Material3 `Button.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Button.kt): `ButtonDefaults.textStyleFor` (Defaults object)
 - [Compose Material3 `ButtonXSmallTokens.kt` @ 079e2e3](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonXSmallTokens.kt)
+- Disabled links: [Scott O'Hara, "Disabling a link"](https://www.scottohara.me/blog/2021/05/28/disabled-links.html) (2021, updated 2022); [Bootstrap 5.3 Buttons, Disabled state](https://getbootstrap.com/docs/5.3/components/buttons/#disabled-state); implementation references, not spec: [Material Web `button.ts` @ d872455](https://github.com/material-components/material-web/blob/d872455c4be56022da2095349b30ef46e0b55bc3/button/internal/button.ts) (`renderLink`), [Angular Material `button-base.ts` @ 58b4170](https://github.com/angular/components/blob/58b4170b1c4fbbf71cf88bb8eb14c71d63b2af85/src/material/button/button-base.ts), [MUI `ButtonBase.js` @ c6761cd](https://github.com/mui/material-ui/blob/c6761cd6fad503eeb415dc12cbf523547c3af717/packages/mui-material/src/ButtonBase/ButtonBase.js)
+- Router links: [Vue Router, Extending RouterLink](https://router.vuejs.org/guide/advanced/extending-router-link.html) and [Nuxt, `<NuxtLink>`](https://nuxt.com/docs/api/components/nuxt-link) (`custom` and its slot)
 - Disabled behavior on other platforms: Android `View.canTakeFocus()`, Compose `Modifier.clickable(enabled)`, Flutter `ButtonStyleButton` (`canRequestFocus: widget.enabled`).
