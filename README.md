@@ -44,17 +44,13 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Date picker
 - [x] Time picker
 
-### v0.6
+### v0.6 (Form controls)
 
 - [x] Form value for the switch
-
-### v0.7 (Form controls)
-
-- [ ] Slider
+- [x] Slider
 - [ ] Scroll time picker
 - [ ] Date range picker
 - [ ] Chips
-- [ ] Link switch to form
 - [ ] List, List Items (maybe?)
 - [ ] Language-specific line heights and variable font axes
 
