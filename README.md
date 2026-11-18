@@ -46,6 +46,9 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 ### Later
 
+- [ ] Slider
+- [ ] Scroll time picker
+- [ ] Date range picker
 - [ ] Form value for the switch
 - [ ] Language-specific line heights and variable font axes
 
