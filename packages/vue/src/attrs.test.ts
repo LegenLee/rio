@@ -12,6 +12,7 @@ import Radio from './radio/Radio.vue';
 import RadioGroup from './radio/RadioGroup.vue';
 import Select from './select/Select.vue';
 import SelectOption from './select/SelectOption.vue';
+import Switch from './switch/Switch.vue';
 import TextField from './text-field/TextField.vue';
 
 /** What the app gives every component: an id list, a class, and `false` for the attribute core sets */
@@ -79,6 +80,14 @@ const CASES: [string, Case][] = [
         h(RadioGroup, { label: 'Size' }, () =>
           h(Radio, { ...app('aria-disabled'), value: 's', softDisabled: on }),
         ),
+      target: 'input',
+      set: ['aria-disabled', 'true'],
+    },
+  ],
+  [
+    'RioSwitch',
+    {
+      vnode: ({ on }) => h(Switch, { ...app('aria-disabled'), softDisabled: on }),
       target: 'input',
       set: ['aria-disabled', 'true'],
     },

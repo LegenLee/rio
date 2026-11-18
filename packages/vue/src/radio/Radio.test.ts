@@ -184,12 +184,19 @@ describe('RioRadioGroup and RioRadio', () => {
     expect([...new FormData(form)]).toEqual([['tone', 'Luna']]);
   });
 
-  test('lays out at the 48px target, stacked', async () => {
+  test('lays out at the 48px target, stacked, with the input over all of it', async () => {
     const { input } = await setup();
     const first = input('Callisto').closest('.rio-radio')!.getBoundingClientRect();
     const second = input('Ganymede').closest('.rio-radio')!.getBoundingClientRect();
+    const target = input('Callisto').getBoundingClientRect();
     const icon = input('Callisto').parentElement!.querySelector('.rio-radio__icon')!;
     expect([first.width, first.height]).toEqual([48, 48]);
+    expect([target.left, target.top, target.width, target.height]).toEqual([
+      first.left,
+      first.top,
+      48,
+      48,
+    ]);
     expect(second.top - first.top).toBe(48);
     expect(icon.getBoundingClientRect().width).toBe(20);
   });

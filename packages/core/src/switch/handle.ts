@@ -1,6 +1,9 @@
 // The switch handle's motion: where it sits and how big it is, both driven by the fast-spatial
 // spring, plus dragging it with touch or a pen.
 //
+// The drag is the input's, which takes the presses: it marks the input with `data-dragging`, and
+// swallows the click that follows, so the checkbox doesn't toggle as well.
+//
 // The stylesheet (`@rio-m3e/styles/switch.css`) declares the targets for each state:
 // `--rio-switch-handle-x-target` (the handle's center) and `--rio-switch-handle-size-target`. The
 // springs write the animated values to `--_handle-x` and `--_handle-size` on the root, and remove
@@ -11,6 +14,8 @@ import { attachDrag } from '../primitives/drag/drag';
 import { attachSpringProperty } from '../primitives/spring-property/spring-property';
 
 export interface SwitchHandleOptions {
+  /** The switch's input, which takes the presses and so the drag */
+  input: HTMLElement;
   /** Returns whether the switch is on. */
   selected: () => boolean;
   /** Called when a drag ends on the other side. */
@@ -49,7 +54,7 @@ export function attachSwitchHandle(
   // In right-to-left layouts the "on" side is on the left, so screen motion flips.
   let direction = 1;
 
-  const drag = attachDrag(root, {
+  const drag = attachDrag(options.input, {
     onStart() {
       off = readPx(root, '--rio-switch-handle-x-off');
       on = readPx(root, '--rio-switch-handle-x-on');

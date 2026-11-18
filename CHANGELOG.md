@@ -10,10 +10,12 @@ Core's DOM behaviors no longer keep state on the elements an adapter renders, ap
 
 ### Added
 
+- **`RioSwitch` takes part in forms.** A transparent native checkbox with the switch role sits over the track, as in `RioCheckbox`: while on, it submits `value` (`on` by default) under `name`, and while off, nothing; `required` holds the form back until it is on. A `<label>` around it, or pointing at its `id`, names it. Space and Enter still toggle it, and Enter doesn't submit the form; with Alt, Ctrl, or Meta, Enter is left to the app.
 - `attachTheme` in `@rio-m3e/tokens`: writes the theme on an element, its `color-scheme` included, and returns a handle that writes another theme over it (`update`) or takes it off (`detach`). `createRio` is built on it. `colorScheme` is one of the theme's options (`ThemeOptions`) now, for `attachTheme` and `createThemeCss` alike.
 
 ### Changed
 
+- **BREAKING**: `RioSwitch`'s root is the track, a `<span>`, not a `<button>`. `class` and `style` go to it; every other attribute and listener goes to the input. For adapters: `switchSkeleton` has an `input` part in place of `touch`. The input's part carries `type`, `role`, `disabled`, and `aria-disabled`; the root's carries none of them anymore, nor `aria-checked` or `rio-focus-ring`. Whether the switch is on is the input's native `checked`: attach `attachCheckable` to the input with `checked`, `blocked` (from `createSwitch`), and `onChange`, and call its `sync()` after each `onChange` and each render. `createSwitch`'s `handleKeydown`, for Enter, goes on the input's `keydown`, in place of `handleClick` on the root's `click`. `attachRipple` attaches to the input, with the state part as its `surface`. `attachSwitchHandle` takes the `input`, where presses and drags start.
 - **BREAKING** for adapters: the pickers' state is named after them, as the rest of their API is: `PickerState` and `initialPickerState` are `DatePickerState` and `initialDatePickerState`, and `initialTimeState` is `initialTimePickerState`.
 - **BREAKING** for adapters: `attachTimePicker` takes `onHover`, and the time picker keeps the number the pointer hovers in its state (`hovered`, set with `hover`), which the dial's numbers render as `data-hovered`.
 - **BREAKING** for adapters: `createSubMenu` takes `ids.menu`. The submenu's part carries that `id`, and its item's part `popovertarget`, which `attachSubMenu` set before.
@@ -24,6 +26,10 @@ Core's DOM behaviors no longer keep state on the elements an adapter renders, ap
 ### Removed
 
 - **BREAKING**: `applyTheme` in `@rio-m3e/tokens`, which wrote the variables only. Use `attachTheme`, which writes the `color-scheme` too, and can take the theme off again.
+
+### Fixed
+
+- In Safari and other WebKit browsers, the native input of `RioCheckbox` and `RioRadio` stayed at its own 12px size in a corner of the 48px target, so a press elsewhere on the target, the box or the ring included, missed it unless a `<label>` around it took the press. The input covers the whole target now.
 
 ## [0.5.0] - 2026-11-18
 

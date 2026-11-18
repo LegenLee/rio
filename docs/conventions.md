@@ -94,7 +94,7 @@ packages/
       menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
       split-button.test.ts
     switch/
-      switch.ts             props, attributes, click handling
+      switch.ts             props, parts, and Enter, over a native checkbox
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
     text-field/
@@ -156,7 +156,7 @@ packages/
     shape-morph/
       shape-morph.ts        v-shape-morph, used inside components (not exported yet)
     switch/
-      Switch.vue
+      Switch.vue            a native checkbox; class and style on the root, other attributes on the input
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     text-field/
       TextField.vue         class and style on the root, other attributes on the input

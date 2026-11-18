@@ -56,6 +56,10 @@
   position: absolute;
   inset: 0;
   z-index: 1;
+  /* WebKit keeps a native checkbox at its own size between the insets; the size stretches it over
+     the target. */
+  inline-size: 100%;
+  block-size: 100%;
   margin: 0;
   opacity: 0;
   cursor: pointer;
