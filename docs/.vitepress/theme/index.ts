@@ -7,12 +7,18 @@ import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme-without-fonts';
 import { h } from 'vue';
 import Demo from './components/Demo.vue';
+import HeroActions from './components/HeroActions.vue';
 import './custom.css';
 import { RioTheme } from './rio-theme';
 
 export default {
   extends: DefaultTheme,
-  Layout: () => h(DefaultTheme.Layout, null, { 'layout-top': () => h(RioTheme) }),
+  Layout: () =>
+    h(DefaultTheme.Layout, null, {
+      'layout-top': () => h(RioTheme),
+      // The home's hero has no `actions`; its links are Rio buttons instead.
+      'home-hero-actions-after': () => h(HeroActions),
+    }),
   enhanceApp({ app }) {
     app.component('Demo', Demo);
   },
