@@ -39,6 +39,7 @@ export default defineConfig({
           { text: 'Button', link: '/components/button' },
           { text: 'Button group', link: '/components/button-group' },
           { text: 'Checkbox', link: '/components/checkbox' },
+          { text: 'Chips', link: '/components/chip' },
           { text: 'Date picker', link: '/components/date-picker' },
           { text: 'Dialog', link: '/components/dialog' },
           { text: 'Icon button', link: '/components/icon-button' },

@@ -2,6 +2,8 @@ export * from './button-group/button-group';
 export * from './button-group/interaction';
 export * from './button/button';
 export * from './checkbox/checkbox';
+export * from './chip/chip';
+export * from './chip/interaction';
 export * from './date-picker/date';
 export * from './date-picker/date-picker';
 export * from './date-picker/interaction';

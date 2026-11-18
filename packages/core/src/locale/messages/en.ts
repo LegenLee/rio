@@ -1,6 +1,9 @@
 import type { RioMessages } from '../messages';
 
 export const en: RioMessages = {
+  chip: {
+    remove: 'Remove {label}',
+  },
   datePicker: {
     title: 'Select date',
     noDateSelected: 'Selected date',

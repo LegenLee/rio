@@ -1,6 +1,11 @@
 export { default as RioButton } from './button/Button.vue';
 export { default as RioButtonGroup } from './button-group/ButtonGroup.vue';
 export { default as RioCheckbox } from './checkbox/Checkbox.vue';
+export { default as RioAssistChip } from './chip/AssistChip.vue';
+export { default as RioChipSet } from './chip/ChipSet.vue';
+export { default as RioFilterChip } from './chip/FilterChip.vue';
+export { default as RioInputChip } from './chip/InputChip.vue';
+export { default as RioSuggestionChip } from './chip/SuggestionChip.vue';
 export { default as RioDatePicker } from './date-picker/DatePicker.vue';
 export { default as RioDatePickerDialog } from './date-picker/DatePickerDialog.vue';
 export { default as RioDialog } from './dialog/Dialog.vue';

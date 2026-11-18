@@ -38,6 +38,23 @@ import {
   createSelectOption,
   createSubMenu,
   createSwitch,
+  actionChipLinkSkeleton,
+  actionChipSkeleton,
+  chipSetSkeleton,
+  createAssistChip,
+  createChipSet,
+  createFilterChip,
+  createInputChip,
+  createSuggestionChip,
+  filterChipSkeleton,
+  inputChipRemoveOnlySkeleton,
+  inputChipSkeleton,
+  type ActionChipContent,
+  type AssistChipProps,
+  type FilterChipContent,
+  type FilterChipProps,
+  type InputChipContent,
+  type InputChipProps,
   createRangeSlider,
   createSlider,
   rangeSliderSkeleton,
@@ -112,6 +129,11 @@ import Select from './select/Select.vue';
 import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
+import AssistChip from './chip/AssistChip.vue';
+import ChipSet from './chip/ChipSet.vue';
+import FilterChip from './chip/FilterChip.vue';
+import InputChip from './chip/InputChip.vue';
+import SuggestionChip from './chip/SuggestionChip.vue';
 import RangeSlider from './slider/RangeSlider.vue';
 import Slider from './slider/Slider.vue';
 import TextField from './text-field/TextField.vue';
@@ -317,6 +339,126 @@ describe('RioRangeSlider', () => {
     if (start) expect(start.textContent).toBe(api.valueText(0));
     const end = findPart(rootOf(screen), rangeSliderSkeleton, 'endValueIndicator', api);
     if (end) expect(end.textContent).toBe(api.valueText(1));
+  });
+});
+
+describe.each([
+  ['RioAssistChip', AssistChip, createAssistChip],
+  ['RioSuggestionChip', SuggestionChip, createSuggestionChip],
+] as const)('%s', (_, Chip, create) => {
+  test.each<[string, AssistChipProps, ActionChipContent]>([
+    ['plain', {}, { icon: false }],
+    ['elevated, with an icon', { elevated: true }, { icon: true }],
+    ['a link', { href: '#here' }, { icon: true }],
+    ['a disabled link', { href: '#here', disabled: true }, { icon: false }],
+    ['a soft-disabled link', { href: '#here', softDisabled: true }, { icon: false }],
+    ['disabled', { disabled: true }, { icon: true }],
+    ['soft-disabled', { softDisabled: true }, { icon: false }],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(Chip, {
+      props,
+      slots: { default: () => 'Book', ...(content.icon ? { icon: () => h('svg') } : {}) },
+    });
+    const api = create({ props: () => props, content: () => content, onClick: noop });
+    expectSkeleton(rootOf(screen), api.isLink() ? actionChipLinkSkeleton : actionChipSkeleton, api);
+  });
+});
+
+describe('RioFilterChip', () => {
+  const all = { icon: true, selectedIcon: true, dropdownIcon: true };
+  const none = { icon: false, selectedIcon: false, dropdownIcon: false };
+
+  test.each<[string, FilterChipProps, FilterChipContent]>([
+    ['unselected, with every icon', {}, all],
+    ['selected, with every icon', { selected: true }, all],
+    ['selected, without a selected icon', { selected: true }, { ...none, icon: true }],
+    ['a menu chip, open', { menu: true, open: true, selected: true }, all],
+    ['elevated and disabled', { elevated: true, disabled: true, selected: true }, none],
+    ['soft-disabled, with a value', { softDisabled: true, value: 'a' }, all],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(FilterChip, {
+      props,
+      slots: {
+        default: () => 'Wi-Fi',
+        ...(content.icon ? { icon: () => 'i' } : {}),
+        ...(content.selectedIcon ? { 'selected-icon': () => '✓' } : {}),
+        ...(content.dropdownIcon ? { 'dropdown-icon': () => '▾' } : {}),
+      },
+    });
+    const api = createFilterChip({
+      props: () => props,
+      content: () => content,
+      onClick: noop,
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    expectSkeleton(rootOf(screen), filterChipSkeleton, api);
+    // Which icon fills the icon part is core's call too.
+    const icon = findPart(rootOf(screen), filterChipSkeleton, 'icon', api);
+    if (icon) expect(icon.textContent).toBe(api.showsSelectedIcon() ? '✓' : 'i');
+  });
+});
+
+describe('RioInputChip', () => {
+  test.each<[string, InputChipProps & { locale?: string }, InputChipContent]>([
+    ['plain', {}, { icon: false, avatar: false }],
+    ['with an avatar over its icon', {}, { icon: true, avatar: true }],
+    ['with an icon, in Korean', { locale: 'ko' }, { icon: true, avatar: false }],
+    ['remove-only', { removeOnly: true }, { icon: false, avatar: false }],
+    ['disabled', { disabled: true }, { icon: false, avatar: true }],
+    ['soft-disabled', { softDisabled: true }, { icon: true, avatar: false }],
+  ])('%s', async (_, { locale = 'en', ...props }, content) => {
+    const screen = await render(InputChip, {
+      props: { ...props, locale },
+      slots: {
+        default: () => 'Ada',
+        'remove-icon': () => h('svg'),
+        ...(content.icon ? { icon: () => h('svg') } : {}),
+        ...(content.avatar ? { avatar: () => h('img') } : {}),
+      },
+    });
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('.rio-chip__label')!.id.replace(/-label$/, '');
+    const api = createInputChip({
+      props: () => props,
+      content: () => content,
+      messages: () => messagesFor(locale).chip,
+      ids: {
+        label: `${id}-label`,
+        removeBefore: `${id}-remove-before`,
+        removeAfter: `${id}-remove-after`,
+      },
+      onClick: noop,
+      onRemove: noop,
+    });
+    expectSkeleton(root, api.isAction() ? inputChipSkeleton : inputChipRemoveOnlySkeleton, api);
+    const before = findPart(root, inputChipSkeleton, 'removeBefore', api);
+    if (before) expect(before.textContent).toBe(api.removeText().before);
+    const after = findPart(root, inputChipSkeleton, 'removeAfter', api);
+    if (after) expect(after.textContent).toBe(api.removeText().after);
+  });
+});
+
+describe('RioChipSet', () => {
+  test.each([
+    ['plain', {}],
+    [
+      'scrolling, with a selection',
+      { scroll: true, selection: 'multiple' as const, modelValue: ['a'] },
+    ],
+  ])('%s', async (_, props) => {
+    const screen = await render(ChipSet, {
+      props,
+      slots: { default: () => h(AssistChip, null, () => 'One') },
+    });
+    const { modelValue, ...rest } = props as { modelValue?: string[] };
+    const api = createChipSet({
+      props: () => ({ ...rest, selected: modelValue }),
+      tabStop: () => undefined,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), chipSetSkeleton, api);
   });
 });
 

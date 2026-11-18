@@ -63,6 +63,10 @@ packages/
     checkbox/
       checkbox.ts           props, parts, and what a change asks for
       checkbox.test.ts
+    chip/
+      chip.ts               assist, filter, input, and suggestion chips, and the chip set: props, parts, selection
+      interaction.ts        the chip set's tab stop, arrow keys, and focus after a removal (DOM, tested through the Vue components)
+      chip.test.ts
     date-picker/
       date.ts               ISO dates and months, and writing and reading them as a language does
       date-picker.ts        the calendar, the field's reading, and the docked and modal pickers' parts
@@ -131,6 +135,7 @@ packages/
     button.css
     button-group.css
     checkbox.css
+    chip.css                the four chips and the chip set
     dialog.css
     icon-button.css         layered on top of button.css
     menu.css
@@ -148,6 +153,14 @@ packages/
       context.ts            what the group provides; buttons read it with useButtonGroupItem
     checkbox/
       Checkbox.vue          a native checkbox; class and style on the root, other attributes on the input
+    chip/
+      AssistChip.vue
+      FilterChip.vue
+      InputChip.vue         class and style on the root, other attributes on the chip's action
+      SuggestionChip.vue
+      ChipSet.vue           holds the selection and the tab stop, and gives the chips their keys
+      context.ts            what the set provides to its chips, and the chips' ripple on their state part
+      Chip.vrt.test.ts      screenshot test (see Visual regression)
     dialog/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/

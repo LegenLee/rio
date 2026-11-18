@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive, type VNode } from 'vue';
 import Checkbox from './checkbox/Checkbox.vue';
+import InputChip from './chip/InputChip.vue';
 import Menu from './menu/Menu.vue';
 import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
@@ -72,6 +73,14 @@ const CASES: [string, Case][] = [
       vnode: ({ on }) => h(Checkbox, { ...app('aria-invalid'), error: on }),
       target: 'input',
       set: ['aria-invalid', 'true'],
+    },
+  ],
+  [
+    'RioInputChip',
+    {
+      vnode: ({ on }) => h(InputChip, { ...app('aria-disabled'), softDisabled: on }, () => 'Ada'),
+      target: '.rio-chip__action',
+      set: ['aria-disabled', 'true'],
     },
   ],
   [

@@ -63,11 +63,15 @@ import {
 import {
   RioButton,
   RioButtonGroup,
+  RioAssistChip,
   RioCheckbox,
+  RioChipSet,
   RioDatePicker,
   RioDatePickerDialog,
   RioDialog,
+  RioFilterChip,
   RioIconButton,
+  RioInputChip,
   RioMenu,
   RioMenuDivider,
   RioMenuGroup,
@@ -79,6 +83,7 @@ import {
   RioSelectOption,
   RioSlider,
   RioSplitButton,
+  RioSuggestionChip,
   RioSubMenu,
   RioSwitch,
   RioTextField,
@@ -91,6 +96,14 @@ import { computed, reactive, ref, useTemplateRef } from 'vue';
 import { theme } from './theme';
 
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
+const chips = reactive({
+  filters: ['wifi'] as (string | number)[],
+  people: ['Ada', 'Grace', 'Alan'],
+  menuOpen: false,
+  size: undefined as string | undefined,
+  last: '',
+});
+const sizeChip = useTemplateRef('sizeChip');
 const sliders = reactive({
   plain: 40,
   stops: 60,
@@ -1151,6 +1164,65 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <code>toppings={{ toppings }} terms={{ terms }} size={{ size }}</code>
     </section>
 
+    <section class="chips">
+      <RioChipSet aria-label="Assist and suggestion chips">
+        <RioAssistChip @click="chips.last = 'Add to calendar'">
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+          </template>
+          Add to calendar
+        </RioAssistChip>
+        <RioAssistChip elevated @click="chips.last = 'Elevated'">Elevated</RioAssistChip>
+        <RioAssistChip disabled>Disabled</RioAssistChip>
+        <RioSuggestionChip @click="chips.last = 'Sounds good'">Sounds good</RioSuggestionChip>
+        <RioSuggestionChip soft-disabled>Soft-disabled</RioSuggestionChip>
+      </RioChipSet>
+      <RioChipSet v-model="chips.filters" selection="multiple" aria-label="Filter chips">
+        <RioFilterChip v-for="name in ['wifi', 'bluetooth', 'nfc']" :key="name" :value="name">
+          <template #selected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+          </template>
+          {{ name }}
+        </RioFilterChip>
+        <RioFilterChip
+          ref="sizeChip"
+          v-model:open="chips.menuOpen"
+          menu
+          :selected="chips.size !== undefined"
+        >
+          {{ chips.size ?? 'Size' }}
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+          </template>
+        </RioFilterChip>
+      </RioChipSet>
+      <RioMenu
+        v-model:open="chips.menuOpen"
+        v-model="chips.size"
+        :anchor="sizeChip"
+        selection="single"
+        label="Size"
+      >
+        <RioMenuItem v-for="size in ['Small', 'Large']" :key="size" :value="size">
+          {{ size }}
+        </RioMenuItem>
+      </RioMenu>
+      <RioChipSet scroll aria-label="Input chips">
+        <RioInputChip
+          v-for="person in chips.people"
+          :key="person"
+          @click="chips.last = person"
+          @remove="chips.people = chips.people.filter((p) => p !== person)"
+        >
+          {{ person }}
+          <template #remove-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+          </template>
+        </RioInputChip>
+      </RioChipSet>
+      <code>chips={{ chips }}</code>
+    </section>
+
     <section class="switches">
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.plain" />
@@ -1359,6 +1431,11 @@ main {
 
 .dot.moved {
   transform: translateX(288px);
+}
+
+.chips {
+  display: grid;
+  gap: 16px;
 }
 
 .switches {

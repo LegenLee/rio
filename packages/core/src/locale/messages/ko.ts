@@ -1,6 +1,9 @@
 import type { RioMessages } from '../messages';
 
 export const ko: RioMessages = {
+  chip: {
+    remove: '{label} 삭제',
+  },
   datePicker: {
     title: '날짜 선택',
     noDateSelected: '선택한 날짜',

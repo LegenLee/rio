@@ -78,6 +78,11 @@ export interface TimePickerMessages {
   invalidMinute: string;
 }
 
+/** An input chip's remove button. `{label}` stands for the chip's label. */
+export interface ChipMessages {
+  remove: string;
+}
+
 /** The range slider's inputs, as assistive technology names them inside the app's group. */
 export interface SliderMessages {
   rangeStart: string;
@@ -85,6 +90,7 @@ export interface SliderMessages {
 }
 
 export interface RioMessages {
+  chip: ChipMessages;
   datePicker: DatePickerMessages;
   slider: SliderMessages;
   timePicker: TimePickerMessages;
