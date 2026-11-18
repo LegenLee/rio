@@ -78,8 +78,15 @@ export interface TimePickerMessages {
   invalidMinute: string;
 }
 
+/** The range slider's inputs, as assistive technology names them inside the app's group. */
+export interface SliderMessages {
+  rangeStart: string;
+  rangeEnd: string;
+}
+
 export interface RioMessages {
   datePicker: DatePickerMessages;
+  slider: SliderMessages;
   timePicker: TimePickerMessages;
 }
 

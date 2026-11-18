@@ -17,7 +17,7 @@ How the Rio repository is organized and how code in it is written. Read this bef
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
 
 - **The component APIs keep nothing between calls.** Whatever a component needs to remember, such as whether the date picker opened from the keyboard, is state the adapter holds, which `core` asks to change through `onChange`, `on<State>Change`, or `onStateChange`.
-- **DOM behaviors report too.** What an `attach*` finds out about the elements the adapter renders, such as where the pointer hovers on the time picker's dial, whether a dialog's content overflows, or which open menu is inactive, it reports through a callback; the adapter keeps it, and the parts render it as attributes. A DOM behavior writes directly only where the adapter doesn't render (the app's own element a tooltip describes, the document's root, a primitive's own marks such as `data-ripple`), and values no render could keep up with: ones that change every frame, such as a spring's or a drag's, and ones undone within the same task. Detaching never takes off what a part renders.
+- **DOM behaviors report too.** What an `attach*` finds out about the elements the adapter renders, such as where the pointer hovers on the time picker's dial, whether a dialog's content overflows, or which open menu is inactive, it reports through a callback; the adapter keeps it, and the parts render it as attributes. A DOM behavior writes directly only where the adapter doesn't render (the app's own element a tooltip describes, the document's root, a primitive's own marks such as `data-ripple`); marks it puts on and takes off around a single press, such as the slider's `data-pressed` and `data-dragging`; a native control's own state, which the browser changes too, put back to the adapter's, such as an input's `checked` or `value`; and values no render could keep up with: ones that change every frame, such as a spring's or a drag's, and ones undone within the same task. Detaching never takes off what a part renders.
 
 ## Folder layout
 
@@ -89,6 +89,10 @@ packages/
       radio.ts              the group and its radio buttons: props and parts
       interaction.ts        Shift+Tab into a group with nothing selected (DOM, tested through the Vue components)
       radio.test.ts
+    slider/
+      slider.ts             the slider and the range slider: props, parts, and the values they take
+      interaction.ts        the pointer, the inputs' values, and the inset icon's room (DOM, tested through the Vue components)
+      slider.test.ts
     split-button/
       split-button.ts       two createButtons, and the trailing one's menu state
       menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
@@ -131,6 +135,7 @@ packages/
     icon-button.css         layered on top of button.css
     menu.css
     radio.css               the radio buttons and their group
+    slider.css              the slider and the range slider
     split-button.css        layered on top of button.css
     switch.css
     text-field.css
@@ -155,6 +160,10 @@ packages/
       ripple.ts             the v-ripple directive
     shape-morph/
       shape-morph.ts        v-shape-morph, used inside components (not exported yet)
+    slider/
+      Slider.vue            a native range input; class and style on the root, other attributes on the input
+      RangeSlider.vue       two native range inputs in a group, which takes the app's attributes
+      Slider.vrt.test.ts    screenshot test (see Visual regression)
     switch/
       Switch.vue            a native checkbox; class and style on the root, other attributes on the input
       Switch.vrt.test.ts    screenshot test (see Visual regression)

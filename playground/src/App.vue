@@ -44,6 +44,8 @@ import {
   mdiShareVariant,
   mdiSkipNext,
   mdiSkipPrevious,
+  mdiVolumeHigh,
+  mdiVolumeOff,
 } from '@mdi/js';
 import {
   BUTTON_SIZES,
@@ -72,8 +74,10 @@ import {
   RioMenuItem,
   RioRadio,
   RioRadioGroup,
+  RioRangeSlider,
   RioSelect,
   RioSelectOption,
+  RioSlider,
   RioSplitButton,
   RioSubMenu,
   RioSwitch,
@@ -87,6 +91,14 @@ import { computed, reactive, ref, useTemplateRef } from 'vue';
 import { theme } from './theme';
 
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
+const sliders = reactive({
+  plain: 40,
+  stops: 60,
+  centered: -20,
+  range: [20, 70] as [number, number],
+  volume: 0,
+  vertical: 30,
+});
 const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
@@ -1168,6 +1180,43 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <label class="switch-row"><RioSwitch soft-disabled /> Soft-disabled (Tab to it)</label>
     </section>
 
+    <section class="sliders">
+      <RioSlider v-model="sliders.plain" aria-label="Plain" />
+      <RioSlider
+        v-model="sliders.stops"
+        :step="10"
+        stops
+        value-indicator
+        aria-label="Stops and the value indicator"
+      />
+      <RioSlider
+        v-model="sliders.centered"
+        centered
+        :min="-50"
+        :max="50"
+        value-indicator
+        aria-label="Centered"
+      />
+      <RioRangeSlider v-model="sliders.range" value-indicator aria-label="Range" />
+      <RioSlider v-model="sliders.volume" size="large" aria-label="Volume">
+        <template #icon>
+          <svg viewBox="0 0 24 24">
+            <path :d="sliders.volume === 0 ? mdiVolumeOff : mdiVolumeHigh" fill="currentColor" />
+          </svg>
+        </template>
+      </RioSlider>
+      <div class="slider-row">
+        <RioSlider v-model="sliders.vertical" vertical size="medium" aria-label="Vertical">
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiVolumeHigh" fill="currentColor" /></svg>
+          </template>
+        </RioSlider>
+        <RioSlider :model-value="50" disabled vertical aria-label="Disabled" />
+        <RioSlider :model-value="50" soft-disabled vertical aria-label="Soft-disabled" />
+      </div>
+      <code>sliders={{ sliders }}</code>
+    </section>
+
     <section class="type-scale">
       <div v-for="style in TYPE_STYLES" :key="style" class="type-row">
         <code>{{ style }}</code>
@@ -1316,6 +1365,19 @@ main {
   display: grid;
   justify-items: start;
   gap: 12px;
+}
+
+.sliders {
+  display: grid;
+  gap: 24px;
+  max-inline-size: 480px;
+  padding-block-start: 48px;
+}
+
+.slider-row {
+  display: flex;
+  gap: 48px;
+  padding-inline-start: 56px;
 }
 
 .switch-row {

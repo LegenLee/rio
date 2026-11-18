@@ -26,6 +26,10 @@ export const ko: RioMessages = {
     afterMax: '{max} 이전 날짜를 선택하세요',
     unavailable: '선택할 수 없는 날짜입니다',
   },
+  slider: {
+    rangeStart: '최솟값',
+    rangeEnd: '최댓값',
+  },
   timePicker: {
     selectTime: '시간 선택',
     enterTime: '시간 입력',

@@ -25,6 +25,8 @@ export * from './radio/interaction';
 export * from './radio/radio';
 export * from './select/interaction';
 export * from './select/select';
+export * from './slider/interaction';
+export * from './slider/slider';
 export * from './split-button/menu-icon';
 export * from './split-button/split-button';
 export * from './switch/handle';

@@ -38,6 +38,13 @@ import {
   createSelectOption,
   createSubMenu,
   createSwitch,
+  createRangeSlider,
+  createSlider,
+  rangeSliderSkeleton,
+  sliderSkeleton,
+  type RangeSliderProps,
+  type SliderContent,
+  type SliderProps,
   createTextField,
   createTooltip,
   createSplitButton,
@@ -105,6 +112,8 @@ import Select from './select/Select.vue';
 import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
+import RangeSlider from './slider/RangeSlider.vue';
+import Slider from './slider/Slider.vue';
 import TextField from './text-field/TextField.vue';
 import TimeInput from './time-picker/TimeInput.vue';
 import TimePickerDialog from './time-picker/TimePickerDialog.vue';
@@ -220,6 +229,94 @@ describe('RioSwitch', () => {
     // When the icon part renders, which icon fills it is core's call too.
     const icon = findPart(rootOf(screen), switchSkeleton, 'icon', api);
     if (icon) expect(icon.textContent).toBe(api.showsSelectedIcon() ? '✓' : '✕');
+  });
+});
+
+describe('RioSlider', () => {
+  const none = { icon: false };
+  const icon = { icon: true };
+
+  test.each<[string, Omit<SliderProps, 'value'> & { modelValue?: number }, SliderContent]>([
+    ['by default', {}, none],
+    ['with stops', { modelValue: 30, stops: true, step: 10 }, none],
+    ['centered', { modelValue: 20, centered: true, min: -50, max: 50 }, none],
+    ['centered, with an icon it doesn’t show', { centered: true, size: 'large' }, icon],
+    ['extra small, with an icon it doesn’t show', {}, icon],
+    [
+      'vertical and large, with the value indicator',
+      { vertical: true, size: 'large', valueIndicator: true, modelValue: 70 },
+      none,
+    ],
+    ['medium, with an inset icon', { size: 'medium', modelValue: 50 }, icon],
+    ['disabled', { disabled: true, modelValue: 40 }, none],
+    ['soft-disabled', { softDisabled: true }, none],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, and format',
+      {
+        min: 10,
+        max: 90,
+        step: 5,
+        size: 'small',
+        modelValue: 40,
+        format: (value: number) => `${value}%`,
+      },
+      none,
+    ],
+  ])('%s', async (_, { modelValue, ...props }, content) => {
+    const screen = await render(Slider, {
+      props: { modelValue, ...props },
+      slots: content.icon ? { icon: () => '♪' } : {},
+    });
+    const api = createSlider({
+      props: () => ({ ...props, value: modelValue }),
+      content: () => content,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), sliderSkeleton, api);
+    const indicator = findPart(rootOf(screen), sliderSkeleton, 'valueIndicator', api);
+    if (indicator) expect(indicator.textContent).toBe(api.valueText());
+  });
+});
+
+describe('RioRangeSlider', () => {
+  const messages = () => messagesFor('en').slider;
+
+  test.each<[string, Omit<RangeSliderProps, 'value'> & { modelValue?: [number, number] }]>([
+    ['by default', {}],
+    ['with stops and a name', { modelValue: [20, 60], stops: true, step: 10, name: 'price' }],
+    [
+      'vertical and extra large, with the value indicators',
+      { vertical: true, size: 'xlarge', valueIndicator: true, modelValue: [5, 95] },
+    ],
+    ['disabled', { disabled: true }],
+    ['soft-disabled', { softDisabled: true, modelValue: [30, 30] }],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, and format',
+      {
+        min: -10,
+        max: 10,
+        step: 0.5,
+        size: 'medium',
+        modelValue: [-2.5, 4],
+        format: (value: number) => `${value}°`,
+      },
+    ],
+  ])('%s', async (_, { modelValue, ...props }) => {
+    const screen = await render(RangeSlider, {
+      props: { locale: 'en-US', modelValue, ...props },
+    });
+    const api = createRangeSlider({
+      props: () => ({ locale: 'en-US', ...props, value: modelValue }),
+      messages,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), rangeSliderSkeleton, api);
+    const start = findPart(rootOf(screen), rangeSliderSkeleton, 'startValueIndicator', api);
+    if (start) expect(start.textContent).toBe(api.valueText(0));
+    const end = findPart(rootOf(screen), rangeSliderSkeleton, 'endValueIndicator', api);
+    if (end) expect(end.textContent).toBe(api.valueText(1));
   });
 });
 

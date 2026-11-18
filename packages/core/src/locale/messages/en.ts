@@ -26,6 +26,10 @@ export const en: RioMessages = {
     afterMax: 'Choose {max} or earlier',
     unavailable: 'This date isn’t available',
   },
+  slider: {
+    rangeStart: 'Minimum',
+    rangeEnd: 'Maximum',
+  },
   timePicker: {
     selectTime: 'Select time',
     enterTime: 'Enter time',
