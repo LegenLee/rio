@@ -55,6 +55,16 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Language-specific line heights and variable font axes
 - [ ] Icons
 - [ ] Loading progress bars
+- [ ] Scroll fields
+
+### v0.7 (Layouts)
+
+- [ ] App bar
+- [ ] FABs
+- [ ] Navigation drawer + rails
+- [ ] Cards
+- [ ] Sheets
+- [ ] Toolbars
 
 ## Usage
 
