@@ -53,6 +53,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Chips
 - [ ] List, List Items (maybe?)
 - [ ] Language-specific line heights and variable font axes
+- [ ] Icons
 
 ## Usage
 
