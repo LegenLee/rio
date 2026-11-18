@@ -7,6 +7,7 @@ import { defineComponent, h, ref } from 'vue';
 import Menu from './Menu.vue';
 import MenuItem from './MenuItem.vue';
 import SubMenu from './SubMenu.vue';
+import { eventsLeaving } from '../test/events';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -124,6 +125,16 @@ const pointAt = (element: Element) => {
 };
 
 describe('RioSubMenu', () => {
+  // The submenu is inside the menu's element, which keeps them in.
+  test('clicks and presses in it, and on its item, stay in the menus', async () => {
+    const { item, menu, isOpen } = await setup();
+    const out = eventsLeaving(() => menu('File'));
+    await userEvent.click(item('Share'));
+    await vi.waitFor(() => expect(isOpen('Share')).toBe(true));
+    await userEvent.click(item('Email'));
+    expect(out).toEqual([]);
+  });
+
   test('opens and closes without a warning from Vue', async () => {
     // Opening and closing render it again; a warning from Vue fails the test (`test/setup.ts`).
     const { item, isOpen } = await setup();

@@ -224,7 +224,20 @@ onBeforeUnmount(() => handle?.detach());
         >{{ select.supportingTextNow() }}</span
       >
     </div>
-    <div ref="listbox" v-bind="select.parts.listbox()">
+    <!-- Clicks and presses stay in the list, so a card or a row around the select doesn't take
+         them. Keys go on. -->
+    <div
+      ref="listbox"
+      v-bind="select.parts.listbox()"
+      @click.stop
+      @auxclick.stop
+      @dblclick.stop
+      @pointerdown.stop
+      @pointerup.stop
+      @mousedown.stop
+      @mouseup.stop
+      @contextmenu.stop
+    >
       <slot />
     </div>
   </div>

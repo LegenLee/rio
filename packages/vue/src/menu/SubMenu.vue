@@ -123,6 +123,7 @@ onBeforeUnmount(() => handle?.detach());
       <slot name="trailing-icon" />
     </span>
   </button>
+  <!-- Inside the menu's own element, which keeps clicks and presses in. -->
   <div ref="root" v-bind="sub.menu.parts.root()">
     <slot />
   </div>

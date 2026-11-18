@@ -150,7 +150,21 @@ onBeforeUnmount(() => handle?.detach());
       </TextField>
     </div>
     <input v-if="picker.submits()" v-bind="picker.parts.formValue()" />
-    <div v-if="picker.docked()" ref="menu" v-bind="picker.parts.menu()">
+    <!-- Clicks and presses stay in the calendar, so a card or a row around the picker doesn't take
+         them. Keys go on. -->
+    <div
+      v-if="picker.docked()"
+      ref="menu"
+      v-bind="picker.parts.menu()"
+      @click.stop
+      @auxclick.stop
+      @dblclick.stop
+      @pointerdown.stop
+      @pointerup.stop
+      @mousedown.stop
+      @mouseup.stop
+      @contextmenu.stop
+    >
       <template v-if="open">
         <DatePickerCalendar
           v-model:month="state.month"

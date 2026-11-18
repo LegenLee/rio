@@ -9,6 +9,8 @@
 // - Tab closes the menu and moves on from the element that opened it.
 // - Closing after a choice or Escape gives the focus back to the anchor, or to whatever had it
 //   before. A click elsewhere leaves the focus where the click put it.
+// - A right-click in an open menu opens nothing: the browser's own menu doesn't show over it. On a
+//   field that takes text, it does, for pasting and spelling.
 //
 // Submenus (`attachSubMenu`) are menus too, with these on top:
 // - The pointer opens one after resting on its item for a moment, and a click opens it at once.
@@ -174,6 +176,13 @@ const topOf = (menu: HTMLElement) => {
   for (let up = menuAround(menu); up; up = menuAround(up)) top = up;
   return top;
 };
+/** A field that takes text, where a right-click keeps the browser's menu */
+const TEXT_FIELD = [
+  'input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"],' +
+    ' [type="button"], [type="submit"], [type="reset"], [type="image"])',
+  'textarea',
+  '[contenteditable]:not([contenteditable="false"])',
+].join(', ');
 const activeMenus = new WeakMap<HTMLElement, HTMLElement>();
 const shapes = new WeakMap<
   HTMLElement,
@@ -394,6 +403,11 @@ function setup(
     state.openers.get(item)?.hover();
   };
   root.addEventListener('pointermove', onPointerMove);
+  const onContextMenuIn = (event: MouseEvent) => {
+    if ((event.target as Element).closest(TEXT_FIELD)) return;
+    event.preventDefault();
+  };
+  root.addEventListener('contextmenu', onContextMenuIn);
   // The focus moving into the menu, from the keyboard, makes it the active one too.
   const onFocusIn = (event: FocusEvent) => {
     if ((event.target as Element).closest('[role="menu"]') === root) shapeTree(root, root);
@@ -551,6 +565,7 @@ function setup(
     detach() {
       root.removeEventListener('keydown', onKeydown);
       root.removeEventListener('pointermove', onPointerMove);
+      root.removeEventListener('contextmenu', onContextMenuIn);
       root.removeEventListener('focusin', onFocusIn);
       endGrace(state);
       document.removeEventListener('contextmenu', onContextMenu, { capture: true });

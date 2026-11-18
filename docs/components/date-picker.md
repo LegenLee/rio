@@ -145,6 +145,7 @@ Type a date, or press the field or its calendar button.
 
 - **A press on the field opens the calendar, and the focus stays in the field**, so the person can type (Rio's choice: the guidelines open it on a tap, and the accessibility page keeps the calendar button as the only way in from the keyboard). **From the keyboard, the calendar button or Alt+Down opens it with the focus on the selected date**, or else today. Tab into the field doesn't open it.
 - Docked: the calendar shows below the field, or above it without room there, 360px wide. A press outside, the focus leaving the field and the calendar, and Escape close it. The modal picker opens a dialog for either way in.
+- **Clicks and presses in the calendar stay in it** (Rio's choice), in the docked calendar as in the dialog: choosing a day doesn't reach a card or a row around the picker with its own click. Keys go on. Code that listens for clicks on the document doesn't get them either, unless it listens while capturing, as VueUse's `onClickOutside` does.
 - **Choosing a day doesn't change the date until OK** (the spec's text buttons); Cancel, Escape, and a press outside leave it. **Enter on a day chooses it and confirms**, as the keyboard table has it. Closing gives the focus back to the field.
 - `clearable` adds Clear at the start of the buttons, where the M3 Design Kit's modal picker has it, in either picker. It empties the date and closes. It is off by default, as the accessibility page suggests when it isn't needed.
 

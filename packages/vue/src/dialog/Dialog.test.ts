@@ -221,6 +221,28 @@ describe('RioDialog', () => {
     expect((document.activeElement as HTMLInputElement).value).toBe('Luna');
   });
 
+  test('a press in something inside that keeps it, as a menu does, is never one on the scrim', async () => {
+    const { dialog, open, state } = await setup({
+      content: () =>
+        h(
+          'div',
+          { class: 'keeps', onPointerdown: (event: Event) => event.stopPropagation() },
+          'Menu',
+        ),
+    });
+    await open();
+    const root = dialog();
+    const box = root.getBoundingClientRect();
+    const outside = { clientX: box.left - 10, clientY: box.top + 10, bubbles: true };
+    // A press on the scrim that no click follows, as when the pointer is released outside the window
+    root.dispatchEvent(new PointerEvent('pointerdown', outside));
+    // Then a press inside, released on the scrim: the click goes to the dialog, at the scrim.
+    root.querySelector('.keeps')!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    root.dispatchEvent(new MouseEvent('click', outside));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(state.open).toBe(true);
+  });
+
   test('long text with nothing to focus takes the focus itself, after the buttons', async () => {
     const lines = Array.from({ length: 60 }, (_, index) => h('p', null, `Line ${index + 1}`));
     const { dialog, button, open } = await setup({ content: () => lines });

@@ -184,7 +184,8 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
   };
 
   // Scrim. A click on the `::backdrop` targets the dialog, outside its box. A press that starts in
-  // the dialog and ends on the scrim, as selecting text may, isn't a click on the scrim.
+  // the dialog and ends on the scrim, as selecting text may, isn't a click on the scrim. Each press
+  // is seen while capturing, even one that something inside keeps from bubbling, as a menu does.
 
   const onScrim = (event: MouseEvent) => {
     if (event.target !== root) return false;
@@ -297,7 +298,7 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
   };
 
   root.addEventListener('keydown', onKeydown);
-  root.addEventListener('pointerdown', onPointerDown);
+  root.addEventListener('pointerdown', onPointerDown, { capture: true });
   root.addEventListener('click', onClick);
 
   return {
@@ -328,7 +329,7 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
     },
     detach() {
       root.removeEventListener('keydown', onKeydown);
-      root.removeEventListener('pointerdown', onPointerDown);
+      root.removeEventListener('pointerdown', onPointerDown, { capture: true });
       root.removeEventListener('click', onClick);
       unwatch();
       overlay.detach();

@@ -132,7 +132,7 @@ A click opens it, and it stays until you interact with something else.
 - **Both variants are in**, with transient and persistent rich tooltips.
 - Markup: the element and the tooltip sit in a `<span class="rio-tooltip-trigger">` with `display: contents`, so the element lays out as if unwrapped. The tooltip comes right after the element, shown as a popover; its parts are spans, so a tooltip may sit inside a paragraph.
 - **The wrapper is still in the DOM**: a parent that styles or counts its children (`> button`, `:first-child`, `.children`) meets the wrapper instead of the element. Rio's button group looks through it. An app's own child selectors need the wrapper too, as in `.toolbar > .rio-tooltip-trigger > button`. Keeping it puts the tooltip right after its element in the focus order, in every engine.
-- **Clicks and presses in the tooltip stay in it**: they don't reach the app's markup around the element, such as a card with its own click. Keys go on, for Escape. Code that listens for clicks on the document doesn't get them either: a dropdown of the app's own that closes on a click outside stays open on a click in the tooltip.
+- **Clicks and presses in the tooltip stay in it**: they don't reach the app's markup around the element, such as a card with its own click. Keys go on, for Escape. Code that listens for clicks on the document doesn't get them either, so a dropdown of the app's own that closes on a click outside stays open on a click in the tooltip; code that listens while capturing, as VueUse's `onClickOutside` does, still gets them.
 - Don't put a `RioTooltip` inside a link or a button: a tooltip with actions would then be an interactive element inside another.
 
 ### Showing and hiding

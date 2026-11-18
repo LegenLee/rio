@@ -7,6 +7,7 @@ import LocaleProvider from '../locale/LocaleProvider.vue';
 import { createRio } from '../rio/rio';
 import DatePicker from './DatePicker.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
+import { eventsLeaving } from '../test/events';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -62,6 +63,17 @@ const setup = async ({ value, props = {} }: Setup = {}) => {
 const focusedDate = () => (document.activeElement as HTMLElement | null)?.dataset.date;
 
 describe('RioDatePicker, docked', () => {
+  test("clicks and presses in the calendar stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { input, menu, isOpen, day } = await setup({ value: '2026-11-27' });
+    input.focus();
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await vi.waitFor(() => expect(isOpen()).toBe(true));
+    const out = eventsLeaving(() => menu()!);
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.click(day('2026-11-10'));
+    expect(out).toEqual(['keydown']);
+  });
+
   test('the field writes the date the language’s way, and says the format', async () => {
     const { screen, input } = await setup({ value: '2026-11-27' });
     expect(input.value).toBe('11/27/2026');

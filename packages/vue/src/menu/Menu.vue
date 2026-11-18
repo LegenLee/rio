@@ -98,7 +98,20 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <div ref="root" v-bind="menu.parts.root()">
+  <!-- Clicks and presses stay in the menu, so a card or a row around it doesn't take them. Keys go
+       on. -->
+  <div
+    ref="root"
+    v-bind="menu.parts.root()"
+    @click.stop
+    @auxclick.stop
+    @dblclick.stop
+    @pointerdown.stop
+    @pointerup.stop
+    @mousedown.stop
+    @mouseup.stop
+    @contextmenu.stop
+  >
     <slot />
   </div>
 </template>

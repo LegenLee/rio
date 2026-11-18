@@ -6,6 +6,7 @@ import { render } from 'vitest-browser-vue';
 import { createApp, defineComponent, h, reactive, type VNode } from 'vue';
 import Select from './Select.vue';
 import SelectOption from './SelectOption.vue';
+import { eventsLeaving } from '../test/events';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -75,6 +76,18 @@ const shown = (field: HTMLElement) =>
   field.querySelector('.rio-select__value')!.textContent!.trim();
 
 describe('RioSelect', () => {
+  test("clicks and presses in its list stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { opened, listbox, state } = await setup();
+    await opened();
+    const out = eventsLeaving(() => listbox);
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.click(
+      listbox.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])')!,
+    );
+    expect(out).toEqual(['keydown']);
+    expect(state.selected).toBeDefined();
+  });
+
   test('a combobox named by its label, with a list it controls, empty at first', async () => {
     const { screen, field, listbox, root } = await setup();
     await expect.element(screen.getByRole('combobox', { name: 'Size' })).toBeVisible();
