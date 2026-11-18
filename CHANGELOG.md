@@ -4,6 +4,26 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [Unreleased]
+
+Core's DOM behaviors no longer keep state on the elements an adapter renders, apart from a primitive's own marks: they report what they find, the adapter keeps it, and the parts render it. They still write values no render could keep up with, as a spring's or a drag's. Adapters other than Rio's own need the new callbacks below.
+
+### Added
+
+- `attachTheme` in `@rio-m3e/tokens`: writes the theme on an element, its `color-scheme` included, and returns a handle that writes another theme over it (`update`) or takes it off (`detach`). `createRio` is built on it. `colorScheme` is one of the theme's options (`ThemeOptions`) now, for `attachTheme` and `createThemeCss` alike.
+
+### Changed
+
+- **BREAKING** for adapters: the pickers' state is named after them, as the rest of their API is: `PickerState` and `initialPickerState` are `DatePickerState` and `initialDatePickerState`, and `initialTimeState` is `initialTimePickerState`.
+- **BREAKING** for adapters: `attachTimePicker` takes `onHover`, and the time picker keeps the number the pointer hovers in its state (`hovered`, set with `hover`), which the dial's numbers render as `data-hovered`.
+- **BREAKING** for adapters: `createSubMenu` takes `ids.menu`. The submenu's part carries that `id`, and its item's part `popovertarget`, which `attachSubMenu` set before.
+- **BREAKING** for adapters: `attachTextField`'s handle has no `update` anymore. A text area's rows reach the stylesheet through the container's part (`--rio-text-field-rows` in its `style`).
+- For adapters: `attachDialog` reports how the content overflows (`onOverflowChange`), and `createDialog`'s `overflow` renders it on the content's part (`data-overflow-top`, `data-overflow-bottom`, and `tabindex` when only the content takes the focus). `attachMenu` and `attachSubMenu` report the inactive shape (`onInactiveChange`), and `createMenu`'s and `createSubMenu`'s `inactive` render it (`data-inactive`). The date picker keeps whether it opened from the keyboard in its state (`focusOnOpen`).
+
+### Removed
+
+- **BREAKING**: `applyTheme` in `@rio-m3e/tokens`, which wrote the variables only. Use `attachTheme`, which writes the `color-scheme` too, and can take the theme off again.
+
 ## [0.5.0] - 2026-11-18
 
 ### Added

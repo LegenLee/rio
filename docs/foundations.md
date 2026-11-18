@@ -160,7 +160,7 @@ Each token becomes three CSS variables. The names don't include the scheme.
 | `--rio-motion-fast-spatial-damping`   | `0.6`                                       | The raw spring, for the spring solver                                                                   |
 | `--rio-motion-fast-spatial-stiffness` | `800`                                       | The raw spring, for the spring solver                                                                   |
 
-- The theme picks the scheme: `applyTheme(el, { sourceColor, motion: 'standard' })`.
+- The theme picks the scheme: `createRio({ theme: { sourceColor, motion: 'standard' } })`.
 - **Rio defaults to `'expressive'`.** The spec itself names no default scheme. Rio follows the recommendation here because it is an M3E library.
 - Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
 - **The standard spatial springs are always there too**, whatever the theme's scheme: `--rio-motion-standard-{fast|default|slow}-spatial-{damping|stiffness}`. A few components use the standard scheme by spec, such as the split button's menu icon, and read these.
@@ -170,7 +170,7 @@ Each token becomes three CSS variables. The names don't include the scheme.
   - `createSpring()` animates a number with `requestAnimationFrame`. A new target takes over from the current position and velocity, so an interrupted press reverses without a jolt.
   - `readSpringParams(el, token)` reads a token's spring from the element's `-damping` and `-stiffness` variables. Reading from CSS lets a subtree that swaps schemes change its springs too, and keeps `core` independent of `tokens`.
   - `attachSpringProperty(el, { target, apply })` is the general form. The stylesheet declares a target length or angle for each state in a registered custom property, and the spring follows it whenever it changes. The stylesheet also gives the target an instant transition, so while the element is rendered the browser reports every change as a transition event, whatever caused it: a state attribute, `:hover`, a theme applied after the components mounted, or a change of position in a group. A change made while the element isn't rendered is caught up when it shows again. So the spring starts from what is on screen. If the app's CSS replaces the element's `transition` list, the spring stays still and the stylesheet's value shows; to add transitions to a Rio element that springs, end the list with `var(--rio-spring-targets)`, for example `transition: opacity 200ms, var(--rio-spring-targets)`. Those elements are the button, the icon button, the switch, and the split button's two buttons (`.rio-split-button__leading` and `.rio-split-button__trailing`). Don't use it anywhere else, such as on a button group or on the split button's root: the variable isn't defined there, so the whole `transition` declaration would be dropped. A drag can take over with `hold()` and hand back with `release(velocity)`.
-  - A theme applied after the components mounted moves their targets once, so shapes spring into place at load. Apply the theme before mounting (`applyTheme` before `mount`, or `createThemeCss` in a stylesheet) to avoid it.
+  - A theme applied after the components mounted moves their targets once, so shapes spring into place at load. Apply the theme before mounting (`createRio`, which writes it as the app installs Rio, or `createThemeCss` in a stylesheet) to avoid it.
   - `attachShapeMorph(el)` uses it for the corner radius, toward the `--rio-shape-morph-target` its stylesheet declares (`@rio-m3e/styles/base/shape-morph.css`). The start and end sides spring separately, so a stylesheet can give them different targets (`--rio-shape-morph-start-target` and `-end-target`), as the connected button group does. The button uses it for its press and selection shapes.
   - The button group uses `createSpring` directly for the pressed button's width and its neighbors'.
   - The switch uses it for its handle's position and size, and `attachDrag` lets touch and pen drag the handle. The spring then starts at the finger's speed.
@@ -225,7 +225,7 @@ The scale has ten steps, named for how rounded the corner is. Three of them (`la
 - Each step is a CSS variable: `--rio-shape-corner-<step>`, for example `--rio-shape-corner-medium`.
 - `full` is `9999px`, the same value as Material Web's token. It works for static shapes but animates badly: a transition from `9999px` to `12px` stays fully round until the very end. Components that morph between `full` and another step must use half their height instead.
 - The partial tokens need no extra variables. Components set individual corners with logical properties such as `border-start-start-radius`, so shapes also flip correctly in right-to-left layouts.
-- **Resizing a step**: `applyTheme(el, { sourceColor, shapes: { medium: 16 } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
+- **Resizing a step**: `createRio({ theme: { sourceColor, shapes: { medium: 16 } } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
 - **Remapping a component** will be a component-level variable, defined with each component.
 - The shape library and shape morphing are out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
 
@@ -294,7 +294,7 @@ Each style becomes six CSS variables, and the emphasized set uses the spec's `em
 
 - **The default value is `Roboto, system-ui, sans-serif`.** The fallbacks aren't in the spec. They are there because Roboto may not be loaded on the web, and CSS expects a generic family at the end of `font-family`.
 - Rio doesn't load any font itself. Load Roboto in the app; otherwise the system font is used.
-- Override with `applyTheme(el, { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } })`.
+- Override with `createRio({ theme: { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } } })`.
 
 ### 5.3 Language height (not implemented yet)
 
@@ -420,8 +420,8 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 
 | Item                                               | Package                 | Status                                                                                                                                                                  |
 | -------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
-| Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
+| Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `attachTheme`, `createThemeCss`                                                                                                              |
+| Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`attachTheme`, `createThemeCss`).                                               |
 | Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
 | Spring solver (handles interruptions and gestures) | `core`, `tokens`        | Done: `solveSpring`, `createSpring`, `readSpringParams`, and the `-damping` and `-stiffness` motion variables.                                                          |

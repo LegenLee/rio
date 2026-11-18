@@ -1,10 +1,5 @@
 import type { PartialMessages } from '@rio-m3e/core';
-import {
-  createThemeCss,
-  createThemeVariables,
-  type ThemeColorScheme,
-  type ThemeOptions,
-} from '@rio-m3e/tokens';
+import { attachTheme, createThemeCss, type ThemeOptions } from '@rio-m3e/tokens';
 import {
   computed,
   effectScope,
@@ -16,13 +11,8 @@ import {
 } from 'vue';
 import { localeKey, messagesKey } from '../locale/locale';
 
-export interface RioThemeOptions extends ThemeOptions {
-  /**
-   * The root's `color-scheme`, which picks each color's light or dark value. `false` leaves it to
-   * the app. Defaults to `'light dark'`, which follows the system.
-   */
-  colorScheme?: ThemeColorScheme;
-}
+/** The theme: `@rio-m3e/tokens`' options, with the `color-scheme` written with it */
+export type RioThemeOptions = ThemeOptions;
 
 export interface RioOptions {
   /**
@@ -69,28 +59,13 @@ export function createRio(options: RioOptions = {}): RioPlugin {
       );
       // On a server there is no document: the page takes `css` instead.
       if (options.theme === undefined || typeof document === 'undefined') return;
-      const root = document.documentElement;
-      let written = new Set<string>();
+      // Written at once, before the app mounts, and again as the theme changes
+      const theme = attachTheme(document.documentElement);
       const scope = effectScope(true);
-      scope.run(() =>
-        watchEffect(() => {
-          const theme = toValue(options.theme);
-          const next = new Map<string, string>();
-          if (theme) {
-            const { colorScheme = 'light dark', ...rest } = theme;
-            for (const [name, value] of Object.entries(createThemeVariables(rest))) {
-              next.set(name, value);
-            }
-            if (colorScheme) next.set('color-scheme', colorScheme);
-          }
-          for (const name of written) if (!next.has(name)) root.style.removeProperty(name);
-          for (const [name, value] of next) root.style.setProperty(name, value);
-          written = new Set(next.keys());
-        }),
-      );
+      scope.run(() => watchEffect(() => theme.update(toValue(options.theme))));
       app.onUnmount(() => {
         scope.stop();
-        for (const name of written) root.style.removeProperty(name);
+        theme.detach();
       });
     },
   };

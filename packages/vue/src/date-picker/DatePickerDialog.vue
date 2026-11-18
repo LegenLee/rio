@@ -2,11 +2,11 @@
 import {
   attachDialog,
   createDatePickerDialog,
-  initialPickerState,
+  initialDatePickerState,
   type DatePickerDialogProps,
   type DatePickerMessages,
   type DialogDomHandle,
-  type PickerState,
+  type DatePickerState,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
@@ -67,7 +67,7 @@ defineSlots<{
 
 const locale = useLocale(() => props.locale);
 const messages = useMessages('datePicker', locale, () => props.messages);
-const state = reactive<PickerState>(initialPickerState(model.value, locale.value, props));
+const state = reactive<DatePickerState>(initialDatePickerState(model.value, locale.value, props));
 // The content renders from opening until the closing motion ends.
 const rendered = ref(open.value);
 

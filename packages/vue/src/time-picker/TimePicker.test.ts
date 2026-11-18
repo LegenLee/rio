@@ -298,6 +298,25 @@ describe('RioTimePickerDialog', () => {
     await vi.waitFor(() => expect(hovered()).toEqual([]));
   });
 
+  // Chromium tells a resting pointer of the content changing under it, which clears the hover on its
+  // own; WebKit needs the picker to see that the dial is a new one.
+  test('opened again under a resting pointer, no number shows hover until the pointer moves', async () => {
+    const { open, dial, point, dialog } = await setupDialog({}, '07:30');
+    await open();
+    const hovered = () =>
+      [...dial().querySelectorAll<HTMLElement>('[data-hovered]')].map((item) => item.dataset.value);
+    await userEvent.hover(page.elementLocator(dial()), { position: point(90) });
+    await vi.waitFor(() => expect(hovered()).toEqual(['3']));
+    await userEvent.keyboard('{Escape}');
+    await vi.waitFor(() => expect(dialog.querySelector('.rio-time-picker__dial')).toBeNull());
+    // The focus is back on the button that opened it.
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(dialog.querySelector('.rio-time-picker__dial')).not.toBeNull());
+    expect(hovered()).toEqual([]);
+    await userEvent.hover(page.elementLocator(dial()), { position: point(92) });
+    await vi.waitFor(() => expect(hovered()).toEqual(['3']));
+  });
+
   test('a press doesn’t take the focus from where it is', async () => {
     const { open, press, field } = await setupDialog({}, '07:30');
     await open();

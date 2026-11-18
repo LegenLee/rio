@@ -9,8 +9,8 @@
 //   Up to the one before; on a 24-hour clock, 11 leads to 12 on the inner ring, and 23 back to 0.
 //   Enter and Space pick the number, without going on to the minutes.
 // - The numbers overlap, 60 of them for the minutes, so the pointer goes through them to the dial:
-//   the number nearest the pointer, the one a press would pick, shows its hover state
-//   (`data-hovered`), rather than the one drawn on top.
+//   `onHover` reports the number nearest the pointer, the one a press would pick, for its hover
+//   state, rather than the one drawn on top.
 // - On the AM and PM buttons, the arrow keys choose the other one, as in a radio group.
 // - A text field focused other than by the pointer, as by Tab or as the dialog opens, has its text
 //   selected, so typing replaces both digits.
@@ -29,6 +29,8 @@ export interface TimePickerDomOptions {
   onPick: (value: number, release: boolean) => void;
   /** AM or PM chosen with the arrow keys */
   onPeriod: (pm: boolean) => void;
+  /** The number nearest a pointer that hovers over the dial, or none, as it changes */
+  onHover: (value: number | undefined) => void;
 }
 
 export interface TimePickerDomHandle {
@@ -63,23 +65,24 @@ export function attachTimePicker(
     return index + (inner ? 12 : 0);
   };
 
-  /** Where a pointer that hovers is over the dial */
-  let hoverAt: { x: number; y: number } | undefined;
+  /**
+   * Where a pointer that hovers is over the dial, and which dial: one rendered afresh, as on
+   * opening again, has no pointer over it until the pointer moves.
+   */
+  let hoverAt: { x: number; y: number; face: Element | null } | undefined;
+  let hovered: number | undefined;
   const showHover = () => {
     const face = dial();
-    for (const number of root.querySelectorAll('.rio-time-picker__number[data-hovered]')) {
-      number.removeAttribute('data-hovered');
-    }
-    if (!face || !hoverAt) return;
-    const value = valueAt(face, hoverAt.x, hoverAt.y);
-    face
-      .querySelector(`.rio-time-picker__number[data-value="${value}"]`)
-      ?.setAttribute('data-hovered', '');
+    if (hoverAt && hoverAt.face !== face) hoverAt = undefined;
+    const value = face && hoverAt ? valueAt(face, hoverAt.x, hoverAt.y) : undefined;
+    if (value === hovered) return;
+    hovered = value;
+    options.onHover(value);
   };
   const onHover = (event: PointerEvent) => {
     if (event.pointerType === 'touch') return;
     const over = (event.target as Element).closest('.rio-time-picker__dial');
-    hoverAt = over || dragging ? { x: event.clientX, y: event.clientY } : undefined;
+    hoverAt = over || dragging ? { x: event.clientX, y: event.clientY, face: dial() } : undefined;
     showHover();
   };
   const onPointerLeave = () => {
@@ -177,7 +180,7 @@ export function attachTimePicker(
   return {
     sync() {
       enterDial();
-      // The adapter may have reused a number for another value.
+      // The dial may show the other field's numbers now, another one under the pointer.
       showHover();
       if (focusedField === undefined) return;
       const active = document.activeElement;

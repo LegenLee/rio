@@ -8,7 +8,7 @@ import {
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/text-field.css';
-import { onBeforeUnmount, onMounted, onUpdated, useAttrs, useId, useTemplateRef } from 'vue';
+import { onBeforeUnmount, onMounted, useAttrs, useId, useTemplateRef } from 'vue';
 
 // `class` and `style` dress the whole field; every other attribute, such as `type`, `name`,
 // `placeholder`, or `autocomplete`, and every listener belongs to the input.
@@ -82,8 +82,6 @@ const container = useTemplateRef<HTMLElement>('container');
 const input = useTemplateRef<HTMLInputElement | HTMLTextAreaElement>('input');
 let handle: TextFieldDomHandle | undefined;
 onMounted(() => (handle = attachTextField(container.value!, () => input.value)));
-// `rows` may have changed.
-onUpdated(() => handle?.update());
 onBeforeUnmount(() => handle?.detach());
 </script>
 

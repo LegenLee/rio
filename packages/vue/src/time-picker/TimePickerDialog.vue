@@ -3,7 +3,7 @@ import {
   attachDialog,
   attachTimePicker,
   createTimePicker,
-  initialTimeState,
+  initialTimePickerState,
   type DialogDomHandle,
   type HourCycle,
   type TimePickerDomHandle,
@@ -58,7 +58,7 @@ defineSlots<{
 
 const locale = useLocale(() => props.locale);
 const messages = useMessages('timePicker', locale, () => props.messages);
-const state = reactive<TimePickerState>(initialTimeState(model.value));
+const state = reactive<TimePickerState>(initialTimePickerState(model.value));
 // The content renders from opening until the closing motion ends.
 const rendered = ref(open.value);
 const id = useId();
@@ -107,6 +107,7 @@ onMounted(() => {
     hourCycle: picker.hourCycle,
     onPick: picker.dialPick,
     onPeriod: picker.selectPeriod,
+    onHover: picker.hover,
   });
 });
 watch(open, (next) => dialogHandle?.sync(next), { flush: 'post' });

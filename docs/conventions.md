@@ -9,12 +9,15 @@ How the Rio repository is organized and how code in it is written. Read this bef
 | `@rio-m3e/tokens`  | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
 | `@rio-m3e/core`    | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
 | `@rio-m3e/styles`  | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
-| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
+| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`. `createRio` wires the theme of `tokens` (`attachTheme`) and the language into the app.                | `core`, `styles`, `tokens`                           |
 | `@rio-m3e/testing` | Test helpers the adapters share, such as `expectSkeleton` for the contract tests. Private: never published, no build.                                    | `core`                                               |
 | `playground`       | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
 | `docs`             | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
+
+- **The component APIs keep nothing between calls.** Whatever a component needs to remember, such as whether the date picker opened from the keyboard, is state the adapter holds, which `core` asks to change through `onChange`, `on<State>Change`, or `onStateChange`.
+- **DOM behaviors report too.** What an `attach*` finds out about the elements the adapter renders, such as where the pointer hovers on the time picker's dial, whether a dialog's content overflows, or which open menu is inactive, it reports through a callback; the adapter keeps it, and the parts render it as attributes. A DOM behavior writes directly only where the adapter doesn't render (the app's own element a tooltip describes, the document's root, a primitive's own marks such as `data-ripple`), and values no render could keep up with: ones that change every frame, such as a spring's or a drag's, and ones undone within the same task. Detaching never takes off what a part renders.
 
 ## Folder layout
 
@@ -227,6 +230,7 @@ Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tre
 
 How an adapter turns `core`'s API into components.
 
+- **An adapter holds only what its framework needs.** If a second adapter would have to write the same code again (DOM work, a default, a type), it belongs in `core`, or in `tokens` for the theme.
 - **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
   - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
 - **Each adapter decides what belongs to its framework**: the framework versions it supports (its `peerDependencies`), how state and its callbacks are named in the framework's idiom (Vue's `v-model:selected`; in React, a controlled `selected` with `onSelectedChange`), and its file names (see File naming). Within one adapter, every component follows the same naming.

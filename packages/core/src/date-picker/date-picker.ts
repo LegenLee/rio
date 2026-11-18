@@ -480,7 +480,7 @@ export const initialFocus = (
 // What a picker keeps while it is used
 
 /** The state an adapter keeps for a picker, which the picker asks to change with `onStateChange` */
-export interface PickerState {
+export interface DatePickerState {
   /** The date chosen in the calendar so far; the value changes on OK. */
   draft?: string;
   /** The month the calendar shows, `YYYY-MM` */
@@ -494,6 +494,11 @@ export interface PickerState {
   textError?: string;
   /** The modal dialog's mode */
   mode: 'calendar' | 'input';
+  /**
+   * Whether the picker's last opening came from the keyboard, so the focus goes into the calendar.
+   * Opening starts the rest of the state afresh, and leaves this.
+   */
+  focusOnOpen?: boolean;
 }
 
 /** What a picker asks for, and what it reads it from */
@@ -515,21 +520,21 @@ interface PickerCallbacks {
   isDateDisabled?: (date: string) => boolean;
   messages: () => DatePickerMessages;
   /** The state the adapter keeps for the picker */
-  state: () => PickerState;
+  state: () => DatePickerState;
   /** Called with the requested date. */
   onChange: (value: string | undefined) => void;
   /** Called with the requested `open`. */
   onOpenChange: (open: boolean) => void;
   /** Asks to change part of the state. */
-  onStateChange: (state: Partial<PickerState>) => void;
+  onStateChange: (state: Partial<DatePickerState>) => void;
 }
 
 /** The state a picker starts from, and goes back to as it opens */
-export const initialPickerState = (
+export const initialDatePickerState = (
   value: string | undefined,
   locale: string,
   limits: { min?: string; max?: string } = {},
-): PickerState => {
+): DatePickerState => {
   const focused = initialFocus(value, limits.min, limits.max);
   return {
     draft: value,
@@ -576,9 +581,9 @@ const pickerActions = (props: () => PickerBase, options: PickerCallbacks) => {
       }
     },
     /** Starts afresh from the value: call it when the picker opens. */
-    opened(state: Partial<PickerState> = {}) {
+    opened(state: Partial<DatePickerState> = {}) {
       options.onStateChange({
-        ...initialPickerState(props().value, props().locale, props()),
+        ...initialDatePickerState(props().value, props().locale, props()),
         ...state,
       });
     },
@@ -684,11 +689,9 @@ export function createDatePicker(options: DatePickerOptions): DatePickerApi {
   const props = () => options.props();
   const variant = () => props().variant ?? 'docked';
   const actions = pickerActions(props, options);
-  // TODO: Move focus state handling to each framework adapter.
-  let focusIn = false;
   const show = (fromKeyboard: boolean) => {
     if (props().disabled || props().open) return;
-    focusIn = fromKeyboard;
+    options.onStateChange({ focusOnOpen: fromKeyboard });
     options.onOpenChange(true);
   };
   const commitText = () => {
@@ -737,7 +740,7 @@ export function createDatePicker(options: DatePickerOptions): DatePickerApi {
       };
     },
     calendarButtonLabel: () => options.messages().openCalendar,
-    focusOnOpen: () => focusIn,
+    focusOnOpen: () => !!options.state().focusOnOpen,
     handleFieldClick(event) {
       // A click from the keyboard or assistive technology has no pointer behind it; the calendar
       // button opens it from there.

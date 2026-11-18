@@ -10,7 +10,7 @@ import {
   createCalendar,
   createDatePicker,
   createTimePicker,
-  initialTimeState,
+  initialTimePickerState,
   timePickerDialogSkeleton,
   timePickerSkeleton,
   type PartAttrs,
@@ -20,7 +20,7 @@ import {
   createDatePickerDialog,
   datePickerDialogSkeleton,
   datePickerSkeleton,
-  initialPickerState,
+  initialDatePickerState,
   messagesFor,
   dialogSkeleton,
   createButton,
@@ -381,6 +381,8 @@ describe('RioSubMenu', () => {
       slots: { default: () => h(SubMenu, { ...rest, modelValue: selected }, slots) },
     });
     const parent = createMenu({ props: () => menuProps, onChange: noop, onOpenChange: noop });
+    // The item, then the submenu after it
+    const [item, menu] = rootOf(screen).children;
     const api = createSubMenu({
       props: () => props,
       content: () => content,
@@ -388,9 +390,9 @@ describe('RioSubMenu', () => {
       open: () => false,
       onChange: noop,
       onOpenChange: noop,
+      ids: { menu: menu!.id },
     });
-    // The item, then the submenu after it
-    const [item, menu] = rootOf(screen).children;
+    expect(menu!.id).not.toBe('');
     expectSkeleton(item!, menuItemSkeleton, api.item);
     expectSkeleton(menu!, menuSkeleton, api.menu);
   });
@@ -750,7 +752,7 @@ describe('RioDatePicker', () => {
         locale: 'en-US',
       }),
       messages,
-      state: () => initialPickerState(value, 'en-US'),
+      state: () => initialDatePickerState(value, 'en-US'),
       onChange: noop,
       onOpenChange: noop,
       onStateChange: noop,
@@ -807,7 +809,7 @@ describe('RioDatePickerDialog', () => {
     const api = createDatePickerDialog({
       props: () => ({ locale: 'en-US', rendered: false }),
       messages: () => messagesFor('en').datePicker,
-      state: () => initialPickerState(undefined, 'en-US'),
+      state: () => initialDatePickerState(undefined, 'en-US'),
       ids: { title: 'x', headline: 'y' },
       onChange: noop,
       onOpenChange: noop,
@@ -837,7 +839,7 @@ describe('RioDatePickerDialog', () => {
     const api = createDatePickerDialog({
       props: () => ({ locale: 'en-US', rendered: true }),
       messages: () => messagesFor('en').datePicker,
-      state: () => ({ ...initialPickerState(undefined, 'en-US'), mode }),
+      state: () => ({ ...initialDatePickerState(undefined, 'en-US'), mode }),
       ids: { title, headline: title.replace(/-title$/, '-headline') },
       onChange: noop,
       onOpenChange: noop,
@@ -931,7 +933,7 @@ describe('RioTimeInput', () => {
       'inline',
       { locale, value: '19:05' },
       {
-        ...initialTimeState('19:05'),
+        ...initialTimePickerState('19:05'),
         mode: 'input',
         hourText: twelve ? '07' : '19',
         minuteText: '05',
@@ -950,7 +952,7 @@ describe('RioTimeInput', () => {
       'inline',
       { locale: 'en-US', value: '19:05' },
       {
-        ...initialTimeState('19:05'),
+        ...initialTimePickerState('19:05'),
         mode: 'input',
         hourText: '13',
         minuteText: '05',
@@ -969,7 +971,7 @@ describe('RioTimePickerDialog', () => {
     const api = timePicker(
       'dialog',
       { locale: 'en-US', rendered: false },
-      initialTimeState(undefined),
+      initialTimePickerState(undefined),
     );
     expectSkeleton(rootOf(screen), timePickerDialogSkeleton, api);
   });
@@ -1003,7 +1005,7 @@ describe('RioTimePickerDialog', () => {
     const api = timePicker(
       'dialog',
       { locale: 'en-US', value: '07:30', open: true, rendered: true, ...props },
-      { ...initialTimeState('07:30'), hourText: '07', minuteText: '30', ...state },
+      { ...initialTimePickerState('07:30'), hourText: '07', minuteText: '30', ...state },
     );
     expectSkeleton(root, timePickerDialogSkeleton, api);
     expectTimePickerContent(root, api);

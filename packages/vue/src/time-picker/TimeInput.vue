@@ -2,7 +2,7 @@
 import {
   attachTimePicker,
   createTimePicker,
-  initialTimeState,
+  initialTimePickerState,
   type HourCycle,
   type TimePickerDomHandle,
   type TimePickerMessages,
@@ -29,7 +29,7 @@ const model = defineModel<string | undefined>();
 
 const locale = useLocale(() => props.locale);
 const messages = useMessages('timePicker', locale, () => props.messages);
-const state = reactive<TimePickerState>({ ...initialTimeState(model.value), mode: 'input' });
+const state = reactive<TimePickerState>({ ...initialTimePickerState(model.value), mode: 'input' });
 const id = useId();
 const picker = createTimePicker({
   variant: 'inline',
@@ -51,6 +51,7 @@ onMounted(() => {
     hourCycle: picker.hourCycle,
     onPick: picker.dialPick,
     onPeriod: picker.selectPeriod,
+    onHover: picker.hover,
   });
 });
 // The dial renders in TimePickerBody, so this follows the state, not this component's updates.

@@ -6,14 +6,13 @@
 //   to the first element Tab reaches in the dialog. Closing returns it to where it was, which the
 //   browser does.
 // - Tab and Shift+Tab go round the dialog's elements instead of leaving for the browser's own UI.
-//   Content that scrolls, with nothing inside that takes the focus, takes it itself
-//   (`tabindex="0"`), so the keyboard can scroll it.
+//   Content that scrolls, with nothing inside that takes the focus, takes it itself, so the
+//   keyboard can scroll it: `onOverflowChange` reports it `focusable`, for its `tabindex`.
 // - Escape, or a click on the scrim, asks to close: `onCancel` gets an event it can cancel, and the
 //   dialog closes unless it does. While a menu or another dialog opened from this one is open, a
 //   click on the scrim closes only that.
-// - The content scrolls when the dialog doesn't fit the window. `data-overflow-top` and
-//   `data-overflow-bottom` on the content say where more of it is hidden, for the dividers. Each
-//   opening starts it at the top.
+// - The content scrolls when the dialog doesn't fit the window. `onOverflowChange` reports where
+//   more of it is hidden, for the dividers. Each opening starts it at the top.
 // - The page behind doesn't scroll while a dialog is open: the document's root gets
 //   `overflow: hidden`. A page that had a scrollbar keeps its space (`scrollbar-gutter: stable`),
 //   so the page doesn't shift sideways.
@@ -22,6 +21,7 @@
 
 import type { CancelableEvent } from '../parts';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import type { DialogOverflow } from './dialog';
 
 /** What asks the dialog to close: Escape (or the back gesture), or a click on the scrim */
 export type DialogCancelReason = 'escape' | 'scrim';
@@ -46,12 +46,14 @@ export interface DialogDomOptions {
    * the focus goes to the element marked `autofocus`, or else to the first element Tab reaches.
    */
   initialFocus?: () => HTMLElement | null | undefined;
+  /** How the content overflows, as it changes, for `createDialog`'s `overflow` */
+  onOverflowChange?: (overflow: DialogOverflow) => void;
 }
 
 export interface DialogDomHandle {
   /** Brings the dialog in line with `open`. Call it once attached, and whenever `open` changes. */
   sync(open: boolean): void;
-  /** Call it after the content changed, to update the dividers. */
+  /** Call it after each render: the content may scroll now, or take the focus it was due. */
   update(): void;
   detach(): void;
 }
@@ -207,26 +209,31 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
   // Overflow
 
   const content = () => root.querySelector<HTMLElement>(':scope > .rio-dialog__content');
+  const NONE: DialogOverflow = { top: false, bottom: false, focusable: false };
+  let reported = NONE;
+  const report = (next: DialogOverflow) => {
+    if (
+      Object.entries(next).every(([key, value]) => reported[key as keyof DialogOverflow] === value)
+    )
+      return;
+    reported = next;
+    options.onOverflowChange?.(next);
+  };
   const updateDividers = () => {
     const element = content();
     if (!element) return;
     const hidden = element.scrollHeight - element.clientHeight;
-    element.toggleAttribute('data-overflow-top', element.scrollTop >= SCROLL_SLOP);
-    element.toggleAttribute('data-overflow-bottom', hidden - element.scrollTop >= SCROLL_SLOP);
-  };
-  /** The content, while it takes the focus so the keyboard can scroll it */
-  let reachable: HTMLElement | null = null;
-  const setReachable = (element: HTMLElement | null) => {
-    if (element === reachable) return;
-    reachable?.removeAttribute('tabindex');
-    reachable = element;
-    reachable?.setAttribute('tabindex', '0');
+    report({
+      ...reported,
+      top: element.scrollTop >= SCROLL_SLOP,
+      bottom: hidden - element.scrollTop >= SCROLL_SLOP,
+    });
   };
   const updateOverflow = () => {
     updateDividers();
     const element = content();
     const scrolls = !!element && element.scrollHeight - element.clientHeight >= SCROLL_SLOP;
-    setReachable(scrolls && tabbablesIn(element).length === 0 ? element : null);
+    report({ ...reported, focusable: scrolls && tabbablesIn(element).length === 0 });
   };
   // The content's box changes with the window, and its children's with what they hold.
   const resizes = new ResizeObserver(updateOverflow);
@@ -244,13 +251,16 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
     resizes.disconnect();
     watched?.removeEventListener('scroll', updateDividers);
     watched = null;
-    setReachable(null);
+    report(NONE);
   };
 
   // Focus. Browsers differ on what they focus first: some pick the content when it scrolls, some
   // the first radio button of a group rather than the checked one.
 
+  /** Whether the opening's focus waits for the content, which takes it once the adapter renders */
+  let focusDue = false;
   const focusFirst = () => {
+    focusDue = false;
     const chosen = options.initialFocus?.();
     if (chosen) {
       chosen.focus();
@@ -259,8 +269,11 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
     // The browser has focused it already.
     if (root.querySelector('[autofocus]')) return;
     const tabbables = tabbablesIn(root);
+    const element = content();
     // Something to act on comes before the content it would scroll.
-    (tabbables.find((element) => element !== reachable) ?? tabbables[0])?.focus();
+    const first = tabbables.find((each) => each !== element) ?? tabbables[0];
+    if (first) first.focus();
+    else focusDue = reported.focusable;
   };
 
   // Opening and closing. The closing motion is the dialog's and its scrim's transitions, which
@@ -311,6 +324,7 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
       if (!root.open) return;
       watch();
       updateOverflow();
+      if (focusDue) focusFirst();
     },
     detach() {
       root.removeEventListener('keydown', onKeydown);

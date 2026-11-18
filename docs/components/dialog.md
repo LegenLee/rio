@@ -173,7 +173,7 @@ Change the name, then press Escape or click outside the dialog.
 - The dialog sizes to its content between 280px and 560px wide, keeps 24px from the window's edges, and sits in the center. The app can move it with CSS on `.rio-dialog`, for the spec's custom positions.
 - **Buttons sit at the end, in the order the app gives them: the dismissing one first, then the confirming one, nearest the edge.** When they don't fit side by side, they stack with the confirming one on top. Right-to-left layouts mirror this. It is CSS only (`flex-wrap: wrap-reverse`), so it follows the DOM order.
 - The buttons' containers keep the 24px padding; text buttons' labels sit further in by the buttons' own padding.
-- **The content scrolls between the pinned headline and buttons, with dividers that show while it scrolls**, at the edge where more of it is hidden: below the headline once it has scrolled down, and above the buttons while there is more below. `attachDialog` marks the content with `data-overflow-top` and `data-overflow-bottom`. Scrolling stops at the content's ends rather than moving on to the page (`overscroll-behavior: contain`).
+- **The content scrolls between the pinned headline and buttons, with dividers that show while it scrolls**, at the edge where more of it is hidden: below the headline once it has scrolled down, and above the buttons while there is more below. `attachDialog` reports where more is hidden, and the content's part renders it as `data-overflow-top` and `data-overflow-bottom`. Scrolling stops at the content's ends rather than moving on to the page (`overscroll-behavior: contain`).
 
 ### Motion
 

@@ -37,6 +37,8 @@ export interface TimePickerState {
   /** Which field the dial sets */
   selection: TimeSelection;
   mode: TimePickerMode;
+  /** The number nearest a pointer that hovers over the dial, which shows its hover state */
+  hovered?: number;
 }
 
 export interface TimePickerProps {
@@ -184,6 +186,8 @@ export interface TimePickerApi extends Record<TimePickerWhen, () => boolean> {
    * technology make, picks it; the pointer picks through the dial (`attachTimePicker`).
    */
   handleNumberClick: (event: { detail: number }, value: number) => void;
+  /** The number a pointer hovers nearest on the dial, or none (`attachTimePicker`'s `onHover`) */
+  hover: (value: number | undefined) => void;
   hourInput: (text: string) => void;
   minuteInput: (text: string) => void;
   /** Reads the text fields: call it on Enter and on their `change`. */
@@ -201,7 +205,7 @@ export interface TimePickerApi extends Record<TimePickerWhen, () => boolean> {
 const pad = (value: number) => String(value).padStart(2, '0');
 
 /** The state a time picker starts from */
-export const initialTimeState = (value: string | undefined): TimePickerState => {
+export const initialTimePickerState = (value: string | undefined): TimePickerState => {
   const time = parseTime(value);
   return {
     draft: value,
@@ -211,6 +215,7 @@ export const initialTimeState = (value: string | undefined): TimePickerState => 
     invalid: undefined,
     selection: 'hour',
     mode: 'dial',
+    hovered: undefined,
   };
 };
 
@@ -389,6 +394,7 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
           'data-inner': item.inner ? '' : undefined,
           'data-selected': selected ? '' : undefined,
           'data-unlabeled': item.label ? undefined : '',
+          'data-hovered': state().hovered === item.value ? '' : undefined,
         };
       },
       error: () => ({
@@ -434,6 +440,7 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
     handleNumberClick(event, value) {
       if (event.detail === 0) api.dialPick(value);
     },
+    hover: (hovered) => options.onStateChange({ hovered }),
     hourInput: (hourText) => options.onStateChange({ hourText }),
     minuteInput: (minuteText) => options.onStateChange({ minuteText }),
     commitText,
@@ -451,7 +458,7 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
       });
     },
     opened() {
-      const start = initialTimeState(props().value);
+      const start = initialTimePickerState(props().value);
       const time = parseTime(props().value);
       options.onStateChange({
         ...start,

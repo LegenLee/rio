@@ -228,7 +228,14 @@ export function createTextField(options: TextFieldOptions): TextFieldApi {
         };
       },
       frame: () => ({ class: 'rio-text-field__frame' }),
-      container: () => ({ class: 'rio-text-field__container' }),
+      container: () => {
+        const p = props();
+        return {
+          class: 'rio-text-field__container',
+          // A text area's least height, which the stylesheet works out from its rows
+          style: p.multiline ? `--rio-text-field-rows: ${p.rows}` : undefined,
+        };
+      },
       outline: () => ({ class: 'rio-text-field__outline', 'aria-hidden': 'true' }),
       outlineStart: () => ({ class: 'rio-text-field__outline-start' }),
       outlineNotch: () => ({ class: 'rio-text-field__outline-notch' }),

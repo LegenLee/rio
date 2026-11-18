@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { messagesFor } from '../locale/messages';
 import {
   createTimePicker,
-  initialTimeState,
+  initialTimePickerState,
   type TimePickerProps,
   type TimePickerState,
 } from './time-picker';
@@ -17,7 +17,7 @@ const setup = (
 ) => {
   const current: TimePickerProps = { locale: 'en-US', rendered: true, ...props };
   const state: TimePickerState = {
-    ...initialTimeState(current.value),
+    ...initialTimePickerState(current.value),
     ...(variant === 'inline' ? { mode: 'input' as const } : {}),
     ...initial,
   };
@@ -276,6 +276,17 @@ describe('createTimePicker, dialog', () => {
     expect(state.draft).toBe('03:05');
     picker.dialPick(15);
     expect(state.draft).toBe('15:05');
+  });
+
+  test('the number a pointer hovers nearest shows it, as the adapter keeps it', () => {
+    const { picker, state } = setup('dialog', { value: '19:05' });
+    const [, , , three, four] = picker.dialItems();
+    picker.hover(3);
+    expect(state.hovered).toBe(3);
+    expect(picker.parts.dialItem(three!)['data-hovered']).toBe('');
+    expect(picker.parts.dialItem(four!)['data-hovered']).toBeUndefined();
+    picker.hover(undefined);
+    expect(picker.parts.dialItem(three!)['data-hovered']).toBeUndefined();
   });
 
   test('only a click without a pointer picks a number; the pointer picks through the dial', () => {

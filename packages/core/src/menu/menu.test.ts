@@ -171,6 +171,7 @@ describe('createSubMenu', () => {
       open: () => open,
       onChange,
       onOpenChange,
+      ids: { menu: 'the-submenu' },
     });
     return { sub, parent, onChange, onOpenChange };
   };
@@ -192,10 +193,33 @@ describe('createSubMenu', () => {
     expect(sub.menu.parts.root()).toEqual({
       class: 'rio-menu',
       role: 'menu',
+      id: 'the-submenu',
       'aria-label': 'Share',
       'data-variant': 'vibrant',
       'data-instant': '',
+      'data-inactive': undefined,
     });
+  });
+
+  test('its item invokes it as a popover; its shape is the adapter’s to keep', () => {
+    expect(setupSub().sub.item.parts.root()).toMatchObject({
+      popovertarget: 'the-submenu',
+      popovertargetaction: 'show',
+    });
+    const parent = setupMenu();
+    let inactive = true;
+    const sub = createSubMenu({
+      props: () => ({}),
+      menu: () => parent.menu,
+      open: () => true,
+      onChange: vi.fn(),
+      onOpenChange: vi.fn(),
+      ids: { menu: 'the-submenu' },
+      inactive: () => inactive,
+    });
+    expect(sub.menu.parts.root()['data-inactive']).toBe('');
+    inactive = false;
+    expect(sub.menu.parts.root()['data-inactive']).toBeUndefined();
   });
 
   test('a click on the item opens the submenu rather than choosing', () => {

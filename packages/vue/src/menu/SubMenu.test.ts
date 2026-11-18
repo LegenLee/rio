@@ -1,4 +1,4 @@
-import type { MenuSelected } from '@rio-m3e/core';
+import { attachSubMenu, type MenuSelected } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
@@ -196,10 +196,11 @@ describe('RioSubMenu', () => {
       const { item, menu, isOpen } = await setup();
       pointAt(item('Share'));
       await vi.waitFor(() => expect(isOpen('Share')).toBe(true));
+      // The adapter renders the shapes it is told of.
+      await vi.waitFor(() => expect(menu('Share').hasAttribute('data-inactive')).toBe(true));
       expect(menu('File').hasAttribute('data-inactive')).toBe(false);
-      expect(menu('Share').hasAttribute('data-inactive')).toBe(true);
       pointAt(item('Email'));
-      expect(menu('File').hasAttribute('data-inactive')).toBe(true);
+      await vi.waitFor(() => expect(menu('File').hasAttribute('data-inactive')).toBe(true));
       expect(menu('Share').hasAttribute('data-inactive')).toBe(false);
       await vi.waitFor(() =>
         expect(getComputedStyle(menu('File')).borderTopLeftRadius).toBe(
@@ -263,6 +264,14 @@ describe('RioSubMenu', () => {
       await pause(350);
       pointer('pointermove', item('Sort by'), share.right - 2, next.top + 4);
       await vi.waitFor(() => expect(isOpen('Share')).toBe(false));
+    });
+
+    test('detaching leaves the item’s link to the submenu, which its part renders', async () => {
+      const { item, menu } = await setup();
+      // As an adapter may detach and attach again without a render, as React's StrictMode does
+      attachSubMenu(item('Share'), menu('Share'), { onOpenChange: () => {} }).detach();
+      expect(item('Share').getAttribute('popovertarget')).toBe(menu('Share').id);
+      expect(item('Share').getAttribute('popovertargetaction')).toBe('show');
     });
 
     test('a click opens it at once, and another click on its item keeps it open', async () => {

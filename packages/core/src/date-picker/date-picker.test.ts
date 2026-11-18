@@ -5,7 +5,7 @@ import {
   createDatePicker,
   createDatePickerDialog,
   dateHeadline,
-  initialPickerState,
+  initialDatePickerState,
   type DatePickerDialogProps,
   type DatePickerProps,
   dateInputPattern,
@@ -219,7 +219,7 @@ describe('the field', () => {
 
 describe('createDatePicker', () => {
   const setup = (props: Partial<DatePickerProps> = {}) => {
-    let state = initialPickerState(props.value, 'en-US');
+    let state = initialDatePickerState(props.value, 'en-US');
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
     const picker = createDatePicker({
@@ -271,11 +271,15 @@ describe('createDatePicker', () => {
   });
 
   test('Alt+Down and the calendar button open it with the focus in; disabled, nothing opens', () => {
-    const { picker, onOpenChange } = setup();
+    const { picker, onOpenChange, state } = setup();
     const event = key('ArrowDown', true);
     picker.handleFieldKeydown(event);
     expect(event.preventDefault).toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(picker.focusOnOpen()).toBe(true);
+    // It is the adapter's state, and opening, which starts the rest afresh, leaves it.
+    expect(state().focusOnOpen).toBe(true);
+    picker.opened();
     expect(picker.focusOnOpen()).toBe(true);
     const disabled = setup({ disabled: true });
     disabled.picker.toggle();
@@ -326,7 +330,7 @@ describe('createDatePicker', () => {
 
 describe('createDatePickerDialog', () => {
   const setup = (props: Partial<DatePickerDialogProps> = {}) => {
-    let state = initialPickerState(props.value, 'en-US');
+    let state = initialDatePickerState(props.value, 'en-US');
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
     const dialog = createDatePickerDialog({

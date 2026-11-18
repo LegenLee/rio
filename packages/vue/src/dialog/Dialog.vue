@@ -3,6 +3,7 @@ import {
   attachDialog,
   createDialog,
   type DialogCancelEvent,
+  type DialogOverflow,
   type DialogDomHandle,
   type DialogProps,
 } from '@rio-m3e/core';
@@ -34,10 +35,12 @@ const slots = defineSlots<{
 }>();
 
 const id = useId();
+const overflow = ref<DialogOverflow>({ top: false, bottom: false, focusable: false });
 const dialog = createDialog({
   // `satisfies` fails the build if a prop added to DialogProps is missing here.
   props: () => ({ open: open.value, role }) satisfies Record<keyof DialogProps, unknown>,
   content: () => ({ icon: !!slots.icon, headline: !!headline, actions: !!slots.actions }),
+  overflow: () => overflow.value,
   ids: { headline: `${id}-headline`, content: `${id}-content` },
 });
 
@@ -53,6 +56,7 @@ onMounted(() => {
   handle = attachDialog(root.value!, {
     onCancel: (event) => emit('cancel', event),
     onOpenChange: (next) => (open.value = next),
+    onOverflowChange: (next) => (overflow.value = next),
     onClosed: () => {
       if (!open.value) rendered.value = false;
     },

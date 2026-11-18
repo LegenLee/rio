@@ -1,7 +1,7 @@
 import { mdiDeleteOutline } from '@mdi/js';
 import { attachDialog, type DialogCancelEvent, type DialogRole } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive, type VNode } from 'vue';
@@ -234,6 +234,16 @@ describe('RioDialog', () => {
     expect(document.activeElement).toBe(button('Discard'));
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(content);
+  });
+
+  // Chromium focuses content that scrolls on its own; WebKit needs the dialog to, once the content
+  // has rendered its tabindex.
+  test('long text with nothing else to focus takes the focus as the dialog opens', async () => {
+    const lines = Array.from({ length: 60 }, (_, index) => h('p', null, `Line ${index + 1}`));
+    const { dialog, open } = await setup({ content: () => lines, actions: () => [] });
+    await open();
+    const content = dialog().querySelector<HTMLElement>('.rio-dialog__content')!;
+    await vi.waitFor(() => expect(document.activeElement).toBe(content));
   });
 
   test('Tab skips disabled and hidden elements at the ends', async () => {

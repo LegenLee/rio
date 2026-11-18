@@ -4,7 +4,7 @@
 // theme (the default source color), and the page.
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
-import { applyTheme } from '@rio-m3e/tokens';
+import { attachTheme } from '@rio-m3e/tokens';
 import { beforeAll } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -14,7 +14,8 @@ export const SCHEMES = ['light', 'dark'] as const;
 export type Scheme = (typeof SCHEMES)[number];
 
 beforeAll(async () => {
-  applyTheme(document.documentElement, { sourceColor: '#6750a4' });
+  // Without a color-scheme: each gallery sets the root's for its scheme.
+  attachTheme(document.documentElement, { sourceColor: '#6750a4', colorScheme: false });
   document.body.style.margin = '0';
   await Promise.all([
     document.fonts.load('400 16px Roboto'),

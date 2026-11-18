@@ -21,7 +21,7 @@
 //   first item. Left and Escape close it and give the focus back to its item. Tab and a choice
 //   close the whole menu.
 // - The menu with the pointer or the focus has the active shape, and the other open menus around
-//   it the inactive one (`data-inactive`).
+//   it the inactive one: `onInactiveChange` tells each menu as it changes.
 //
 // Not yet: opening a menu from its trigger with the arrow keys.
 
@@ -55,6 +55,8 @@ export interface MenuDomOptions {
    * overlay opening. The adapter sets `open` to false.
    */
   onClose: () => void;
+  /** The menu takes the inactive shape, or the active one again, for `createMenu`'s `inactive`. */
+  onInactiveChange?: (inactive: boolean) => void;
 }
 
 export interface MenuDomHandle {
@@ -75,6 +77,8 @@ export interface SubMenuDomOptions {
    * elsewhere. The adapter sets its `open` to match.
    */
   onOpenChange: (open: boolean) => void;
+  /** As a menu's `onInactiveChange` */
+  onInactiveChange?: (inactive: boolean) => void;
 }
 
 export interface SubMenuDomHandle {
@@ -162,8 +166,8 @@ const endGrace = (state: MenuState) => {
 };
 
 // The open menus of one tree, a menu and its open submenus, share the active shape: the one the
-// pointer or the focus was last in has it, and the others get `data-inactive`. With one menu open,
-// it is simply active.
+// pointer or the focus was last in has it, and the others are inactive. With one menu open, it is
+// simply active. Each menu hears of its own as it changes.
 const menuAround = (element: Element) => element.parentElement?.closest<HTMLElement>('.rio-menu');
 const topOf = (menu: HTMLElement) => {
   let top = menu;
@@ -171,6 +175,16 @@ const topOf = (menu: HTMLElement) => {
   return top;
 };
 const activeMenus = new WeakMap<HTMLElement, HTMLElement>();
+const shapes = new WeakMap<
+  HTMLElement,
+  { inactive: boolean; report?: (inactive: boolean) => void }
+>();
+const setInactive = (menu: HTMLElement, inactive: boolean) => {
+  const shape = shapes.get(menu);
+  if (!shape || shape.inactive === inactive) return;
+  shape.inactive = inactive;
+  shape.report?.(inactive);
+};
 const shapeTree = (menu: HTMLElement, active?: HTMLElement) => {
   const top = topOf(menu);
   if (active) activeMenus.set(top, active);
@@ -180,8 +194,7 @@ const shapeTree = (menu: HTMLElement, active?: HTMLElement) => {
   const open = [top, ...top.querySelectorAll<HTMLElement>('.rio-menu')].filter((each) =>
     each.matches(':popover-open'),
   );
-  for (const each of open)
-    each.toggleAttribute('data-inactive', open.length > 1 && each !== current);
+  for (const each of open) setInactive(each, open.length > 1 && each !== current);
 };
 
 type Placement = Pick<MenuProps, 'side' | 'align' | 'offset'> & { alignOffset?: number };
@@ -208,6 +221,7 @@ function setup(
 ): MenuDom {
   const document = root.ownerDocument;
   const view = document.defaultView!;
+  shapes.set(root, { inactive: false, report: options.onInactiveChange });
   // A menu moved to a new anchor during a press is closed by the browser when the press ends;
   // it opens again at the new anchor instead of telling the adapter (see `afterPress`).
   let reanchoring = false;
@@ -550,11 +564,10 @@ function setup(
       afterPress = undefined;
       overlay.detach();
       anchored?.detach();
+      shapes.delete(root);
     },
   };
 }
-
-let submenuIds = 0;
 
 /**
  * A submenu's behavior in the DOM: a menu (see `attachMenu`) that `item` opens, shown beside it.
@@ -583,17 +596,19 @@ export function attachSubMenu(
   };
   const dom = setup(
     root,
-    { anchor: () => item, props: () => SUBMENU_PLACEMENT, onClose: () => request(false) },
+    {
+      anchor: () => item,
+      props: () => SUBMENU_PLACEMENT,
+      onClose: () => request(false),
+      onInactiveChange: options.onInactiveChange,
+    },
     { focusOnShow: () => focusIn },
   );
   const disabled = () => item.getAttribute('aria-disabled') === 'true';
 
-  // The item invokes the submenu, so a click on it isn't a click outside, which would close the open
-  // submenu. The click opens it through the adapter (`handleClick`), not the browser, which is told
-  // to only ever show it, and is then stopped.
-  root.id ||= `rio-submenu-${++submenuIds}`;
-  item.setAttribute('popovertarget', root.id);
-  item.setAttribute('popovertargetaction', 'show');
+  // The item invokes the submenu (`popovertarget`), so a click on it isn't a click outside, which
+  // would close the open submenu. The click opens it through the adapter (`handleClick`), not the
+  // browser, and is then stopped.
   // A click from the keyboard or assistive technology has no pointer behind it (`detail` 0), and
   // moves the focus in, as the keys do.
   const onClickFirst = (event: MouseEvent) => {
@@ -700,8 +715,6 @@ export function attachSubMenu(
       item.removeEventListener('click', onClick);
       item.removeEventListener('pointerleave', onPointerLeave);
       item.removeEventListener('keydown', onKeydown);
-      item.removeAttribute('popovertarget');
-      item.removeAttribute('popovertargetaction');
       if (parent && stateOf(parent).openers.get(item) === opener) {
         stateOf(parent).openers.delete(item);
       }

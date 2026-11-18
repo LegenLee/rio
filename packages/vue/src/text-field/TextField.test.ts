@@ -4,7 +4,7 @@ import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
-import { defineComponent, h, reactive } from 'vue';
+import { defineComponent, h, reactive, ref } from 'vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { icon } from '../test/vrt';
 import TextField from './TextField.vue';
@@ -206,6 +206,25 @@ describe('RioTextField', () => {
     expect(container.getBoundingClientRect().height).toBe(start);
     container.style.blockSize = `${start + 48}px`;
     expect(input.getBoundingClientRect().height).toBeGreaterThan(72);
+  });
+
+  test('its least height follows its rows, as they change', async () => {
+    const rows = ref(3);
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h(TextField, { label: 'Notes', multiline: true, rows: rows.value, style: theme }),
+      ),
+    );
+    const container = (screen.container as HTMLElement).querySelector<HTMLElement>(
+      '.rio-text-field__container',
+    )!;
+    const least = () => parseFloat(getComputedStyle(container).minBlockSize);
+    const three = least();
+    rows.value = 5;
+    await vi.waitFor(() => expect(least()).toBeGreaterThan(three));
+    const line = (least() - three) / 2;
+    expect(least()).toBeCloseTo(5 * line + 32, 0);
   });
 
   test('a drag from the corner resizes it, rather than focusing the input', async () => {
