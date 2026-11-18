@@ -684,6 +684,7 @@ export function createDatePicker(options: DatePickerOptions): DatePickerApi {
   const props = () => options.props();
   const variant = () => props().variant ?? 'docked';
   const actions = pickerActions(props, options);
+  // TODO: Move focus state handling to each framework adapter.
   let focusIn = false;
   const show = (fromKeyboard: boolean) => {
     if (props().disabled || props().open) return;
