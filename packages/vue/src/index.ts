@@ -18,6 +18,8 @@ export { default as RioMenuDivider } from './menu/MenuDivider.vue';
 export { default as RioMenuGroup } from './menu/MenuGroup.vue';
 export { default as RioMenuItem } from './menu/MenuItem.vue';
 export { default as RioSubMenu } from './menu/SubMenu.vue';
+export { default as RioCircularProgress } from './progress/CircularProgress.vue';
+export { default as RioLinearProgress } from './progress/LinearProgress.vue';
 export { default as RioRadio } from './radio/Radio.vue';
 export { default as RioRadioGroup } from './radio/RadioGroup.vue';
 export { vRipple } from './ripple/ripple';

@@ -89,6 +89,10 @@ packages/
       menu.ts               the menu, its items, submenus, groups, and dividers: props, parts, selection
       interaction.ts        opening, placement, keyboard, focus, and submenus (DOM, tested through the Vue components)
       menu.test.ts
+    progress/
+      progress.ts           linear and circular indicators: props, parts, and the waves' paths
+      interaction.ts        drawing the waves over the flat indicators, every frame (DOM, tested through the Vue components)
+      progress.test.ts
     radio/
       radio.ts              the group and its radio buttons: props and parts
       interaction.ts        Shift+Tab into a group with nothing selected (DOM, tested through the Vue components)
@@ -139,6 +143,7 @@ packages/
     dialog.css
     icon-button.css         layered on top of button.css
     menu.css
+    progress.css            the linear and circular indicators, flat, and their indeterminate motion
     radio.css               the radio buttons and their group
     slider.css              the slider and the range slider
     split-button.css        layered on top of button.css
@@ -165,6 +170,10 @@ packages/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
+    progress/
+      LinearProgress.vue
+      CircularProgress.vue
+      Progress.vrt.test.ts  screenshot test (see Visual regression)
     radio/
       RadioGroup.vue        holds the selection and gives the radio buttons their name
       Radio.vue

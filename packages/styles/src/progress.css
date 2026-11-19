@@ -1,0 +1,410 @@
+/*
+ * Progress indicators (M3 Expressive): linear and circular, flat or wavy, determinate or
+ * indeterminate. Values: the spec's tokens and measurement drawings, and Compose's progress
+ * indicator tokens (see docs/components/progress-indicator.md).
+ *
+ * The root carries the progress as a fraction (`--rio-progress-value`) and the thickness
+ * (`--rio-progress-thickness`), which core writes, plus `data-indeterminate`, `data-wavy`,
+ * `data-empty`, `data-full`, and `data-flat`. The flat shape is drawn here. While wavy, core's
+ * `attachLinearProgress` and `attachCircularProgress` draw each indicator's wave over the stretch
+ * laid out here, and the flat indicator gives way once its wave has a path.
+ */
+
+/* Registered, so they animate: the progress, the wave's height, and the moving indicators' ends */
+@property --rio-progress-value {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --rio-progress-amplitude {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --rio-linear-progress-start {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --rio-linear-progress-end {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --rio-linear-progress-lower-start {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: -1;
+}
+
+@property --rio-linear-progress-lower-end {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: -1;
+}
+
+@property --rio-circular-progress-start {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --rio-circular-progress-end {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.rio-linear-progress,
+.rio-circular-progress {
+  --_t: var(--rio-progress-thickness, 4px);
+  /* Between the indicator and the track */
+  --_gap: 4px;
+  /* The progress shows as a dot as soon as it starts. */
+  --_dot: var(--_t);
+  /* Public, for an indicator in a button: the label's color, and no track. */
+  --_indicator: var(--rio-progress-color, var(--rio-color-primary));
+  --_track: var(--rio-progress-track-color, var(--rio-color-secondary-container));
+
+  /* A change of progress, and the wave flattening near its ends, take 500ms. */
+  transition:
+    --rio-progress-value 500ms linear,
+    --rio-progress-amplitude 500ms;
+}
+
+:is(.rio-linear-progress, .rio-circular-progress):is([data-empty], [data-indeterminate]) {
+  --_dot: 0px;
+}
+
+:is(.rio-linear-progress, .rio-circular-progress)[data-flat] {
+  --rio-progress-amplitude: 0px;
+}
+
+/* Linear: the indicator from `start` to `end`, and while indeterminate the lower one too, as
+   fractions of the track; the track around them, 4px off each. */
+
+.rio-linear-progress {
+  --rio-progress-amplitude: 3px;
+  --rio-progress-wavelength: 40px;
+  --rio-linear-progress-start: 0;
+  --rio-linear-progress-end: var(--rio-progress-value);
+  --rio-linear-progress-lower-start: -1;
+  --rio-linear-progress-lower-end: -1;
+
+  --_x1: calc(clamp(0, var(--rio-linear-progress-start), 1) * 100%);
+  --_w1: max(
+    var(--_dot),
+    calc(
+      (
+          clamp(0, var(--rio-linear-progress-end), 1) -
+            clamp(0, var(--rio-linear-progress-start), 1)
+        ) *
+        100%
+    )
+  );
+  --_x2: calc(clamp(0, var(--rio-linear-progress-lower-start), 1) * 100%);
+  --_w2: calc(
+    (
+        clamp(0, var(--rio-linear-progress-lower-end), 1) -
+          clamp(0, var(--rio-linear-progress-lower-start), 1)
+      ) *
+      100%
+  );
+  /* Where the track after the indicator starts from: the indicator's end, its dot included */
+  --_end1: calc(var(--_x1) + var(--_w1));
+
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  block-size: var(--_t);
+}
+
+.rio-linear-progress[data-wavy] {
+  /* The wave's 3px either side */
+  block-size: calc(var(--_t) + 6px);
+}
+
+.rio-linear-progress > span {
+  position: absolute;
+  inset-block-start: calc(50% - var(--_t) / 2);
+  block-size: var(--_t);
+  border-radius: var(--rio-shape-corner-full);
+  background-color: var(--_track);
+}
+
+.rio-linear-progress__indicator {
+  inset-inline-start: var(--_x1);
+  inline-size: var(--_w1);
+}
+
+.rio-linear-progress__indicator-lower {
+  inset-inline-start: var(--_x2);
+  inline-size: var(--_w2);
+}
+
+.rio-linear-progress :is(.rio-linear-progress__indicator, .rio-linear-progress__indicator-lower) {
+  background-color: var(--_indicator);
+}
+
+.rio-linear-progress__track-lower {
+  inset-inline-start: 0;
+  inline-size: clamp(0px, calc(var(--rio-linear-progress-lower-start) * 100% - var(--_gap)), 100%);
+}
+
+.rio-linear-progress__track-middle {
+  --_from: max(0px, calc(var(--rio-linear-progress-lower-end) * 100% + var(--_gap)));
+  --_to: min(100%, calc(var(--rio-linear-progress-start) * 100% - var(--_gap)));
+  inset-inline-start: var(--_from);
+  inline-size: max(0px, calc(var(--_to) - var(--_from)));
+}
+
+.rio-linear-progress__track-upper {
+  inset-inline: max(0px, calc(var(--_end1) + var(--_gap))) 0;
+}
+
+/* With no progress, nothing to keep off: the track runs the whole way. */
+.rio-linear-progress[data-empty] .rio-linear-progress__track-upper {
+  inset-inline-start: 0;
+}
+
+/* The stop indicator ends a determinate track: 4px, in the middle of the track's round end. */
+.rio-linear-progress:not([data-indeterminate]) .rio-linear-progress__track-upper {
+  background-image: radial-gradient(circle 2px at center, var(--_indicator) 1.5px, transparent 2px);
+  background-position: right calc(var(--_t) / 2 - 2px) center;
+  background-size: 4px 100%;
+  background-repeat: no-repeat;
+}
+
+.rio-linear-progress:dir(rtl):not([data-indeterminate]) .rio-linear-progress__track-upper {
+  background-position: left calc(var(--_t) / 2 - 2px) center;
+}
+
+/* Indeterminate: two indicators cross the track in turn, each growing and then shrinking. Their
+   track ends follow their raw ends, so one waiting off the track leaves no gap in it. */
+.rio-linear-progress[data-indeterminate] {
+  --rio-progress-wavelength: 20px;
+  --_end1: calc(var(--rio-linear-progress-end) * 100%);
+  animation:
+    rio-linear-progress-end 2s infinite,
+    rio-linear-progress-start 2s infinite,
+    rio-linear-progress-lower-end 2s infinite,
+    rio-linear-progress-lower-start 2s infinite;
+}
+
+@keyframes rio-linear-progress-end {
+  0% {
+    --rio-linear-progress-end: -0.1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  50%,
+  100% {
+    --rio-linear-progress-end: 1.1;
+  }
+}
+
+@keyframes rio-linear-progress-start {
+  0%,
+  10% {
+    --rio-linear-progress-start: -0.1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  65%,
+  100% {
+    --rio-linear-progress-start: 1.1;
+  }
+}
+
+@keyframes rio-linear-progress-lower-end {
+  0%,
+  45% {
+    --rio-linear-progress-lower-end: -0.1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  85%,
+  100% {
+    --rio-linear-progress-lower-end: 1.1;
+  }
+}
+
+@keyframes rio-linear-progress-lower-start {
+  0%,
+  60% {
+    --rio-linear-progress-lower-start: -0.1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  100% {
+    --rio-linear-progress-lower-start: 1.1;
+  }
+}
+
+.rio-linear-progress__wave {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+.rio-linear-progress:dir(rtl) .rio-linear-progress__wave {
+  scale: -1 1;
+}
+
+/* Circular: the indicator from the top, clockwise, and the track the rest of the way round */
+
+.rio-circular-progress {
+  --rio-progress-amplitude: 1.6px;
+  --rio-progress-wavelength: 15px;
+  --rio-circular-progress-start: 0;
+  --rio-circular-progress-end: var(--rio-progress-value);
+
+  --_r: var(--rio-circular-progress-radius);
+  --_c: calc(2 * pi * var(--_r));
+  /* The indicator's visible length along the circle, its round ends included */
+  --_arc: max(
+    var(--_dot),
+    calc((var(--rio-circular-progress-end) - var(--rio-circular-progress-start)) * var(--_c))
+  );
+  --_track-arc: calc(var(--_c) - var(--_arc) - 2 * var(--_gap));
+
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: var(--rio-circular-progress-size);
+  block-size: var(--rio-circular-progress-size);
+}
+
+.rio-circular-progress__svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  /* Circles start at 3 o'clock. */
+  rotate: -90deg;
+}
+
+.rio-circular-progress__svg > * {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A dash runs between the line's round ends, so it is the visible length less the thickness, and
+   starts half the thickness in. A length of nothing thins the line to nothing, so no dot shows. */
+.rio-circular-progress__indicator {
+  stroke: var(--_indicator);
+  stroke-width: min(var(--_t), max(0px, calc(var(--_arc) * 1000)));
+  stroke-dasharray: max(0px, calc(var(--_arc) - var(--_t))) var(--_c);
+  stroke-dashoffset: calc(-1 * (var(--rio-circular-progress-start) * var(--_c) + var(--_t) / 2));
+}
+
+.rio-circular-progress__track {
+  stroke: var(--_track);
+  stroke-width: min(var(--_t), max(0px, calc(var(--_track-arc) * 1000)));
+  stroke-dasharray: max(0px, calc(var(--_track-arc) - var(--_t))) var(--_c);
+  stroke-dashoffset: calc(-1 * (var(--_arc) + var(--_gap) + var(--_t) / 2));
+}
+
+.rio-circular-progress[data-empty] .rio-circular-progress__track {
+  stroke-width: var(--_t);
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
+.rio-circular-progress__indicator-wave {
+  stroke: var(--_indicator);
+  stroke-width: var(--_t);
+}
+
+/* Indeterminate: no track; the indicator grows round the circle and shrinks from its tail, as the
+   circle turns. Each time it shrinks, it starts again where its tail got to. */
+.rio-circular-progress[data-indeterminate] .rio-circular-progress__track {
+  visibility: hidden;
+}
+
+.rio-circular-progress[data-indeterminate] {
+  animation:
+    rio-circular-progress-start 1333ms infinite,
+    rio-circular-progress-end 1333ms infinite;
+}
+
+.rio-circular-progress[data-indeterminate] .rio-circular-progress__svg {
+  animation:
+    rio-circular-progress-spin 1568ms linear infinite,
+    rio-circular-progress-advance calc(1333ms * 25) steps(25) infinite;
+}
+
+@keyframes rio-circular-progress-end {
+  0% {
+    --rio-circular-progress-end: 0.03;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  50%,
+  100% {
+    --rio-circular-progress-end: 0.75;
+  }
+}
+
+@keyframes rio-circular-progress-start {
+  0%,
+  50% {
+    --rio-circular-progress-start: 0;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  100% {
+    --rio-circular-progress-start: 0.72;
+  }
+}
+
+@keyframes rio-circular-progress-spin {
+  from {
+    rotate: -90deg;
+  }
+  to {
+    rotate: 270deg;
+  }
+}
+
+/* 0.72 of a turn each cycle, the distance the tail covered: 18 whole turns in 25 cycles */
+@keyframes rio-circular-progress-advance {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(18turn);
+  }
+}
+
+/* Once a wave has a path, it stands in for the flat indicator. */
+.rio-linear-progress:has(.rio-linear-progress__indicator-wave[d])
+  :is(.rio-linear-progress__indicator, .rio-linear-progress__indicator-lower),
+.rio-circular-progress:has(.rio-circular-progress__indicator-wave[d])
+  .rio-circular-progress__indicator {
+  opacity: 0;
+}
+
+.rio-linear-progress__wave > path {
+  fill: none;
+  stroke: var(--_indicator);
+  stroke-width: var(--_t);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rio-linear-progress,
+  .rio-circular-progress {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .rio-linear-progress,
+  .rio-circular-progress {
+    forced-color-adjust: none;
+    --_indicator: Highlight;
+    --_track: GrayText;
+  }
+}

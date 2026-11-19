@@ -44,6 +44,7 @@ export default defineConfig({
           { text: 'Dialog', link: '/components/dialog' },
           { text: 'Icon button', link: '/components/icon-button' },
           { text: 'Menu', link: '/components/menu' },
+          { text: 'Progress indicators', link: '/components/progress-indicator' },
           { text: 'Radio button', link: '/components/radio-button' },
           { text: 'Select', link: '/components/select' },
           { text: 'Slider', link: '/components/slider' },

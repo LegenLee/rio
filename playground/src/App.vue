@@ -66,12 +66,14 @@ import {
   RioAssistChip,
   RioCheckbox,
   RioChipSet,
+  RioCircularProgress,
   RioDatePicker,
   RioDatePickerDialog,
   RioDialog,
   RioFilterChip,
   RioIconButton,
   RioInputChip,
+  RioLinearProgress,
   RioMenu,
   RioMenuDivider,
   RioMenuGroup,
@@ -96,6 +98,7 @@ import { computed, reactive, ref, useTemplateRef } from 'vue';
 import { theme } from './theme';
 
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
+const progress = ref(0.4);
 const chips = reactive({
   filters: ['wifi'] as (string | number)[],
   people: ['Ada', 'Grace', 'Alan'],
@@ -1164,6 +1167,22 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <code>toppings={{ toppings }} terms={{ terms }} size={{ size }}</code>
     </section>
 
+    <section class="progress">
+      <RioLinearProgress :value="progress" aria-label="Determinate" />
+      <RioLinearProgress aria-label="Indeterminate" />
+      <RioLinearProgress :value="progress" wavy aria-label="Wavy" />
+      <RioLinearProgress wavy :thickness="8" aria-label="Wavy, indeterminate, thick" />
+      <div class="progress-row">
+        <RioCircularProgress :value="progress" aria-label="Determinate" />
+        <RioCircularProgress aria-label="Indeterminate" />
+        <RioCircularProgress :value="progress" wavy aria-label="Wavy" />
+        <RioCircularProgress wavy :thickness="8" aria-label="Wavy, indeterminate, thick" />
+      </div>
+      <RioButton variant="tonal" @click="progress = progress >= 1 ? 0 : progress + 0.2">
+        Progress {{ Math.round(progress * 100) }}%
+      </RioButton>
+    </section>
+
     <section class="chips">
       <RioChipSet aria-label="Assist and suggestion chips">
         <RioAssistChip @click="chips.last = 'Add to calendar'">
@@ -1431,6 +1450,23 @@ main {
 
 .dot.moved {
   transform: translateX(288px);
+}
+
+.progress {
+  display: grid;
+  justify-items: start;
+  gap: 24px;
+  max-inline-size: 480px;
+}
+
+.progress > .rio-linear-progress {
+  inline-size: 100%;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .chips {

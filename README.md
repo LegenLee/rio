@@ -54,7 +54,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] List, List Items (maybe?)
 - [ ] Language-specific line heights and variable font axes
 - [ ] Icons
-- [ ] Loading progress bars
+- [x] Loading progress bars
 - [ ] Scroll fields
 
 ### v0.7 (Layouts)

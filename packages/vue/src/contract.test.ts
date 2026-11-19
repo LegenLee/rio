@@ -38,6 +38,12 @@ import {
   createSelectOption,
   createSubMenu,
   createSwitch,
+  circularProgressSkeleton,
+  createCircularProgress,
+  createLinearProgress,
+  linearProgressSkeleton,
+  type CircularProgressProps,
+  type LinearProgressProps,
   actionChipLinkSkeleton,
   actionChipSkeleton,
   chipSetSkeleton,
@@ -129,6 +135,8 @@ import Select from './select/Select.vue';
 import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
+import CircularProgress from './progress/CircularProgress.vue';
+import LinearProgress from './progress/LinearProgress.vue';
 import AssistChip from './chip/AssistChip.vue';
 import ChipSet from './chip/ChipSet.vue';
 import FilterChip from './chip/FilterChip.vue';
@@ -459,6 +467,35 @@ describe('RioChipSet', () => {
       onChange: noop,
     });
     expectSkeleton(rootOf(screen), chipSetSkeleton, api);
+  });
+});
+
+describe('RioLinearProgress', () => {
+  test.each<[string, LinearProgressProps]>([
+    ['determinate', { value: 0.4 }],
+    ['indeterminate', {}],
+    ['empty', { value: 0 }],
+    ['wavy and full', { value: 1, wavy: true }],
+    // Every non-boolean prop away from its default
+    ['with its own range and thickness, wavy', { value: 30, max: 120, thickness: 8, wavy: true }],
+  ])('%s', async (_, props) => {
+    const screen = await render(LinearProgress, { props });
+    const api = createLinearProgress({ props: () => props });
+    expectSkeleton(rootOf(screen), linearProgressSkeleton, api);
+  });
+});
+
+describe('RioCircularProgress', () => {
+  test.each<[string, CircularProgressProps]>([
+    ['determinate', { value: 0.4 }],
+    ['indeterminate', {}],
+    ['wavy', { value: 0.6, wavy: true }],
+    // Every non-boolean prop away from its default
+    ['with its own range, thickness, and size', { value: 3, max: 4, thickness: 8, size: 96 }],
+  ])('%s', async (_, props) => {
+    const screen = await render(CircularProgress, { props });
+    const api = createCircularProgress({ props: () => props });
+    expectSkeleton(rootOf(screen), circularProgressSkeleton, api);
   });
 });
 

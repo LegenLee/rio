@@ -27,8 +27,8 @@ export interface CancelableEvent {
 export interface PartNode<Part extends string = string, When extends string = never> {
   /** The part, named as in the component's `parts`. */
   readonly part: Part;
-  /** The element the part is, as `tagName` in lower case. */
-  readonly tag: keyof HTMLElementTagNameMap;
+  /** The element the part is, as its `localName`: an HTML element, or an SVG one. */
+  readonly tag: keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap;
   /**
    * The component API's decision that says whether the part renders, such as `'showsIcon'`.
    * Without it, the part always renders.

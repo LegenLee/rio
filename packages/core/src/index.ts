@@ -23,6 +23,8 @@ export * from './primitives/ripple/ripple';
 export * from './primitives/shape-morph/shape-morph';
 export * from './primitives/spring-property/spring-property';
 export * from './primitives/spring/spring';
+export * from './progress/interaction';
+export * from './progress/progress';
 export * from './radio/interaction';
 export * from './radio/radio';
 export * from './select/interaction';
