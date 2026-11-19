@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   attachCheckable,
-  attachRipple,
   attachSwitchHandle,
   createSwitch,
   mergePartAttrs,
@@ -12,6 +11,7 @@ import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
 import '@rio-m3e/styles/switch.css';
 import { nextTick, onBeforeUnmount, onMounted, onUpdated, useTemplateRef } from 'vue';
+import { useRipple } from '../ripple/ripple';
 
 // `class` and `style` dress the whole switch; every other attribute, such as `id`, `name`,
 // `value`, `required`, or `aria-label`, and every listener belongs to the input.
@@ -44,6 +44,7 @@ const sw = createSwitch({
 const root = useTemplateRef<HTMLSpanElement>('root');
 const input = useTemplateRef<HTMLInputElement>('input');
 const state = useTemplateRef<HTMLSpanElement>('state');
+useRipple(input, state);
 let checkable: CheckableHandle | undefined;
 let handles: { detach(): void }[] = [];
 
@@ -55,7 +56,6 @@ onMounted(() => {
   });
   handles = [
     checkable,
-    attachRipple(input.value!, { surface: state.value! }),
     attachSwitchHandle(root.value!, { input: input.value!, selected: () => !!selected, onChange }),
   ];
 });

@@ -60,6 +60,11 @@ describe('RioCheckbox', () => {
     expect(input.checked).toBe(false);
   });
 
+  test('a press on the input ripples on the state part', async () => {
+    const { root } = await setup();
+    expect(root.querySelector('.rio-checkbox__state')!.hasAttribute('data-ripple')).toBe(true);
+  });
+
   test('a click on the label checks it too', async () => {
     const { state, label, input } = await setup();
     const box = label.getBoundingClientRect();

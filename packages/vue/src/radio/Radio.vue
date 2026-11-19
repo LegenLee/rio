@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import {
   attachCheckable,
-  attachRipple,
   createRadio,
   mergePartAttrs,
   type CheckableHandle,
   type RadioProps,
   type RadioValue,
-  type RippleHandle,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
 import '@rio-m3e/styles/radio.css';
 import { inject, onBeforeUnmount, onMounted, onUpdated, useTemplateRef } from 'vue';
+import { useRipple } from '../ripple/ripple';
 import { radioGroupKey } from './context';
 
 // `class` and `style` dress the whole radio button; every other attribute, such as `id` or
@@ -42,8 +41,8 @@ const radio = createRadio({
 
 const input = useTemplateRef<HTMLInputElement>('input');
 const state = useTemplateRef<HTMLSpanElement>('state');
+useRipple(input, state);
 let checkable: CheckableHandle | undefined;
-let ripple: RippleHandle | undefined;
 let unregister: (() => void) | undefined;
 onMounted(() => {
   checkable = attachCheckable(input.value!, {
@@ -52,13 +51,11 @@ onMounted(() => {
     onChange: (checked) => checked && group.select(value),
   });
   unregister = group.register(checkable);
-  ripple = attachRipple(input.value!, { surface: state.value! });
 });
 onUpdated(() => checkable?.sync());
 onBeforeUnmount(() => {
   unregister?.();
   checkable?.detach();
-  ripple?.detach();
 });
 </script>
 

@@ -12,7 +12,8 @@ import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/chip.css';
 import { computed, useAttrs, useId, useTemplateRef } from 'vue';
 import { useLocale, useMessages } from '../locale/locale';
-import { useChipRipple, useChipSetItem } from './context';
+import { useRipple } from '../ripple/ripple';
+import { useChipSetItem } from './context';
 
 // `class` and `style` dress the whole chip; every other attribute, such as `aria-describedby`,
 // and every listener belongs to the chip's action, or to the chip on a `removeOnly` one.
@@ -69,7 +70,7 @@ const chip = createInputChip({
   onRemove: () => emit('remove'),
 });
 
-useChipRipple(useTemplateRef<HTMLElement>('action'), useTemplateRef<HTMLElement>('state'));
+useRipple(useTemplateRef<HTMLElement>('action'), useTemplateRef<HTMLElement>('state'));
 </script>
 
 <template>

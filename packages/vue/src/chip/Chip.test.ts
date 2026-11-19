@@ -74,6 +74,17 @@ describe.each([
     await expect.element(screen.getByRole('link', { name: 'Go' })).not.toHaveAttribute('href');
   });
 
+  test('turned into a link, it ripples on the new state part, and no longer on the old', async () => {
+    const screen = await render(Chip, { slots: { default: () => 'Go' } });
+    const before = screen.container.querySelector('.rio-chip__state')!;
+    expect(before.hasAttribute('data-ripple')).toBe(true);
+    await screen.rerender({ href: '#here' });
+    const after = screen.container.querySelector('.rio-chip__state')!;
+    expect(after).not.toBe(before);
+    await vi.waitFor(() => expect(after.hasAttribute('data-ripple')).toBe(true));
+    expect(before.hasAttribute('data-ripple')).toBe(false);
+  });
+
   test('disabled takes no focus and no click; soft-disabled takes the focus, not the click', async () => {
     const onClick = vi.fn();
     const disabled = await render(Chip, {
@@ -282,6 +293,11 @@ describe('RioInputChip', () => {
     });
     return { screen, onRemove, onClick, root: screen.container.querySelector('.rio-chip')! };
   };
+
+  test('a press on the action ripples on the state part', async () => {
+    const { root } = await setup();
+    expect(root.querySelector('.rio-chip__state')!.hasAttribute('data-ripple')).toBe(true);
+  });
 
   test('the chip’s action and its remove button, named after the label', async () => {
     const { screen, onRemove, onClick } = await setup();

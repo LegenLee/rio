@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import {
   attachCheckable,
-  attachRipple,
   createCheckbox,
   mergePartAttrs,
   type CheckableHandle,
   type CheckboxProps,
-  type RippleHandle,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
 import '@rio-m3e/styles/checkbox.css';
 import { nextTick, onBeforeUnmount, onMounted, onUpdated, useTemplateRef } from 'vue';
+import { useRipple } from '../ripple/ripple';
 
 // `class` and `style` dress the whole checkbox; every other attribute, such as `id`, `name`,
 // `value`, or `aria-label`, and every listener belongs to the input.
@@ -31,8 +30,8 @@ const checkbox = createCheckbox({
 
 const input = useTemplateRef<HTMLInputElement>('input');
 const state = useTemplateRef<HTMLSpanElement>('state');
+useRipple(input, state);
 let checkable: CheckableHandle | undefined;
-let ripple: RippleHandle | undefined;
 onMounted(() => {
   checkable = attachCheckable(input.value!, {
     checked: () => !!selected,
@@ -44,13 +43,9 @@ onMounted(() => {
       void nextTick(() => checkable?.sync());
     },
   });
-  ripple = attachRipple(input.value!, { surface: state.value! });
 });
 onUpdated(() => checkable?.sync());
-onBeforeUnmount(() => {
-  checkable?.detach();
-  ripple?.detach();
-});
+onBeforeUnmount(() => checkable?.detach());
 </script>
 
 <template>

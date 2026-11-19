@@ -6,7 +6,8 @@ import '@rio-m3e/styles/base/ripple.css';
 import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/chip.css';
 import { useTemplateRef } from 'vue';
-import { useChipRipple, useChipSetItem } from './context';
+import { useRipple } from '../ripple/ripple';
+import { useChipSetItem } from './context';
 
 const { selected, elevated, value, menu, open, disabled, softDisabled } =
   defineProps<FilterChipProps>();
@@ -56,7 +57,7 @@ const chip = createFilterChip({
   onOpenChange: (next) => emit('update:open', next),
 });
 
-useChipRipple(useTemplateRef<HTMLElement>('root'), useTemplateRef<HTMLElement>('state'));
+useRipple(useTemplateRef<HTMLElement>('root'), useTemplateRef<HTMLElement>('state'));
 </script>
 
 <template>

@@ -175,7 +175,7 @@ packages/
       InputChip.vue         class and style on the root, other attributes on the chip's action
       SuggestionChip.vue
       ChipSet.vue           holds the selection and the tab stop, and gives the chips their keys
-      context.ts            what the set provides to its chips, and the chips' ripple on their state part
+      context.ts            what the set provides to its chips
       Chip.vrt.test.ts      screenshot test (see Visual regression)
     dialog/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
@@ -192,7 +192,7 @@ packages/
       Radio.vue
       context.ts            what the group provides to its radio buttons
     ripple/
-      ripple.ts             the v-ripple directive
+      ripple.ts             the v-ripple directive, and useRipple for presses that ripple on a part
     shape-morph/
       shape-morph.ts        v-shape-morph, used inside components (not exported yet)
     slider/

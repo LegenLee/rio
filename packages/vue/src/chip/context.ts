@@ -1,5 +1,5 @@
-import { attachRipple, type ChipSetSelection, type ChipValue } from '@rio-m3e/core';
-import { inject, useId, watch, type InjectionKey, type Ref } from 'vue';
+import type { ChipSetSelection, ChipValue } from '@rio-m3e/core';
+import { inject, useId, type InjectionKey } from 'vue';
 
 /** What `RioChipSet` provides to the chips inside it. */
 export interface ChipSetContext {
@@ -23,23 +23,4 @@ export function useChipSetItem() {
     key: () => (set ? key : undefined),
     tabStop: () => set?.isTabStop(key),
   };
-}
-
-/**
- * Presses on `element` ripple on `surface`, the chip's state part. Attaches again when either
- * element is replaced, as when a chip turns into a link.
- */
-export function useChipRipple(
-  element: Readonly<Ref<HTMLElement | null>>,
-  surface: Readonly<Ref<HTMLElement | null>>,
-) {
-  watch(
-    [element, surface],
-    ([el, state], _, onCleanup) => {
-      if (!el || !state) return;
-      const ripple = attachRipple(el, { surface: state });
-      onCleanup(() => ripple.detach());
-    },
-    { flush: 'post' },
-  );
 }

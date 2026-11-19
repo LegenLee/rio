@@ -81,6 +81,12 @@ describe('RioRadioGroup and RioRadio', () => {
     expect(root.dataset.selected).toBe('true');
   });
 
+  test('a press on the input ripples on the state part', async () => {
+    const { input } = await setup();
+    const state = input('Luna').parentElement!.querySelector('.rio-radio__state')!;
+    expect(state.hasAttribute('data-ripple')).toBe(true);
+  });
+
   test('a click on the label selects it too', async () => {
     const { state, input } = await setup();
     const label = input('Ganymede').closest('label')!;
