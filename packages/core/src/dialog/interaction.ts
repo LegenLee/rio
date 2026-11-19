@@ -21,6 +21,7 @@
 
 import type { CancelableEvent } from '../parts';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import { hasModifier } from '../utils/keyboard';
 import type { DialogOverflow } from './dialog';
 
 /** What asks the dialog to close: Escape (or the back gesture), or a click on the scrim */
@@ -167,7 +168,7 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.key !== 'Tab' || event.defaultPrevented) return;
-    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (hasModifier(event)) return;
     const tabbables = tabbablesIn(root);
     const first = tabbables[0];
     const last = tabbables.at(-1);

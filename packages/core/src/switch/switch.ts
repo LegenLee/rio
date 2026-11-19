@@ -1,5 +1,6 @@
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { disabledAttrs, isBlocked } from '../utils/disabled';
+import { hasModifier } from '../utils/keyboard';
 import { resolveProps } from '../utils/object';
 
 export interface SwitchProps {
@@ -136,7 +137,7 @@ export function createSwitch(options: SwitchOptions): SwitchApi {
     blocked,
     handleKeydown(event) {
       if (event.key !== 'Enter' || event.defaultPrevented) return;
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (hasModifier(event)) return;
       // Enter would otherwise submit the form the switch is in.
       event.preventDefault();
       if (!event.repeat && !blocked()) options.onChange(!props().selected);

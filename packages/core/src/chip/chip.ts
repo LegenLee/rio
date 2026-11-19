@@ -4,6 +4,7 @@
 import type { ChipMessages } from '../locale/messages';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { disabledAttrs, isBlocked } from '../utils/disabled';
+import { hasModifier } from '../utils/keyboard';
 import { linkAttrs } from '../utils/link';
 import { resolveProps } from '../utils/object';
 
@@ -576,7 +577,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
     },
     handleKeydown(event) {
       if (event.defaultPrevented || (event.key !== 'Backspace' && event.key !== 'Delete')) return;
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (hasModifier(event)) return;
       event.preventDefault();
       if (!blocked()) options.onRemove();
     },

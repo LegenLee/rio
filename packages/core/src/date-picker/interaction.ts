@@ -19,6 +19,7 @@
 
 import { attachAnchoredPosition } from '../primitives/anchored-position/anchored-position';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import { hasModifier } from '../utils/keyboard';
 import type { CalendarApi } from './date-picker';
 
 export interface CalendarDomOptions {
@@ -73,7 +74,7 @@ export function attachCalendar(root: HTMLElement, options: CalendarDomOptions): 
   };
 
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     const element = event.target as HTMLElement;
     if (event.shiftKey && (event.key === 'M' || event.key === 'Y')) {
       const button = root.querySelectorAll<HTMLElement>('.rio-date-picker__menu-button');

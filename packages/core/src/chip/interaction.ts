@@ -14,6 +14,8 @@
 // The elements the arrow keys go through carry `data-chip-focus` with their chip's key, which
 // core's chip parts write.
 
+import { hasModifier } from '../utils/keyboard';
+
 export interface ChipSetDomOptions {
   /** The key of the chip the tab stop is on, as the adapter has it. */
   tabStop: () => string | undefined;
@@ -79,7 +81,7 @@ export function attachChipSet(root: HTMLElement, options: ChipSetDomOptions): Ch
   };
 
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     if (event.shiftKey) return;
     const list = items();
     const index = list.findIndex((el) => el.contains(event.target as Node));

@@ -34,6 +34,7 @@ import {
   type AnchorPoint,
 } from '../primitives/anchored-position/anchored-position';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import { hasModifier } from '../utils/keyboard';
 import { resolveProps } from '../utils/object';
 import { createTypeahead } from '../utils/typeahead';
 import { menuDefaults, type MenuProps } from './menu';
@@ -319,7 +320,7 @@ function setup(
   state.typing = search.typing;
 
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     // Tab closes the whole menu, from a submenu too, so the outermost menu takes it.
     if (event.key === 'Tab') {
       if (nested) return;
@@ -705,7 +706,7 @@ export function attachSubMenu(
   // Right (left in right-to-left layouts), Enter, and Space open it with the focus on its first
   // item. A space while letters are being typed is part of the search.
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     const forward = view.getComputedStyle(item).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
     const space = event.key === ' ' && !(parent && stateOf(parent).typing());
     if (event.key !== forward && event.key !== 'Enter' && !space) return;

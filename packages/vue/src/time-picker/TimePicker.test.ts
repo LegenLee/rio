@@ -365,6 +365,27 @@ describe('RioTimePickerDialog', () => {
     expect(focused()?.dataset.value).toBe('2');
   });
 
+  test('on the dial, keys with Alt, Ctrl, or Meta are left to the app', async () => {
+    const { open, selected } = await setupDialog({}, '07:30');
+    await open();
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(focused()?.getAttribute('aria-label')).toBe('Hour 12 of 12'));
+    for (const key of ['ArrowLeft', 'Home', 'Enter']) {
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        const press = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          [modifier]: true,
+        });
+        focused()!.dispatchEvent(press);
+        expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+      }
+    }
+    expect(focused()?.getAttribute('aria-label')).toBe('Hour 12 of 12');
+    expect(selected()).toBe('7');
+  });
+
   test('Space on the minute shows the minutes and moves onto them, at 0', async () => {
     const { open, field, dialog } = await setupDialog({}, '07:30');
     await open();

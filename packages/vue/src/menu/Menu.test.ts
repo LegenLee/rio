@@ -100,6 +100,26 @@ const fadeFrom = (menu: HTMLElement) => {
 };
 
 describe('RioMenu', () => {
+  test('keys with Alt, Ctrl, or Meta are left to the app', async () => {
+    const { opened, isOpen } = await setup();
+    await opened();
+    const start = focusedText();
+    for (const key of ['ArrowDown', 'End', 'Tab']) {
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        const press = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          [modifier]: true,
+        });
+        document.activeElement!.dispatchEvent(press);
+        expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+      }
+    }
+    expect(focusedText()).toBe(start);
+    expect(isOpen()).toBe(true);
+  });
+
   test('a right-click on a field in it opens the browser’s menu, for pasting', async () => {
     const { opened } = await setup({
       items: () => [

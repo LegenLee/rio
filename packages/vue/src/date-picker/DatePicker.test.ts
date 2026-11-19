@@ -266,6 +266,25 @@ describe('RioDatePicker, docked', () => {
     expect(year.bottom).toBeLessThanOrEqual(box.bottom);
   });
 
+  test('keys with Alt, Ctrl, or Meta are left to the app', async () => {
+    const { screen } = await setup({ value: '2026-11-27' });
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    await vi.waitFor(() => expect(focusedDate()).toBe('2026-11-27'));
+    for (const key of ['ArrowRight', 'PageDown', 'Enter']) {
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        const press = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          [modifier]: true,
+        });
+        document.activeElement!.dispatchEvent(press);
+        expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+      }
+    }
+    expect(focusedDate()).toBe('2026-11-27');
+  });
+
   test('min and max: days outside can’t be chosen, and the arrows stop', async () => {
     const { screen, day, state } = await setup({
       value: '2026-11-15',

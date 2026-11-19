@@ -343,6 +343,25 @@ describe('RioSubMenu', () => {
       },
     );
 
+    test('Right, Enter, and Space with Alt, Ctrl, or Meta are left to the app', async () => {
+      const { item, isOpen } = await setup();
+      item('Share').focus();
+      for (const key of ['ArrowRight', 'Enter', ' ']) {
+        for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+          const press = new KeyboardEvent('keydown', {
+            key,
+            bubbles: true,
+            cancelable: true,
+            [modifier]: true,
+          });
+          item('Share').dispatchEvent(press);
+          expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+        }
+      }
+      await pause(100);
+      expect(isOpen('Share')).toBe(false);
+    });
+
     test('in right-to-left layouts, Left opens it and Right closes it', async () => {
       const { item, isOpen } = await setup({ dir: 'rtl' });
       item('Share').focus();

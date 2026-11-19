@@ -132,6 +132,19 @@ describe('RioRadioGroup and RioRadio', () => {
     expect(document.activeElement).toBe(input('Luna'));
   });
 
+  test('at an end, the arrows with Alt, Ctrl, or Meta are left to the browser', async () => {
+    const { state, input } = await setup({ selected: 'Luna' });
+    input('Luna').focus();
+    for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+      input('Luna').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, [modifier]: true }),
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.activeElement).toBe(input('Luna'));
+    expect(state.changes).toEqual([]);
+  });
+
   test('Space selects the focused one', async () => {
     const { state, input } = await setup();
     input('Luna').focus();

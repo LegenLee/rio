@@ -205,6 +205,25 @@ describe('RioDialog', () => {
     expect(document.activeElement).toBe(button('Discard'));
   });
 
+  test('Tab with Alt, Ctrl, or Meta is left to the browser', async () => {
+    const { button, open } = await setup({
+      content: () => [h('p', null, 'Your draft will be lost.'), h('a', { href: '#' }, 'Details')],
+    });
+    await open();
+    // On the last button, where Tab alone goes round to the first
+    const last = button('Discard');
+    last.focus();
+    const tab = (init: KeyboardEventInit) =>
+      last.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true, ...init }),
+      );
+    for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+      expect(tab({ [modifier]: true }), modifier).toBe(true);
+      expect(document.activeElement).toBe(last);
+    }
+    expect(tab({})).toBe(false);
+  });
+
   test('in a list of radio buttons, the focus goes to the checked one', async () => {
     const tones = ['None', 'Callisto', 'Ganymede', 'Luna'];
     const { open } = await setup({

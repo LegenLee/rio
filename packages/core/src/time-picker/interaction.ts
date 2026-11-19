@@ -17,6 +17,8 @@
 // - After the adapter shows the other field's numbers, the focus, when it was on a number, goes to
 //   where the dial starts, whether the adapter replaced the numbers or reused them.
 
+import { hasModifier } from '../utils/keyboard';
+
 /** The rings' radii, as fractions of the dial's size */
 const OUTER = 102 / 256;
 const INNER = 74 / 256;
@@ -133,7 +135,7 @@ export function attachTimePicker(
     queueMicrotask(enterDial);
   };
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     const target = event.target as HTMLElement;
     const forward = ['ArrowRight', 'ArrowDown'].includes(event.key);
     const back = ['ArrowLeft', 'ArrowUp'].includes(event.key);
