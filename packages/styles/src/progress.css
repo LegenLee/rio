@@ -59,6 +59,12 @@
   initial-value: 0;
 }
 
+@property --rio-circular-progress-advance {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
 .rio-linear-progress,
 .rio-circular-progress {
   --_t: var(--rio-progress-thickness, 4px);
@@ -319,7 +325,8 @@
 }
 
 /* Indeterminate: no track; the indicator grows round the circle and shrinks from its tail, as the
-   circle turns. Each time it shrinks, it starts again where its tail got to. */
+   circle turns. Each time it shrinks, it starts again where its tail got to: the circle steps on as
+   the indicator restarts, both from the root's animations, so they change in the same frame. */
 .rio-circular-progress[data-indeterminate] .rio-circular-progress__track {
   visibility: hidden;
 }
@@ -327,13 +334,13 @@
 .rio-circular-progress[data-indeterminate] {
   animation:
     rio-circular-progress-start 1333ms infinite,
-    rio-circular-progress-end 1333ms infinite;
+    rio-circular-progress-end 1333ms infinite,
+    rio-circular-progress-advance calc(1333ms * 25) steps(25) infinite;
 }
 
 .rio-circular-progress[data-indeterminate] .rio-circular-progress__svg {
-  animation:
-    rio-circular-progress-spin 1568ms linear infinite,
-    rio-circular-progress-advance calc(1333ms * 25) steps(25) infinite;
+  transform: rotate(calc(var(--rio-circular-progress-advance) * 1turn));
+  animation: rio-circular-progress-spin 1568ms linear infinite;
 }
 
 @keyframes rio-circular-progress-end {
@@ -370,10 +377,10 @@
 /* 0.72 of a turn each cycle, the distance the tail covered: 18 whole turns in 25 cycles */
 @keyframes rio-circular-progress-advance {
   from {
-    transform: rotate(0turn);
+    --rio-circular-progress-advance: 0;
   }
   to {
-    transform: rotate(18turn);
+    --rio-circular-progress-advance: 18;
   }
 }
 

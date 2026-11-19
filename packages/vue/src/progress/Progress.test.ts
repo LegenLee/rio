@@ -270,6 +270,30 @@ describe('RioCircularProgress', () => {
     expect(getComputedStyle(svg).rotate).not.toBe(before);
   });
 
+  test('indeterminate: as the indicator restarts, the circle steps on to where its tail got to', async () => {
+    const { root, part, state } = await setupCircular();
+    /** The circle's step and the indicator's start, `ms` into the animation */
+    const at = async (ms: number) => {
+      state.style = `animation-play-state: paused; animation-delay: -${ms}ms`;
+      await nextTick();
+      const style = getComputedStyle(root);
+      return {
+        step: Number(style.getPropertyValue('--rio-circular-progress-advance')),
+        start: Number(style.getPropertyValue('--rio-circular-progress-start')),
+        transform: getComputedStyle(part('svg')).transform,
+      };
+    };
+    const before = await at(1330);
+    const after = await at(1336);
+    expect(before.step).toBe(0);
+    expect(before.start).toBeCloseTo(0.72, 2);
+    expect(after.step).toBeCloseTo(0.72);
+    expect(after.start).toBeCloseTo(0, 2);
+    // Turned 0.72 of a turn: 259.2°
+    const [a, b] = after.transform.match(/-?[\d.e]+/g)!.map(Number);
+    expect((Math.atan2(b!, a!) * 180) / Math.PI).toBeCloseTo(259.2 - 360, 1);
+  });
+
   test('wavy: the wave starts where the flat indicator’s dash does', async () => {
     const { part } = await setupCircular({ value: 0.25, wavy: true });
     const wave = part('indicator-wave');
