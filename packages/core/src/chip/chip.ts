@@ -3,6 +3,7 @@
 
 import type { ChipMessages } from '../locale/messages';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { resolveProps } from '../utils/object';
 
 /** Identifies a filter chip inside a chip set that keeps a selection, through its `value` prop. */
 export type ChipValue = string | number;
@@ -163,7 +164,7 @@ function createActionChip<E extends CancelableEvent>(
   type: 'assist' | 'suggestion',
   options: ActionChipOptions<E>,
 ): ActionChipApi<E> {
-  const props = () => ({ ...chipDefaults, ...options.props() });
+  const props = () => resolveProps(chipDefaults, options.props());
   const isLink = () => options.props().href !== undefined;
   const showsIcon = () => !!options.content?.().icon;
 
@@ -304,7 +305,7 @@ export interface FilterChipApi<E extends CancelableEvent = MouseEvent> {
 export function createFilterChip<E extends CancelableEvent = MouseEvent>(
   options: FilterChipOptions<E>,
 ): FilterChipApi<E> {
-  const props = () => ({ ...chipDefaults, ...options.props() });
+  const props = () => resolveProps(chipDefaults, options.props());
   const content = () =>
     options.content?.() ?? { icon: false, selectedIcon: false, dropdownIcon: false };
   const showsSelectedIcon = () => props().selected && content().selectedIcon;
@@ -490,7 +491,7 @@ const splitAroundLabel = (message: string) => {
 export function createInputChip<E extends CancelableEvent = MouseEvent>(
   options: InputChipOptions<E>,
 ): InputChipApi<E> {
-  const props = () => ({ ...chipDefaults, ...options.props() });
+  const props = () => resolveProps(chipDefaults, options.props());
   const content = () => options.content?.() ?? { icon: false, avatar: false };
   const removeText = () => splitAroundLabel(options.messages().remove);
   const showsAvatar = () => content().avatar;
@@ -654,7 +655,7 @@ const valuesOf = (selected: ChipSetSelected): ChipValue[] =>
   selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
 
 export function createChipSet(options: ChipSetOptions): ChipSetApi {
-  const props = () => ({ ...chipSetDefaults, ...options.props() });
+  const props = () => resolveProps(chipSetDefaults, options.props());
   const isSelected = (value: ChipValue) => {
     const p = props();
     return p.selection !== 'none' && valuesOf(p.selected).includes(value);

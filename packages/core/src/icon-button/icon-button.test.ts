@@ -75,3 +75,18 @@ describe('createIconButton', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const { button } = setup({
+    variant: undefined,
+    width: undefined,
+    size: undefined,
+    type: undefined,
+  });
+  expect(button.parts.root()).toMatchObject({
+    'data-variant': 'filled',
+    'data-width': 'default',
+    'data-size': 'small',
+    type: 'button',
+  });
+});

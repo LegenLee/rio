@@ -3,7 +3,7 @@ import type {
   AnchoredSide,
 } from '../primitives/anchored-position/anchored-position';
 import type { PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /** M3 tooltip variants: a brief label, or a card with a subhead, text, and actions. */
 export const TOOLTIP_VARIANTS = ['plain', 'rich'] as const;
@@ -110,7 +110,7 @@ export interface TooltipApi extends Record<TooltipWhen, () => boolean> {
 const NO_CONTENT: TooltipContent = { subhead: false, actions: false };
 
 export function createTooltip(options: TooltipOptions): TooltipApi {
-  const props = () => ({ ...tooltipDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(tooltipDefaults, options.props());
   const rich = () => props().variant === 'rich';
   const content = () => options.content?.() ?? NO_CONTENT;
   const showsSubhead = () => rich() && content().subhead;

@@ -134,3 +134,9 @@ describe('handleKeydown', () => {
     },
   );
 });
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const { sw } = setup({ selected: undefined, disabled: undefined, softDisabled: undefined });
+  expect(sw.parts.root()).toMatchObject({ 'data-selected': 'false', 'data-disabled': undefined });
+  expect(sw.blocked()).toBe(false);
+});

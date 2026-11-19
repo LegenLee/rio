@@ -1,4 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
+import { resolveProps } from '../utils/object';
 
 export interface CheckboxProps {
   /** Whether the checkbox is checked. */
@@ -72,7 +73,7 @@ export interface CheckboxApi {
 }
 
 export function createCheckbox(options: CheckboxOptions): CheckboxApi {
-  const props = () => ({ ...checkboxDefaults, ...options.props() });
+  const props = () => resolveProps(checkboxDefaults, options.props());
   const unavailable = () => {
     const p = props();
     return !!p.disabled || !!p.softDisabled;

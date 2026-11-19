@@ -1,7 +1,7 @@
 import type { MenuVariant } from '../menu/menu';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import type { TextFieldVariant } from '../text-field/text-field';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /** Identifies an option, through its `value` prop. */
 export type SelectValue = string | number;
@@ -225,7 +225,7 @@ const valuesOf = (selected: SelectSelected): SelectValue[] =>
   selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
 
 export function createSelect(options: SelectOptions): SelectApi {
-  const props = () => ({ ...selectDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(selectDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   const { ids } = options;
 
@@ -462,7 +462,7 @@ const NO_OPTION_CONTENT: SelectOptionContent = {
 export function createSelectOption<E extends CancelableEvent = MouseEvent>(
   options: SelectOptionOptions<E>,
 ): SelectOptionApi<E> {
-  const props = () => ({ ...selectOptionDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(selectOptionDefaults, options.props());
   const content = () => options.content?.() ?? NO_OPTION_CONTENT;
   const selected = () => !!options.select()?.isSelected(options.props().value);
 

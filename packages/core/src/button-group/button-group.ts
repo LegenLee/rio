@@ -1,6 +1,6 @@
 import type { ButtonShape, ButtonSize } from '../button/button';
 import type { PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /**
  * M3E button group variants. A standard group spaces its buttons and lets a pressed button push
@@ -88,7 +88,7 @@ const valuesOf = (selected: ButtonGroupSelected): ButtonGroupValue[] =>
   selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
 
 export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
-  const props = () => ({ ...buttonGroupDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(buttonGroupDefaults, options.props());
 
   const isSelected = (value: ButtonGroupValue) => {
     const p = props();

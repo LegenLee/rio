@@ -34,7 +34,7 @@ import {
   type AnchorPoint,
 } from '../primitives/anchored-position/anchored-position';
 import { attachOverlay } from '../primitives/overlay/overlay';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 import { createTypeahead } from '../utils/typeahead';
 import { menuDefaults, type MenuProps } from './menu';
 
@@ -283,7 +283,7 @@ function setup(
   };
 
   const place = () => {
-    const p = { ...menuDefaults, alignOffset: 0, ...omitUndefined(options.props()) };
+    const p = resolveProps({ ...menuDefaults, alignOffset: 0 }, options.props());
     const key = `${p.side} ${p.align} ${p.offset} ${p.alignOffset}`;
     if (anchored && key === placement) return anchored;
     anchored?.detach();

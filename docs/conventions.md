@@ -121,7 +121,7 @@ packages/
       tooltip.test.ts
     parts.ts                PartAttrs, CancelableEvent, and mergePartAttrs (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
-      object.ts             omitUndefined, for button and button-group
+      object.ts             resolveProps, which every component with defaults reads its props through
       typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/
@@ -253,7 +253,7 @@ Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tre
 How an adapter turns `core`'s API into components.
 
 - **An adapter holds only what its framework needs.** If a second adapter would have to write the same code again (DOM work, a default, a type), it belongs in `core`, or in `tokens` for the theme.
-- **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
+- **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. Every component with defaults (`switchDefaults`, `sliderDefaults`, ...) reads its props through `resolveProps` (`utils/object.ts`), which takes a prop passed as `undefined` as its default. Vue passes an absent string prop that way, and so does an adapter that hands on a prop the app left out, as a React one would. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
   - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
 - **Each adapter decides what belongs to its framework**: the framework versions it supports (its `peerDependencies`), how state and its callbacks are named in the framework's idiom (Vue's `v-model:selected`; in React, a controlled `selected` with `onSelectedChange`), and its file names (see File naming). Within one adapter, every component follows the same naming.
 - **Rio's CSS variables fit the framework's `style` types.** Apps put `createThemeVariables(…)` and Rio's public variables (`--rio-focus-ring-color`, `--rio-spring-targets`) in `style`. Vue's `CSSProperties` takes any `--*` key already. React's leaves custom properties out on purpose and points to module augmentation, so a React adapter adds `--rio-*` keys, and only those, to React's `CSSProperties`; `@rio-m3e/tokens` stays free of any framework's types.

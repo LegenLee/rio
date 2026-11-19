@@ -54,3 +54,13 @@ describe('createCheckbox', () => {
     expect(soft.blocked()).toBe(true);
   });
 });
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const checkbox = setup({ selected: undefined, indeterminate: undefined, error: undefined });
+  expect(checkbox.parts.root()).toMatchObject({
+    'data-selected': 'false',
+    'data-indeterminate': undefined,
+    'data-error': undefined,
+  });
+  expect(checkbox.next(true)).toBe(true);
+});

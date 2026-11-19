@@ -3,7 +3,7 @@ import type {
   AnchoredSide,
 } from '../primitives/anchored-position/anchored-position';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /** M3E vertical menu color styles: surface-based, or tertiary-based for more emphasis. */
 export const MENU_VARIANTS = ['standard', 'vibrant'] as const;
@@ -104,7 +104,7 @@ const valuesOf = (selected: MenuSelected): MenuValue[] =>
   selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
 
 export function createMenu(options: MenuOptions): MenuApi {
-  const props = () => ({ ...menuDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(menuDefaults, options.props());
   const isSelected = (value: MenuValue) => {
     const p = props();
     return p.selection !== 'none' && valuesOf(p.selected).includes(value);
@@ -254,7 +254,7 @@ const NO_CONTENT: MenuItemContent = {
 export function createMenuItem<E extends CancelableEvent = MouseEvent>(
   options: MenuItemOptions<E>,
 ): MenuItemApi<E> {
-  const props = () => ({ ...menuItemDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(menuItemDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   // `menuitemradio` or `menuitemcheckbox` when the menu keeps a selection and the item has a value.
   // An item that opens a submenu is never chosen, so it is neither.

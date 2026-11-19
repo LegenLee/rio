@@ -2,6 +2,7 @@
 
 import type { SliderMessages } from '../locale/messages';
 import type { PartAttrs, PartNode } from '../parts';
+import { resolveProps } from '../utils/object';
 
 /** M3E slider sizes, by the track's thickness. `xsmall` is the default. */
 export const SLIDER_SIZES = ['xsmall', 'small', 'medium', 'large', 'xlarge'] as const;
@@ -253,7 +254,7 @@ const inputAttrs = (
 });
 
 export function createSlider(options: SliderOptions): SliderApi {
-  const props = () => ({ ...sliderDefaults, ...options.props() });
+  const props = () => resolveProps(sliderDefaults, options.props());
   const range = () => sliderRange(props());
   const value = () => {
     const r = range();
@@ -395,7 +396,7 @@ export interface RangeSliderApi {
 }
 
 export function createRangeSlider(options: RangeSliderOptions): RangeSliderApi {
-  const props = () => ({ ...sliderDefaults, ...options.props() });
+  const props = () => resolveProps(sliderDefaults, options.props());
   const range = () => sliderRange(props());
   const value = (): [number, number] => {
     const r = range();

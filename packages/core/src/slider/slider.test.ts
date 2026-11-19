@@ -316,3 +316,34 @@ describe('createRangeSlider', () => {
     expect(setupRange({ disabled: true }).slider.blocked()).toBe(true);
   });
 });
+
+describe('props an adapter passes as undefined take the defaults', () => {
+  const unset = {
+    min: undefined,
+    max: undefined,
+    step: undefined,
+    stops: undefined,
+    size: undefined,
+    vertical: undefined,
+    valueIndicator: undefined,
+    disabled: undefined,
+    softDisabled: undefined,
+  };
+
+  test('the slider: XS, from 0 to 100 by whole steps, not centered', () => {
+    const { slider } = setup({ ...unset, centered: undefined, value: 30 }, { icon: true });
+    expect(slider.parts.root()).toMatchObject({
+      'data-size': 'xsmall',
+      'data-centered': undefined,
+      style: '--rio-slider-value: 0.3',
+    });
+    expect(slider.parts.input()).toMatchObject({ min: '0', max: '100', step: '1' });
+    expect(slider.showsIcon()).toBe(false);
+  });
+
+  test('the range slider', () => {
+    const { slider } = setupRange({ ...unset, name: undefined });
+    expect(slider.value()).toEqual([0, 100]);
+    expect(slider.parts.root()['data-size']).toBe('xsmall');
+  });
+});

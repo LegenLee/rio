@@ -1,5 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /**
  * The dialog's ARIA role: `alertdialog` for a prompt that asks for a response, such as a
@@ -85,7 +85,7 @@ export interface DialogApi extends Record<DialogWhen, () => boolean> {
 const NO_CONTENT: DialogContent = { icon: false, headline: false, actions: false };
 
 export function createDialog(options: DialogOptions): DialogApi {
-  const props = () => ({ ...dialogDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(dialogDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   const showsIcon = () => content().icon;
   const showsHeadline = () => content().headline;

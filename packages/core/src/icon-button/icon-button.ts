@@ -6,6 +6,7 @@ import {
   type ButtonVariant,
 } from '../button/button';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { resolveProps } from '../utils/object';
 
 export const ICON_BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'standard'] as const;
 export type IconButtonVariant = (typeof ICON_BUTTON_VARIANTS)[number];
@@ -115,10 +116,11 @@ export interface IconButtonApi<E extends CancelableEvent = MouseEvent> {
 export function createIconButton<E extends CancelableEvent = MouseEvent>(
   options: IconButtonOptions<E>,
 ): IconButtonApi<E> {
+  const props = () => resolveProps(iconButtonDefaults, options.props());
   // An icon button behaves exactly like a button. The button only reads `variant` to write
   // `data-variant` and to keep text buttons from toggling, and no icon button variant is `text`.
   const button = createButton<E>({
-    props: () => ({ ...options.props(), variant: options.props().variant as ButtonVariant }),
+    props: () => ({ ...props(), variant: props().variant as ButtonVariant }),
     onClick: options.onClick,
     onChange: options.onChange,
   });
@@ -126,21 +128,21 @@ export function createIconButton<E extends CancelableEvent = MouseEvent>(
   return {
     parts: {
       root() {
-        const p = options.props();
+        const p = props();
         const root = button.parts.root();
         return {
           ...root,
           class: `${root.class} rio-icon-button`,
           'aria-label': p.label,
-          'data-width': p.width ?? iconButtonDefaults.width,
-          'data-variant': p.variant ?? iconButtonDefaults.variant,
+          'data-width': p.width,
+          'data-variant': p.variant,
         };
       },
       touch: button.parts.touch,
       icon: button.parts.icon,
     },
     showsSelectedIcon() {
-      const p = options.props();
+      const p = props();
       // A link can't toggle.
       return !!(p.toggle && p.selected && !button.isLink() && options.content?.().selectedIcon);
     },

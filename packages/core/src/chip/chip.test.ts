@@ -391,3 +391,45 @@ describe('the chip set', () => {
     expect([set.isTabStop('k'), set.isTabStop('j')]).toEqual([true, false]);
   });
 });
+
+describe('props an adapter passes as undefined take the defaults', () => {
+  test('a filter chip is a toggle, off', () => {
+    const chip = createFilterChip({
+      props: () => ({ selected: undefined, menu: undefined, elevated: undefined, open: undefined }),
+      onClick: vi.fn(),
+      onChange: vi.fn(),
+      onOpenChange: vi.fn(),
+    });
+    expect(chip.parts.root()).toMatchObject({
+      'aria-pressed': 'false',
+      'aria-haspopup': undefined,
+      'aria-expanded': undefined,
+      'data-selected': 'false',
+      'data-elevated': undefined,
+    });
+  });
+
+  test('a chip set keeps no selection', () => {
+    const onChange = vi.fn();
+    const set = createChipSet({
+      props: () => ({ selection: undefined, required: undefined, scroll: undefined }),
+      tabStop: () => undefined,
+      onChange,
+    });
+    expect(set.selection()).toBe('none');
+    set.select('a', true);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(set.parts.root()['data-scroll']).toBeUndefined();
+  });
+
+  test('an input chip has its action', () => {
+    const chip = createInputChip({
+      props: () => ({ removeOnly: undefined, disabled: undefined }),
+      messages: () => messagesFor('en').chip,
+      ids: { label: 'l', removeBefore: 'b', removeAfter: 'a' },
+      onClick: vi.fn(),
+      onRemove: vi.fn(),
+    });
+    expect(chip.isAction()).toBe(true);
+  });
+});

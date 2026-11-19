@@ -1,6 +1,6 @@
 import type { ButtonGroupValue } from '../button-group/button-group';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
@@ -117,7 +117,7 @@ const isLink = (p: ButtonProps) => p.href !== undefined;
 const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text' && !isLink(p);
 
 /** Defaults under the given props, skipping props that are explicitly `undefined`. */
-const resolve = (props: ButtonProps) => ({ ...buttonDefaults, ...omitUndefined(props) });
+const resolve = (props: ButtonProps) => resolveProps(buttonDefaults, props);
 
 export function createButton<E extends CancelableEvent = MouseEvent>(
   options: ButtonOptions<E>,

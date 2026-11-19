@@ -1,4 +1,5 @@
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { resolveProps } from '../utils/object';
 
 export interface SwitchProps {
   /** Whether the switch is on. */
@@ -98,28 +99,29 @@ export interface SwitchKeyEvent extends CancelableEvent {
 }
 
 export function createSwitch(options: SwitchOptions): SwitchApi {
+  const props = () => resolveProps(switchDefaults, options.props());
   const showsIcon = () => {
     const content = options.content?.();
-    return !!(options.props().selected ? content?.selectedIcon : content?.unselectedIcon);
+    return !!(props().selected ? content?.selectedIcon : content?.unselectedIcon);
   };
   const blocked = () => {
-    const p = options.props();
-    return !!p.disabled || !!p.softDisabled;
+    const p = props();
+    return p.disabled || p.softDisabled;
   };
 
   return {
     parts: {
       root() {
-        const p = options.props();
+        const p = props();
         return {
           class: 'rio-switch',
-          'data-selected': String(!!p.selected),
+          'data-selected': String(p.selected),
           'data-icon': showsIcon() ? '' : undefined,
           'data-disabled': blocked() ? '' : undefined,
         };
       },
       input() {
-        const p = options.props();
+        const p = props();
         return {
           class: 'rio-switch__input',
           type: 'checkbox',
@@ -133,14 +135,14 @@ export function createSwitch(options: SwitchOptions): SwitchApi {
       icon: () => ({ class: 'rio-switch__icon' }),
     },
     showsIcon,
-    showsSelectedIcon: () => !!(options.props().selected && options.content?.().selectedIcon),
+    showsSelectedIcon: () => props().selected && !!options.content?.().selectedIcon,
     blocked,
     handleKeydown(event) {
       if (event.key !== 'Enter' || event.defaultPrevented) return;
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       // Enter would otherwise submit the form the switch is in.
       event.preventDefault();
-      if (!event.repeat && !blocked()) options.onChange(!options.props().selected);
+      if (!event.repeat && !blocked()) options.onChange(!props().selected);
     },
   };
 }

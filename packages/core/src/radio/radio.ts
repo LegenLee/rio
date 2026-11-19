@@ -1,4 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
+import { resolveProps } from '../utils/object';
 
 /** A radio button's value, and the group's selection. */
 export type RadioValue = string | number;
@@ -100,7 +101,7 @@ export interface RadioApi {
 }
 
 export function createRadio(options: RadioOptions): RadioApi {
-  const props = () => ({ ...radioDefaults, ...options.props() });
+  const props = () => resolveProps(radioDefaults, options.props());
   const unavailable = () => {
     const p = props();
     return !!p.disabled || !!p.softDisabled;

@@ -232,6 +232,16 @@ describe('RioChipSet', () => {
       expect(state.changes).toHaveLength(2);
     });
 
+    test('without a selection, chips with a value keep their own selection too', async () => {
+      const onSelected = vi.fn();
+      const { button, state } = await setup(() => [
+        h(FilterChip, { value: 's', 'onUpdate:selected': onSelected }, () => 'Small'),
+      ]);
+      await userEvent.click(button('Small'));
+      expect(onSelected).toHaveBeenCalledWith(true);
+      expect(state.changes).toEqual([]);
+    });
+
     test('a chip without a value keeps its own selection', async () => {
       const onSelected = vi.fn();
       const { button, state } = await setup(

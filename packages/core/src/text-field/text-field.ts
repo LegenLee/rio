@@ -1,5 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /** M3 text field variants: the same field, with a filled container or an outline. */
 export const TEXT_FIELD_VARIANTS = ['filled', 'outlined'] as const;
@@ -175,7 +175,7 @@ export interface TextFieldApi extends Record<TextFieldWhen, () => boolean> {
 const NO_CONTENT: TextFieldContent = { leadingIcon: false, trailingIcon: false };
 
 export function createTextField(options: TextFieldOptions): TextFieldApi {
-  const props = () => ({ ...textFieldDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(textFieldDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   const { ids } = options;
 
