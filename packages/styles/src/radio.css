@@ -44,7 +44,11 @@
 }
 
 .rio-radio[data-disabled] {
-  --_ring: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_ring: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_ring-active: var(--_ring);
   --_dot: var(--_ring);
 }

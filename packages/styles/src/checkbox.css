@@ -46,9 +46,17 @@
 }
 
 .rio-checkbox[data-disabled] {
-  --_outline: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_outline: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_outline-active: var(--_outline);
-  --_container: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_container: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_icon: var(--rio-color-surface);
 }
 

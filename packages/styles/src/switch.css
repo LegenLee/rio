@@ -135,9 +135,18 @@
 .rio-switch[data-disabled] {
   --_track: color-mix(in srgb, var(--rio-color-surface-container-highest) 12%, transparent);
   --_outline: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
-  --_handle: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_handle: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_handle-active: var(--_handle);
-  --_icon: color-mix(in srgb, var(--rio-color-surface-container-highest) 38%, transparent);
+  --_icon: color-mix(
+    in srgb,
+    var(--rio-color-surface-container-highest)
+      calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
 }
 
 .rio-switch[data-disabled]:where([data-selected='true']) {
@@ -145,7 +154,11 @@
   --_outline: transparent;
   --_handle: var(--rio-color-surface);
   --_handle-active: var(--rio-color-surface);
-  --_icon: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_icon: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
 }
 
 .rio-switch[data-disabled] .rio-switch__state::before {

@@ -146,13 +146,29 @@
 
 /* Disabled, native or soft */
 .rio-slider[data-disabled] {
-  --_active: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_active: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_inactive: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
-  --_handle-color: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_handle-color: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_stop-active: var(--rio-color-inverse-on-surface);
-  --_stop-inactive: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_stop-inactive: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_icon-active: var(--rio-color-inverse-on-surface);
-  --_icon-inactive: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_icon-inactive: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   cursor: default;
 }
 

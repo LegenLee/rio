@@ -152,7 +152,11 @@
 /* Disabled, native or soft */
 
 .rio-chip[data-disabled] {
-  --_label: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_label: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_leading: var(--_label);
   --_trailing: var(--_label);
   --_outline: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
@@ -173,7 +177,7 @@
 }
 
 .rio-chip[data-disabled] .rio-chip__avatar {
-  opacity: 0.38;
+  opacity: var(--rio-state-disabled-state-layer-opacity);
 }
 
 /* Parts */

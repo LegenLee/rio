@@ -160,7 +160,11 @@
 
 /* Disabled */
 .rio-text-field[data-disabled] {
-  --_label: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_label: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_input: var(--_label);
   --_affix: var(--_label);
   --_icon: var(--_label);

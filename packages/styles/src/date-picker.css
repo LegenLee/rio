@@ -72,7 +72,11 @@
 }
 
 .rio-date-picker__menu-button:disabled {
-  color: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   cursor: default;
 }
 
@@ -148,7 +152,11 @@
 }
 
 .rio-date-picker__day[aria-disabled='true'] {
-  --_day: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_day: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
 
   cursor: default;
 }
@@ -194,7 +202,11 @@
 }
 
 .rio-date-picker__option[aria-disabled='true'] {
-  color: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   cursor: default;
 }
 

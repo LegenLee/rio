@@ -396,6 +396,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 ### In Rio
 
 - Each token is a CSS variable with the same name: `--rio-state-hover-state-layer-opacity`, `--rio-state-focus-indicator-thickness`, and so on. They are part of the theme variables.
+- **Every disabled 38% reads `--rio-state-disabled-state-layer-opacity`** (Rio's choice): labels, icons, outlines, handles, tracks, and some containers, such as a checked checkbox's, in every component, so a theme changes them all at once. Where a component's tokens give another disabled opacity, such as 12% for a chip's outline or a switch's track, 4% for a filled text field's container, and 10% for a button's container, it stays a number.
 - **`@rio-m3e/styles/base/state-layer.css`**: the class `rio-state-layer` draws the overlay with `currentColor`, so a component sets its content color and the layer follows. The overlay sits on a `::before` with `z-index: -1` inside an isolated element, which places it between the container and the content. Later rules win, so only one state shows: pressed beats focus, and focus beats hover.
 - Hover applies only under `@media (hover: hover)`, because touch screens keep `:hover` after a tap.
 - The fade uses the `fast-effects` motion token, following the low-emphasis fade recommendation with the spec's token for opacity changes.

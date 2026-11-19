@@ -172,11 +172,15 @@
 }
 
 .rio-menu-item[aria-disabled='true'] > :not(.rio-menu-item__touch) {
-  opacity: 0.38;
+  opacity: var(--rio-state-disabled-state-layer-opacity);
 }
 
 .rio-menu-item[aria-disabled='true'][data-selected='true'] {
-  --_item-container: color-mix(in srgb, var(--_selected-container) 38%, transparent);
+  --_item-container: color-mix(
+    in srgb,
+    var(--_selected-container) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
 }
 
 .rio-menu-item__touch {
