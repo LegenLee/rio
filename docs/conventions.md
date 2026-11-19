@@ -132,6 +132,7 @@ packages/
       css.ts                parsePx: a computed px length as a number, for the DOM behaviors
       disabled.ts           isBlocked and disabledAttrs: disabled and soft-disabled, for every component with both
       focus.ts              FOCUSABLE_SELECTOR: the elements that take the focus themselves, for text field and select
+      intl.ts               dateTimeFormat and numberFormat: one Intl format for each language and options
       keyboard.ts           hasModifier: Alt, Ctrl, or Meta held, for the keys components leave to shortcuts
       link.ts               linkAttrs: an `<a>`'s attributes as a link, disabled or not, for buttons and chips
       object.ts             resolveProps, which every component with defaults reads its props through
@@ -339,6 +340,7 @@ A helper moves up only when a second caller actually needs it.
 - Rename on the way up. A short local name like `kebab` becomes `kebabCase` once it's shared.
 - Helpers are not public API. Functions users call, such as `colorVar` and `elevationVar`, live in their feature folder and are exported from `index.ts`. Helpers never are.
 - Helpers are pure functions. Nothing in `utils/` or `shared` touches the DOM or a framework. DOM behaviors are primitives.
+- A helper may keep what it made for the next call with the same arguments, as `utils/intl.ts` keeps `Intl` formats; what it returns stays the same.
 - Helpers get tests, next to the source like everything else.
 
 ## Code style

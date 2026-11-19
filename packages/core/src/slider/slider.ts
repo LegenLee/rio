@@ -3,6 +3,7 @@
 import type { SliderMessages } from '../locale/messages';
 import type { PartAttrs, PartNode } from '../parts';
 import { disabledAttrs, isBlocked } from '../utils/disabled';
+import { numberFormat } from '../utils/intl';
 import { resolveProps } from '../utils/object';
 
 /** M3E slider sizes, by the track's thickness. `xsmall` is the default. */
@@ -115,22 +116,13 @@ const fractionOf = (value: number, { min, max }: SliderRange) =>
 /** Number of steps along the track, for the stop indicators. */
 const stopCount = ({ min, max, step }: SliderRange) => (max - min) / step;
 
-/** One number format for each language, as the sliders write values on every render */
-const numberFormats = new Map<string, Intl.NumberFormat>();
-
 const formatValue = (value: number, props: SliderCommonProps) => {
   if (props.format) return props.format(value);
-  const locale = props.locale ?? '';
-  let formatter = numberFormats.get(locale);
-  if (!formatter) {
-    try {
-      formatter = new Intl.NumberFormat(props.locale);
-    } catch {
-      return String(value);
-    }
-    numberFormats.set(locale, formatter);
+  try {
+    return numberFormat(props.locale).format(value);
+  } catch {
+    return String(value);
   }
-  return formatter.format(value);
 };
 
 /** The sizes the spec gives the inset icon a size for */
