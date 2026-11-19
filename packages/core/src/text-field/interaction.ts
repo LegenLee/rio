@@ -6,11 +6,12 @@
 // - A text area can be made taller by dragging the container's corner: a press there is left to
 //   the browser.
 
+import { FOCUSABLE_SELECTOR } from '../utils/focus';
+
 export interface TextFieldDomHandle {
   detach(): void;
 }
 
-const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
 /** The corner a resizable container is dragged from, in px each way */
 const RESIZE_CORNER = 16;
 
@@ -22,7 +23,7 @@ export function attachTextField(
     const control = input();
     if (!control || control.disabled || event.button !== 0) return;
     const target = event.target as Element;
-    if (target.closest(FOCUSABLE) || target.closest('label')) return;
+    if (target.closest(FOCUSABLE_SELECTOR) || target.closest('label')) return;
     // A press on a text area's resize corner drags it.
     const style = getComputedStyle(container);
     if (target === container && style.resize !== 'none') {

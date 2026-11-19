@@ -333,6 +333,42 @@ describe('RioTextField', () => {
     expect(document.activeElement).toBe(clear);
   });
 
+  test('a press on anything in the field that takes the focus itself is left to it', async () => {
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h(
+            TextField,
+            { label: 'Search', modelValue: '' },
+            {
+              'trailing-icon': () => [
+                h('a', { href: '#', 'data-kind': '' }, 'a'),
+                h('button', { type: 'button', 'data-kind': '' }, 'b'),
+                h('input', { 'data-kind': '' }),
+                h('select', { 'data-kind': '' }),
+                h('textarea', { 'data-kind': '' }),
+                h('span', { tabindex: '-1', 'data-kind': '' }, 't'),
+                h('span', { contenteditable: '', 'data-kind': '' }, 'c'),
+                h('span', { class: 'plain' }, 'p'),
+              ],
+            },
+          ),
+      ),
+    );
+    const root = screen.container.querySelector<HTMLElement>('.rio-text-field')!;
+    /** Whether the field let the press through, as the browser takes it */
+    const leftAlone = (el: Element) =>
+      el.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }),
+      );
+    // The field's own input too, where a press places the caret.
+    const own = root.querySelector('.rio-text-field__input')!;
+    for (const el of [own, ...root.querySelectorAll('[data-kind]')]) {
+      expect(leftAlone(el), el.outerHTML).toBe(true);
+    }
+    expect(leftAlone(root.querySelector('.plain')!)).toBe(false);
+  });
+
   test('disabled: the input is disabled, and a press doesn’t focus it', async () => {
     const { input, root } = await setup({ label: 'Name', disabled: true });
     expect(input.disabled).toBe(true);

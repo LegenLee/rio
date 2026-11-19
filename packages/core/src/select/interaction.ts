@@ -22,6 +22,7 @@
 import { attachAnchoredPosition } from '../primitives/anchored-position/anchored-position';
 import { attachFormReset } from '../primitives/form-reset/form-reset';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import { FOCUSABLE_SELECTOR } from '../utils/focus';
 import { createTypeahead } from '../utils/typeahead';
 
 export interface SelectDomElements {
@@ -56,7 +57,6 @@ export interface SelectDomHandle {
   detach(): void;
 }
 
-const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
 /** How many options Page Up and Page Down move */
 const PAGE = 10;
 
@@ -212,7 +212,7 @@ export function attachSelect(
 
   // A press on the container, outside anything in it that takes the focus itself
   const ownPress = (event: Event) => {
-    const other = (event.target as Element).closest(FOCUSABLE);
+    const other = (event.target as Element).closest(FOCUSABLE_SELECTOR);
     return !other || other === field || !container.contains(other);
   };
   const onPointerDown = (event: PointerEvent) => {
