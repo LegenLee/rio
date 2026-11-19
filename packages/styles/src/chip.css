@@ -179,17 +179,6 @@
 /* Parts */
 
 /* The chip is 32px tall, below the spec's 48px minimum target. */
-.rio-chip__touch {
-  position: absolute;
-  /* Physical, like `translate`: a logical start would flip in right-to-left layouts and push the
-     target off the chip. */
-  top: 50%;
-  left: 50%;
-  inline-size: max(100%, 48px);
-  block-size: max(100%, 48px);
-  translate: -50% -50%;
-}
-
 /* The state layer on ::before and the ripple on ::after, over the border too */
 .rio-chip__state {
   position: absolute;

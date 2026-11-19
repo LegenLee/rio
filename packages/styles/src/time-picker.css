@@ -156,15 +156,6 @@
 }
 
 /* The target reaches 48px, past the 40px buttons. Physical, like `translate`. */
-.rio-time-picker__touch {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  inline-size: max(100%, 48px);
-  block-size: max(100%, 48px);
-  translate: -50% -50%;
-}
-
 .rio-time-picker__period-button[data-selected] {
   --rio-shape-morph-target: var(--_period-selected);
 

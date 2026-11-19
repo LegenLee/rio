@@ -143,6 +143,7 @@ packages/
       ripple.css            pairs with core's primitives/ripple
       shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
+      touch-target.css      the 48px press target of buttons, chips, and the time picker's period buttons
     button.css
     button-group.css
     checkbox.css

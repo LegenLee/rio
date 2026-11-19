@@ -47,7 +47,10 @@ describe('assist and suggestion chips', () => {
     expect([showsIcon(), isLink()]).toEqual([true, false]);
     expect(parts.icon()).toEqual({ class: 'rio-chip__icon', 'aria-hidden': 'true' });
     expect(parts.state()).toEqual({ class: 'rio-chip__state', 'aria-hidden': 'true' });
-    expect(parts.touch()).toEqual({ class: 'rio-chip__touch', 'aria-hidden': 'true' });
+    expect(parts.touch()).toEqual({
+      class: 'rio-chip__touch rio-touch-target',
+      'aria-hidden': 'true',
+    });
     expect(parts.label()).toEqual({ class: 'rio-chip__label' });
   });
 

@@ -30,7 +30,10 @@ describe('createIconButton', () => {
 
   test('shares the touch and icon parts with the button', () => {
     const { parts } = setup().button;
-    expect(parts.touch()).toEqual({ class: 'rio-button__touch', 'aria-hidden': 'true' });
+    expect(parts.touch()).toEqual({
+      class: 'rio-button__touch rio-touch-target',
+      'aria-hidden': 'true',
+    });
     expect(parts.icon()).toEqual({ class: 'rio-button__icon', 'aria-hidden': 'true' });
   });
 

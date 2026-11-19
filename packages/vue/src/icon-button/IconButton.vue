@@ -3,6 +3,7 @@ import { createIconButton, type IconButtonProps } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/button.css';
 import '@rio-m3e/styles/icon-button.css';
 import { useButtonGroupItem } from '../button-group/context';

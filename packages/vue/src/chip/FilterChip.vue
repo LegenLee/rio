@@ -3,6 +3,7 @@ import { createFilterChip, type FilterChipProps } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/chip.css';
 import { useTemplateRef } from 'vue';
 import { useChipRipple, useChipSetItem } from './context';

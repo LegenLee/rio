@@ -8,6 +8,7 @@ import {
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/chip.css';
 import { computed, useAttrs, useId, useTemplateRef } from 'vue';
 import { useLocale, useMessages } from '../locale/locale';

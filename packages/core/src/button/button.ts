@@ -150,7 +150,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
           'data-selected': toggle ? String(p.selected) : undefined,
         };
       },
-      touch: () => ({ class: 'rio-button__touch', 'aria-hidden': 'true' }),
+      touch: () => ({ class: 'rio-button__touch rio-touch-target', 'aria-hidden': 'true' }),
       // The icon only decorates; the label names the button.
       icon: () => ({ class: 'rio-button__icon', 'aria-hidden': 'true' }),
       label: () => ({ class: 'rio-button__label' }),

@@ -16,6 +16,7 @@ import {
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/dialog.css';
 import '@rio-m3e/styles/time-picker.css';
 import {

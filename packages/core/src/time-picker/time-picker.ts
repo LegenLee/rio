@@ -349,7 +349,10 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
         tabindex: pmNow() ? '-1' : '0',
         'data-selected': pmNow() ? undefined : '',
       }),
-      periodTouch: () => ({ class: 'rio-time-picker__touch', 'aria-hidden': 'true' }),
+      periodTouch: () => ({
+        class: 'rio-time-picker__touch rio-touch-target',
+        'aria-hidden': 'true',
+      }),
       pm: () => ({
         class: 'rio-time-picker__period-button rio-state-layer rio-focus-ring',
         type: 'button',

@@ -8,6 +8,7 @@ import {
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/button.css';
 import '@rio-m3e/styles/split-button.css';
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';

@@ -202,7 +202,7 @@ function createActionChip<E extends CancelableEvent>(
           'data-chip-focus': focusMark(key, !p.disabled),
         };
       },
-      touch: () => ({ class: 'rio-chip__touch', 'aria-hidden': 'true' }),
+      touch: () => ({ class: 'rio-chip__touch rio-touch-target', 'aria-hidden': 'true' }),
       state: statePart,
       // The icon only decorates; the label names the chip.
       icon: () => ({ class: 'rio-chip__icon', 'aria-hidden': 'true' }),
@@ -332,7 +332,7 @@ export function createFilterChip<E extends CancelableEvent = MouseEvent>(
           'data-chip-focus': focusMark(key, !p.disabled),
         };
       },
-      touch: () => ({ class: 'rio-chip__touch', 'aria-hidden': 'true' }),
+      touch: () => ({ class: 'rio-chip__touch rio-touch-target', 'aria-hidden': 'true' }),
       state: statePart,
       icon: () => ({ class: 'rio-chip__icon', 'aria-hidden': 'true' }),
       label: () => ({ class: 'rio-chip__label' }),
@@ -520,7 +520,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
           'data-chip-focus': focusMark(options.key?.(), !p.disabled),
         };
       },
-      touch: () => ({ class: 'rio-chip__touch', 'aria-hidden': 'true' }),
+      touch: () => ({ class: 'rio-chip__touch rio-touch-target', 'aria-hidden': 'true' }),
       state: statePart,
       icon: () => ({ class: 'rio-chip__icon', 'aria-hidden': 'true' }),
       avatar: () => ({ class: 'rio-chip__avatar', 'aria-hidden': 'true' }),
@@ -552,7 +552,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
           'data-chip-focus': focusMark(options.key?.(), !p.disabled),
         };
       },
-      removeTouch: () => ({ class: 'rio-chip__touch', 'aria-hidden': 'true' }),
+      removeTouch: () => ({ class: 'rio-chip__touch rio-touch-target', 'aria-hidden': 'true' }),
       removeIcon: () => ({ class: 'rio-chip__remove-icon', 'aria-hidden': 'true' }),
       removeBefore: () => ({ id: options.ids.removeBefore, hidden: '' }),
       removeAfter: () => ({ id: options.ids.removeAfter, hidden: '' }),
