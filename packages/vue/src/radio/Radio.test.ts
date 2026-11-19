@@ -138,6 +138,15 @@ describe('RioRadioGroup and RioRadio', () => {
     expect(document.activeElement).toBe(input('Luna'));
   });
 
+  test('right to left, Left goes forward: at the end, round to the first', async () => {
+    const { state, group, input } = await setup({ selected: 'Luna' });
+    group.dir = 'rtl';
+    input('Luna').focus();
+    input('Luna').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    await expect.poll(() => document.activeElement).toBe(input('Callisto'));
+    expect(state.changes).toEqual(['Callisto']);
+  });
+
   test('at an end, the arrows with Alt, Ctrl, or Meta are left to the browser', async () => {
     const { state, input } = await setup({ selected: 'Luna' });
     input('Luna').focus();

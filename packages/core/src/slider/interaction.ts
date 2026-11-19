@@ -23,6 +23,7 @@
 // - A form's reset puts the inputs back to their defaults; they then show the adapter's values
 //   again. Resetting the values is the app's.
 
+import { isRtl } from '../primitives/direction/direction';
 import { attachFormReset } from '../primitives/form-reset/form-reset';
 import { parsePx } from '../utils/css';
 import { hasModifier } from '../utils/keyboard';
@@ -98,8 +99,7 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
     if (travel <= 0) return 0;
     let offset: number;
     if (vertical) offset = rect.bottom - inset - event.clientY;
-    else if (getComputedStyle(root).direction === 'rtl')
-      offset = rect.right - inset - event.clientX;
+    else if (isRtl(root)) offset = rect.right - inset - event.clientX;
     else offset = event.clientX - rect.left - inset;
     return Math.min(1, Math.max(0, offset / travel));
   };

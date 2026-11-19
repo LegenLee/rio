@@ -13,6 +13,7 @@
 // Every element child of the group counts as an item, in DOM order, or the element inside a
 // tooltip's wrapper, which has no box.
 
+import { isRtl } from '../primitives/direction/direction';
 import { prefersReducedMotion } from '../primitives/reduced-motion/reduced-motion';
 import { createSpring, readSpringParams, type Spring } from '../primitives/spring/spring';
 import { hasModifier } from '../utils/keyboard';
@@ -51,7 +52,7 @@ export function attachButtonGroup(
     const index = focusable.findIndex((el) => el.contains(document.activeElement));
     if (index === -1) return;
     // In right-to-left layouts the next button is on the left.
-    const forward = (event.key === 'ArrowRight') !== (getComputedStyle(root).direction === 'rtl');
+    const forward = (event.key === 'ArrowRight') !== isRtl(root);
     const next = focusable[index + (forward ? 1 : -1)];
     if (!next) return;
     event.preventDefault();

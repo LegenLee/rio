@@ -14,6 +14,7 @@
 // The elements the arrow keys go through carry `data-chip-focus` with their chip's key, which
 // core's chip parts write.
 
+import { isRtl } from '../primitives/direction/direction';
 import { hasModifier } from '../utils/keyboard';
 
 export interface ChipSetDomOptions {
@@ -91,7 +92,7 @@ export function attachChipSet(root: HTMLElement, options: ChipSetDomOptions): Ch
     else if (event.key === 'End') next = list.length - 1;
     else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       // In right-to-left layouts the next chip is on the left.
-      const forward = (event.key === 'ArrowRight') !== (getComputedStyle(root).direction === 'rtl');
+      const forward = (event.key === 'ArrowRight') !== isRtl(root);
       next = (index + (forward ? 1 : -1) + list.length) % list.length;
     } else return;
     event.preventDefault();

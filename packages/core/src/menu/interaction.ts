@@ -33,6 +33,7 @@ import {
   type AnchoredSide,
   type AnchorPoint,
 } from '../primitives/anchored-position/anchored-position';
+import { isRtl } from '../primitives/direction/direction';
 import { attachOverlay } from '../primitives/overlay/overlay';
 import { hasModifier } from '../utils/keyboard';
 import { resolveProps } from '../utils/object';
@@ -335,7 +336,7 @@ function setup(
     // through `focusin`: a window without the system's focus doesn't fire it.
     if (activeMenus.get(topOf(root)) !== root) shapeTree(root, root);
     const handled = () => event.preventDefault();
-    if (nested && event.key === (isRtl() ? 'ArrowRight' : 'ArrowLeft')) {
+    if (nested && event.key === (isRtl(root) ? 'ArrowRight' : 'ArrowLeft')) {
       handled();
       options.onClose();
       return;
@@ -365,8 +366,6 @@ function setup(
     }
   };
   root.addEventListener('keydown', onKeydown);
-
-  const isRtl = () => view.getComputedStyle(root).direction === 'rtl';
 
   // The pointer over the menu's own items opens the submenu of the one it rests on and closes the
   // others, except while it heads for an open submenu across other items (`MenuState.grace`). Only
@@ -594,7 +593,6 @@ export function attachSubMenu(
   root: HTMLElement,
   options: SubMenuDomOptions,
 ): SubMenuDomHandle {
-  const view = item.ownerDocument.defaultView!;
   const parent = item.closest<HTMLElement>('[role="menu"]');
   /** Whether the submenu is open, as last `sync`ed */
   let open = false;
@@ -707,7 +705,7 @@ export function attachSubMenu(
   // item. A space while letters are being typed is part of the search.
   const onKeydown = (event: KeyboardEvent) => {
     if (event.defaultPrevented || hasModifier(event)) return;
-    const forward = view.getComputedStyle(item).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+    const forward = isRtl(item) ? 'ArrowLeft' : 'ArrowRight';
     const space = event.key === ' ' && !(parent && stateOf(parent).typing());
     if (event.key !== forward && event.key !== 'Enter' && !space) return;
     // Also keeps Enter and Space from clicking the item.

@@ -18,6 +18,7 @@
 //   with the focus in the calendar gives it back to the field.
 
 import { attachAnchoredPosition } from '../primitives/anchored-position/anchored-position';
+import { isRtl } from '../primitives/direction/direction';
 import { attachOverlay } from '../primitives/overlay/overlay';
 import { hasModifier } from '../utils/keyboard';
 import type { CalendarApi } from './date-picker';
@@ -37,8 +38,6 @@ export interface CalendarDomHandle {
   focus(): void;
   detach(): void;
 }
-
-const isRtl = (element: Element) => getComputedStyle(element).direction === 'rtl';
 
 export function attachCalendar(root: HTMLElement, options: CalendarDomOptions): CalendarDomHandle {
   const document = root.ownerDocument;

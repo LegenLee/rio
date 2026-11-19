@@ -17,6 +17,7 @@ export * from './menu/menu';
 export * from './parts';
 export * from './primitives/anchored-position/anchored-position';
 export * from './primitives/checkable/checkable';
+export * from './primitives/direction/direction';
 export * from './primitives/drag/drag';
 export * from './primitives/form-reset/form-reset';
 export * from './primitives/overlay/overlay';

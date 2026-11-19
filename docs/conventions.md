@@ -41,6 +41,8 @@ packages/
         anchored-position.ts  places a floating element next to an anchor (see Overlays)
       checkable/
         checkable.ts        keeps a native checkbox or radio button in line with the adapter's state
+      direction/
+        direction.ts        isRtl: whether an element lays out right to left, for what mirrors
       drag/
         drag.ts
       form-reset/
