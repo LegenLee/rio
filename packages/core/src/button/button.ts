@@ -1,5 +1,6 @@
 import type { ButtonGroupValue } from '../button-group/button-group';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { linkAttrs } from '../utils/link';
 import { resolveProps } from '../utils/object';
 
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
@@ -127,15 +128,9 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
       root() {
         const p = resolve(options.props());
         if (isLink(p)) {
-          const unavailable = p.disabled || p.softDisabled;
           return {
             class: 'rio-button rio-state-layer rio-focus-ring',
-            href: unavailable ? undefined : p.href,
-            // Without `href`, an `<a>` is a placeholder; the role makes it a link again, disabled.
-            role: unavailable ? 'link' : undefined,
-            'aria-disabled': unavailable ? 'true' : undefined,
-            // Only the soft variant keeps the focus.
-            tabindex: p.softDisabled && !p.disabled ? '0' : undefined,
+            ...linkAttrs(p),
             'data-variant': p.variant,
             'data-size': p.size,
             'data-shape': p.shape,

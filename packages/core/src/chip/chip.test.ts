@@ -110,8 +110,13 @@ describe('assist and suggestion chips', () => {
     expect(setup({ href: '#', softDisabled: true }, false, false).chip.parts.root().tabindex).toBe(
       '-1',
     );
-    // A disabled chip takes no focus, so the arrow keys pass it.
+    // A disabled chip takes no focus, so the arrow keys pass it, a link included, even as the
+    // set's tab stop.
     expect(setup({ disabled: true }, false, false).chip.parts.root()).toMatchObject({
+      tabindex: undefined,
+      'data-chip-focus': undefined,
+    });
+    expect(setup({ href: '#', disabled: true }, false, true).chip.parts.root()).toMatchObject({
       tabindex: undefined,
       'data-chip-focus': undefined,
     });

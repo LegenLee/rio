@@ -3,6 +3,7 @@
 
 import type { ChipMessages } from '../locale/messages';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { linkAttrs } from '../utils/link';
 import { resolveProps } from '../utils/object';
 
 /** Identifies a filter chip inside a chip set that keeps a selection, through its `value` prop. */
@@ -181,18 +182,13 @@ function createActionChip<E extends CancelableEvent>(
           'data-icon': showsIcon() ? '' : undefined,
         };
         if (isLink()) {
-          const unavailable = blockedBy(p);
-          let tabindex = p.disabled ? undefined : tabindexOf(tabStop);
-          // Without `href` a link takes no focus; the soft variant keeps it.
-          if (tabindex === undefined && unavailable && !p.disabled) tabindex = '0';
+          const link = linkAttrs(p);
           return {
             ...common,
-            href: unavailable ? undefined : p.href,
-            // Without `href`, an `<a>` is a placeholder; the role makes it a link again, disabled.
-            role: unavailable ? 'link' : undefined,
-            'aria-disabled': unavailable ? 'true' : undefined,
-            tabindex,
-            'data-disabled': unavailable ? '' : undefined,
+            ...link,
+            // In a set, the set's tab stop; outside one, the link's own.
+            tabindex: p.disabled ? undefined : (tabindexOf(tabStop) ?? link.tabindex),
+            'data-disabled': blockedBy(p) ? '' : undefined,
             'data-chip-focus': focusMark(key, !p.disabled),
           };
         }
