@@ -1,4 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { resolveProps } from '../utils/object';
 
 export interface CheckboxProps {
@@ -74,10 +75,7 @@ export interface CheckboxApi {
 
 export function createCheckbox(options: CheckboxOptions): CheckboxApi {
   const props = () => resolveProps(checkboxDefaults, options.props());
-  const unavailable = () => {
-    const p = props();
-    return !!p.disabled || !!p.softDisabled;
-  };
+  const unavailable = () => isBlocked(props());
 
   return {
     parts: {
@@ -96,8 +94,7 @@ export function createCheckbox(options: CheckboxOptions): CheckboxApi {
         return {
           class: 'rio-checkbox__input',
           type: 'checkbox',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           'aria-invalid': p.error ? 'true' : undefined,
         };
       },

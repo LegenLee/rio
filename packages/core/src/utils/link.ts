@@ -1,7 +1,7 @@
-export interface LinkProps {
+import { isBlocked, type DisabledProps } from './disabled';
+
+export interface LinkProps extends DisabledProps {
   href?: string;
-  disabled?: boolean;
-  softDisabled?: boolean;
 }
 
 /**
@@ -10,7 +10,7 @@ export interface LinkProps {
  * again, disabled. Only the soft variant keeps the focus.
  */
 export function linkAttrs(p: LinkProps) {
-  const unavailable = !!p.disabled || !!p.softDisabled;
+  const unavailable = isBlocked(p);
   return {
     href: unavailable ? undefined : p.href,
     role: unavailable ? 'link' : undefined,

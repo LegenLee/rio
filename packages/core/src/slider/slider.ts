@@ -2,6 +2,7 @@
 
 import type { SliderMessages } from '../locale/messages';
 import type { PartAttrs, PartNode } from '../parts';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { resolveProps } from '../utils/object';
 
 /** M3E slider sizes, by the track's thickness. `xsmall` is the default. */
@@ -247,8 +248,7 @@ const inputAttrs = (
   max: String(max),
   step: String(step),
   value: String(value),
-  disabled: p.disabled ? '' : undefined,
-  'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+  ...disabledAttrs(p),
   'aria-orientation': p.vertical ? 'vertical' : undefined,
   'aria-valuetext': p.format ? p.format(value) : undefined,
 });
@@ -260,10 +260,7 @@ export function createSlider(options: SliderOptions): SliderApi {
     const r = range();
     return snapSliderValue(options.props().value ?? r.min, r);
   };
-  const blocked = () => {
-    const p = props();
-    return !!p.disabled || !!p.softDisabled;
-  };
+  const blocked = () => isBlocked(props());
   const showsIcon = () => {
     const p = props();
     return !!options.content?.().icon && !p.centered && ICON_SIZES.includes(p.size);
@@ -405,10 +402,7 @@ export function createRangeSlider(options: RangeSliderOptions): RangeSliderApi {
     const b = snapSliderValue(end, r);
     return a <= b ? [a, b] : [b, a];
   };
-  const blocked = () => {
-    const p = props();
-    return !!p.disabled || !!p.softDisabled;
-  };
+  const blocked = () => isBlocked(props());
   const input = (index: number, thumb: 'start' | 'end') => {
     const p = props();
     const r = range();

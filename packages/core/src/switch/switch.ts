@@ -1,4 +1,5 @@
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { resolveProps } from '../utils/object';
 
 export interface SwitchProps {
@@ -104,10 +105,7 @@ export function createSwitch(options: SwitchOptions): SwitchApi {
     const content = options.content?.();
     return !!(props().selected ? content?.selectedIcon : content?.unselectedIcon);
   };
-  const blocked = () => {
-    const p = props();
-    return p.disabled || p.softDisabled;
-  };
+  const blocked = () => isBlocked(props());
 
   return {
     parts: {
@@ -126,8 +124,7 @@ export function createSwitch(options: SwitchOptions): SwitchApi {
           class: 'rio-switch__input',
           type: 'checkbox',
           role: 'switch',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
         };
       },
       state: () => ({ class: 'rio-switch__state', 'aria-hidden': 'true' }),

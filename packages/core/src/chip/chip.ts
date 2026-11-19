@@ -3,6 +3,7 @@
 
 import type { ChipMessages } from '../locale/messages';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { linkAttrs } from '../utils/link';
 import { resolveProps } from '../utils/object';
 
@@ -156,8 +157,6 @@ export interface ActionChipApi<E extends CancelableEvent = MouseEvent> {
   handleClick: (event: E) => void;
 }
 
-const blockedBy = (p: ChipCommonProps) => !!p.disabled || !!p.softDisabled;
-
 /** The state part, the same in every chip */
 const statePart = () => ({ class: 'rio-chip__state', 'aria-hidden': 'true' });
 
@@ -188,17 +187,16 @@ function createActionChip<E extends CancelableEvent>(
             ...link,
             // In a set, the set's tab stop; outside one, the link's own.
             tabindex: p.disabled ? undefined : (tabindexOf(tabStop) ?? link.tabindex),
-            'data-disabled': blockedBy(p) ? '' : undefined,
+            'data-disabled': isBlocked(p) ? '' : undefined,
             'data-chip-focus': focusMark(key, !p.disabled),
           };
         }
         return {
           ...common,
           type: 'button',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           tabindex: p.disabled ? undefined : tabindexOf(tabStop),
-          'data-disabled': blockedBy(p) ? '' : undefined,
+          'data-disabled': isBlocked(p) ? '' : undefined,
           'data-chip-focus': focusMark(key, !p.disabled),
         };
       },
@@ -210,9 +208,9 @@ function createActionChip<E extends CancelableEvent>(
     },
     showsIcon,
     isLink,
-    blocked: () => blockedBy(props()),
+    blocked: () => isBlocked(props()),
     handleClick(event) {
-      if (blockedBy(props())) {
+      if (isBlocked(props())) {
         event.preventDefault();
         return;
       }
@@ -316,8 +314,7 @@ export function createFilterChip<E extends CancelableEvent = MouseEvent>(
         return {
           class: 'rio-chip rio-focus-ring',
           type: 'button',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           // A menu chip is a menu button; its selection shows, and its label says the filter.
           'aria-pressed': p.menu ? undefined : String(p.selected),
           'aria-haspopup': p.menu ? 'menu' : undefined,
@@ -328,7 +325,7 @@ export function createFilterChip<E extends CancelableEvent = MouseEvent>(
           'data-elevated': p.elevated ? '' : undefined,
           'data-icon': showsIcon() ? '' : undefined,
           'data-trailing': showsTrailing() ? '' : undefined,
-          'data-disabled': blockedBy(p) ? '' : undefined,
+          'data-disabled': isBlocked(p) ? '' : undefined,
           'data-chip-focus': focusMark(key, !p.disabled),
         };
       },
@@ -341,10 +338,10 @@ export function createFilterChip<E extends CancelableEvent = MouseEvent>(
     showsIcon,
     showsSelectedIcon,
     showsTrailing,
-    blocked: () => blockedBy(props()),
+    blocked: () => isBlocked(props()),
     handleClick(event) {
       const p = props();
-      if (blockedBy(p)) {
+      if (isBlocked(p)) {
         event.preventDefault();
         return;
       }
@@ -492,7 +489,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
   const removeText = () => splitAroundLabel(options.messages().remove);
   const showsAvatar = () => content().avatar;
   const showsIcon = () => !showsAvatar() && content().icon;
-  const blocked = () => blockedBy(props());
+  const blocked = () => isBlocked(props());
 
   return {
     parts: {
@@ -514,8 +511,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
         return {
           ...label,
           type: 'button',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           tabindex: p.disabled ? undefined : tabindexOf(options.tabStop?.()),
           'data-chip-focus': focusMark(options.key?.(), !p.disabled),
         };
@@ -532,8 +528,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
         return {
           class: 'rio-chip__remove rio-focus-ring',
           type: 'button',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           'aria-labelledby': [
             before ? options.ids.removeBefore : '',
             options.ids.label,

@@ -1,4 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { resolveProps } from '../utils/object';
 
 /** A radio button's value, and the group's selection. */
@@ -102,10 +103,7 @@ export interface RadioApi {
 
 export function createRadio(options: RadioOptions): RadioApi {
   const props = () => resolveProps(radioDefaults, options.props());
-  const unavailable = () => {
-    const p = props();
-    return !!p.disabled || !!p.softDisabled;
-  };
+  const unavailable = () => isBlocked(props());
 
   return {
     parts: {
@@ -121,8 +119,7 @@ export function createRadio(options: RadioOptions): RadioApi {
           type: 'radio',
           name: options.name(),
           value: options.value(),
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
         };
       },
       state: () => ({ class: 'rio-radio__state', 'aria-hidden': 'true' }),

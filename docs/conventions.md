@@ -130,6 +130,7 @@ packages/
     parts.ts                PartAttrs, CancelableEvent, and mergePartAttrs (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
       css.ts                parsePx: a computed px length as a number, for the DOM behaviors
+      disabled.ts           isBlocked and disabledAttrs: disabled and soft-disabled, for every component with both
       focus.ts              FOCUSABLE_SELECTOR: the elements that take the focus themselves, for text field and select
       link.ts               linkAttrs: an `<a>`'s attributes as a link, disabled or not, for buttons and chips
       object.ts             resolveProps, which every component with defaults reads its props through
