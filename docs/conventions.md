@@ -43,6 +43,8 @@ packages/
         checkable.ts        keeps a native checkbox or radio button in line with the adapter's state
       drag/
         drag.ts
+      form-reset/
+        form-reset.ts       tells when a form has put its controls back, for the components that show the adapter's state on them
       overlay/
         overlay.ts          the top layer and the order of Rio's overlays (see Overlays)
       ripple/

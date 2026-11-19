@@ -21,6 +21,7 @@
 // - A form's reset puts the inputs back to their defaults; they then show the adapter's values
 //   again. Resetting the values is the app's.
 
+import { attachFormReset } from '../primitives/form-reset/form-reset';
 import { parsePx } from '../utils/css';
 import { snapSliderValue, type SliderRange } from './slider';
 
@@ -81,7 +82,6 @@ interface Gesture {
 
 export function attachSlider(root: HTMLElement, options: SliderDomOptions): SliderDomHandle {
   const { inputs } = options;
-  const document = root.ownerDocument;
   let gesture: Gesture | undefined;
   let dispatching = false;
   let iconInactive = false;
@@ -272,14 +272,6 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
     if (options.blocked() && KEYS.has(event.key)) event.preventDefault();
   };
 
-  // The reset event comes before the form puts its inputs back.
-  let resetTimer: ReturnType<typeof setTimeout> | undefined;
-  const onReset = (event: Event) => {
-    if (!inputs.some((input) => input.form === event.target)) return;
-    clearTimeout(resetTimer);
-    resetTimer = setTimeout(sync);
-  };
-
   // The icon's room changes with the slider's length.
   const resize = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(sync);
   resize?.observe(root);
@@ -293,14 +285,14 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
     input.addEventListener('input', onInput);
     input.addEventListener('keydown', onKeyDown);
   }
-  document.addEventListener('reset', onReset, { capture: true });
+  const reset = attachFormReset(inputs, sync);
   sync();
 
   return {
     sync,
     detach() {
       end();
-      clearTimeout(resetTimer);
+      reset.detach();
       resize?.disconnect();
       root.removeEventListener('pointerdown', onPointerDown);
       root.removeEventListener('pointermove', onPointerMove);
@@ -311,7 +303,6 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
         input.removeEventListener('input', onInput);
         input.removeEventListener('keydown', onKeyDown);
       }
-      document.removeEventListener('reset', onReset, { capture: true });
     },
   };
 }
