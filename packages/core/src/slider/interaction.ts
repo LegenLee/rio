@@ -21,6 +21,7 @@
 // - A form's reset puts the inputs back to their defaults; they then show the adapter's values
 //   again. Resetting the values is the app's.
 
+import { parsePx } from '../utils/css';
 import { snapSliderValue, type SliderRange } from './slider';
 
 export interface SliderDomOptions {
@@ -68,9 +69,6 @@ const VALUE_SETTER =
     ? undefined
     : Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
 
-const readPx = (el: Element, name: string) =>
-  parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
-
 interface Gesture {
   pointerId: number;
   /** The handle it moves, until both sit where it started and it hasn't moved off yet */
@@ -91,7 +89,7 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
   /** Where the pointer is along the track, from 0 at `min` to 1 at `max` */
   const fractionAt = (event: PointerEvent) => {
     const rect = root.getBoundingClientRect();
-    const inset = readPx(root, '--rio-slider-inset');
+    const inset = parsePx(getComputedStyle(root).getPropertyValue('--rio-slider-inset'));
     const vertical = options.vertical();
     const travel = (vertical ? rect.height : rect.width) - 2 * inset;
     if (travel <= 0) return 0;
@@ -252,7 +250,8 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
     if (!track || !options.onIconInactiveChange) return;
     const rect = track.getBoundingClientRect();
     const length = options.vertical() ? rect.height : rect.width;
-    const inactive = length < readPx(root, '--rio-slider-icon-room');
+    const inactive =
+      length < parsePx(getComputedStyle(root).getPropertyValue('--rio-slider-icon-room'));
     if (inactive === iconInactive) return;
     iconInactive = inactive;
     options.onIconInactiveChange(inactive);

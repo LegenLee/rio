@@ -12,6 +12,7 @@
 
 import { attachDrag } from '../primitives/drag/drag';
 import { attachSpringProperty } from '../primitives/spring-property/spring-property';
+import { parsePx } from '../utils/css';
 
 export interface SwitchHandleOptions {
   /** The switch's input, which takes the presses and so the drag */
@@ -31,9 +32,6 @@ const FLING_VELOCITY = 300;
 
 const inlineVar = (el: HTMLElement, name: string) => (value: number | undefined) =>
   value === undefined ? el.style.removeProperty(name) : el.style.setProperty(name, `${value}px`);
-
-const readPx = (el: Element, name: string) =>
-  parseFloat(getComputedStyle(el).getPropertyValue(name));
 
 export function attachSwitchHandle(
   root: HTMLElement,
@@ -56,9 +54,10 @@ export function attachSwitchHandle(
 
   const drag = attachDrag(options.input, {
     onStart() {
-      off = readPx(root, '--rio-switch-handle-x-off');
-      on = readPx(root, '--rio-switch-handle-x-on');
-      direction = getComputedStyle(root).direction === 'rtl' ? -1 : 1;
+      const style = getComputedStyle(root);
+      off = parsePx(style.getPropertyValue('--rio-switch-handle-x-off'));
+      on = parsePx(style.getPropertyValue('--rio-switch-handle-x-on'));
+      direction = style.direction === 'rtl' ? -1 : 1;
       from = x.value;
       x.hold(from);
     },

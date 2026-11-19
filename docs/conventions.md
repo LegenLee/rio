@@ -125,6 +125,7 @@ packages/
       tooltip.test.ts
     parts.ts                PartAttrs, CancelableEvent, and mergePartAttrs (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
+      css.ts                parsePx: a computed px length as a number, for the DOM behaviors
       object.ts             resolveProps, which every component with defaults reads its props through
       typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts

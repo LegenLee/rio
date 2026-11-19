@@ -12,6 +12,7 @@
 //   keeps the last path drawn until it shows again.
 
 import { prefersReducedMotion } from '../primitives/spring/spring';
+import { parsePx } from '../utils/css';
 import { circularWavePath, linearWavePath } from './progress';
 
 export interface ProgressDomHandle {
@@ -19,11 +20,6 @@ export interface ProgressDomHandle {
   sync(): void;
   detach(): void;
 }
-
-const readPx = (style: CSSStyleDeclaration, name: string, fallback: number) => {
-  const value = parseFloat(style.getPropertyValue(name));
-  return Number.isFinite(value) ? value : fallback;
-};
 
 /** Draws on every frame while `wavy()` and `root` is rendered, and stops when it isn't wavy. */
 function frameLoop(
@@ -71,9 +67,9 @@ export function attachLinearProgress(
     root,
     (time) => {
       const style = getComputedStyle(root);
-      const thickness = readPx(style, '--rio-progress-thickness', 4);
-      const amplitude = readPx(style, '--rio-progress-amplitude', 0);
-      const wavelength = readPx(style, '--rio-progress-wavelength', 40);
+      const thickness = parsePx(style.getPropertyValue('--rio-progress-thickness'), 4);
+      const amplitude = parsePx(style.getPropertyValue('--rio-progress-amplitude'));
+      const wavelength = parsePx(style.getPropertyValue('--rio-progress-wavelength'), 40);
       const track = root.getBoundingClientRect();
       const rtl = style.direction === 'rtl';
       const shift = shiftAt(time, wavelength);
@@ -124,7 +120,7 @@ export function attachCircularProgress(
       if (!indicator || !path) return;
       const style = getComputedStyle(root);
       const circle = getComputedStyle(indicator);
-      const wavelength = readPx(style, '--rio-progress-wavelength', 15);
+      const wavelength = parsePx(style.getPropertyValue('--rio-progress-wavelength'), 15);
       // The dash is the line between the caps: it starts `-dashoffset` along the circle.
       const from = -firstLength(circle.strokeDashoffset);
       const length = circle.strokeDasharray === 'none' ? 0 : firstLength(circle.strokeDasharray);
@@ -139,7 +135,7 @@ export function attachCircularProgress(
               radius: indicator.r.baseVal.value,
               from,
               to: from + length,
-              amplitude: readPx(style, '--rio-progress-amplitude', 0),
+              amplitude: parsePx(style.getPropertyValue('--rio-progress-amplitude')),
               wavelength,
               shift: shiftAt(time, wavelength),
             })
