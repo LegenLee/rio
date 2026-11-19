@@ -11,6 +11,7 @@ import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/dialog.css';
 import { onBeforeUnmount, onMounted, onUpdated, ref, useId, useTemplateRef, watch } from 'vue';
+import { keepPresses } from '../overlay/presses';
 
 interface Props extends Omit<DialogProps, 'open'> {
   /** States what the dialog is for, and names it. Without it, give the dialog an `aria-label`. */
@@ -71,20 +72,7 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <!-- Clicks and presses stay in the dialog, so a card or a row around it doesn't take them. Keys go
-       on, for Escape. -->
-  <dialog
-    ref="root"
-    v-bind="dialog.parts.root()"
-    @click.stop
-    @auxclick.stop
-    @dblclick.stop
-    @pointerdown.stop
-    @pointerup.stop
-    @mousedown.stop
-    @mouseup.stop
-    @contextmenu.stop
-  >
+  <dialog ref="root" v-bind="dialog.parts.root()" v-on="keepPresses">
     <template v-if="rendered">
       <div v-if="dialog.showsIcon()" v-bind="dialog.parts.icon()"><slot name="icon" /></div>
       <h2 v-if="dialog.showsHeadline()" v-bind="dialog.parts.headline()">{{ headline }}</h2>

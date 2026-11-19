@@ -4,6 +4,7 @@ import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive } from 'vue';
 import LocaleProvider from '../locale/LocaleProvider.vue';
+import { eventsLeaving } from '../test/events';
 import TimeInput from './TimeInput.vue';
 import TimePickerDialog from './TimePickerDialog.vue';
 
@@ -560,6 +561,15 @@ describe('RioTimePickerDialog', () => {
     await userEvent.keyboard('{Enter}');
     await vi.waitFor(() => expect(state.open).toBe(false));
     expect(state.value).toBe('07:45');
+  });
+
+  test("clicks and presses in the dialog stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { open, dialog, press } = await setupDialog({}, '07:30');
+    await open();
+    const out = eventsLeaving(() => dialog);
+    await userEvent.keyboard('{ArrowUp}');
+    await press(90);
+    expect(out).toEqual(['keydown']);
   });
 
   test('layout fixes the dial beside or below the fields; it defaults to auto', async () => {

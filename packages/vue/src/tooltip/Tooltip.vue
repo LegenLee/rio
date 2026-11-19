@@ -9,6 +9,7 @@ import '@rio-m3e/styles/base/anchored-position.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/tooltip.css';
 import { onBeforeUnmount, onMounted, onUpdated, useId, useTemplateRef, watch } from 'vue';
+import { keepPresses } from '../overlay/presses';
 
 interface Props extends Omit<TooltipProps, 'open'> {
   /** The tooltip's text. The `content` slot takes richer content instead. */
@@ -70,20 +71,7 @@ onBeforeUnmount(() => handle?.detach());
 <template>
   <span ref="trigger" v-bind="tooltip.parts.trigger()">
     <slot />
-    <!-- Clicks and presses stay in the tooltip, so a card or a row around its element doesn't take
-         them. Keys go on, for Escape. -->
-    <span
-      ref="root"
-      v-bind="tooltip.parts.root()"
-      @click.stop
-      @auxclick.stop
-      @dblclick.stop
-      @pointerdown.stop
-      @pointerup.stop
-      @mousedown.stop
-      @mouseup.stop
-      @contextmenu.stop
-    >
+    <span ref="root" v-bind="tooltip.parts.root()" v-on="keepPresses">
       <span v-if="tooltip.showsSubhead()" v-bind="tooltip.parts.subhead()">{{ subhead }}</span>
       <span v-bind="tooltip.parts.supportingText()"><slot name="content">{{ text }}</slot></span>
       <span v-if="tooltip.showsActions()" v-bind="tooltip.parts.actions()">

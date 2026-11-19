@@ -366,6 +366,17 @@ describe('RioDatePicker, modal', () => {
     await vi.waitFor(() => expect(dialog.open).toBe(false));
   });
 
+  test("clicks and presses in the dialog stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { screen, container } = await setup({ value: '2026-11-27', props: { variant: 'modal' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    const dialog = container.querySelector('dialog')!;
+    await vi.waitFor(() => expect(focusedDate()).toBe('2026-11-27'));
+    const out = eventsLeaving(() => dialog);
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.click(dialog.querySelector<HTMLElement>('[data-date="2026-11-03"]')!);
+    expect(out).toEqual(['keydown']);
+  });
+
   test('the text input reads the date on OK, and keeps the dialog on an error', async () => {
     const { screen, state, container } = await setup({ props: { variant: 'modal' } });
     await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));

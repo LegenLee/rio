@@ -32,6 +32,7 @@ import {
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
+import { keepPresses } from '../overlay/presses';
 import TimePickerBody from './TimePickerBody.vue';
 
 const props = defineProps<{
@@ -129,20 +130,7 @@ const onKeydown = (event: KeyboardEvent) => {
 </script>
 
 <template>
-  <!-- Clicks and presses stay in the dialog, as in RioDialog. -->
-  <dialog
-    ref="root"
-    v-bind="picker.parts.root()"
-    @keydown="onKeydown"
-    @click.stop
-    @auxclick.stop
-    @dblclick.stop
-    @pointerdown.stop
-    @pointerup.stop
-    @mousedown.stop
-    @mouseup.stop
-    @contextmenu.stop
-  >
+  <dialog ref="root" v-bind="picker.parts.root()" @keydown="onKeydown" v-on="keepPresses">
     <template v-if="rendered">
       <TimePickerBody :picker />
       <div v-if="picker.showsError()" v-bind="picker.parts.error()">{{ picker.error() }}</div>

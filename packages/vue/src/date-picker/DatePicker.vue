@@ -17,6 +17,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, useTemplateRef, watch }
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
+import { keepPresses } from '../overlay/presses';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
@@ -150,21 +151,7 @@ onBeforeUnmount(() => handle?.detach());
       </TextField>
     </div>
     <input v-if="picker.submits()" v-bind="picker.parts.formValue()" />
-    <!-- Clicks and presses stay in the calendar, so a card or a row around the picker doesn't take
-         them. Keys go on. -->
-    <div
-      v-if="picker.docked()"
-      ref="menu"
-      v-bind="picker.parts.menu()"
-      @click.stop
-      @auxclick.stop
-      @dblclick.stop
-      @pointerdown.stop
-      @pointerup.stop
-      @mousedown.stop
-      @mouseup.stop
-      @contextmenu.stop
-    >
+    <div v-if="picker.docked()" ref="menu" v-bind="picker.parts.menu()" v-on="keepPresses">
       <template v-if="open">
         <DatePickerCalendar
           v-model:month="state.month"

@@ -27,6 +27,7 @@ import {
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
+import { keepPresses } from '../overlay/presses';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 
@@ -132,19 +133,7 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <!-- Clicks and presses stay in the dialog, as in RioDialog. -->
-  <dialog
-    ref="root"
-    v-bind="dialog.parts.root()"
-    @click.stop
-    @auxclick.stop
-    @dblclick.stop
-    @pointerdown.stop
-    @pointerup.stop
-    @mousedown.stop
-    @mouseup.stop
-    @contextmenu.stop
-  >
+  <dialog ref="root" v-bind="dialog.parts.root()" v-on="keepPresses">
     <template v-if="rendered">
       <div v-bind="dialog.parts.header()">
         <span v-bind="dialog.parts.title()">{{ messages.title }}</span>

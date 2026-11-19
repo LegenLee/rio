@@ -185,6 +185,8 @@ packages/
       LinearProgress.vue
       CircularProgress.vue
       Progress.vrt.test.ts  screenshot test (see Visual regression)
+    overlay/
+      presses.ts            keepPresses: stops core's OVERLAY_PRESS_EVENTS on an overlay's root, with v-on
     radio/
       RadioGroup.vue        holds the selection and gives the radio buttons their name
       Radio.vue
@@ -312,7 +314,7 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
   - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
   - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice).
   - Each document keeps its own record, so overlays in an iframe stack among themselves.
-- **Adapters keep clicks and presses in a tooltip or a dialog**, in their framework's own events. The overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape. Core can't do it: frameworks such as React handle events at the app's root, so a native `stopPropagation()` in the overlay would hide every click in it from the app. Vue stops them on the overlay's element (`@click.stop`); a React adapter would stop React's events where its portal begins.
+- **Adapters keep clicks and presses in an overlay**, in their framework's own events: a dialog, a tooltip, a menu and its submenus, a select's list, and the docked date picker's calendar. The overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape. Core can't stop them: frameworks such as React handle events at the app's root, so a native `stopPropagation()` in the overlay would hide every click in it from the app. Core names the events (`OVERLAY_PRESS_EVENTS`); Vue stops each on the overlay's root with `v-on="keepPresses"`, and a React adapter would stop React's events on the overlay's root.
 - **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own:
   - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
   - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.

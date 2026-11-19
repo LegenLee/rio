@@ -24,6 +24,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
+import { keepPresses } from '../overlay/presses';
 import { selectKey, type SelectOptionEntry } from './context';
 
 // `class` and `style` dress the whole select; every other attribute, such as `id` or
@@ -224,20 +225,7 @@ onBeforeUnmount(() => handle?.detach());
         >{{ select.supportingTextNow() }}</span
       >
     </div>
-    <!-- Clicks and presses stay in the list, so a card or a row around the select doesn't take
-         them. Keys go on. -->
-    <div
-      ref="listbox"
-      v-bind="select.parts.listbox()"
-      @click.stop
-      @auxclick.stop
-      @dblclick.stop
-      @pointerdown.stop
-      @pointerup.stop
-      @mousedown.stop
-      @mouseup.stop
-      @contextmenu.stop
-    >
+    <div ref="listbox" v-bind="select.parts.listbox()" v-on="keepPresses">
       <slot />
     </div>
   </div>
