@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, onTestFinished, test, vi, type MockInstance } from 'vitest';
 import { attachRipple, type RippleHandle } from './ripple';
 
 let handle: RippleHandle | undefined;
@@ -65,6 +65,22 @@ describe('attachRipple', () => {
     const { from, to } = onlyRipple();
     expect(from['--rio-ripple-x']).toBe('10px');
     expect(to['--rio-ripple-x']).toBe('60px');
+  });
+
+  test('the wave grows over 450ms; under reduced motion, at once', () => {
+    const duration = () => (animate.mock.calls.at(-1)![1] as KeyframeAnimationOptions).duration;
+    setup();
+    pointer('pointerdown');
+    expect(duration()).toBe(450);
+    pointer('pointerup');
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+    }));
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+    pointer('pointerdown', { pointerId: 2 });
+    expect(duration()).toBe(0);
   });
 
   test('a release stays pressed for the minimum time', async () => {

@@ -186,7 +186,7 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - Spatial motion moves things: position, size, rotation, and corner radius. Movement and overshoot are what reduced motion is meant to prevent, so they go.
 - Effects motion changes color and opacity. Short fades don't cause that discomfort, so they stay. This matches iOS's Reduce Motion, which keeps crossfades. Android's "Remove animations" goes further and drops everything.
 - Switching to the standard scheme was considered and rejected. Standard still moves and still overshoots slightly (y 1.06), and the spec presents it as a product style, not an accessibility mode.
-- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. The ripple applies the same rule in JavaScript: it skips the growing wave and keeps the fade. `attachShapeMorph` jumps straight to its target.
+- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. In JavaScript, `prefersReducedMotion()` from `@rio-m3e/core` applies the same rule: the ripple skips the growing wave and keeps the fade, `attachShapeMorph` jumps straight to its target, and a wavy progress indicator's wave holds still.
 
 ## 4. Shape corners with a radius scale
 

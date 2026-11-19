@@ -50,6 +50,8 @@ packages/
       ripple/
         ripple.ts
         ripple.test.ts
+      reduced-motion/
+        reduced-motion.ts   prefersReducedMotion, for the spatial motion JavaScript drives
       shape-morph/
         shape-morph.ts      the corner radius, on top of spring-property
       spring/
@@ -136,7 +138,7 @@ packages/
     base/                   CSS shared across components
       anchored-position.css pairs with core's primitives/anchored-position
       focus-ring.css
-      reduced-motion.css    imported by every component that uses motion tokens
+      reduced-motion.css    imported by every component that uses motion tokens; pairs with core's primitives/reduced-motion
       ripple.css            pairs with core's primitives/ripple
       shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css

@@ -20,6 +20,7 @@ export * from './primitives/checkable/checkable';
 export * from './primitives/drag/drag';
 export * from './primitives/form-reset/form-reset';
 export * from './primitives/overlay/overlay';
+export * from './primitives/reduced-motion/reduced-motion';
 export * from './primitives/ripple/ripple';
 export * from './primitives/shape-morph/shape-morph';
 export * from './primitives/spring-property/spring-property';

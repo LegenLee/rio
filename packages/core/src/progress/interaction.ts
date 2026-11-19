@@ -11,7 +11,7 @@
 // - While the indicator isn't rendered, as under `display: none`, frames draw nothing, and the wave
 //   keeps the last path drawn until it shows again.
 
-import { prefersReducedMotion } from '../primitives/spring/spring';
+import { prefersReducedMotion } from '../primitives/reduced-motion/reduced-motion';
 import { parsePx } from '../utils/css';
 import { circularWavePath, linearWavePath } from './progress';
 

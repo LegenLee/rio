@@ -13,12 +13,8 @@
 // Every element child of the group counts as an item, in DOM order, or the element inside a
 // tooltip's wrapper, which has no box.
 
-import {
-  createSpring,
-  prefersReducedMotion,
-  readSpringParams,
-  type Spring,
-} from '../primitives/spring/spring';
+import { prefersReducedMotion } from '../primitives/reduced-motion/reduced-motion';
+import { createSpring, readSpringParams, type Spring } from '../primitives/spring/spring';
 
 export interface ButtonGroupInteractionOptions {
   /**
