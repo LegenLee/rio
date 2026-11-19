@@ -15,6 +15,8 @@
 //   what the person asked for until `sync()`, which puts the adapter's value back, so a change the
 //   adapter turns down doesn't stick.
 // - While blocked (soft-disabled), nothing changes: a press only focuses, and the keys do nothing.
+//   With Alt, Ctrl, or Meta, they go on to the browser, as its shortcuts; a change they make on an
+//   input doesn't stick.
 // - The input being pressed carries `data-pressed`, and while dragging `data-dragging`.
 // - With an inset icon, reports whether the active track is too short for it, so the icon moves to
 //   the inactive track.
@@ -23,6 +25,7 @@
 
 import { attachFormReset } from '../primitives/form-reset/form-reset';
 import { parsePx } from '../utils/css';
+import { hasModifier } from '../utils/keyboard';
 import { snapSliderValue, type SliderRange } from './slider';
 
 export interface SliderDomOptions {
@@ -269,7 +272,7 @@ export function attachSlider(root: HTMLElement, options: SliderDomOptions): Slid
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (options.blocked() && KEYS.has(event.key)) event.preventDefault();
+    if (options.blocked() && !hasModifier(event) && KEYS.has(event.key)) event.preventDefault();
   };
 
   // The icon's room changes with the slider's length.

@@ -205,7 +205,7 @@ Value indicator (optional), stop indicators (optional), active track, handle, in
 - **Labels**: point a `<label>` at the slider's `id`, or wrap the slider in one, or give it `aria-label`. `class` and `style` dress the slider; every other attribute, such as `id`, `name`, `form`, or `aria-label`, and every listener goes to the input, as on `RioCheckbox`.
 - **Forms**: the slider submits its value under `name`. A form's reset leaves the app's value, which the slider keeps showing; resetting it is the app's.
 - **`RioRangeSlider`** is a group (Rio's choice): the app's attributes, such as `aria-label` or `aria-labelledby`, go to it and name it. Its inputs are named "Minimum" and "Maximum" in English and "최솟값" and "최댓값" in Korean (`messages` replaces them), and both submit under `name`, the start first. Each input's `min` or `max` is the other's value, so the keys stop there, and assistive technology reads the range it can still reach.
-- **Disabled** works as on the button: `disabled` is native and not focusable, and `softDisabled` (`aria-disabled`) stays focusable while presses, drags, and keys are blocked. See [button.md](button.md) for the deviation note.
+- **Disabled** works as on the button: `disabled` is native and not focusable, and `softDisabled` (`aria-disabled`) stays focusable while presses, drags, and keys are blocked. Keys with Alt, Ctrl, or Meta go on to the browser, as its shortcuts, and a change they make doesn't stick. See [button.md](button.md) for the deviation note.
 - `format` writes the value for the value indicator and for assistive technology (`aria-valuetext`). Without it, the value indicator shows the number in the slider's language (`Intl.NumberFormat`), and assistive technology reads the number.
 
 ### The pointer

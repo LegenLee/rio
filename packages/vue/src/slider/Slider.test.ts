@@ -418,6 +418,24 @@ describe('RioSlider', () => {
       expect(input.value).toBe('50');
     });
 
+    test('soft-disabled: keys with Alt, Ctrl, or Meta go on to the browser', async () => {
+      const { input } = await setup({ props: { softDisabled: true } });
+      input.focus();
+      const press = (init: KeyboardEventInit) =>
+        input.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'ArrowLeft',
+            bubbles: true,
+            cancelable: true,
+            ...init,
+          }),
+        );
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        expect(press({ [modifier]: true }), modifier).toBe(true);
+      }
+      expect(press({})).toBe(false);
+    });
+
     test('soft-disabled: a change assistive technology makes on the input doesn’t stick', async () => {
       const { input, state } = await setup({ props: { softDisabled: true } });
       input.value = '70';
