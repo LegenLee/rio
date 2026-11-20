@@ -45,6 +45,7 @@ export {
   type EdgeFeature,
   type PolygonFeature,
 } from './primitives/shapes/features';
+export { createMorph, type Morph } from './primitives/shapes/morph';
 export {
   normalizePolygon,
   polygonBounds,

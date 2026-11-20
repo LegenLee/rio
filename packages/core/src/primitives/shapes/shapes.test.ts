@@ -1,13 +1,13 @@
 // Ported from androidx graphics-shapes, commonTest's ShapesTest.kt, at androidx 079e2e3. Copyright
 // 2022 The Android Open Source Project, licensed under the Apache License, Version 2.0. Changed:
-// ported to TypeScript and Vitest.
+// ported to TypeScript and Vitest; the pill star tests are new.
 
 import { describe, expect, test } from 'vitest';
 import type { CornerRounding } from './corner-rounding';
 import { pointOnCurve, type Cubic } from './cubic';
 import { Point } from './point';
-import { circlePolygon, starPolygon } from './shapes';
-import { assertInBounds } from './test-utils';
+import { circlePolygon, pillStarPolygon, starPolygon } from './shapes';
+import { assertEqualish, assertFeaturesEqualish, assertInBounds } from './test-utils';
 
 const ZERO = new Point(0, 0);
 const EPSILON = 0.01;
@@ -95,5 +95,48 @@ describe('starPolygon', () => {
   test('throws for bad radii', () => {
     expect(() => starPolygon({ numVerticesPerRadius: 4, innerRadius: 0 })).toThrow();
     expect(() => starPolygon({ numVerticesPerRadius: 4, innerRadius: 1 })).toThrow();
+  });
+});
+
+describe('pillStarPolygon', () => {
+  // Unrounded, each corner is a single point at its vertex, two features apart.
+  const vertex = (polygon: ReturnType<typeof pillStarPolygon>, i: number) =>
+    polygon.features[2 * i]!.cubics[0]!;
+
+  // The original misplaces vertices when startLocation is above 0 (see shapes.ts), so these check
+  // the port against its own start of 0, which the goldens check against the original.
+  const tall = { width: 1, height: 2, innerRadiusRatio: 0.7, vertexSpacing: 0.8 };
+
+  test('a start location an even number of vertices on is the same shape, rotated', () => {
+    // 2/6 of the way around 6 vertices is 2 vertices on, where one vertex's t is the perimeter.
+    const shifted = pillStarPolygon({ ...tall, numVerticesPerRadius: 3, startLocation: 2 / 6 });
+    const reference = pillStarPolygon({ ...tall, numVerticesPerRadius: 3 }).features;
+    shifted.features.forEach((feature, i) =>
+      assertFeaturesEqualish(reference[(i + 4) % reference.length]!, feature, `feature ${i}`),
+    );
+  });
+
+  test('a vertex whose t is the perimeter lands where the outline starts', () => {
+    // 0.3 of the way around 10 vertices: vertex 7, an inner one, is at t = perimeter.
+    const polygon = pillStarPolygon({ ...tall, numVerticesPerRadius: 5, startLocation: 0.3 });
+    const [x, y] = vertex(polygon, 7);
+    assertEqualish(0.7, x);
+    assertEqualish(0, y);
+  });
+
+  test('on a wide pill too, where the outline starts past the straight half side', () => {
+    // 1/6 of the way around 6 vertices: vertex 5, an inner one, is at t = perimeter. The outline
+    // starts at the right end cap, 0.5 (hSegHalf) right of the center plus the inner radius.
+    const polygon = pillStarPolygon({
+      width: 2,
+      height: 1,
+      numVerticesPerRadius: 3,
+      innerRadiusRatio: 0.7,
+      vertexSpacing: 0.8,
+      startLocation: 1 / 6,
+    });
+    const [x, y] = vertex(polygon, 5);
+    assertEqualish(1.2, x);
+    assertEqualish(0, y);
   });
 });

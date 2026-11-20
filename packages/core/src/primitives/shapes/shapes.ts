@@ -319,8 +319,9 @@ function pillStarVerticesFromNumVerts(
   for (let i = 0; i < numVerticesPerRadius * 2; i++) {
     // t can start (and end) after 0; boundedT does the right thing when crossing 0 again.
     const boundedT = t % perimeter;
-    // Deviation from the original: it goes back to section 0 without its bounds, so with a
-    // startLocation above 0, the vertices past the start land in the wrong places.
+    // Deviation from the original, twice over, both only with a startLocation above 0. First, it
+    // goes back to section 0 without its bounds, so the vertices past the start land in the wrong
+    // places. Second, see section 9 below.
     if (boundedT < secStart) {
       currSecIndex = 0;
       secStart = sections[0]!;
@@ -371,8 +372,17 @@ function pillStarVerticesFromNumVerts(
           rectTR,
         );
         break;
-      default: // 8
+      case 8:
         vertex = new Point(currRadius, -vSegHalf + tProportion * vSegHalf);
+        break;
+      default:
+        // Section 9 has no length: it starts where the perimeter ends, which the sum of the
+        // sections can miss by a rounding error, so a vertex lands in it when its t is the
+        // perimeter. That is where the outline starts: section 0's start on a tall pill, and on a
+        // wide one, where section 0 has no length either, section 1's, hSegHalf further right.
+        // The original takes it as section 8 at its start: half a vertical side away on a tall
+        // pill, hSegHalf away on a wide one.
+        vertex = new Point(currRadius + hSegHalf, 0);
     }
     result.push(vertex.x + center.x, vertex.y + center.y);
     t += tPerVertex;
