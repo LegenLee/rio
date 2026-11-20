@@ -56,6 +56,12 @@ packages/
         reduced-motion.ts   prefersReducedMotion, for the spatial motion JavaScript drives
       shape-morph/
         shape-morph.ts      the corner radius, on top of spring-property
+      shapes/               the Material shape library and morphs, ported from androidx (see Ported code)
+        morph.ts            Morph.kt, and so on: one file for each of the original's
+        material-shapes.ts  Compose Material3's MaterialShapes, by name
+        path.ts             cubicsPath: cubics as SVG path data (Rio's own)
+        goldens.test.ts     the port against the original's output
+        __goldens__/        that output, as JSON (see Goldens)
       spring/
         spring.ts           spring math and driver, used by other primitives
       spring-property/
@@ -86,6 +92,10 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    loading-indicator/
+      loading-indicator.ts  props, parts, the loop's and a value's moments, and the shape drawn at each
+      interaction.ts        drawing the shape every frame while it loops (DOM, tested through the Vue component)
+      loading-indicator.test.ts
     locale/
       locale.ts             the language a component uses, and the first day of its week (see docs/guide/languages.md)
       messages.ts           the message tables' shape, lookup, and placeholders
@@ -137,7 +147,9 @@ packages/
       intl.ts               dateTimeFormat and numberFormat: one Intl format for each language and options
       keyboard.ts           hasModifier: Alt, Ctrl, or Meta held, for the keys components leave to shortcuts
       link.ts               linkAttrs: an `<a>`'s attributes as a link, disabled or not, for buttons and chips
+      number.ts             parseFloatStrict: a number as Kotlin reads it, for the shapes' SVG and text parsers
       object.ts             resolveProps, which every component with defaults reads its props through
+      progress.ts           a value's share of its range and the progressbar ARIA, for progress and loading indicators
       typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/
@@ -155,6 +167,7 @@ packages/
     chip.css                the four chips and the chip set
     dialog.css
     icon-button.css         layered on top of button.css
+    loading-indicator.css
     menu.css
     progress.css            the linear and circular indicators, flat, and their indeterminate motion
     radio.css               the radio buttons and their group
@@ -183,6 +196,9 @@ packages/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
+    loading-indicator/
+      LoadingIndicator.vue
+      LoadingIndicator.vrt.test.ts  screenshot test (see Visual regression)
     progress/
       LinearProgress.vue
       CircularProgress.vue
@@ -287,7 +303,7 @@ How an adapter turns `core`'s API into components.
 A primitive is a DOM behavior that several components share, such as the press ripple. Primitives live in `core/src/primitives/` and are public API, exported from `core/src/index.ts` for every adapter to use.
 
 - **Only behaviors that need JavaScript.** If CSS alone can do it, it belongs in `styles/src/base/` instead. The state layer and the focus ring turned out to be CSS-only; the ripple needs the press position, and the spring needs per-frame math.
-- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `shape-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation.
+- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `shape-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation. `shapes/` is math too: polygons and the morphs between them, which components draw.
 - **DOM behavior that belongs to one component** stays in that component's folder in `core` (for example `switch/handle.ts`), built from primitives. It moves into `primitives/` once a second component needs it, like a shared helper.
 - **Shape: `attachX(element)` returns `{ detach() }`.** It takes a real element, adds listeners or animations, and gives back a handle that undoes everything. Adapters attach on mount and detach before unmount.
 - **State goes out through `data-*` attributes** on the element (`data-ripple`, `data-pressed`), so CSS can react without knowing about the JavaScript.
@@ -347,6 +363,17 @@ A helper moves up only when a second caller actually needs it.
 - A helper may keep what it made for the next call with the same arguments, as `utils/intl.ts` keeps `Intl` formats; what it returns stays the same.
 - Helpers get tests, next to the source like everything else.
 
+## Ported code
+
+Where the spec has no web version and Google's implementation is open source, Rio may port it rather than write its own. The shape library is one: `core/src/primitives/shapes/` is androidx graphics-shapes and Compose Material3's `MaterialShapes`, in TypeScript.
+
+- **One commit.** Port from one androidx commit (`079e2e3` today), and link the files at it. Moving to a newer one moves every ported file and the goldens together.
+- **The original's structure inside, Rio's API outside.** Each of the original's files becomes one file (all but `Format.kt`, which only formats debug output), internals and classes included, so a change upstream can be followed line by line. What is exported turns into plain data and functions (`createMorph` for `Morph`, `roundedPolygon` for `RoundedPolygon`'s constructors). Since the files hold internals too, `index.ts` exports from them by name, never with `export *`.
+- **Each file says where it came from**: the original file and commit, its copyright line ("Copyright 2022 The Android Open Source Project"), the Apache License 2.0, and after "Changed:", what Rio changed. `NOTICE` credits the projects ported.
+- **Numbers are 64-bit.** Android computes in 32-bit Floats; the port doesn't imitate their rounding. Where that changes the outcome, it follows what the original's code and comments mean.
+- **The original's bugs are fixed where its intent is clear**, with a comment at the spot that says what the original does and what Rio does instead, and a line in the file's header. Differences a user could see are listed in `foundations.md`.
+- **Tested against the original's output** (see Goldens). Tests ported from the original sit next to the code, as Rio's own do.
+
 ## Code style
 
 - **Formatting**: oxfmt with single quotes, semicolons, and a 100-column line width (`.oxfmtrc.json`). Run `pnpm fmt` to format and `pnpm fmt:check` to check.
@@ -369,7 +396,7 @@ In all of them, keep three kinds of statements apart and label them:
 - **Recommendations**: guidance prose on m3.material.io (dos, don'ts, "should").
 - **In Rio**: what Rio decides on top, with the reason.
 
-From Compose Material3, use only the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never rely on `private` or `internal` code, and link the files at the androidx commit you read.
+From Compose Material3, take what the spec says only from the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never present `private` or `internal` code as the spec. Where the spec leaves something out that only Compose's implementation has, such as the loading indicator's motion, Rio may follow it as its own choice: say so under In Rio. Either way, link the files at the androidx commit you read.
 
 Rio's defaults follow the spec. Recommendations become options or component-level practice, and never quietly change a default. Never present a Rio decision as the spec. Where Rio goes against the spec or a recommendation, mark the spot with a quoted note that starts with **Deviation from the spec.** or **Deviation from a recommendation.**, and say what Rio does instead and why. See the ripple's touch delay in `docs/foundations.md`, section 6.
 
@@ -417,6 +444,15 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Assert exact values for anything transcribed from a spec, and keep a second copy of the spec values in the test, written independently of the source (see `elevation.test.ts`). A typo in the source then fails the test instead of slipping through.
 - Use snapshots for output too large to write by hand (see `color.test.ts`). Snapshots live in `__snapshots__/` next to the test and are committed.
 - Review snapshot diffs like code. An unexpected diff after a dependency upgrade, such as MCU, is a regression until proven otherwise. Update snapshots with `pnpm test --run -u` only when the change is intended.
+
+### Goldens
+
+Ported code is tested against what the original returns. `scripts/shapes-goldens/` is a Kotlin program that runs graphics-shapes 1.1.0 on the JVM (its code matches the commit Rio ports) and Compose's `MaterialShapes` on fixed inputs, and writes their output to `packages/core/src/primitives/shapes/__goldens__/*.json`. `goldens.test.ts` builds the same inputs with the port and compares.
+
+- The goldens are committed and only read: neither CI nor `pnpm test` needs a JVM. Regenerate them, with JDK 21, when the port moves to another commit or for new cases (`scripts/shapes-goldens/README.md`).
+- Compare within 1e-4, since Kotlin computes in 32-bit Floats.
+- A case where the port differs on purpose stays in the goldens, and the test checks it against something else, such as `DEVIATIONS` and `TIED_MORPHS` in `goldens.test.ts`; it is never dropped.
+- oxfmt skips `__goldens__/` (`ignorePatterns` in `.oxfmtrc.json`).
 
 ### Rendering and behavior
 
@@ -478,7 +514,7 @@ Each version goes to npm and to a GitHub release, as the same four tarballs. The
 
 - **Versions move together.** Every published package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Private packages, such as `testing`, keep `0.0.0`; the release scripts skip them. Before 1.0, a minor version may break the API.
 - **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section, followed by a `pnpm add` line.
-- **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
+- **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`, and the androidx code ported into `@rio-m3e/core`. That's why `NOTICE` is in each package's `files`.
 - **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it.
 - **npm publishing is trusted publishing** (OIDC) from `.github/workflows/publish.yml`. No npm token is stored anywhere, and npm attaches provenance, which needs the `repository` field in each `package.json`. `publishConfig.access` is `public` because scoped packages are private by default.
 

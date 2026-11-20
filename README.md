@@ -55,7 +55,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Language-specific line heights and variable font axes
 - [ ] Icons
 - [x] Loading progress bars
-- [ ] Loading indicator with shape morphs
+- [x] Loading indicator with shape morphs
 - [ ] Scroll fields
 
 ### v0.7 (Layouts)

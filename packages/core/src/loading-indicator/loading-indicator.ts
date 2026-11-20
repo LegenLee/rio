@@ -1,12 +1,12 @@
 // The loading indicator (M3 Expressive): a shape that morphs through Material shapes as it turns,
 // for waits too short for a progress indicator. Props, parts, and the shape at any moment.
 //
-// The shapes, their scale, and the motion follow Compose Material3's LoadingIndicator.kt at androidx
-// 079e2e3, with the spring's duration from Compose's SpringEstimation.kt. Copyright 2024 The
-// Android Open Source Project, licensed under the Apache License, Version 2.0. Changed: ported to
-// TypeScript; the motion is a function of the time since it started rather than coroutines, the
-// morphs' spring runs until it is within 0.01 rather than 0.1, and under reduced motion the morphs
-// don't overshoot (Rio's choices).
+// The shapes, their scale, and the motion follow Compose Material3's LoadingIndicator.kt at
+// androidx 079e2e3, with the spring's duration from Compose's SpringEstimation.kt. Copyright 2024
+// and 2020 The Android Open Source Project, licensed under the Apache License, Version 2.0.
+// Changed: ported to TypeScript; the motion is a function of the time since it started rather than
+// coroutines, the morphs' spring runs until it is within 0.01 rather than 0.1, and under reduced
+// motion the morphs don't overshoot (Rio's choices).
 
 import type { PartAttrs, PartNode } from '../parts';
 import { materialShape, type MaterialShapeName } from '../primitives/shapes/material-shapes';
@@ -84,9 +84,9 @@ const REDUCED_MORPH_SPRING: SpringParams = { dampingRatio: 1, stiffness: 200 };
 
 /**
  * How long a spring from 0 to 1 runs before it is ended, in whole ms, as Compose counts them: once
- * it is within `threshold` of 1. An underdamped spring ends once its envelope is (SpringEstimation.kt's
- * estimate); a critically damped one, which Compose estimates by Newton's method, when it gets
- * there, found here by bisection.
+ * it is within `threshold` of 1. An underdamped spring ends once its envelope is (the estimate in
+ * SpringEstimation.kt); a critically damped one, which Compose estimates by Newton's method, when
+ * it gets there, found here by bisection.
  */
 export function springDurationMs(
   { dampingRatio: zeta, stiffness }: SpringParams,
@@ -194,7 +194,10 @@ const defaultDeterminateShapes = () =>
     materialShape('soft-burst'),
   ]);
 
-/** The morphs between the shapes in turn, each between the shapes normalized; looping, back to the first. */
+/**
+ * The morphs between the shapes in turn, each between the shapes normalized; looping, back to the
+ * first.
+ */
 function morphSequence(polygons: readonly RoundedPolygon[], loop: boolean): Morph[] {
   const morphs: Morph[] = [];
   for (let i = 0; i < polygons.length; i++) {
@@ -258,7 +261,10 @@ export interface LoadingIndicatorParts {
   root: () => PartAttrs;
   /** Holds the shape, in a 1 by 1 view box. */
   svg: () => PartAttrs;
-  /** The shape. Its `d` and `transform` are the first moment's, which `attachLoadingIndicator` moves on from. */
+  /**
+   * The shape. Its `d` and `transform` are the first moment's, which `attachLoadingIndicator` moves
+   * on from.
+   */
   indicator: () => PartAttrs;
 }
 
