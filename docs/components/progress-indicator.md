@@ -139,7 +139,7 @@ Active indicator, track, and stop indicator.
 - **The wavy shape is drawn in JavaScript**: on every frame, `attachLinearProgress` and `attachCircularProgress` read where the stylesheet lays the flat indicators out and draw a wave over the same stretch, which then stands in for the flat one. Until the script runs, the flat shape shows.
 - The wave is fixed to the track and moves toward the end by one wavelength a second, as Compose's default `waveSpeed`. A circular wave fits a whole number of waves round the circle, so it closes without a seam (Rio's choice).
 - The wave lies flat up to 10% and from 95% of determinate progress, as Compose's `WavyProgressIndicatorDefaults.indicatorAmplitude` does, and its height eases in and out over 500ms (Rio's choice).
-- The track keeps 4dp from the active indicator; with no progress, it runs the whole way. As soon as there is progress, the indicator shows as a dot.
+- The track keeps 4dp from the active indicator; with no progress, it runs the whole way. As soon as there is progress, the indicator shows as a dot. At full progress, a circular indicator's ends meet and it closes into a ring, as Compose's does.
 - The stop indicator ends every determinate linear track (Rio's choice): there's no prop yet to remove it where the track has 3:1 contrast.
 - A circular indeterminate indicator has no track, as Compose's `circularIndeterminateTrackColor` is transparent; a linear one keeps it.
 

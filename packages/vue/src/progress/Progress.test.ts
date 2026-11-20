@@ -272,6 +272,34 @@ describe('RioCircularProgress', () => {
     expect(parseFloat(track.strokeDashoffset)).toBeCloseTo(-(circumference / 4 + 4 + 2), 1);
   });
 
+  test('at full progress, a ring: the ends meet on the same spot, not at their tips', async () => {
+    const { part, state } = await setupCircular({ value: 1 });
+    const circumference = 2 * Math.PI * 18;
+    const dash = () => {
+      const indicator = getComputedStyle(part('indicator'));
+      return [parseFloat(indicator.strokeDasharray), parseFloat(indicator.strokeDashoffset)];
+    };
+    expect(dash()[0]).toBeCloseTo(circumference, 1);
+    expect(dash()[1]).toBeCloseTo(0, 1);
+    // Within the thickness of closing, the ends start less far in: at 99%, 1.13px short of full,
+    // half that in rather than half the thickness.
+    state.value = 0.99;
+    await vi.waitFor(() => {
+      expect(dash()[0]).toBeCloseTo(circumference * 0.99 - circumference * 0.01, 1);
+      expect(dash()[1]).toBeCloseTo((-circumference * 0.01) / 2, 1);
+    });
+  });
+
+  test('wavy, at full progress: the wave closes into a ring', async () => {
+    const { part } = await setupCircular({ value: 1, wavy: true });
+    const wave = part('indicator-wave');
+    await vi.waitFor(() => expect(wave.getAttribute('d')).toBeTruthy());
+    const points = [...wave.getAttribute('d')!.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)];
+    const [first, last] = [points[0]!, points.at(-1)!].map((m) => [Number(m[1]), Number(m[2])]);
+    expect(last![0]).toBeCloseTo(first![0]!, 1);
+    expect(last![1]).toBeCloseTo(first![1]!, 1);
+  });
+
   test('with no progress, no indicator, not even a dot, and the track all the way round', async () => {
     const { part } = await setupCircular({ value: 0 });
     expect(getComputedStyle(part('indicator')).strokeWidth).toBe('0px');
