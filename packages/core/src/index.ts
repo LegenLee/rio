@@ -45,6 +45,7 @@ export {
   type EdgeFeature,
   type PolygonFeature,
 } from './primitives/shapes/features';
+export { parseFeatures, serializeFeatures } from './primitives/shapes/feature-serializer';
 export { createMorph, type Morph } from './primitives/shapes/morph';
 export {
   normalizePolygon,
@@ -71,6 +72,7 @@ export {
   type RectanglePolygonOptions,
   type StarPolygonOptions,
 } from './primitives/shapes/shapes';
+export { featuresFromSvgPath } from './primitives/shapes/svg-path-parser';
 export * from './primitives/spring-property/spring-property';
 export * from './primitives/spring/spring';
 export * from './progress/interaction';
