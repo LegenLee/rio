@@ -69,13 +69,12 @@ fun bool(b: Boolean): J = JRaw(b.toString())
 
 fun nums(fs: FloatArray): J = arr(fs.map { num(it) })
 
-/** Arrays of numbers stay on one line, so a cubic is one line of the file. */
+/** Arrays of numbers (and empty ones) stay on one line, so a cubic is one line of the file. */
 fun render(j: J, indent: String = ""): String =
     when (j) {
         is JRaw -> j.text
         is JArr ->
             if (j.items.all { it is JRaw }) j.items.joinToString(", ", "[", "]") { render(it) }
-            else if (j.items.isEmpty()) "[]"
             else
                 j.items.joinToString(",\n", "[\n", "\n$indent]") {
                     "$indent  " + render(it, "$indent  ")

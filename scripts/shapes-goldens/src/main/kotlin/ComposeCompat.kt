@@ -38,17 +38,18 @@ class Matrix {
     private var f = 0f
 
     fun rotateZ(degrees: Float) {
+        // As Compose's: the sine and cosine in Double, then Float from there on
         val r = degrees * (PI / 180.0)
-        val s = sin(r)
-        val co = cos(r)
+        val s = sin(r).toFloat()
+        val co = cos(r).toFloat()
         val na = co * a + s * c
         val nb = co * b + s * d
         val nc = -s * a + co * c
         val nd = -s * b + co * d
-        a = na.toFloat()
-        b = nb.toFloat()
-        c = nc.toFloat()
-        d = nd.toFloat()
+        a = na
+        b = nb
+        c = nc
+        d = nd
     }
 
     fun scale(x: Float = 1f, y: Float = 1f) {

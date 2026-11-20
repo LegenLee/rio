@@ -35,17 +35,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Returns a [Path] for this [Morph].
- *
- * @param progress the [Morph]'s progress
- * @param path a [Path] to rewind and set with the new path data. In case provided, this Path would
- *   be the returned one.
- * @param startAngle the angle (in degrees) from which to begin drawing the generated path. By
- *   default, it is set to 0 degrees, meaning the [Path] begins drawing at the 3 o'clock position.
- *
- * @material3expressive
- */
-/**
  * Holds predefined Material Design shapes as [RoundedPolygon]s that can be used at various
  * components as they are, or as part of a [Morph].
  *

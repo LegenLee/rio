@@ -17,7 +17,11 @@ let body = text.slice(packageAt);
 
 // Drop the Compose-only path and shape helpers: everything from the first public extension up to
 // the MaterialShapes class, keeping the class's own KDoc.
-const start = body.indexOf('@ExperimentalMaterial3ExpressiveApi\npublic fun Morph.toPath');
+// The first extension starts at its own KDoc, above its annotation.
+const start = body.lastIndexOf(
+  '/**',
+  body.indexOf('@ExperimentalMaterial3ExpressiveApi\npublic fun Morph.toPath'),
+);
 const cls = body.indexOf('public sealed class MaterialShapes');
 const kdoc = body.lastIndexOf('/**', cls);
 if (start < 0 || cls < 0 || kdoc < start) throw new Error('MaterialShapes.kt changed shape');
