@@ -19,7 +19,7 @@ const pulled = ref(40);
   display: grid;
   justify-items: start;
   gap: 8px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 .field > :last-child {
   justify-self: stretch;
