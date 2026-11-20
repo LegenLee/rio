@@ -12,6 +12,23 @@ export * from './dialog/interaction';
 export * from './icon-button/icon-button';
 export * from './locale/locale';
 export * from './locale/messages';
+// By name: the module also holds the timing its tests check.
+export {
+  attachLoadingIndicator,
+  type LoadingIndicatorDomHandle,
+  type LoadingIndicatorDomOptions,
+} from './loading-indicator/interaction';
+export {
+  createLoadingIndicator,
+  LOADING_INDICATOR_SHAPES,
+  loadingIndicatorDefaults,
+  loadingIndicatorSkeleton,
+  type LoadingIndicatorApi,
+  type LoadingIndicatorDrawing,
+  type LoadingIndicatorOptions,
+  type LoadingIndicatorParts,
+  type LoadingIndicatorProps,
+} from './loading-indicator/loading-indicator';
 export * from './menu/interaction';
 export * from './menu/menu';
 export * from './parts';

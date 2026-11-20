@@ -2,6 +2,7 @@
 
 import type { PartAttrs, PartNode } from '../parts';
 import { resolveProps } from '../utils/object';
+import { progressBarAttrs, progressFraction } from '../utils/progress';
 
 /** What the linear and the circular indicator share. */
 export interface ProgressCommonProps {
@@ -37,23 +38,14 @@ export const progressDefaults = {
 /** The wave's amplitude on a circular indicator, in px, which its default size leaves room for. */
 const CIRCULAR_AMPLITUDE = 1.6;
 
-/** How much of the range the progress covers, from 0 to 1, or `undefined` while indeterminate. */
-const fractionOf = (p: { value?: number; max: number }) => {
-  if (p.value === undefined || !Number.isFinite(p.value)) return undefined;
-  const max = Number.isFinite(p.max) && p.max > 0 ? p.max : progressDefaults.max;
-  return Math.min(1, Math.max(0, p.value / max));
-};
+const fractionOf = (p: { value?: number; max: number }) => progressFraction(p.value, p.max);
 
 /** The props the root of both indicators shares, for assistive technology and the stylesheet. */
 const rootAttrs = (p: ProgressCommonProps & { max: number; wavy: boolean; thickness: number }) => {
   const fraction = fractionOf(p);
-  const max = Number.isFinite(p.max) && p.max > 0 ? p.max : progressDefaults.max;
   const determinate = fraction !== undefined;
   return {
-    role: 'progressbar',
-    'aria-valuemin': '0',
-    'aria-valuemax': String(max),
-    'aria-valuenow': determinate ? String(Math.min(max, Math.max(0, p.value!))) : undefined,
+    ...progressBarAttrs(p.value, p.max),
     'data-indeterminate': determinate ? undefined : '',
     'data-wavy': p.wavy ? '' : undefined,
     'data-empty': fraction === 0 ? '' : undefined,
