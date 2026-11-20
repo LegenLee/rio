@@ -7,6 +7,9 @@
 //   reduced motion it holds still. Its amplitude and wavelength come from the stylesheet
 //   (`--rio-progress-amplitude`, `--rio-progress-wavelength`), which flattens it near the ends of
 //   the progress and shortens it while indeterminate.
+// - While a circular indicator is indeterminate, the stylesheet turns the circle on by a step each
+//   time the indicator restarts. The wave goes back as far along the circle, so it stays where it
+//   was on screen.
 // - Right to left, a linear wave runs from the right, as the track does.
 // - While the indicator isn't rendered, as under `display: none`, frames draw nothing, and the wave
 //   keeps the last path drawn until it shows again.
@@ -48,8 +51,11 @@ function frameLoop(
 }
 
 /** How far the wave has moved along the track at `time`, in px */
-const shiftAt = (time: number, wavelength: number) =>
-  prefersReducedMotion() ? 0 : ((time / 1000) * wavelength) % wavelength;
+const travelAt = (time: number, wavelength: number) =>
+  prefersReducedMotion() ? 0 : (time / 1000) * wavelength;
+
+/** The same, within a wavelength */
+const shiftAt = (time: number, wavelength: number) => travelAt(time, wavelength) % wavelength;
 
 export interface LinearProgressDomOptions {
   wavy: () => boolean;
@@ -126,18 +132,24 @@ export function attachCircularProgress(
       const length = circle.strokeDasharray === 'none' ? 0 : firstLength(circle.strokeDasharray);
       // The stylesheet thins the line to nothing where there is no progress to show.
       const visible = parseFloat(circle.strokeWidth) > 0;
+      const radius = indicator.r.baseVal.value;
+      // The turns the circle has stepped on by while indeterminate, which aren't whole waves: the
+      // wave goes back as far, so it stays put on screen as the indicator restarts.
+      const advance = parseFloat(style.getPropertyValue('--rio-circular-progress-advance')) || 0;
       path.setAttribute(
         'd',
         visible
           ? circularWavePath({
               cx: indicator.cx.baseVal.value,
               cy: indicator.cy.baseVal.value,
-              radius: indicator.r.baseVal.value,
+              radius,
               from,
               to: from + length,
               amplitude: parsePx(style.getPropertyValue('--rio-progress-amplitude')),
               wavelength,
-              shift: shiftAt(time, wavelength),
+              // Not within this wavelength: the path fits its own round the circle, and a shift
+              // cut at another would jump each time it is cut.
+              shift: travelAt(time, wavelength) - advance * 2 * Math.PI * radius,
             })
           : '',
       );

@@ -298,12 +298,16 @@
 }
 
 /* A dash runs between the line's round ends, so it is the visible length less the thickness, and
-   starts half the thickness in. A length of nothing thins the line to nothing, so no dot shows. */
+   starts half the thickness in. A length of nothing thins the line to nothing, so no dot shows.
+   Once the indicator nearly closes the circle, its ends start less far in, until at full progress
+   they meet on the same spot and the line closes into a ring, rather than touching at their tips. */
 .rio-circular-progress__indicator {
+  --_inset: clamp(0px, calc((var(--_c) - var(--_arc)) / 2), calc(var(--_t) / 2));
+
   stroke: var(--_indicator);
   stroke-width: min(var(--_t), max(0px, calc(var(--_arc) * 1000)));
-  stroke-dasharray: max(0px, calc(var(--_arc) - var(--_t))) var(--_c);
-  stroke-dashoffset: calc(-1 * (var(--rio-circular-progress-start) * var(--_c) + var(--_t) / 2));
+  stroke-dasharray: max(0px, calc(var(--_arc) - 2 * var(--_inset))) var(--_c);
+  stroke-dashoffset: calc(-1 * (var(--rio-circular-progress-start) * var(--_c) + var(--_inset)));
 }
 
 .rio-circular-progress__track {
