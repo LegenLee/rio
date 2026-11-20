@@ -6,7 +6,7 @@
 // and 2020 The Android Open Source Project, licensed under the Apache License, Version 2.0.
 // Changed: ported to TypeScript; the motion is a function of the time since it started rather than
 // coroutines, the morphs' spring runs until it is within 0.01 rather than 0.1, and under reduced
-// motion the morphs don't overshoot (Rio's choices).
+// motion the morphs don't overshoot.
 
 import type { PartAttrs, PartNode } from '../parts';
 import { materialShape, type MaterialShapeName } from '../primitives/shapes/material-shapes';
@@ -74,12 +74,12 @@ export const ACTIVE_INDICATOR_SCALE = 38 / 48;
 const MORPH_SPRING: SpringParams = { dampingRatio: 0.6, stiffness: 200 };
 /**
  * Where the morph's spring ends: within 0.01 of the shape, Compose's default `visibilityThreshold`,
- * at 569ms, before the next morph starts (Rio's choice). Compose raises it to 0.1 to end the spring
+ * at 569ms, before the next morph starts. Compose raises it to 0.1 to end the spring
  * sooner, at 297ms, but that is just after its overshoot peaks, and the drawing snaps back 8.5° and
  * the shape 9% in a frame; within 0.01, the spring comes back by itself and the end hardly shows.
  */
 const MORPH_THRESHOLD = 0.01;
-/** Under reduced motion, the morph doesn't overshoot (Rio's choice). */
+/** Under reduced motion, the morph doesn't overshoot. */
 const REDUCED_MORPH_SPRING: SpringParams = { dampingRatio: 1, stiffness: 200 };
 
 /**

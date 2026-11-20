@@ -5,7 +5,7 @@
 // - While determinate, the shape is drawn for the progress whenever `sync` is called, after each
 //   render; it doesn't animate between values.
 // - Under reduced motion the morphs ease in without overshooting; the indicator keeps moving,
-//   since its movement is what says the process is going on (Rio's choice).
+//   since its movement is what says the process is going on.
 // - While the indicator isn't rendered, as under `display: none`, frames draw nothing.
 
 import { prefersReducedMotion } from '../primitives/reduced-motion/reduced-motion';
