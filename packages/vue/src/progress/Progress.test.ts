@@ -53,6 +53,24 @@ const setupCircular = async (props: Record<string, unknown> = {}) => {
   return { screen, state, root, part };
 };
 
+/** Calls frames back at `time()`, not the real time, so a wave moves only as far as a test says */
+const holdFrameTime = (time: () => number) => {
+  const request = window.requestAnimationFrame.bind(window);
+  const spy = vi
+    .spyOn(window, 'requestAnimationFrame')
+    .mockImplementation((callback) => request(() => callback(time())));
+  onTestFinished(() => spy.mockRestore());
+};
+
+/** How far a wavy circular indicator's wave starts off its circle, in px, at the default size */
+const waveStartOffset = (wave: SVGElement) => {
+  const [, x, y] = wave
+    .getAttribute('d')!
+    .match(/^M(-?[\d.]+) (-?[\d.]+)/)!
+    .map(Number);
+  return Math.hypot(x! - 24, y! - 24) - 20.4;
+};
+
 describe('RioLinearProgress', () => {
   test('a progress bar named by the app, with its value for assistive technology', async () => {
     const { root } = await setupLinear({ value: 30, max: 120 });
@@ -321,5 +339,38 @@ describe('RioCircularProgress', () => {
     const before = part('indicator-wave').getAttribute('d');
     await frames(4);
     expect(part('indicator-wave').getAttribute('d')).not.toBe(before);
+  });
+
+  test('wavy: the wave moves on smoothly from one second to the next', async () => {
+    // The path fits 9 waves round the circle, 14.24px each, not the 15px the wave moves a second.
+    let now = 999.9;
+    holdFrameTime(() => now);
+    const { part } = await setupCircular({ value: 0.5, wavy: true });
+    const wave = part('indicator-wave');
+    await vi.waitFor(() => expect(wave.getAttribute('d')).toBeTruthy());
+    const before = waveStartOffset(wave);
+    now = 1000.1;
+    await frames(2);
+    expect(waveStartOffset(wave)).toBeCloseTo(before, 1);
+  });
+
+  test('wavy, indeterminate: as the circle steps on, the wave stays where it was on screen', async () => {
+    // 0.72 of a turn is 6.48 of the 9 waves round the circle: without going back as far, the wave
+    // would turn nearly upside down under the indicator.
+    holdFrameTime(() => 0);
+    const { part, state } = await setupCircular({ wavy: true });
+    const wave = part('indicator-wave');
+    /** How far the wave starts off the circle, `ms` into the animation */
+    const offsetAt = async (ms: number) => {
+      state.style = `animation-play-state: paused; animation-delay: -${ms}ms`;
+      await nextTick();
+      await frames(2);
+      return waveStartOffset(wave);
+    };
+    // As the first cycle ends, and the 25th, when the circle has gone round 18 times and starts over.
+    for (const end of [1333, 1333 * 25]) {
+      const before = await offsetAt(end - 2);
+      expect(await offsetAt(end + 2)).toBeCloseTo(before, 1);
+    }
   });
 });
