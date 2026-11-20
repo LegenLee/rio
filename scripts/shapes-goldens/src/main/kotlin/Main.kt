@@ -410,6 +410,18 @@ val polygonCases: List<Pair<String, Input>> =
                 rounding = r30s50,
                 innerRounding = r10,
                 vertexSpacing = 0.8f,
+            ),
+        // The original misplaces the vertices past the start when startLocation is above 0, and
+        // the port fixes that: its tests compare this to pill-star-spacing, 6 vertices on.
+        "pill-star-start-location" to
+            pillStar(
+                1f,
+                2f,
+                numVerticesPerRadius = 10,
+                innerRadiusRatio = .8f,
+                rounding = r30s50,
+                innerRounding = r10,
+                vertexSpacing = 0.8f,
                 startLocation = 0.3f,
             ),
         "rotated" to

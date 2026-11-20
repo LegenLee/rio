@@ -24,6 +24,52 @@ export * from './primitives/overlay/overlay';
 export * from './primitives/reduced-motion/reduced-motion';
 export * from './primitives/ripple/ripple';
 export * from './primitives/shape-morph/shape-morph';
+// The shapes port exports by name: its files also hold the original's internals.
+export type { CornerRounding } from './primitives/shapes/corner-rounding';
+export {
+  arcCubic,
+  reverseCubic,
+  splitCubic,
+  straightCubic,
+  transformCubic,
+  type Cubic,
+  type PointTransformer,
+} from './primitives/shapes/cubic';
+export {
+  cornerFeature,
+  edgeFeature,
+  ignorableFeature,
+  reverseFeature,
+  transformFeature,
+  type CornerFeature,
+  type EdgeFeature,
+  type PolygonFeature,
+} from './primitives/shapes/features';
+export {
+  normalizePolygon,
+  polygonBounds,
+  polygonFromFeatures,
+  polygonMaxBounds,
+  roundedPolygon,
+  transformPolygon,
+  type RegularPolygonOptions,
+  type RoundedPolygon,
+  type ShapeBounds,
+  type ShapePoint,
+  type VerticesPolygonOptions,
+} from './primitives/shapes/polygon';
+export {
+  circlePolygon,
+  pillPolygon,
+  pillStarPolygon,
+  rectanglePolygon,
+  starPolygon,
+  type CirclePolygonOptions,
+  type PillPolygonOptions,
+  type PillStarPolygonOptions,
+  type RectanglePolygonOptions,
+  type StarPolygonOptions,
+} from './primitives/shapes/shapes';
 export * from './primitives/spring-property/spring-property';
 export * from './primitives/spring/spring';
 export * from './progress/interaction';
