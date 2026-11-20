@@ -241,7 +241,7 @@ The active item is the one whose submenu is open; its state layer is the hovered
 - The M3 Design Kit lays out each item in a 48px row, with the 44px item inset 2px above and below and 4px at the sides. So items sit 4px apart and 4px from the container's edges, and the first item's corner-medium nests inside the container's corner-large. Each item keeps a 48px target over the space around it.
 - **Sources disagree on the space between an item's elements**: the kit draws 8px, while the tokens and the spec page say 12px. Rio uses the token.
 - Not in the vertical menu's tokens, so Rio takes them from the baseline menu: a minimum width of 112px and a maximum of 280px, and a 1px surface-variant divider. The group label is label-large in on-surface-variant, in a 32px row, as Rio's choice.
-- Selecting changes an item's corners with the `fast-spatial` curve, in CSS. The item's top and bottom corners differ (first and last items), which the shape-morph primitive's start and end sides can't express.
+- Selecting changes an item's corners with the `fast-spatial` curve, in CSS. The item's top and bottom corners differ (first and last items), which the corner-morph primitive's start and end sides can't express.
 
 ### Motion
 

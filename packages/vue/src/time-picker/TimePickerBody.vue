@@ -3,7 +3,7 @@
 // exported: the pickers pass their core API in.
 import type { TimePickerApi } from '@rio-m3e/core';
 import { vRipple } from '../ripple/ripple';
-import { vShapeMorph } from '../shape-morph/shape-morph';
+import { vCornerMorph } from '../corner-morph/corner-morph';
 
 defineProps<{ picker: TimePickerApi }>();
 </script>
@@ -45,11 +45,16 @@ defineProps<{ picker: TimePickerApi }>();
       </template>
     </div>
     <div v-if="picker.showsPeriod()" v-bind="picker.parts.period()">
-      <button v-ripple v-shape-morph v-bind="picker.parts.am()" @click="picker.selectPeriod(false)">
+      <button
+        v-ripple
+        v-corner-morph
+        v-bind="picker.parts.am()"
+        @click="picker.selectPeriod(false)"
+      >
         {{ picker.periodNames()[0] }}
         <span v-bind="picker.parts.periodTouch()" />
       </button>
-      <button v-ripple v-shape-morph v-bind="picker.parts.pm()" @click="picker.selectPeriod(true)">
+      <button v-ripple v-corner-morph v-bind="picker.parts.pm()" @click="picker.selectPeriod(true)">
         {{ picker.periodNames()[1] }}
         <span v-bind="picker.parts.periodTouch()" />
       </button>

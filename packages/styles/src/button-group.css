@@ -33,7 +33,7 @@
  * Connected: 2px apart, and as wide as the space it's given, shared equally by its buttons. The
  * ends of the row keep the group's shape; the facing corners are smaller, tighten when pressed,
  * and open up fully when the button is selected. Each button springs its two sides separately
- * (see base/shape-morph.css).
+ * (see base/corner-morph.css).
  *
  * A button may sit in a tooltip's wrapper (`tooltip.css`), which has no box, so each rule also
  * reaches a button one level down in one.
@@ -58,8 +58,8 @@
 
   flex: 1 1 0;
   /* The corners show these targets (button.css). */
-  --rio-shape-morph-start-target: var(--_start);
-  --rio-shape-morph-end-target: var(--_end);
+  --rio-corner-morph-start-target: var(--_start);
+  --rio-corner-morph-end-target: var(--_end);
 }
 
 .rio-button-group[data-variant='connected'] > .rio-button:where([data-size='large']),

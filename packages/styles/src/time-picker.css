@@ -128,9 +128,9 @@
 
 .rio-time-picker__period-button {
   /* Round is half the height rather than corner-full, so it springs into the selected shape. */
-  --rio-shape-morph-target: calc(var(--_period-height) / 2);
-  --rio-shape-morph-start-target: var(--rio-shape-morph-target);
-  --rio-shape-morph-end-target: var(--rio-shape-morph-target);
+  --rio-corner-morph-target: calc(var(--_period-height) / 2);
+  --rio-corner-morph-start-target: var(--rio-corner-morph-target);
+  --rio-corner-morph-end-target: var(--rio-corner-morph-target);
 
   flex: none;
   inline-size: var(--_period-width);
@@ -138,26 +138,26 @@
   margin: 0;
   padding: 0;
   border: 0;
-  border-start-start-radius: var(--rio-shape-morph-start-target);
-  border-end-start-radius: var(--rio-shape-morph-start-target);
-  border-start-end-radius: var(--rio-shape-morph-end-target);
-  border-end-end-radius: var(--rio-shape-morph-end-target);
+  border-start-start-radius: var(--rio-corner-morph-start-target);
+  border-end-start-radius: var(--rio-corner-morph-start-target);
+  border-start-end-radius: var(--rio-corner-morph-end-target);
+  border-end-end-radius: var(--rio-corner-morph-end-target);
   background-color: var(--rio-color-surface-container-lowest);
   color: var(--rio-color-on-surface-variant);
   font: var(--rio-typescale-title-medium);
   letter-spacing: var(--rio-typescale-title-medium-tracking);
   cursor: pointer;
-  /* The corners move with a spring (base/shape-morph.css); its targets change at once. */
+  /* The corners move with a spring (base/corner-morph.css); its targets change at once. */
   transition:
     background-color var(--rio-motion-fast-effects),
     color var(--rio-motion-fast-effects),
-    --rio-shape-morph-start-target 1ms step-end,
-    --rio-shape-morph-end-target 1ms step-end;
+    --rio-corner-morph-start-target 1ms step-end,
+    --rio-corner-morph-end-target 1ms step-end;
 }
 
 /* The target reaches 48px, past the 40px buttons. Physical, like `translate`. */
 .rio-time-picker__period-button[data-selected] {
-  --rio-shape-morph-target: var(--_period-selected);
+  --rio-corner-morph-target: var(--_period-selected);
 
   background-color: var(--rio-color-primary-container);
   color: var(--rio-color-on-primary-container);

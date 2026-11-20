@@ -181,7 +181,7 @@ The container is as tall as the button of the same size. Its width is the icon s
 ### Built on the button
 
 - `createIconButton` wraps `createButton` and adds `aria-label`, `data-width`, and the icon button's variants. The click guard, toggling, and disabled handling are the button's.
-- The root carries both `rio-button` and `rio-icon-button`. It reuses the button's stylesheet for shapes, shape morphing, colors, disabled rules, the touch target, and the state layer. `icon-button.css` adds only the widths, the icon sizes, and removing elevation.
+- The root carries both `rio-button` and `rio-icon-button`. It reuses the button's stylesheet for shapes, corner morphing, colors, disabled rules, the touch target, and the state layer. `icon-button.css` adds only the widths, the icon sizes, and removing elevation.
 - The `standard` colors live in `button.css` with the other variants, so they don't depend on which stylesheet loads first. Every rule in `icon-button.css` uses `.rio-button.rio-icon-button`, which beats the button's `:where()` rules in any order and still leaves the disabled and pressed rules in charge.
 
 ### Values and their sources

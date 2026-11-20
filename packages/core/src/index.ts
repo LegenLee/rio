@@ -40,7 +40,7 @@ export * from './primitives/form-reset/form-reset';
 export * from './primitives/overlay/overlay';
 export * from './primitives/reduced-motion/reduced-motion';
 export * from './primitives/ripple/ripple';
-export * from './primitives/shape-morph/shape-morph';
+export * from './primitives/corner-morph/corner-morph';
 // The shapes port exports by name: its files also hold the original's internals.
 export type { CornerRounding } from './primitives/shapes/corner-rounding';
 export {

@@ -41,6 +41,8 @@ packages/
         anchored-position.ts  places a floating element next to an anchor (see Overlays)
       checkable/
         checkable.ts        keeps a native checkbox or radio button in line with the adapter's state
+      corner-morph/
+        corner-morph.ts     the corner radius, on top of spring-property
       direction/
         direction.ts        isRtl: whether an element lays out right to left, for what mirrors
       drag/
@@ -49,13 +51,11 @@ packages/
         form-reset.ts       tells when a form has put its controls back, for the components that show the adapter's state on them
       overlay/
         overlay.ts          the top layer and the order of Rio's overlays (see Overlays)
+      reduced-motion/
+        reduced-motion.ts   prefersReducedMotion, for the spatial motion JavaScript drives
       ripple/
         ripple.ts
         ripple.test.ts
-      reduced-motion/
-        reduced-motion.ts   prefersReducedMotion, for the spatial motion JavaScript drives
-      shape-morph/
-        shape-morph.ts      the corner radius, on top of spring-property
       shapes/               the Material shape library and morphs, ported from androidx (see Ported code)
         morph.ts            Morph.kt, and so on: one file for each of the original's
         material-shapes.ts  Compose Material3's MaterialShapes, by name
@@ -155,10 +155,10 @@ packages/
   styles/src/
     base/                   CSS shared across components
       anchored-position.css pairs with core's primitives/anchored-position
+      corner-morph.css      pairs with core's primitives/corner-morph
       focus-ring.css
       reduced-motion.css    imported by every component that uses motion tokens; pairs with core's primitives/reduced-motion
       ripple.css            pairs with core's primitives/ripple
-      shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
       touch-target.css      the 48px press target of buttons, chips, and the time picker's period buttons
     button.css
@@ -192,6 +192,8 @@ packages/
       ChipSet.vue           holds the selection and the tab stop, and gives the chips their keys
       context.ts            what the set provides to its chips
       Chip.vrt.test.ts      screenshot test (see Visual regression)
+    corner-morph/
+      corner-morph.ts       v-corner-morph, used inside components (not exported yet)
     dialog/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
@@ -211,8 +213,6 @@ packages/
       context.ts            what the group provides to its radio buttons
     ripple/
       ripple.ts             the v-ripple directive, and useRipple for presses that ripple on a part
-    shape-morph/
-      shape-morph.ts        v-shape-morph, used inside components (not exported yet)
     slider/
       Slider.vue            a native range input; class and style on the root, other attributes on the input
       RangeSlider.vue       two native range inputs in a group, which takes the app's attributes
@@ -271,7 +271,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
   - `style` carries only Rio's own custom properties, as `name: value` declarations separated by `;` (the time picker's `--rio-time-picker-angle`), for values the stylesheet can't select on.
 - **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
-  - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
+  - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-corner-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
   - More values: the value itself. `data-variant`, `data-size`, `data-shape`, `data-width`.
 - **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
@@ -303,16 +303,16 @@ How an adapter turns `core`'s API into components.
 A primitive is a DOM behavior that several components share, such as the press ripple. Primitives live in `core/src/primitives/` and are public API, exported from `core/src/index.ts` for every adapter to use.
 
 - **Only behaviors that need JavaScript.** If CSS alone can do it, it belongs in `styles/src/base/` instead. The state layer and the focus ring turned out to be CSS-only; the ripple needs the press position, and the spring needs per-frame math.
-- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `shape-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation. `shapes/` is math too: polygons and the morphs between them, which components draw.
+- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `corner-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation. `shapes/` is math too: polygons and the morphs between them, which components draw.
 - **DOM behavior that belongs to one component** stays in that component's folder in `core` (for example `switch/handle.ts`), built from primitives. It moves into `primitives/` once a second component needs it, like a shared helper.
 - **Shape: `attachX(element)` returns `{ detach() }`.** It takes a real element, adds listeners or animations, and gives back a handle that undoes everything. Adapters attach on mount and detach before unmount.
 - **State goes out through `data-*` attributes** on the element (`data-ripple`, `data-pressed`), so CSS can react without knowing about the JavaScript.
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.
 - **The stylesheet selects on the primitive's data attribute, not on a class** (`[data-ripple]`, not `.rio-ripple`). Vue rewrites `class` whenever a `:class` binding changes and would drop a class the primitive added, but it leaves attributes it doesn't own alone.
 - **Adapters expose primitives in their framework's idiom.** In Vue, that's a directive (`vRipple` → `v-ripple`) that attaches on mount, detaches before unmount, and imports the paired stylesheet. A React adapter would use a hook instead.
-- **Springs see their targets through a transition.** A stylesheet that declares a target for `attachSpringProperty` (directly, or through `attachShapeMorph`) does two things on the element:
+- **Springs see their targets through a transition.** A stylesheet that declares a target for `attachSpringProperty` (directly, or through `attachCornerMorph`) does two things on the element:
   - It lists the target in `transition` as `<target> 1ms step-end`. While the element is rendered, the browser then reports every change of the target, whatever causes it: a state attribute, `:hover`, a theme variable on an ancestor, or the element's position among its siblings. A change made while it isn't rendered (`display: none`, or out of the document) makes no transition; the primitive catches up, without animating, when the element shows again. Without the transition, including when the app's CSS replaces the `transition` list, the spring never moves and the stylesheet's value shows.
-  - It draws the animated property from the target, not from the expression behind it: `border-start-start-radius: var(--rio-shape-morph-start-target)`, not `var(--_radius)`. `step-end` holds the old value until the spring takes over, so the new value doesn't flash for a frame first.
+  - It draws the animated property from the target, not from the expression behind it: `border-start-start-radius: var(--rio-corner-morph-start-target)`, not `var(--_radius)`. `step-end` holds the old value until the spring takes over, so the new value doesn't flash for a frame first.
 
   CSS can't add to a `transition` list, so components keep their spring targets in the public `--rio-spring-targets` and end their `transition` with `var(--rio-spring-targets)`. A stylesheet that springs more targets on an element extends the variable, as the split button's trailing button does, and an app that sets its own `transition` on one of these elements includes it. The variable is defined only on elements that spring, so it doesn't belong in a `transition` anywhere else: an undefined `var()` drops the whole declaration.
 
