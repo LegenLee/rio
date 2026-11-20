@@ -16,6 +16,6 @@ const volume = ref(40);
 .field {
   display: grid;
   gap: 8px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 </style>

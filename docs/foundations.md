@@ -187,6 +187,7 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - Effects motion changes color and opacity. Short fades don't cause that discomfort, so they stay. This matches iOS's Reduce Motion, which keeps crossfades. Android's "Remove animations" goes further and drops everything.
 - Switching to the standard scheme was considered and rejected. Standard still moves and still overshoots slightly (y 1.06), and the spec presents it as a product style, not an accessibility mode.
 - **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. In JavaScript, `prefersReducedMotion()` from `@rio-m3e/core` applies the same rule: the ripple skips the growing wave and keeps the fade, `attachShapeMorph` jumps straight to its target, and a wavy progress indicator's wave holds still.
+- **Indeterminate indicators keep moving**: the progress indicators and the loading indicator. That movement is what says the process is going on, so taking it away would take away what they mean. The loading indicator's morphs stop overshooting.
 
 ## 4. Shape corners with a radius scale
 
@@ -227,7 +228,23 @@ The scale has ten steps, named for how rounded the corner is. Three of them (`la
 - The partial tokens need no extra variables. Components set individual corners with logical properties such as `border-start-start-radius`, so shapes also flip correctly in right-to-left layouts.
 - **Resizing a step**: `createRio({ theme: { sourceColor, shapes: { medium: 16 } } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
 - **Remapping a component** will be a component-level variable, defined with each component.
-- The shape library and shape morphing are out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
+- The press effect on M3E buttons is a corner radius animation, which CSS handles.
+
+#### The shape library and shape morphing
+
+The spec has no web version, so Rio ports Google's own: androidx graphics-shapes, the engine behind Compose's shapes, and Compose Material3's `MaterialShapes`, at androidx `079e2e3`. It is in `@rio-m3e/core`, and the loading indicator is built on it.
+
+- **The 35 shapes by name**: `materialShape('cookie-9-sided')`, with the names in `MATERIAL_SHAPES`. Shapes of your own come from `roundedPolygon`, `circlePolygon`, `rectanglePolygon`, `starPolygon`, `pillPolygon`, `pillStarPolygon`, and `polygonFromFeatures`, or from an SVG path with `featuresFromSvgPath`. `serializeFeatures` and `parseFeatures` keep a shape's features as text.
+- **Morphs**: `createMorph(start, end)` gives the shape in between at any progress, as cubics (`cubics(progress)`), and `cubicsPath(cubics)` writes cubics as SVG path data, for a `<path>`'s `d` or CSS's `path()`.
+- **Plain data and functions** (Rio's choice): a polygon is a plain object and a cubic a tuple of eight numbers, and where the original has classes and methods, Rio has functions, such as `transformPolygon`, `normalizePolygon`, and `polygonBounds`. Inside, the port keeps the original's structure.
+- **Checked against the original**: the tests compare the port with what the original library returns on the JVM, within 1e-4, for the shape functions with a range of options, the 35 shapes, morphs (the loading indicator's frame by frame), SVG paths, and serialization. See [conventions.md](conventions.md).
+- **It differs from Android** where Android's 32-bit numbers or the original's bugs change the outcome. Rio computes in 64 bits without imitating 32-bit rounding, and follows what the original's code and comments mean:
+  - A morph can pair two shapes' corners differently where two candidates are equal in theory: in 32 bits they come out equal and the original keeps their order, while in 64 bits rounding tells them apart. The start and end shapes are the same, but the shapes in between differ, as from a triangle to a square.
+  - A corner on a straight line between its neighbors, as two of the pixel circle's, is convex or not by rounding, and a morph pairs it accordingly, so the shapes in between can differ, as from a heart to a pixel circle.
+  - A 90° SVG arc becomes 2 cubics, as the original's comment means; Android's comes out a little over 90° and takes 3.
+  - `pillStarPolygon` with a `startLocation` above 0 places the vertices past the start where they belong.
+  - `featuresFromSvgPath` keeps the last side of the first shape in a path of several; turns quadratic curves (`Q`, `T`) into cubics exactly, as SVG defines them; reflects a `T` or `S` after `Z` from the current point; keeps the first corner of a path that starts with an empty segment; and finds corners and their convexity by how the path turns, also where a curve's control points sit on its ends, as when a tool draws a straight line as a curve.
+  - `serializeFeatures` writes numbers in full and never with an exponent, which the original's `parseFeatures` would misread.
 
 ## 5. Set text with a type scale
 
@@ -430,7 +447,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | Shape morph (corner radius)                        | `core`, `styles`        | Done: `attachShapeMorph`, `base/shape-morph.css`, built on `attachSpringProperty`.                                                                                      |
 | Drag                                               | `core`                  | Done: `attachDrag` (touch and pen by default, threshold, release velocity, click swallowing).                                                                           |
 | Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
-| Shape: shape library and morphing                  | —                       | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
+| Shape: shape library and morphing                  | `core`                  | Done: `materialShape`, the polygon functions, `createMorph`, `featuresFromSvgPath`, and `cubicsPath`, ported from androidx graphics-shapes. See section 4.              |
 | Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
 | Typography: language height                        | `tokens`                | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
 | Typography: variable font axes                     | `tokens`                | Not yet. See section 5.4.                                                                                                                                               |
@@ -468,6 +485,10 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 ### Implementation reference (not spec)
 
 - [Material Web `ripple/internal/ripple.ts` and `_ripple.scss` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/ripple/internal): Google's web ripple. Rio's `attachRipple` follows its behavior (touch delay, minimum press time, keyboard ripple, growth and fade timings) with its own code and structure.
+
+### Ported code (not spec)
+
+- [androidx graphics-shapes @ 079e2e3](https://github.com/androidx/androidx/tree/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/graphics/graphics-shapes/src/commonMain/kotlin/androidx/graphics/shapes) and Compose Material3's [`MaterialShapes.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MaterialShapes.kt) at the same commit, Apache-2.0: ported to `@rio-m3e/core` as Rio's shape library. The tests compare it with graphics-shapes 1.1.0, whose code matches that commit.
 
 ### Design reference (not spec)
 

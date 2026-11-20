@@ -24,6 +24,6 @@ const dollars = (value: number) => `$${value}`;
 .field {
   display: grid;
   gap: 48px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 </style>

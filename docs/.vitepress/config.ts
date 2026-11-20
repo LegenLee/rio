@@ -43,6 +43,7 @@ export default defineConfig({
           { text: 'Date picker', link: '/components/date-picker' },
           { text: 'Dialog', link: '/components/dialog' },
           { text: 'Icon button', link: '/components/icon-button' },
+          { text: 'Loading indicator', link: '/components/loading-indicator' },
           { text: 'Menu', link: '/components/menu' },
           { text: 'Progress indicators', link: '/components/progress-indicator' },
           { text: 'Radio button', link: '/components/radio-button' },

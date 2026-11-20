@@ -27,7 +27,7 @@ onBeforeUnmount(() => timers.forEach(clearTimeout));
   display: grid;
   justify-items: start;
   gap: 24px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 
 .column > :first-child {

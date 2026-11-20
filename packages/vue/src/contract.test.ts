@@ -41,9 +41,12 @@ import {
   circularProgressSkeleton,
   createCircularProgress,
   createLinearProgress,
+  createLoadingIndicator,
   linearProgressSkeleton,
+  loadingIndicatorSkeleton,
   type CircularProgressProps,
   type LinearProgressProps,
+  type LoadingIndicatorProps,
   actionChipLinkSkeleton,
   actionChipSkeleton,
   chipSetSkeleton,
@@ -137,6 +140,7 @@ import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
 import CircularProgress from './progress/CircularProgress.vue';
 import LinearProgress from './progress/LinearProgress.vue';
+import LoadingIndicator from './loading-indicator/LoadingIndicator.vue';
 import AssistChip from './chip/AssistChip.vue';
 import ChipSet from './chip/ChipSet.vue';
 import FilterChip from './chip/FilterChip.vue';
@@ -482,6 +486,22 @@ describe('RioLinearProgress', () => {
     const screen = await render(LinearProgress, { props });
     const api = createLinearProgress({ props: () => props });
     expectSkeleton(rootOf(screen), linearProgressSkeleton, api);
+  });
+});
+
+describe('RioLoadingIndicator', () => {
+  test.each<[string, LoadingIndicatorProps]>([
+    ['indeterminate', {}],
+    ['determinate and contained', { value: 0.5, contained: true }],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, and shapes',
+      { value: 1, max: 4, size: 96, shapes: ['heart', 'sunny'] },
+    ],
+  ])('%s', async (_, props) => {
+    const screen = await render(LoadingIndicator, { props });
+    const api = createLoadingIndicator({ props: () => props });
+    expectSkeleton(rootOf(screen), loadingIndicatorSkeleton, api);
   });
 });
 

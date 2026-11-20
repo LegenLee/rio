@@ -12,6 +12,23 @@ export * from './dialog/interaction';
 export * from './icon-button/icon-button';
 export * from './locale/locale';
 export * from './locale/messages';
+// By name: the module also holds the timing its tests check.
+export {
+  attachLoadingIndicator,
+  type LoadingIndicatorDomHandle,
+  type LoadingIndicatorDomOptions,
+} from './loading-indicator/interaction';
+export {
+  createLoadingIndicator,
+  LOADING_INDICATOR_SHAPES,
+  loadingIndicatorDefaults,
+  loadingIndicatorSkeleton,
+  type LoadingIndicatorApi,
+  type LoadingIndicatorDrawing,
+  type LoadingIndicatorOptions,
+  type LoadingIndicatorParts,
+  type LoadingIndicatorProps,
+} from './loading-indicator/loading-indicator';
 export * from './menu/interaction';
 export * from './menu/menu';
 export * from './parts';
@@ -24,6 +41,61 @@ export * from './primitives/overlay/overlay';
 export * from './primitives/reduced-motion/reduced-motion';
 export * from './primitives/ripple/ripple';
 export * from './primitives/shape-morph/shape-morph';
+// The shapes port exports by name: its files also hold the original's internals.
+export type { CornerRounding } from './primitives/shapes/corner-rounding';
+export {
+  arcCubic,
+  reverseCubic,
+  splitCubic,
+  straightCubic,
+  transformCubic,
+  type Cubic,
+  type PointTransformer,
+} from './primitives/shapes/cubic';
+export {
+  cornerFeature,
+  edgeFeature,
+  ignorableFeature,
+  reverseFeature,
+  transformFeature,
+  type CornerFeature,
+  type EdgeFeature,
+  type PolygonFeature,
+} from './primitives/shapes/features';
+export { parseFeatures, serializeFeatures } from './primitives/shapes/feature-serializer';
+export {
+  MATERIAL_SHAPES,
+  materialShape,
+  type MaterialShapeName,
+} from './primitives/shapes/material-shapes';
+export { createMorph, type Morph } from './primitives/shapes/morph';
+export { cubicsPath } from './primitives/shapes/path';
+export {
+  normalizePolygon,
+  polygonBounds,
+  polygonFromFeatures,
+  polygonMaxBounds,
+  roundedPolygon,
+  transformPolygon,
+  type RegularPolygonOptions,
+  type RoundedPolygon,
+  type ShapeBounds,
+  type ShapePoint,
+  type VerticesPolygonOptions,
+} from './primitives/shapes/polygon';
+export {
+  circlePolygon,
+  pillPolygon,
+  pillStarPolygon,
+  rectanglePolygon,
+  starPolygon,
+  type CirclePolygonOptions,
+  type PillPolygonOptions,
+  type PillStarPolygonOptions,
+  type RectanglePolygonOptions,
+  type StarPolygonOptions,
+} from './primitives/shapes/shapes';
+export { featuresFromSvgPath } from './primitives/shapes/svg-path-parser';
 export * from './primitives/spring-property/spring-property';
 export * from './primitives/spring/spring';
 export * from './progress/interaction';

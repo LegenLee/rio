@@ -20,7 +20,7 @@ const balance = ref(-20);
 
 <style scoped>
 .field {
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
   padding-block-start: 48px;
 }
 </style>

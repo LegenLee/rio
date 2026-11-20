@@ -31,6 +31,6 @@ const values = ref({ xsmall: 30, small: 40, medium: 50, large: 60, xlarge: 0 });
 .sizes {
   display: grid;
   gap: 16px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 </style>

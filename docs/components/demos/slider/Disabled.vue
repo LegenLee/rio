@@ -14,6 +14,6 @@ import { RioRangeSlider, RioSlider } from '@rio-m3e/vue';
 .field {
   display: grid;
   gap: 16px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 </style>

@@ -19,7 +19,7 @@ import { RioCircularProgress, RioLinearProgress } from '@rio-m3e/vue';
 .column {
   display: grid;
   gap: 24px;
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
 }
 
 .row {

@@ -74,6 +74,7 @@ import {
   RioIconButton,
   RioInputChip,
   RioLinearProgress,
+  RioLoadingIndicator,
   RioMenu,
   RioMenuDivider,
   RioMenuGroup,
@@ -1177,6 +1178,12 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         <RioCircularProgress aria-label="Indeterminate" />
         <RioCircularProgress :value="progress" wavy aria-label="Wavy" />
         <RioCircularProgress wavy :thickness="8" aria-label="Wavy, indeterminate, thick" />
+      </div>
+      <div class="progress-row">
+        <RioLoadingIndicator aria-label="Loading" />
+        <RioLoadingIndicator contained aria-label="Loading, contained" />
+        <RioLoadingIndicator :value="progress" contained aria-label="Loading, determinate" />
+        <RioLoadingIndicator :size="96" aria-label="Loading, large" />
       </div>
       <RioButton variant="tonal" @click="progress = progress >= 1 ? 0 : progress + 0.2">
         Progress {{ Math.round(progress * 100) }}%

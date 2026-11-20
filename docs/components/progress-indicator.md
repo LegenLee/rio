@@ -102,7 +102,7 @@ Active indicator, track, and stop indicator.
 
 ## Recommendations
 
-- Match the indicator to the wait: none under 200ms, a loading indicator from 200ms to 5s, a progress indicator over 5s. For a very long wait, let people leave the page.
+- Match the indicator to the wait: none under 200ms, a [loading indicator](loading-indicator.md) from 200ms to 5s, a progress indicator over 5s. For a very long wait, let people leave the page.
 - Show one indicator for a group of items loading together, not one for each.
 - Use one variant for a process throughout the product.
 - Place linear indicators on the edge of the container that is loading, or the edge that grows; center circular ones on the container, or where new items will appear.
@@ -157,7 +157,6 @@ Active indicator, track, and stop indicator.
 
 ### Not yet
 
-- **The loading indicator**, the separate M3 Expressive component for waits from 200ms to 5s.
 - **Removing the stop indicator** where the track has enough contrast.
 - **Four-color indicators**, in the deprecated circular tokens.
 

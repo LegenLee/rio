@@ -14,7 +14,7 @@ const brightness = ref(60);
 <style scoped>
 /* Room for the value indicator, which shows over the handle */
 .field {
-  max-inline-size: 360px;
+  inline-size: min(100%, 360px);
   padding-block-start: 48px;
 }
 </style>
