@@ -10,7 +10,6 @@ import {
   asCubic,
   asFeature,
   buildPolygon,
-  usesMaterialShape,
   type GoldenFeature,
   type GoldenInput,
   type GoldenPolygon,
@@ -37,11 +36,37 @@ function assertBoundsEqualish(
   expected.forEach((v, i) => assertEqualish(v, actual[i]!, `${message} [${i}]`));
 }
 
+/**
+ * Whether the golden's corner `i` is a point on a straight line: its neighbors' far ends and it
+ * line up. Its convexity then comes down to rounding, Float's in the original and 64 bits' in the
+ * port, so it isn't compared.
+ */
+function isStraightCorner(features: readonly GoldenFeature[], i: number): boolean {
+  const corner = features[i]!;
+  if (corner.type !== 'corner' || corner.cubics.length !== 1) return false;
+  const [vx, vy] = corner.cubics[0]!;
+  const before = features[(i + features.length - 1) % features.length]!.cubics[0]!;
+  const after = features[(i + 1) % features.length]!.cubics.at(-1)!;
+  const [px, py] = [before[0]!, before[1]!];
+  const [nx, ny] = [after[6]!, after[7]!];
+  const cross = (vx! - px) * (ny - vy!) - (vy! - py) * (nx - vx!);
+  // Relative to the sides, and above the golden's own Float noise (about 1e-7)
+  return Math.abs(cross) < 1e-6 * Math.hypot(vx! - px, vy! - py) * Math.hypot(nx - vx!, ny - vy!);
+}
+
 export function assertMatchesGolden(golden: GoldenPolygon, polygon: RoundedPolygon) {
   expect(polygon.features).toHaveLength(golden.features.length);
-  golden.features.forEach((feature, i) =>
-    assertFeaturesEqualish(asFeature(feature), polygon.features[i]!, `feature ${i}`),
-  );
+  golden.features.forEach((feature, i) => {
+    const expected = asFeature(feature);
+    const actual = polygon.features[i]!;
+    if (isStraightCorner(golden.features, i) && actual.type === 'corner') {
+      assertFeaturesEqualish(
+        { ...expected, convex: actual.convex } as PolygonFeature,
+        actual,
+        `feature ${i}`,
+      );
+    } else assertFeaturesEqualish(expected, actual, `feature ${i}`);
+  });
   assertGeometryMatchesGolden(golden, polygon);
 }
 
@@ -73,13 +98,12 @@ const DEVIATIONS = new Set(['pill-star-start-location']);
 const polygonCase = (name: string) => polygonCases.find((c) => c.name === name)!;
 
 describe('polygons match the original', () => {
-  test.each(
-    polygonCases
-      .filter((c) => !usesMaterialShape(c.input) && !DEVIATIONS.has(c.name))
-      .map((c) => [c.name, c] as const),
-  )('%s', (_, { input, polygon }) => {
-    assertMatchesGolden(polygon, buildPolygon(input));
-  });
+  test.each(polygonCases.filter((c) => !DEVIATIONS.has(c.name)).map((c) => [c.name, c] as const))(
+    '%s',
+    (_, { input, polygon }) => {
+      assertMatchesGolden(polygon, buildPolygon(input));
+    },
+  );
 
   // The original misplaces a pill star's vertices past the start when startLocation is above 0.
   // 0.3 of the way around 20 vertices is 6 vertices on: the port's features are the original's
@@ -128,6 +152,20 @@ const boundsArray = (b: { left: number; top: number; right: number; bottom: numb
 const TIED_MORPHS = new Set(['triangle-to-square']);
 
 /**
+ * Morphs between shapes with corners on a straight line, convex or not by rounding
+ * (isStraightCorner), which the mapping then follows. These are built from the original's own
+ * polygons, with its flags, and match it frame by frame: the morph itself is the same.
+ */
+const MORPHS_OF_GOLDEN_POLYGONS = new Set(['heart-to-pixel-circle']);
+
+/** The original's polygon for an input among the polygon goldens */
+function goldenPolygonFor(input: GoldenInput): RoundedPolygon {
+  const golden = polygonCases.find((c) => JSON.stringify(c.input) === JSON.stringify(input))!;
+  const [x, y] = golden.polygon.center;
+  return polygonFromFeatures(golden.polygon.features.map(asFeature), { x, y });
+}
+
+/**
  * Every point of the first outline is on the second, and back: points sampled along each cubic,
  * against the other outline drawn as fine line segments.
  */
@@ -161,9 +199,7 @@ function assertSameOutline(a: readonly Cubic[], b: readonly Cubic[], message: st
 describe('morphs match the original', () => {
   test.each(
     morphCases
-      .filter(
-        (c) => !usesMaterialShape(c.start) && !usesMaterialShape(c.end) && !TIED_MORPHS.has(c.name),
-      )
+      .filter((c) => !TIED_MORPHS.has(c.name) && !MORPHS_OF_GOLDEN_POLYGONS.has(c.name))
       .map((c) => [c.name, c] as const),
   )('%s', (_, golden) => {
     // As the generator builds them: normalized, as the loading indicator does, or as they are
@@ -204,6 +240,23 @@ describe('morphs with tied mappings trace their shapes', () => {
       }
     },
   );
+});
+
+describe("morphs between the original's polygons match it", () => {
+  test.each(
+    morphCases
+      .filter((c) => MORPHS_OF_GOLDEN_POLYGONS.has(c.name))
+      .map((c) => [c.name, c] as const),
+  )('%s', (_, golden) => {
+    const prepare = (p: RoundedPolygon) => (golden.normalized ? normalizePolygon(p) : p);
+    const morph = createMorph(
+      prepare(goldenPolygonFor(golden.start)),
+      prepare(goldenPolygonFor(golden.end)),
+    );
+    for (const { progress, cubics } of golden.frames) {
+      assertCubicListsEqualish(cubics.map(asCubic), morph.cubics(progress), `progress ${progress}`);
+    }
+  });
 });
 
 const svgCases = svg as unknown as {
@@ -357,11 +410,7 @@ function assertFeatureListsEqualish(expected: PolygonFeature[], actual: PolygonF
 describe('features serialize as in the original', () => {
   // The port writes 64-bit numbers in full, so the text differs from the original's Float text:
   // both read back as the same features.
-  test.each(
-    serializerGolden.serialize
-      .filter((c) => !usesMaterialShape(c.input))
-      .map((c) => [c.name, c] as const),
-  )('%s', (_, golden) => {
+  test.each(serializerGolden.serialize.map((c) => [c.name, c] as const))('%s', (_, golden) => {
     const features = buildPolygon(golden.input).features;
     const ours = serializeFeatures(features);
     expect(parseFeatures(ours)).toEqual(features);

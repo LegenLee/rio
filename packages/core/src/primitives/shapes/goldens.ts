@@ -4,6 +4,7 @@
 import type { CornerRounding } from './corner-rounding';
 import type { Cubic } from './cubic';
 import type { PolygonFeature } from './features';
+import { materialShape } from './material-shapes';
 import {
   normalizePolygon,
   roundedPolygon,
@@ -47,13 +48,6 @@ export const asFeature = (f: GoldenFeature): PolygonFeature =>
   f.type === 'edge'
     ? { type: 'edge', cubics: f.cubics.map(asCubic) }
     : { type: 'corner', cubics: f.cubics.map(asCubic), convex: f.convex! };
-
-/** Whether a case needs `materialShape`, which the port doesn't have yet */
-export function usesMaterialShape(input: GoldenInput): boolean {
-  return input.fn === 'then'
-    ? usesMaterialShape((input as { base: GoldenInput }).base)
-    : input.fn === 'materialShape';
-}
 
 const center = (args: Record<string, unknown>): ShapePoint | undefined =>
   args.centerX === undefined ? undefined : { x: args.centerX as number, y: args.centerY as number };
@@ -144,6 +138,8 @@ export function buildPolygon(input: GoldenInput): RoundedPolygon {
         startLocation: a.startLocation,
         center: center(args),
       });
+    case 'materialShape':
+      return materialShape(a.name);
     default:
       throw new Error(`Unknown polygon function ${input.fn}`);
   }

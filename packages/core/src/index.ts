@@ -46,7 +46,13 @@ export {
   type PolygonFeature,
 } from './primitives/shapes/features';
 export { parseFeatures, serializeFeatures } from './primitives/shapes/feature-serializer';
+export {
+  MATERIAL_SHAPES,
+  materialShape,
+  type MaterialShapeName,
+} from './primitives/shapes/material-shapes';
 export { createMorph, type Morph } from './primitives/shapes/morph';
+export { cubicsPath } from './primitives/shapes/path';
 export {
   normalizePolygon,
   polygonBounds,
