@@ -46,6 +46,7 @@ export const en: RioMessages = {
     period: 'Select AM or PM',
     switchToInput: 'Toggle input picker',
     switchToDial: 'Toggle dial picker',
+    switchToScroll: 'Toggle scroll picker',
     cancel: 'Cancel',
     ok: 'OK',
     invalidHour12: 'Hour must be 1–12',

@@ -48,7 +48,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 - [x] Form value for the switch
 - [x] Slider
-- [ ] Scroll time picker
+- [x] Scroll time picker
 - [ ] Date range picker
 - [x] Chips
 - [ ] List, List Items (maybe?)

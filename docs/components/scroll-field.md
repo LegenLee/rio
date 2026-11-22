@@ -139,7 +139,7 @@ States: enabled, hovered, focused, and disabled, each inactive (scrolling) and a
 
 - **The height is 120px** (Rio's choice): the measurement drawing's field and Compose's `ScrollFieldDefaults.ScrollFieldHeight`. The token table also lists a 200dp height; give the field a `block-size` to show more values.
 - **The medium width is 120px**, from the token table and the drawing, not the guidelines' 144dp.
-- **Each value sits in a 52px slot**, display-medium's line height, as Compose's scroll field spaces its items (Rio's choice, from Compose's `ScrollField.kt`, not its public API). That leaves the token's 16dp between the values and keeps every value above the 48dp target.
+- **Each value sits in a 52px slot**, display-medium's line height, as Compose's scroll field spaces its items (Rio's choice, from Compose's `ScrollField.kt`, not its public API). That leaves the token's 16dp between the values and keeps every value above the 48dp target. `--rio-scroll-field-item-height` sets another slot, as the scroll time picker on the page sets 60px ([time-picker.md](time-picker.md)).
 - The width holds as values scroll through the middle: each value keeps room for itself written large.
 
 ### Scrolling
@@ -166,7 +166,6 @@ States: enabled, hovered, focused, and disabled, each inactive (scrolling) and a
 ### Not yet
 
 - **Long lists render every value**: keep them short, as the spec recommends. A field of thousands of values works, but renders slower.
-- **The scroll time picker**, which the spec builds from scroll fields.
 
 ## Sources
 

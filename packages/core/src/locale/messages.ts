@@ -48,7 +48,7 @@ export interface DatePickerMessages {
 
 /** The time picker's text */
 export interface TimePickerMessages {
-  /** The dialog's name on the dial */
+  /** The dialog's name on the dial or the scroll fields */
   selectTime: string;
   /** The dialog's name in the text input */
   enterTime: string;
@@ -67,9 +67,10 @@ export interface TimePickerMessages {
   dialMinute: string;
   /** Names the AM and PM buttons together */
   period: string;
-  /** The dialog's mode button on the dial, and in the text input */
+  /** The mode button on the dial or the scroll fields, and in the text input, back to either */
   switchToInput: string;
   switchToDial: string;
+  switchToScroll: string;
   cancel: string;
   ok: string;
   /** Typed hours outside 1 to 12, or 0 to 23 */

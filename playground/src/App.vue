@@ -31,6 +31,7 @@ import {
   mdiFormatBold,
   mdiFormatItalic,
   mdiFormatUnderline,
+  mdiGestureSwipeVertical,
   mdiHeart,
   mdiHeartOutline,
   mdiKeyboardOutline,
@@ -93,6 +94,7 @@ import {
   RioTextField,
   RioTimeInput,
   RioTimePickerDialog,
+  RioTimeScroll,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
@@ -209,13 +211,23 @@ const dates = reactive<{ docked?: string; modal?: string; korean?: string; dialo
   korean: '2026-11-27',
 });
 const dateDialogOpen = ref(false);
-const times = reactive<{ inline?: string; german?: string; dialog?: string; horizontal?: string }>({
+const times = reactive<{
+  inline?: string;
+  german?: string;
+  scroll?: string;
+  scrollGerman?: string;
+  dialog?: string;
+  horizontal?: string;
+  scrollDialog?: string;
+}>({
   inline: '07:30',
   german: '19:05',
+  scroll: '07:00',
   horizontal: '14:00',
 });
 const timeDialogOpen = ref(false);
 const timeHorizontalOpen = ref(false);
+const timeScrollOpen = ref(false);
 const submitSelects = (event: SubmitEvent) => {
   const data = new FormData(event.target as HTMLFormElement);
   selectSent.value = [...data].map(([key, value]) => `${key}=${String(value)}`).join(' ');
@@ -1143,6 +1155,42 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
             </svg>
           </template>
         </RioTimePickerDialog>
+        <RioButton variant="tonal" @click="timeScrollOpen = true">Reminder, scroll</RioButton>
+        <RioTimePickerDialog
+          v-model="times.scrollDialog"
+          v-model:open="timeScrollOpen"
+          picker="scroll"
+        >
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #swipe-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiGestureSwipeVertical" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimePickerDialog>
+      </div>
+      <div class="controls">
+        <RioTimeScroll
+          v-for="(key, i) in ['scroll', 'scrollGerman'] as const"
+          :key
+          v-model="times[key]"
+          :locale="i ? 'de-DE' : undefined"
+        >
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #swipe-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiGestureSwipeVertical" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimeScroll>
       </div>
       <code>{{ times }}</code>
     </section>

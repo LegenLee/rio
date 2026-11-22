@@ -10,7 +10,7 @@
 
 .rio-scroll-field {
   /* Each item's slot, and the distance between the items: display-medium's line height */
-  --_item-height: 3.25rem;
+  --_item-height: var(--rio-scroll-field-item-height, 3.25rem);
   --_padding: 16px;
 
   position: relative;

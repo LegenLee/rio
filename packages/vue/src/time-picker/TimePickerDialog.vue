@@ -7,6 +7,7 @@ import {
   type DialogDomHandle,
   type HourCycle,
   type TimePickerDomHandle,
+  type TimePickerKind,
   type TimePickerLayout,
   type TimePickerMessages,
   type TimePickerMode,
@@ -42,7 +43,9 @@ const props = defineProps<{
   hourCycle?: HourCycle;
   /** The dial beside the fields, or below them. Defaults to `'auto'`, from the window's height. */
   layout?: TimePickerLayout;
-  /** What each opening starts in: the dial, or the text input. Defaults to `'dial'`. */
+  /** The picker, which switches to the text input: the dial, or scroll fields. Defaults to `'dial'`. */
+  picker?: TimePickerKind;
+  /** What each opening starts in: the picker, or the text input. Defaults to `'picker'`. */
   initialMode?: TimePickerMode;
   /** Replaces any of the text the dialog shows. */
   messages?: Partial<TimePickerMessages>;
@@ -52,10 +55,12 @@ const model = defineModel<string | undefined>();
 /** Whether the dialog is shown, with `v-model:open`. */
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{
-  /** The mode button's icon on the dial, which switches to the text input */
+  /** The mode button's icon on the dial or the scroll fields, which switches to the text input */
   'keyboard-icon'?: () => unknown;
-  /** The mode button's icon in the text input, which switches to the dial */
+  /** The mode button's icon in the text input, which switches back to the dial */
   'clock-icon'?: () => unknown;
+  /** The mode button's icon in the text input, which switches back to the scroll fields */
+  'swipe-icon'?: () => unknown;
 }>();
 
 const locale = useLocale(() => props.locale);
@@ -74,6 +79,7 @@ const picker = createTimePicker({
       locale: locale.value,
       hourCycle: props.hourCycle,
       layout: props.layout,
+      picker: props.picker,
       initialMode: props.initialMode,
       rendered: rendered.value,
     }) satisfies Record<keyof TimePickerProps, unknown>,
@@ -100,8 +106,8 @@ onMounted(() => {
     onClosed: () => {
       if (!open.value) rendered.value = false;
     },
-    // The hour field
-    initialFocus: () => root.value?.querySelector<HTMLElement>('.rio-time-picker__field'),
+    // The hour field: its toggle, its scroll field, or its text input
+    initialFocus: () => root.value?.querySelector<HTMLElement>('[data-field="hour"]'),
   });
   dialogHandle.sync(open.value);
   handle = attachTimePicker(root.value!, {
@@ -135,9 +141,14 @@ const onKeydown = (event: KeyboardEvent) => {
       <TimePickerBody :picker />
       <div v-if="picker.showsError()" v-bind="picker.parts.error()">{{ picker.error() }}</div>
       <div v-bind="picker.parts.actions()">
-        <IconButton variant="standard" :label="picker.modeButtonLabel()" @click="picker.switchMode">
-          <slot v-if="state.mode === 'dial'" name="keyboard-icon" />
-          <slot v-else name="clock-icon" />
+        <IconButton
+          variant="standard"
+          :label="picker.modeButtonLabel()"
+          @click="picker.switchMode()"
+        >
+          <slot v-if="picker.modeButtonIcon() === 'keyboard'" name="keyboard-icon" />
+          <slot v-else-if="picker.modeButtonIcon() === 'clock'" name="clock-icon" />
+          <slot v-else name="swipe-icon" />
         </IconButton>
         <Button variant="text" @click="picker.cancel">{{ messages.cancel }}</Button>
         <Button variant="text" @click="picker.confirm">{{ messages.ok }}</Button>

@@ -46,6 +46,7 @@ export const ko: RioMessages = {
     period: '오전 또는 오후 선택',
     switchToInput: '입력 선택기로 전환',
     switchToDial: '다이얼 선택기로 전환',
+    switchToScroll: '스크롤 선택기로 전환',
     cancel: '취소',
     ok: '확인',
     invalidHour12: '시는 1부터 12까지입니다',

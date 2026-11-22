@@ -156,6 +156,7 @@ import Slider from './slider/Slider.vue';
 import TextField from './text-field/TextField.vue';
 import TimeInput from './time-picker/TimeInput.vue';
 import TimePickerDialog from './time-picker/TimePickerDialog.vue';
+import TimeScroll from './time-picker/TimeScroll.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -1222,12 +1223,48 @@ const expectTimePickerContent = (root: Element, api: TimePickerApi) => {
     expectPart(minute!.children[0], 'input', api.parts.minuteField());
     expectPart(minute!.children[1], 'span', api.parts.minuteLabel());
     expect(fields.children).toHaveLength(3);
+  } else if (api.showsScroll()) {
+    const [hour, separator, minute] = fields.children;
+    expectPart(separator, 'span', api.parts.separator());
+    expect(fields.children).toHaveLength(3);
+    // Scroll fields, each with the props core gives it
+    for (const [element, field] of [
+      [hour, 'hour'],
+      [minute, 'minute'],
+    ] as const) {
+      expectPart(
+        element,
+        'div',
+        field === 'hour' ? api.parts.hourField() : api.parts.minuteField(),
+      );
+      const options = element!.querySelector('[role="option"]')!.id.replace(/-\d+$/, '');
+      const scroll = createScrollField({
+        props: () => api.scrollField(field),
+        ids: { options },
+        onChange: noop,
+        onEditingChange: noop,
+      });
+      expectSkeleton(element!, scrollFieldSkeleton, scroll);
+    }
   } else {
     const [hour, separator, minute] = fields.children;
     expectPart(hour, 'button', api.parts.hourField());
     expectPart(separator, 'span', api.parts.separator());
     expectPart(minute, 'button', api.parts.minuteField());
     expect(fields.children).toHaveLength(3);
+  }
+  const toggle = root.querySelector('.rio-time-picker__toggle');
+  if (api.showsToggle()) {
+    // The mode button, named for the mode it switches to
+    const props = { variant: 'standard', label: api.modeButtonLabel() } as const;
+    const button = createIconButton({
+      props: () => props,
+      content: () => ({ selectedIcon: false }),
+      onClick: noop,
+      onChange: noop,
+    });
+    expect(toggle!.children).toHaveLength(1);
+    expectSkeleton(toggle!.children[0]!, iconButtonSkeleton, button);
   }
   const period = root.querySelector('.rio-time-picker__period');
   if (api.showsPeriod()) {
@@ -1252,7 +1289,7 @@ const expectTimePickerContent = (root: Element, api: TimePickerApi) => {
 };
 
 const timePicker = (
-  variant: 'inline' | 'dialog',
+  variant: 'inline' | 'scroll' | 'dialog',
   props: TimePickerProps,
   state: TimePickerState,
   error = 'error',
@@ -1311,6 +1348,32 @@ describe('RioTimeInput', () => {
   });
 });
 
+describe('RioTimeScroll', () => {
+  test.each<[string, string, string | undefined]>([
+    ['12 hours, with AM and PM', 'en-US', '19:05'],
+    ['24 hours', 'de-DE', '19:05'],
+    ['without a time', 'en-US', undefined],
+  ])('%s', async (_, locale, value) => {
+    const screen = await render(TimeScroll, { props: { locale, modelValue: value } });
+    const api = timePicker('scroll', { locale, value }, initialTimePickerState(value));
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+
+  test('switched to the text input', async () => {
+    const screen = await render(TimeScroll, { props: { locale: 'en-US', modelValue: '19:05' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle input picker' }));
+    await vi.waitFor(() => rootOf(screen).querySelector('input')!);
+    const api = timePicker(
+      'scroll',
+      { locale: 'en-US', value: '19:05' },
+      { ...initialTimePickerState('19:05'), mode: 'input', hourText: '07', minuteText: '05' },
+    );
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+});
+
 describe('RioTimePickerDialog', () => {
   test('closed, it renders nothing inside', async () => {
     const screen = await render(TimePickerDialog, { props: { locale: 'en-US' } });
@@ -1333,6 +1396,12 @@ describe('RioTimePickerDialog', () => {
       { mode: 'input', hourText: '07', minuteText: '30' },
     ],
     ['the dial, 24 hours', { hourCycle: 24 }, {}],
+    ['the scroll fields', { picker: 'scroll' }, {}],
+    [
+      'the text input, from the scroll fields',
+      { picker: 'scroll', initialMode: 'input' },
+      { mode: 'input', hourText: '07', minuteText: '30' },
+    ],
   ])('open: %s', async (_, props, state) => {
     const host = document.body.appendChild(document.createElement('div'));
     const app = createApp(() =>

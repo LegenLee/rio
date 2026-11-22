@@ -14,6 +14,8 @@
 // - On the AM and PM buttons, the arrow keys choose the other one, as in a radio group.
 // - A text field focused other than by the pointer, as by Tab or as the dialog opens, has its text
 //   selected, so typing replaces both digits.
+// - When the hour's or the minute's scroll field has the focus and gives way to the text input, as
+//   Space or Enter on it switch to it, that field's text input takes the focus.
 // - After the adapter shows the other field's numbers, the focus, when it was on a number, goes to
 //   where the dial starts, whether the adapter replaced the numbers or reused them.
 
@@ -97,6 +99,8 @@ export function attachTimePicker(
   let pressedField: Element | undefined;
   const onPointerDown = (event: PointerEvent) => {
     pressedField = (event.target as Element).closest('.rio-time-picker__input') ?? undefined;
+    // A press elsewhere, as on the mode button where it takes no focus, isn't the scroll field's.
+    if (!(event.target as Element).closest('.rio-time-picker__scroll')) scrolledField = undefined;
     const face = (event.target as Element).closest<HTMLElement>('.rio-time-picker__dial');
     if (!face || event.button !== 0) return;
     // The dial takes the press; the focus stays where it is.
@@ -119,6 +123,8 @@ export function attachTimePicker(
 
   /** The field whose numbers had the focus, so it moves when the dial shows the other field */
   let focusedField: string | undefined;
+  /** The field whose scroll field had the focus, so its text input takes it in its place */
+  let scrolledField: string | undefined;
   /** The field whose toggle was activated from the keyboard, until the dial shows it */
   let entering: string | undefined;
   const enterDial = () => {
@@ -163,6 +169,7 @@ export function attachTimePicker(
     focusedField = target.matches('.rio-time-picker__number')
       ? dial()?.dataset.selection
       : undefined;
+    scrolledField = target.closest<HTMLElement>('.rio-time-picker__scroll')?.dataset.field;
     if (target.matches('.rio-time-picker__input') && target !== pressedField) {
       (target as HTMLInputElement).select();
     }
@@ -184,9 +191,14 @@ export function attachTimePicker(
       enterDial();
       // The dial may show the other field's numbers now, another one under the pointer.
       showHover();
-      if (focusedField === undefined) return;
       const active = document.activeElement;
       const lost = !active || active === document.body || !active.isConnected;
+      if (lost && scrolledField !== undefined) {
+        root
+          .querySelector<HTMLElement>(`.rio-time-picker__input[data-field="${scrolledField}"]`)
+          ?.focus();
+      }
+      if (focusedField === undefined) return;
       if (lost || dial()?.dataset.selection !== focusedField) start()?.focus();
     },
     detach() {

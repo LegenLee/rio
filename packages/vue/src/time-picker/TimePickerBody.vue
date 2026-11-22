@@ -1,11 +1,27 @@
 <script setup lang="ts">
-// The fields, AM and PM, and the dial, which `RioTimeInput` and `RioTimePickerDialog` share. Not
-// exported: the pickers pass their core API in.
-import type { TimePickerApi } from '@rio-m3e/core';
+// The fields, AM and PM, and the dial, which `RioTimeInput`, `RioTimeScroll`, and
+// `RioTimePickerDialog` share. Not exported: the pickers pass their core API in.
+import type { TimePickerApi, TimeSelection } from '@rio-m3e/core';
 import { vRipple } from '../ripple/ripple';
 import { vCornerMorph } from '../corner-morph/corner-morph';
+import ScrollField from '../scroll-field/ScrollField.vue';
 
-defineProps<{ picker: TimePickerApi }>();
+const props = defineProps<{ picker: TimePickerApi }>();
+defineSlots<{
+  /** The scroll fields' mode button, under AM and PM */
+  toggle?: () => unknown;
+}>();
+
+/** A scroll field's props, its value as `v-model`'s, and its root's attributes */
+const scrollField = (field: TimeSelection) => {
+  const { value, ...rest } = props.picker.scrollField(field);
+  const { parts } = props.picker;
+  return {
+    ...(field === 'hour' ? parts.hourField() : parts.minuteField()),
+    ...rest,
+    modelValue: value,
+  };
+};
 </script>
 
 <template>
@@ -34,6 +50,22 @@ defineProps<{ picker: TimePickerApi }>();
           <span v-bind="picker.parts.minuteLabel()">{{ picker.fieldNames()[1] }}</span>
         </span>
       </template>
+      <!-- The fields don't take typed text: Space and Enter switch to the text input. -->
+      <template v-else-if="picker.showsScroll()">
+        <ScrollField
+          v-bind="scrollField('hour')"
+          :editing="false"
+          @update:model-value="picker.scrollPick('hour', $event)"
+          @update:editing="picker.handleScrollEditing"
+        />
+        <span v-bind="picker.parts.separator()">:</span>
+        <ScrollField
+          v-bind="scrollField('minute')"
+          :editing="false"
+          @update:model-value="picker.scrollPick('minute', $event)"
+          @update:editing="picker.handleScrollEditing"
+        />
+      </template>
       <template v-else>
         <button v-ripple v-bind="picker.parts.hourField()" @click="picker.selectField('hour')">
           {{ picker.hourText() }}
@@ -58,6 +90,9 @@ defineProps<{ picker: TimePickerApi }>();
         {{ picker.periodNames()[1] }}
         <span v-bind="picker.parts.periodTouch()" />
       </button>
+    </div>
+    <div v-if="picker.showsToggle()" v-bind="picker.parts.toggle()">
+      <slot name="toggle" />
     </div>
     <div v-if="picker.showsDial()" v-bind="picker.parts.dial()">
       <span v-bind="picker.parts.dialTrack()" />

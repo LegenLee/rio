@@ -135,8 +135,8 @@ packages/
       text-field.test.ts
     time-picker/
       time.ts               HH:MM times, and a language's clock and its AM and PM
-      time-picker.ts        the input picker and the dialog: their parts, the dial's numbers, and reading typed times
-      interaction.ts        the dial's pointer and keys, and AM and PM's arrow keys (DOM, tested through the Vue components)
+      time-picker.ts        the input and scroll pickers and the dialog: their parts, the dial's numbers, the scroll fields' props, and reading typed times
+      interaction.ts        the dial's pointer and keys, AM and PM's arrow keys, and the focus from a scroll field to its text input (DOM, tested through the Vue components)
       time.test.ts
       time-picker.test.ts
     tooltip/
