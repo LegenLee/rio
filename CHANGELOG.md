@@ -4,7 +4,7 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
-## [Unreleased]
+## [0.6.2] - 2026-11-22
 
 ### Added
 
@@ -220,3 +220,4 @@ The first release: the M3E foundations and three components, the button, the ico
 [0.5.0]: https://github.com/LegenLee/rio/releases/tag/v0.5.0
 [0.6.0]: https://github.com/LegenLee/rio/releases/tag/v0.6.0
 [0.6.1]: https://github.com/LegenLee/rio/releases/tag/v0.6.1
+[0.6.2]: https://github.com/LegenLee/rio/releases/tag/v0.6.2
