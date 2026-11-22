@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
-import { attachCornerMorph, type CornerMorphHandle } from './corner-morph';
+import { attachCornerMorph, type CornerMorphHandle, type CornerMorphOptions } from './corner-morph';
 
 // The parts of a component stylesheet the primitive relies on, inlined so the test stands alone.
 // The registrations and the per-side defaults mirror `@rio-m3e/styles/base/corner-morph.css`; the
@@ -33,6 +33,15 @@ beforeAll(() => {
     }
     /* A shape whose end side differs, like the first button of a connected button group */
     .box.lopsided[data-pressed] { --rio-corner-morph-end-target: 4px; }
+    /* A shape whose bottom differs, like the first item of a segmented list: its corners drawn
+       from the targets by the top and the bottom */
+    .box.stacked {
+      border-start-start-radius: var(--rio-corner-morph-start-target);
+      border-start-end-radius: var(--rio-corner-morph-start-target);
+      border-end-start-radius: var(--rio-corner-morph-end-target);
+      border-end-end-radius: var(--rio-corner-morph-end-target);
+    }
+    .box.stacked[data-pressed] { --rio-corner-morph-end-target: 4px; }
   `;
   document.head.append(style);
 });
@@ -40,15 +49,19 @@ beforeAll(() => {
 let handle: CornerMorphHandle | undefined;
 let box: HTMLDivElement;
 
-const setup = (className: string, dir = 'ltr') => {
+const setup = (className: string, dir = 'ltr', options?: CornerMorphOptions) => {
   box = document.createElement('div');
   box.className = className;
   box.dir = dir;
   document.body.append(box);
-  handle = attachCornerMorph(box);
+  handle = attachCornerMorph(box, options);
 };
 
-type Corner = 'borderTopLeftRadius' | 'borderTopRightRadius';
+type Corner =
+  | 'borderTopLeftRadius'
+  | 'borderTopRightRadius'
+  | 'borderBottomLeftRadius'
+  | 'borderBottomRightRadius';
 const radius = (corner: Corner = 'borderTopLeftRadius') =>
   parseFloat(getComputedStyle(box)[corner]);
 // The inline radii the springs write, empty once both sides have handed back to CSS.
@@ -101,6 +114,36 @@ describe('attachCornerMorph', () => {
     await vi.waitFor(() => expect(radius(end)).toBeLessThan(radius(start)));
     await vi.waitFor(() => expect(inline()).toBe(''), { timeout: 2000 });
     expect([radius(start), radius(end)]).toEqual([8, 4]);
+  });
+
+  test('with the block axis, springs the top and the bottom separately', async () => {
+    setup('box springy stacked', 'ltr', { axis: 'block' });
+    const corners = [
+      'borderTopLeftRadius',
+      'borderTopRightRadius',
+      'borderBottomLeftRadius',
+      'borderBottomRightRadius',
+    ] as const;
+    // Every corner the springs write, empty once both have handed back to CSS
+    const moving = () =>
+      ['start-start', 'start-end', 'end-start', 'end-end']
+        .map((corner) => box.style.getPropertyValue(`border-${corner}-radius`))
+        .join('');
+    const seen: number[][] = [];
+    let frame = requestAnimationFrame(function record() {
+      if (moving()) seen.push(corners.map(radius));
+      frame = requestAnimationFrame(record);
+    });
+
+    box.dataset.pressed = '';
+    await vi.waitFor(() => expect(moving()).not.toBe(''));
+    await vi.waitFor(() => expect(moving()).toBe(''), { timeout: 2000 });
+    cancelAnimationFrame(frame);
+    // While moving, the top corners go together, and so do the bottom ones, toward 8px and 4px.
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every(([tl, tr, bl, br]) => tl === tr && bl === br)).toBe(true);
+    expect(seen.some(([tl, , bl]) => bl! < tl!)).toBe(true);
+    expect(corners.map(radius)).toEqual([8, 8, 4, 4]);
   });
 
   test('marks the element and cleans up on detach', () => {

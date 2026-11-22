@@ -13,6 +13,8 @@ export { default as RioDialog } from './dialog/Dialog.vue';
 export { default as RioIconButton } from './icon-button/IconButton.vue';
 export { localeKey, messagesKey, useLocale, useMessages } from './locale/locale';
 export { createRio, type RioOptions, type RioPlugin, type RioThemeOptions } from './rio/rio';
+export { default as RioList } from './list/List.vue';
+export { default as RioListItem } from './list/ListItem.vue';
 export { default as RioLocaleProvider } from './locale/LocaleProvider.vue';
 export { default as RioLoadingIndicator } from './loading-indicator/LoadingIndicator.vue';
 export { default as RioMenu } from './menu/Menu.vue';

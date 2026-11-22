@@ -6,6 +6,13 @@ import {
   buttonLinkSkeleton,
   buttonSkeleton,
   calendarSkeleton,
+  createList,
+  createListItem,
+  listItemActionSkeleton,
+  listItemSkeleton,
+  listSkeleton,
+  type ListItemProps,
+  type ListProps,
   createDateRangePickerDialog,
   createRangeCalendar,
   dateRangePickerDialogSkeleton,
@@ -127,7 +134,7 @@ import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { userEvent } from 'vitest/browser';
-import { createApp, h } from 'vue';
+import { createApp, defineComponent, h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
 import Checkbox from './checkbox/Checkbox.vue';
@@ -138,6 +145,8 @@ import DateRangeCalendar from './date-picker/DateRangeCalendar.vue';
 import DateRangePickerDialog from './date-picker/DateRangePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
+import List from './list/List.vue';
+import ListItem from './list/ListItem.vue';
 import Menu from './menu/Menu.vue';
 import ScrollField from './scroll-field/ScrollField.vue';
 import MenuDivider from './menu/MenuDivider.vue';
@@ -1200,6 +1209,87 @@ describe('RioDatePickerDialog', () => {
       onStateChange: noop,
     });
     expectSkeleton(root, datePickerDialogSkeleton, api);
+  });
+});
+
+describe('RioList', () => {
+  test.each<[string, ListProps]>([
+    ['static, standard', {}],
+    [
+      'one at a time, segmented, named',
+      { selection: 'single', variant: 'segmented', label: 'Size' },
+    ],
+    ['any number', { selection: 'multiple', selected: ['a'] }],
+  ])('%s', async (_, { selected, ...props }) => {
+    const screen = await render(List, {
+      props: { ...props, modelValue: selected },
+      slots: { default: () => [h(ListItem, { value: 'a' }, () => 'A')] },
+    });
+    const root = rootOf(screen);
+    // The tab stop is the item `attachList` reports, read back from the rendered item.
+    const stop = root.querySelector<HTMLElement>('[tabindex="0"]')?.dataset.listFocus;
+    const api = createList({
+      props: () => ({ ...props, selected }),
+      tabStop: () => stop,
+      onChange: noop,
+    });
+    expectSkeleton(root, listSkeleton, api);
+  });
+});
+
+describe('RioListItem', () => {
+  const content = { leading: true, overline: true, supporting: true, trailing: true };
+  const slots = {
+    default: () => 'Label',
+    leading: () => 'L',
+    overline: () => 'O',
+    supporting: () => 'S',
+    trailing: () => 'T',
+  };
+  test.each<[string, ListItemProps, ListProps]>([
+    ['static', {}, {}],
+    ['a link', { href: '/inbox' }, {}],
+    ['a button, disabled', { action: true, disabled: true }, {}],
+    ['an option, selected', { value: 'a' }, { selection: 'single', selected: 'a' }],
+  ])('%s, with every part', async (_, props, listProps) => {
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h(List, { ...listProps, modelValue: listProps.selected }, () =>
+            h(
+              ListItem,
+              {
+                value: props.value,
+                href: props.href,
+                disabled: props.disabled,
+                onClick: props.action ? noop : undefined,
+              },
+              slots,
+            ),
+          ),
+      ),
+    );
+    const root = rootOf(screen).querySelector<HTMLElement>('.rio-list-item')!;
+    const key =
+      root.querySelector<HTMLElement>('[data-list-focus]')?.dataset.listFocus ??
+      root.dataset.listFocus ??
+      'static';
+    const list = createList({ props: () => listProps, tabStop: () => key, onChange: noop });
+    const api = createListItem({
+      props: () => props,
+      list: () => list,
+      key,
+      content: () => content,
+      multiline: () => false,
+    });
+    const skeleton =
+      api.kind() === 'link'
+        ? listItemActionSkeleton('a')
+        : api.kind() === 'button'
+          ? listItemActionSkeleton('button')
+          : listItemSkeleton;
+    expectSkeleton(root, skeleton, api);
+    expect(root.querySelector('.rio-list-item__label')!.textContent).toBe('Label');
   });
 });
 

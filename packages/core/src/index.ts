@@ -11,6 +11,8 @@ export * from './date-picker/interaction';
 export * from './dialog/dialog';
 export * from './dialog/interaction';
 export * from './icon-button/icon-button';
+export * from './list/interaction';
+export * from './list/list';
 export * from './locale/locale';
 export * from './locale/messages';
 // By name: the module also holds the timing its tests check.

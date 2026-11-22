@@ -51,7 +51,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Scroll time picker
 - [x] Date range picker
 - [x] Chips
-- [ ] List, List Items (maybe?)
+- [x] List, List Items
 - [x] Loading progress bars
 - [x] Loading indicator with shape morphs
 - [x] Scroll fields

@@ -6,8 +6,8 @@
  *
  * Shapes whose sides differ set `--rio-corner-morph-start-target` and
  * `--rio-corner-morph-end-target` (the corners at the start and end of the line, in the writing
- * direction) with any class or attribute selector; otherwise both follow
- * `--rio-corner-morph-target`.
+ * direction, or with the primitive's `axis: 'block'`, at the top and the bottom) with any class or
+ * attribute selector; otherwise both follow `--rio-corner-morph-target`.
  *
  * The component also draws its corners from the per-side targets, so it still works without
  * JavaScript, and lists both targets in its `transition` as `1ms step-end`, so the springs see

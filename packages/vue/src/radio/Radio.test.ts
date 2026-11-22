@@ -1,6 +1,6 @@
 import type { RadioValue } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive } from 'vue';
@@ -229,16 +229,26 @@ describe('RioRadioGroup and RioRadio', () => {
     expect(icon.getBoundingClientRect().width).toBe(20);
   });
 
-  test('a radio button outside a group is an error', async () => {
+  test('in a group, a radio button without a value is an error', async () => {
     const errors: unknown[] = [];
     const host = document.body.appendChild(document.createElement('div'));
     const { createApp } = await import('vue');
-    const app = createApp(() => h(Radio, { value: 'a' }));
+    const app = createApp(() => h(RadioGroup, null, () => h(Radio)));
     app.config.errorHandler = (error) => errors.push(error);
     app.config.warnHandler = () => {};
     app.mount(host);
     app.unmount();
     host.remove();
-    expect(String(errors[0])).toContain('RioRadioGroup');
+    expect(String(errors[0])).toContain('needs a value');
+  });
+
+  test('outside a group, a radio button only shows selected', async () => {
+    const screen = await render(Radio, { props: { selected: true } });
+    const input = (screen.container as HTMLElement).querySelector('input')!;
+    expect(input.checked).toBe(true);
+    await screen.rerender({ selected: false });
+    expect(input.checked).toBe(false);
+    await userEvent.click(input);
+    await vi.waitFor(() => expect(input.checked).toBe(false));
   });
 });

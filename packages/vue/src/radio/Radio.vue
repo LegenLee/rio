@@ -18,25 +18,27 @@ import { radioGroupKey } from './context';
 // `aria-label`, and every listener belongs to the input.
 defineOptions({ inheritAttrs: false });
 
-interface Props extends Omit<RadioProps, 'selected'> {
+interface Props extends RadioProps {
   /** The group's `v-model` takes this value when the radio button is selected. */
-  value: RadioValue;
+  value?: RadioValue;
 }
 
-const { value, disabled, softDisabled } = defineProps<Props>();
+// `selected` is for a radio button outside a group, which only shows it, as in a list item.
+const { value, selected, disabled, softDisabled } = defineProps<Props>();
 
-const group = inject(radioGroupKey);
-if (!group) throw new Error('RioRadio has to be inside a RioRadioGroup.');
+const group = inject(radioGroupKey, null);
+if (group && value === undefined) throw new Error('RioRadio in a RioRadioGroup needs a value.');
+const isSelected = () => (group ? group.isSelected(value!) : !!selected);
 
 const radio = createRadio({
   // `satisfies` fails the build if a prop added to RadioProps is missing here.
   props: () =>
-    ({ selected: group.isSelected(value), disabled, softDisabled }) satisfies Record<
+    ({ selected: isSelected(), disabled, softDisabled }) satisfies Record<
       keyof RadioProps,
       unknown
     >,
-  name: group.name,
-  value: () => String(value),
+  name: () => group?.name() ?? '',
+  value: () => String(value ?? ''),
 });
 
 const input = useTemplateRef<HTMLInputElement>('input');
@@ -46,11 +48,12 @@ let checkable: CheckableHandle | undefined;
 let unregister: (() => void) | undefined;
 onMounted(() => {
   checkable = attachCheckable(input.value!, {
-    checked: () => group.isSelected(value),
+    checked: isSelected,
     blocked: radio.blocked,
-    onChange: (checked) => checked && group.select(value),
+    // Outside a group nothing changes the state, so the input goes back to it.
+    onChange: (checked) => (group ? checked && group.select(value!) : checkable?.sync()),
   });
-  unregister = group.register(checkable);
+  unregister = group?.register(checkable);
 });
 onUpdated(() => checkable?.sync());
 onBeforeUnmount(() => {

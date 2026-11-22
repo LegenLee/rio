@@ -95,6 +95,10 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    list/
+      list.ts               the list and its items: props, parts, roles, the selection, and the number of lines
+      interaction.ts        the list's tab stop and keys, which reach the secondary actions; an item's wrapping text (DOM, tested through the Vue components)
+      list.test.ts
     loading-indicator/
       loading-indicator.ts  props, parts, the loop's and a value's moments, and the shape drawn at each
       interaction.ts        drawing the shape every frame while it loops (DOM, tested through the Vue component)
@@ -157,6 +161,7 @@ packages/
       number.ts             parseFloatStrict, a number as Kotlin reads it, for the shapes' parsers; addSteps, for slider and scroll field
       object.ts             resolveProps, which every component with defaults reads its props through
       progress.ts           a value's share of its range and the progressbar ARIA, for progress and loading indicators
+      selection.ts          selectedValues and nextSelection: a group's rules for choosing one or many, for lists
       typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/
@@ -174,6 +179,7 @@ packages/
     chip.css                the four chips and the chip set
     dialog.css
     icon-button.css         layered on top of button.css
+    list.css                the list and its items, standard and segmented
     loading-indicator.css
     menu.css
     progress.css            the linear and circular indicators, flat, and their indeterminate motion
@@ -206,6 +212,10 @@ packages/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
+    list/
+      List.vue              the list, which keeps the selection and the tab stop
+      ListItem.vue          class and style on the <li>, other attributes on the link or button when there is one
+      context.ts            what a list provides to its items
     loading-indicator/
       LoadingIndicator.vue
       LoadingIndicator.vrt.test.ts  screenshot test (see Visual regression)

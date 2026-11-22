@@ -76,6 +76,8 @@ import {
   RioIconButton,
   RioInputChip,
   RioLinearProgress,
+  RioList,
+  RioListItem,
   RioLoadingIndicator,
   RioMenu,
   RioMenuDivider,
@@ -219,6 +221,8 @@ const dates = reactive<{
   korean: '2026-11-27',
 });
 const dateDialogOpen = ref(false);
+const listPicks = ref<(string | number)[] | string | number | undefined>(['heart']);
+const listOpened = ref('');
 const dateRangeOpen = ref(false);
 const times = reactive<{
   inline?: string;
@@ -1221,6 +1225,55 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         </RioTimeScroll>
       </div>
       <code>{{ times }}</code>
+    </section>
+
+    <section class="lists">
+      <RioList variant="segmented" style="inline-size: 320px">
+        <RioListItem @click="listOpened = 'Search'">
+          <template #leading>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMagnify" fill="currentColor" />
+            </svg>
+          </template>
+          Search
+          <template #supporting>Across every note</template>
+          <template #trailing>
+            <RioIconButton variant="standard" label="More">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path :d="mdiDotsVertical" fill="currentColor" />
+              </svg>
+            </RioIconButton>
+          </template>
+        </RioListItem>
+        <RioListItem href="#lists" @click="listOpened = 'Share'">
+          <template #leading>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiShareVariant" fill="currentColor" />
+            </svg>
+          </template>
+          Share
+          <template #trailing>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronRight" fill="currentColor" />
+            </svg>
+          </template>
+        </RioListItem>
+        <RioListItem disabled @click="listOpened = 'Restore'">Restore</RioListItem>
+      </RioList>
+      <RioList
+        v-model="listPicks"
+        selection="multiple"
+        label="Favorites"
+        style="inline-size: 320px"
+      >
+        <RioListItem v-for="name in ['heart', 'bookmark', 'check']" :key="name" :value="name">
+          <template #leading="{ selected }"><RioCheckbox :selected /></template>
+          {{ name }}
+          <template #overline>Favorite</template>
+          <template #supporting>Chosen with a press, Space, or Enter</template>
+        </RioListItem>
+      </RioList>
+      <code>{{ listOpened || 'nothing opened' }} · {{ listPicks }}</code>
     </section>
 
     <section class="selection">
