@@ -118,16 +118,14 @@ export interface ButtonApi<E extends CancelableEvent = MouseEvent> {
 const isLink = (p: ButtonProps) => p.href !== undefined;
 const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text' && !isLink(p);
 
-/** Defaults under the given props, skipping props that are explicitly `undefined`. */
-const resolve = (props: ButtonProps) => resolveProps(buttonDefaults, props);
-
 export function createButton<E extends CancelableEvent = MouseEvent>(
   options: ButtonOptions<E>,
 ): ButtonApi<E> {
   return {
     parts: {
       root() {
-        const p = resolve(options.props());
+        /** Defaults under the given props, skipping props that are explicitly `undefined`. */
+        const p = resolveProps(buttonDefaults, options.props());
         if (isLink(p)) {
           return {
             class: 'rio-button rio-state-layer rio-focus-ring',
