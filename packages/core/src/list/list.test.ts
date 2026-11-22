@@ -112,6 +112,22 @@ describe('createList', () => {
     expect(nothing.list.isSelected('a')).toBe(false);
   });
 
+  test('the selection control: a radio button for one, a checkbox or a switch for several', () => {
+    const control = (props: ListProps) => listSetup(props).list.control();
+    expect(control({})).toBe('none');
+    expect(control({ control: 'checkbox' })).toBe('none');
+    expect(control({ selection: 'single' })).toBe('radio');
+    expect(control({ selection: 'single', control: 'none' })).toBe('none');
+    expect(control({ selection: 'single', control: 'checkbox' })).toBe('radio');
+    expect(control({ selection: 'single', control: 'switch' })).toBe('radio');
+    expect(control({ selection: 'multiple' })).toBe('checkbox');
+    expect(control({ selection: 'multiple', control: 'switch' })).toBe('switch');
+    expect(control({ selection: 'multiple', control: 'none' })).toBe('none');
+    expect(control({ selection: 'multiple', control: 'radio' })).toBe('checkbox');
+    expect(listSetup().list.controlPosition()).toBe('trailing');
+    expect(listSetup({ controlPosition: 'leading' }).list.controlPosition()).toBe('leading');
+  });
+
   test('the tab stop is the item the adapter keeps, or none yet', () => {
     const { list } = listSetup({}, 'k2');
     expect([list.isTabStop('k2'), list.isTabStop('k1')]).toEqual([true, false]);
@@ -162,6 +178,25 @@ describe('createListItem', () => {
     expect(item.selected()).toBe(true);
     const other = itemSetup({ value: 'b' }, { selection: 'single', selected: 'a' });
     expect(other.item.parts.root()).toMatchObject({ 'aria-selected': 'false' });
+  });
+
+  test('an option draws the list’s control in its position, unless its content is there', () => {
+    const option = (listProps: ListProps, content: Partial<ListItemContent> = {}) =>
+      itemSetup({ value: 'a' }, listProps, content).item;
+    const single = option({ selection: 'single' });
+    expect([single.controlIn('leading'), single.controlIn('trailing')]).toEqual([
+      undefined,
+      'radio',
+    ]);
+    expect([single.showsLeading(), single.showsTrailing()]).toEqual([false, true]);
+    const leading = option({ selection: 'multiple', controlPosition: 'leading' });
+    expect([leading.controlIn('leading'), leading.showsLeading(), leading.showsTrailing()]).toEqual(
+      ['checkbox', true, false],
+    );
+    const filled = option({ selection: 'multiple' }, { trailing: true });
+    expect([filled.controlIn('trailing'), filled.showsTrailing()]).toEqual([undefined, true]);
+    expect(option({ selection: 'multiple', control: 'none' }).showsTrailing()).toBe(false);
+    expect(itemSetup({ value: 'a' }).item.controlIn('trailing')).toBeUndefined();
   });
 
   test('until the list picks a tab stop, an action keeps its own focus', () => {

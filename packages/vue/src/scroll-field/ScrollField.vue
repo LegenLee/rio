@@ -67,6 +67,10 @@ const field = createScrollField({
 });
 
 const centerItem = computed(() => field.centerIndex());
+// The value's option, which carries `aria-selected`
+const valueItem = computed(() => field.targetIndex());
+// With the copies, which items are the options
+const itemCount = computed(() => field.items().length);
 
 const root = useTemplateRef<HTMLDivElement>('root');
 const viewport = useTemplateRef<HTMLDivElement>('viewport');
@@ -99,11 +103,12 @@ onBeforeUnmount(() => handle?.detach());
 <template>
   <div ref="root" v-bind="field.parts.root()" @keydown="field.handleKeydown">
     <div ref="viewport" v-bind="field.parts.viewport()">
-      <!-- An item renders again only when its text changes, or whether it is in the middle. -->
+      <!-- An item renders again only when its text changes, whether it is in the middle, whether it
+           is the value's option, or the number of items. -->
       <div
         v-for="item in field.items()"
         :key="item"
-        v-memo="[field.itemText(item), item === centerItem]"
+        v-memo="[field.itemText(item), item === centerItem, item === valueItem, itemCount]"
         v-bind="field.parts.item(item)"
         @click="field.selectItem(item)"
       >

@@ -97,7 +97,7 @@ import Selection from './demos/list/Selection.vue';
 
 - Order items logically, keep them short and scannable, and keep each element in the same place from item to item. Limit supporting text to one to three lines.
 - Anchor visuals to the leading edge. Use a leading icon that relates to the label; a trailing icon for a status or an action; trailing text for a price, a count, or a date.
-- Use checkboxes or switches to select several items, radio buttons for one.
+- Use checkboxes to select several items, switches to turn settings on or off, and radio buttons to select one.
 - Let lists run edge to edge in compact windows; at larger sizes, keep lines between 40 and 60 characters, show more per item, or swap the list for cards or a carousel.
 
 ## In Rio
@@ -114,20 +114,19 @@ import Selection from './demos/list/Selection.vue';
 </RioList>
 
 <RioList v-model="toppings" selection="multiple" label="Toppings">
-  <RioListItem value="cheese">
-    <template #leading="{ selected }"><RioCheckbox :selected /></template>
-    Cheese
-  </RioListItem>
+  <RioListItem value="cheese">Cheese</RioListItem>
 </RioList>
 ```
 
-| `RioList` prop | Type                                                       | Default      |
-| -------------- | ---------------------------------------------------------- | ------------ |
-| `modelValue`   | the selected value or values, with `v-model`               | —            |
-| `variant`      | `'standard' \| 'segmented'`                                | `'standard'` |
-| `selection`    | `'none' \| 'single' \| 'multiple'`                         | `'none'`     |
-| `required`     | `boolean`: keeps one item selected                         | `false`      |
-| `label`        | `string`: names the list; a list box's says what is chosen | —            |
+| `RioList` prop    | Type                                                       | Default        |
+| ----------------- | ---------------------------------------------------------- | -------------- |
+| `modelValue`      | the selected value or values, with `v-model`               | —              |
+| `variant`         | `'standard' \| 'segmented'`                                | `'standard'`   |
+| `selection`       | `'none' \| 'single' \| 'multiple'`                         | `'none'`       |
+| `required`        | `boolean`: keeps one item selected                         | `false`        |
+| `control`         | `'checkbox' \| 'radio' \| 'switch' \| 'none'`              | by `selection` |
+| `controlPosition` | `'leading' \| 'trailing'`                                  | `'trailing'`   |
+| `label`           | `string`: names the list; a list box's says what is chosen | —              |
 
 | `RioListItem` prop | Type                                                | Default |
 | ------------------ | --------------------------------------------------- | ------- |
@@ -142,7 +141,8 @@ Slots on `RioListItem`: the default slot is the label; `overline` and `supportin
 - **One list, one mode, from its props and its items'** (Rio's choice):
   - With `selection`, the list is a list box, and every item is an option, chosen by its `value`, which `v-model` holds: one, or an array of them. `required` keeps the last one selected, as in the button group and the chip set; without it, a press on the selected item turns it off.
   - Without `selection`, an item with `href` is a link, one with a `@click` listener is a button, and one with neither is static. In a list of links and buttons, what takes the focus in an item's `trailing` slot is a secondary action, so the item is multi-action.
-- **Controls only show the state** (Rio's choice): in a list box, the `leading` and `trailing` slots take no presses, and what takes the focus in them is kept out of the tab order, so a checkbox, a radio button, or a switch there leaves both to the option. Bind the slot's `selected` to it. Their text stays part of the option's name, such as a count in the trailing slot; an option's content has no roles of its own for assistive technology. `RioRadio` shows `selected` outside a radio group for this (see [radio-button.md](radio-button.md)).
+- **Each option draws the selection's control** (Rio's choice: the spec has radio buttons select one item, checkboxes select several, and switches turn settings on or off, and its anatomy puts the control at the end): a radio button with `single`, and a checkbox with `multiple`, after the text, with the item's state. `control="switch"` draws switches with `multiple`, for settings; `control="none"` draws nothing, for an icon or another style that shows the selection, as the spec allows. A control the selection doesn't take, such as a checkbox with `single`, gives way to its own. `controlPosition="leading"` draws it before the text. The app's own content in that slot takes its place, so a slot with a control on the other side wants `controlPosition` or `control="none"`, or the item shows two.
+- **Controls only show the state** (Rio's choice): in a list box, the `leading` and `trailing` slots take no presses, and what takes the focus in them is kept out of the tab order, so a checkbox, a radio button, or a switch there leaves both to the option, as the list's own does. Bind the slot's `selected` to one there. Their text stays part of the option's name, such as a count in the trailing slot; an option's content has no roles of its own for assistive technology. `RioRadio` shows `selected` outside a radio group for this (see [radio-button.md](radio-button.md)).
 - **Attributes**: `class` and `style` go to the `<li>`; every other attribute and listener goes to a link's or a button's `<a>` or `<button>`, and otherwise to the `<li>`.
 
 ### Keys and focus
