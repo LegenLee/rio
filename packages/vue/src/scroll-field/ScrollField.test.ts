@@ -257,6 +257,103 @@ describe('RioScrollField', () => {
     await settledOn('00');
   });
 
+  test('looping with few values, steps faster than the scroll keep their way', async () => {
+    const { state, viewport, settledOn } = await setup({
+      props: { options: ['a', 'b', 'c'], loop: true },
+      value: 'a',
+    });
+    await settledOn('a');
+    const height = viewport.firstElementChild!.getBoundingClientRect().height;
+    const tops: number[] = [];
+    const onScroll = () => tops.push(viewport.scrollTop / height);
+    viewport.addEventListener('scroll', onScroll);
+    // A mouse wheel turned fast, past the copies on that side
+    for (let notch = 0; notch < 50; notch++) {
+      viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    expect(state.value).toBe('c');
+    await settledOn('c');
+    viewport.removeEventListener('scroll', onScroll);
+    // Down the column only, apart from moves back by whole copies of the three values
+    const back = tops
+      .slice(1)
+      .map((top, i) => tops[i]! - top)
+      .filter((by) => by > 0.05);
+    expect(back.every((by) => by > 2)).toBe(true);
+    // Short of the last copy
+    expect(Math.max(...tops)).toBeLessThan(viewport.childElementCount - 3);
+  });
+
+  test('a smooth scroll that ends short of where the field is headed doesn’t turn it back', async () => {
+    const { root, state, viewport, settledOn } = await setup({
+      props: { options: ['a', 'b', 'c'], loop: true },
+      value: 'a',
+    });
+    await settledOn('a');
+    const start = viewport.scrollTop;
+    const key = (key: string) => root.dispatchEvent(new KeyboardEvent('keydown', { key }));
+    key('ArrowDown');
+    await nextTick();
+    key('ArrowDown');
+    await nextTick();
+    expect(state.value).toBe('c');
+    // As the browser ends one that a newer one replaced
+    viewport.dispatchEvent(new Event('scrollend'));
+    let least = start;
+    for (let frame = 0; frame < 20; frame++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      least = Math.min(least, viewport.scrollTop);
+    }
+    expect(start - least).toBeLessThan(1);
+    await settledOn('c');
+  });
+
+  test('a step back before the scroll moves stops it on the value', async () => {
+    const { root, state, viewport, settledOn } = await setup({ props: { min: 0, max: 59 } });
+    await settledOn('07');
+    const start = viewport.scrollTop;
+    const key = (key: string) => root.dispatchEvent(new KeyboardEvent('keydown', { key }));
+    key('ArrowDown');
+    await nextTick();
+    key('ArrowUp');
+    await nextTick();
+    expect(state.value).toBe(7);
+    let furthest = start;
+    for (let frame = 0; frame < 20; frame++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      furthest = Math.max(furthest, viewport.scrollTop);
+    }
+    expect(furthest - start).toBeLessThan(1);
+    await settledOn('07');
+  });
+
+  test('placed again at once while it scrolls, the next step goes on from there', async () => {
+    const { root, state, viewport, settledOn } = await setup({
+      props: { options: ['a', 'b', 'c'], loop: true },
+      value: 'a',
+    });
+    await settledOn('a');
+    const height = viewport.firstElementChild!.getBoundingClientRect().height;
+    const key = (key: string) => root.dispatchEvent(new KeyboardEvent('keydown', { key }));
+    key('ArrowDown');
+    await nextTick();
+    key('ArrowDown');
+    await nextTick();
+    expect(state.value).toBe('c');
+    // A change of size places the value again, at once.
+    root.style.inlineSize = '200px';
+    await settledOn('c');
+    const placed = viewport.scrollTop;
+    let furthest = placed;
+    const onScroll = () => (furthest = Math.max(furthest, viewport.scrollTop));
+    viewport.addEventListener('scroll', onScroll);
+    key('ArrowDown');
+    await settledOn('a');
+    viewport.removeEventListener('scroll', onScroll);
+    expect((furthest - placed) / height).toBeLessThan(1.1);
+  });
+
   test('back in the page, which loses the scroll, the value is in the middle again at once', async () => {
     const { root, state, viewport, items, settledOn } = await setup({ props: { min: 0, max: 59 } });
     await settledOn('07');

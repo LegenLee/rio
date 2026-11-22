@@ -149,7 +149,7 @@ States: enabled, hovered, focused, and disabled, each inactive (scrolling) and a
 - **The app decides**: when it turns a value down, the scroll goes back to the value once it stops.
 - **Keys** (Rio's choice for Home and End, from the WAI-ARIA list box pattern): Up and Down move to the value above and below, round the ends while looping; Home and End go to the first and the last value; Space and Enter start typing.
 - **A notch of a mouse wheel moves one value**, as an arrow key does (Rio's choice): the browser would scroll a notch as far as two values. A trackpad and a finger scroll freely, and snap. Ctrl and the wheel zoom the page, and over a disabled field the wheel scrolls the page.
-- A looping field holds its values in copies and, once a scroll stops, moves to the same value in the middle copy, so there is always more to scroll.
+- A looping field holds its values in copies and, once a scroll stops, moves to the same value in the middle copy, so there is always more to scroll. Steps faster than the scroll, from the wheel or the keys, keep going the way they started, to the next value's nearest copy on from where the scroll is headed; as they run far from the middle copy, the scroll moves back by whole copies at once.
 
 ### Typing
 

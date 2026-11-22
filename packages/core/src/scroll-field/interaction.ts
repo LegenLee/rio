@@ -8,9 +8,11 @@
 //   Over a field that doesn't take it, the page scrolls instead.
 // - `sync` scrolls the value's item into the middle when it isn't there. It waits while the person
 //   scrolls, and corrects the scroll once it stops, as when the app turned the value down. It
-//   scrolls at once the first time and under reduced motion, smoothly otherwise. As the viewport
-//   comes back into the page, which loses the scroll, or changes size, the value goes back to the
-//   middle at once.
+//   scrolls at once the first time and under reduced motion, smoothly otherwise. While it scrolls,
+//   a new value's item is the one nearest where it is headed, so steps faster than the scroll keep
+//   their way, and a looping field whose scroll heads out of the middle copy moves back by whole
+//   copies at once, so it doesn't run out of them. As the viewport comes back into the page, which
+//   loses the scroll, or changes size, the value goes back to the middle at once.
 // - A looping field, once its scroll stops, moves at once to the same value in the middle copy, so
 //   there is always more to scroll either way.
 // - As editing starts, the text input takes the focus, with its text selected. Typing completes
@@ -91,6 +93,12 @@ export function attachScrollField(
     if (!viewport) return;
     const top = index * itemHeight();
     if (Math.abs(viewport.scrollTop - top) < 0.5) {
+      // Already there: a smooth scroll on the way elsewhere stops.
+      if (driver === 'rio') {
+        driver = undefined;
+        heading = undefined;
+        viewport.scrollTo({ top, behavior: 'auto' });
+      }
       report(index, false);
       return;
     }
@@ -100,6 +108,9 @@ export function attachScrollField(
       viewport.scrollTo({ top, behavior: 'smooth' });
       return;
     }
+    // At once, in place of a smooth scroll on its way
+    driver = undefined;
+    heading = undefined;
     report(index, false);
     viewport.scrollTo({ top, behavior: 'auto' });
   };
@@ -114,11 +125,23 @@ export function attachScrollField(
   const place = () => {
     if (!viewport || !itemHeight()) return;
     if (moving && driver === 'person') return;
-    const target = options.targetIndex(center);
     if (!placed) {
       placed = true;
-      scrollTo(target, false);
-    } else if (target !== center && !(driver === 'rio' && heading === target)) {
+      scrollTo(options.targetIndex(center), false);
+      return;
+    }
+    // While Rio scrolls, from where it is headed, so steps faster than the scroll keep their way
+    const from = driver === 'rio' ? heading : center;
+    let target = options.targetIndex(from);
+    // Whole copies from the middle one, in a looping field. Far out, the scroll moves back by them
+    // at once, which snaps it to an item, so only then.
+    const away = target - options.targetIndex();
+    if (driver === 'rio' && Math.abs(away) > itemCount() / 4 && from !== undefined) {
+      viewport.scrollTo({ top: viewport.scrollTop - away * itemHeight(), behavior: 'auto' });
+      target -= away;
+      // Moving the scroll stopped the smooth one.
+      scrollTo(target, !prefersReducedMotion());
+    } else if (target !== from) {
       scrollTo(target, !prefersReducedMotion());
     }
   };
@@ -126,6 +149,16 @@ export function attachScrollField(
   const settle = () => {
     clearTimeout(settleTimer);
     if (touching) return;
+    // A smooth scroll that a newer one replaced, or that moved by whole copies, ends short of
+    // where Rio is headed.
+    if (
+      driver === 'rio' &&
+      heading !== undefined &&
+      viewport &&
+      Math.abs(viewport.scrollTop / itemHeight() - heading) > 0.5
+    ) {
+      return;
+    }
     moving = false;
     driver = undefined;
     heading = undefined;

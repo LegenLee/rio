@@ -4,6 +4,12 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [0.6.1] - 2026-11-22
+
+### Fixed
+
+- A looping `RioScrollField` with few values, such as three, scrolled back and forth as a mouse wheel turned or keys went faster than its scroll: each value went to its copy nearest the value in the middle, which was behind the scroll as often as ahead of it. Each goes on from where the scroll is headed now, so the scroll keeps the steps' way, and a long run of them no longer stops at the end of the copies. A step back before the scroll has moved stops it on the value.
+
 ## [0.6.0] - 2026-11-22
 
 Core's DOM behaviors no longer keep state on the elements an adapter renders, apart from a primitive's own marks: they report what they find, the adapter keeps it, and the parts render it. They still write values no render could keep up with, as a spring's or a drag's. Adapters other than Rio's own need the new callbacks below.
@@ -203,3 +209,4 @@ The first release: the M3E foundations and three components, the button, the ico
 [0.4.0]: https://github.com/LegenLee/rio/releases/tag/v0.4.0
 [0.5.0]: https://github.com/LegenLee/rio/releases/tag/v0.5.0
 [0.6.0]: https://github.com/LegenLee/rio/releases/tag/v0.6.0
+[0.6.1]: https://github.com/LegenLee/rio/releases/tag/v0.6.1
