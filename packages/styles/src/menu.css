@@ -197,8 +197,8 @@
   color: var(--_item-icon);
 }
 
-.rio-menu-item__icon > :is(svg, img),
-.rio-menu-item__trailing-icon > :is(svg, img) {
+.rio-menu-item__icon > :is(svg, img, :where(.rio-icon)),
+.rio-menu-item__trailing-icon > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
 }

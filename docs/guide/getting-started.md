@@ -102,7 +102,7 @@ app.use(
 
 ## Use the components
 
-Each component imports its own styles. Rio ships no icons, so bring your own. This example uses [Material Design Icons](https://pictogrammers.com/library/mdi/) from `@mdi/js`:
+Each component imports its own styles. Rio ships no icons, so bring your own: in a component's slot, as here, or once for the whole app, for the icons the components draw on their own (see [Icons](./icons.md)). This example uses [Material Design Icons](https://pictogrammers.com/library/mdi/) from `@mdi/js`:
 
 ```vue
 <script setup lang="ts">

@@ -30,6 +30,7 @@ import { useLocale, useMessages } from '../locale/locale';
 import { keepPresses } from '../overlay/presses';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
+import RioIcon from '../icon/Icon.vue';
 
 const props = defineProps<{
   /** The earliest date that can be chosen, `YYYY-MM-DD` */
@@ -57,12 +58,21 @@ const model = defineModel<string | undefined>();
 /** Whether the dialog is shown, with `v-model:open`. */
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{
+  /** Without one, the `previous` icon registered with `createRio`. */
   'previous-icon'?: () => unknown;
+  /** Without one, the `next` icon registered with `createRio`. */
   'next-icon'?: () => unknown;
+  /** Without one, the `dropdown` icon registered with `createRio`. */
   'dropdown-icon'?: () => unknown;
-  /** The mode button's icon in the calendar, which switches to the text input */
+  /**
+   * The mode button's icon in the calendar, which switches to the text input. Without one, the
+   * `edit` icon registered with `createRio`.
+   */
   'edit-icon'?: () => unknown;
-  /** The mode button's icon in the text input, which switches to the calendar */
+  /**
+   * The mode button's icon in the text input, which switches to the calendar. Without one, the
+   * `calendar` icon registered with `createRio`.
+   */
   'calendar-icon'?: () => unknown;
 }>();
 
@@ -139,8 +149,8 @@ onBeforeUnmount(() => handle?.detach());
         <span v-bind="dialog.parts.title()">{{ messages.title }}</span>
         <span v-bind="dialog.parts.headline()">{{ dialog.headline() }}</span>
         <IconButton variant="standard" :label="dialog.modeButtonLabel()" @click="dialog.switchMode">
-          <slot v-if="state.mode === 'calendar'" name="edit-icon" />
-          <slot v-else name="calendar-icon" />
+          <slot v-if="state.mode === 'calendar'" name="edit-icon"><RioIcon alias="edit" /></slot>
+          <slot v-else name="calendar-icon"><RioIcon alias="calendar" /></slot>
         </IconButton>
       </div>
       <div v-bind="dialog.parts.divider()" />

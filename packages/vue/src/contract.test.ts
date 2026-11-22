@@ -2,6 +2,8 @@
 // configurations, has to match its skeleton and carry the attributes core gives each part. A new
 // adapter writes the same test against the same skeletons.
 import {
+  createIcon,
+  type IconSource,
   buttonGroupSkeleton,
   buttonLinkSkeleton,
   buttonSkeleton,
@@ -137,6 +139,8 @@ import { userEvent } from 'vitest/browser';
 import { createApp, defineComponent, h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
+import Icon from './icon/Icon.vue';
+import { createRio } from './rio/rio';
 import Checkbox from './checkbox/Checkbox.vue';
 import DatePicker from './date-picker/DatePicker.vue';
 import DatePickerCalendar from './date-picker/DatePickerCalendar.vue';
@@ -209,6 +213,36 @@ describe('RioButton', () => {
       onChange: noop,
     });
     expectSkeleton(rootOf(screen), api.isLink() ? buttonLinkSkeleton : buttonSkeleton, api);
+  });
+});
+
+describe('RioIcon', () => {
+  test.each<[string, IconSource]>([
+    ['SVG paths', { type: 'svg', path: ['M0 0h24v12H0z', 'M0 12h24v12H0z'] }],
+    [
+      'SVG paths in their own view box',
+      { type: 'svg', path: 'M0 0h48v48H0z', viewBox: '0 0 48 48' },
+    ],
+    ['a ligature', { type: 'ligature', name: 'home', className: 'material-symbols-outlined' }],
+    ['a font’s class', { type: 'class', className: 'mdi mdi-home' }],
+  ])('%s', async (_, icon) => {
+    const screen = await render(Icon, { props: { icon } });
+    const api = createIcon({ source: () => icon });
+    expectSkeleton(rootOf(screen), api.skeleton()!, api);
+  });
+
+  test('a component, under the root part, as an alias pointing along the line', async () => {
+    const Arrow = defineComponent(() => () => h('svg', { viewBox: '0 0 24 24' }));
+    const screen = await render(Icon, {
+      props: { alias: 'next' },
+      global: { plugins: [createRio({ icons: { aliases: { next: Arrow } } })] },
+    });
+    const api = createIcon({ source: () => undefined, alias: () => 'next' });
+    expect(api.skeleton()).toBeUndefined();
+    const root = rootOf(screen);
+    for (const [name, value] of Object.entries(api.parts.root())) {
+      expect(root.getAttribute(name), name).toBe(value ?? null);
+    }
   });
 });
 

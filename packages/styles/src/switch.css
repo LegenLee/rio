@@ -232,7 +232,7 @@
   block-size: 16px;
 }
 
-.rio-switch__icon > :is(svg, img) {
+.rio-switch__icon > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
 }

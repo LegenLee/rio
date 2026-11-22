@@ -17,6 +17,7 @@ import { onBeforeUnmount, onMounted, reactive, useId, useTemplateRef, watch } fr
 import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
 import TimePickerBody from './TimePickerBody.vue';
+import RioIcon from '../icon/Icon.vue';
 
 const props = defineProps<{
   /** A language tag. Without it, the one provided, or the document's, or the browser's. */
@@ -29,9 +30,15 @@ const props = defineProps<{
 /** The time, `HH:MM` on a 24-hour clock, with `v-model`. */
 const model = defineModel<string | undefined>();
 defineSlots<{
-  /** The mode button's icon on the scroll fields, which switches to the text input */
+  /**
+   * The mode button's icon on the scroll fields, which switches to the text input. Without one, the
+   * `keyboard` icon registered with `createRio`.
+   */
   'keyboard-icon'?: () => unknown;
-  /** The mode button's icon in the text input, which switches back to the scroll fields */
+  /**
+   * The mode button's icon in the text input, which switches back to the scroll fields. Without
+   * one, the `swipe` icon registered with `createRio`.
+   */
   'swipe-icon'?: () => unknown;
 }>();
 
@@ -76,8 +83,10 @@ onBeforeUnmount(() => handle?.detach());
           :label="picker.modeButtonLabel()"
           @click="picker.switchMode()"
         >
-          <slot v-if="picker.modeButtonIcon() === 'keyboard'" name="keyboard-icon" />
-          <slot v-else name="swipe-icon" />
+          <slot v-if="picker.modeButtonIcon() === 'keyboard'" name="keyboard-icon"
+            ><RioIcon alias="keyboard"
+          /></slot>
+          <slot v-else name="swipe-icon"><RioIcon alias="swipe" /></slot>
         </IconButton>
       </template>
     </TimePickerBody>

@@ -24,6 +24,8 @@ import {
 } from 'vue';
 import { vRipple } from '../ripple/ripple';
 import { menuContextOf, menuKey } from './context';
+import RioIcon from '../icon/Icon.vue';
+import { useIconOfAlias } from '../icon/icons';
 
 // The item and the submenu render side by side, so attributes given to the component go to the item.
 defineOptions({ inheritAttrs: false });
@@ -50,7 +52,7 @@ const slots = defineSlots<{
   'trailing-text'?: () => unknown;
   /**
    * A trailing icon on the item, hidden from assistive technology, such as an arrow pointing to the
-   * submenu. Rio ships no icons.
+   * submenu. Without one, the `submenu` icon registered with `createRio`.
    */
   'trailing-icon'?: () => unknown;
 }>();
@@ -59,6 +61,8 @@ const parent = inject(menuKey, undefined);
 const open = ref(false);
 const inactive = ref(false);
 const id = useId();
+// The app's registered arrow to the submenu, where its slot gives none
+const submenuIcon = useIconOfAlias('submenu');
 const sub = createSubMenu({
   // `satisfies` fails the build if a prop added to SubMenuProps is missing here.
   props: () =>
@@ -70,7 +74,7 @@ const sub = createSubMenu({
     icon: !!slots.icon,
     supportingText: !!slots['supporting-text'],
     trailingText: !!slots['trailing-text'],
-    trailingIcon: !!slots['trailing-icon'],
+    trailingIcon: !!slots['trailing-icon'] || !!submenuIcon.value,
   }),
   menu: () => parent,
   open: () => open.value,
@@ -120,7 +124,7 @@ onBeforeUnmount(() => handle?.detach());
       <slot name="trailing-text" />
     </span>
     <span v-if="item.showsTrailingIcon()" v-bind="item.parts.trailingIcon()">
-      <slot name="trailing-icon" />
+      <slot name="trailing-icon"><RioIcon alias="submenu" /></slot>
     </span>
   </button>
   <!-- Inside the menu's own element, which keeps clicks and presses in. -->

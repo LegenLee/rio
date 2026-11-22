@@ -416,7 +416,7 @@
   inset-block-end: calc(var(--_at-value) + var(--_gap) + var(--_icon-padding));
 }
 
-.rio-slider__icon > :is(svg, img) {
+.rio-slider__icon > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
 }

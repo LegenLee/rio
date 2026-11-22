@@ -35,6 +35,7 @@ import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
 import { keepPresses } from '../overlay/presses';
 import TimePickerBody from './TimePickerBody.vue';
+import RioIcon from '../icon/Icon.vue';
 
 const props = defineProps<{
   /** A language tag. Without it, the one provided, or the document's, or the browser's. */
@@ -55,11 +56,20 @@ const model = defineModel<string | undefined>();
 /** Whether the dialog is shown, with `v-model:open`. */
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{
-  /** The mode button's icon on the dial or the scroll fields, which switches to the text input */
+  /**
+   * The mode button's icon on the dial or the scroll fields, which switches to the text input.
+   * Without one, the `keyboard` icon registered with `createRio`.
+   */
   'keyboard-icon'?: () => unknown;
-  /** The mode button's icon in the text input, which switches back to the dial */
+  /**
+   * The mode button's icon in the text input, which switches back to the dial. Without one, the
+   * `clock` icon registered with `createRio`.
+   */
   'clock-icon'?: () => unknown;
-  /** The mode button's icon in the text input, which switches back to the scroll fields */
+  /**
+   * The mode button's icon in the text input, which switches back to the scroll fields. Without
+   * one, the `swipe` icon registered with `createRio`.
+   */
   'swipe-icon'?: () => unknown;
 }>();
 
@@ -146,9 +156,13 @@ const onKeydown = (event: KeyboardEvent) => {
           :label="picker.modeButtonLabel()"
           @click="picker.switchMode()"
         >
-          <slot v-if="picker.modeButtonIcon() === 'keyboard'" name="keyboard-icon" />
-          <slot v-else-if="picker.modeButtonIcon() === 'clock'" name="clock-icon" />
-          <slot v-else name="swipe-icon" />
+          <slot v-if="picker.modeButtonIcon() === 'keyboard'" name="keyboard-icon"
+            ><RioIcon alias="keyboard"
+          /></slot>
+          <slot v-else-if="picker.modeButtonIcon() === 'clock'" name="clock-icon"
+            ><RioIcon alias="clock"
+          /></slot>
+          <slot v-else name="swipe-icon"><RioIcon alias="swipe" /></slot>
         </IconButton>
         <Button variant="text" @click="picker.cancel">{{ messages.cancel }}</Button>
         <Button variant="text" @click="picker.confirm">{{ messages.ok }}</Button>

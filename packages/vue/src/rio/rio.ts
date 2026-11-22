@@ -9,6 +9,7 @@ import {
   type App,
   type MaybeRefOrGetter,
 } from 'vue';
+import { iconsKey, type RioIcons } from '../icon/icons';
 import { localeKey, messagesKey } from '../locale/locale';
 
 /** The theme: `@rio-m3e/tokens`' options, with the `color-scheme` written with it */
@@ -30,6 +31,12 @@ export interface RioOptions {
   fallbackLocale?: MaybeRefOrGetter<string | undefined>;
   /** Message tables by language tag: languages Rio has no table for, or messages that replace Rio's. */
   messages?: MaybeRefOrGetter<Record<string, PartialMessages> | undefined>;
+  /**
+   * The app's icons: the ones the components draw on their own, by what they do (`aliases`),
+   * where the app's slot gives none, and `resolve`, which turns a name into an icon, as for
+   * `RioIcon`'s `icon`. Rio ships no icons.
+   */
+  icons?: MaybeRefOrGetter<RioIcons | undefined>;
 }
 
 /** A Vue plugin, for `app.use` */
@@ -58,6 +65,10 @@ export function createRio(options: RioOptions = {}): RioPlugin {
     },
     install(app) {
       app.provide(localeKey, toRef(options.locale));
+      app.provide(
+        iconsKey,
+        computed(() => toValue(options.icons)),
+      );
       app.provide(
         messagesKey,
         computed(() => ({

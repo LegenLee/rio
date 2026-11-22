@@ -156,7 +156,7 @@ The soft-disabled buttons stay focusable. Press Tab to reach them.
 
 ### Menu icon
 
-- **The app provides the icon** in the `menu-icon` slot, as for every icon in Rio, which ships none. Use an expand icon pointing down. It's hidden from assistive technology.
+- **The app provides the icon** in the `menu-icon` slot, or registered once for the app as `menu` (see [Icons](../guide/icons.md)), as for every icon in Rio, which ships none. Use an expand icon pointing down. It's hidden from assistive technology.
 - **Offset**: closed, the icon sits toward the start by the spec's offset (1px for extra small and small, then 2, 3, and 6px). The spec says "-1dp from center" without a direction; the M3 Design Kit in Figma places the extra large icon 6dp toward the leading button. Open, the icon is centered.
 - **Turn**: opening turns the icon 180°, and closing turns it back. Rio reads the spec's "inwards" as the point of the icon swinging through the start side, toward the leading button: clockwise in left-to-right layouts and counterclockwise in right-to-left ones. The spec shows this only as a video, so the direction is Rio's reading.
 - **Motion**: `attachSplitButtonMenuIcon` springs the turn (`--_menu-turn`) and the offset (`--_menu-shift`) on the trailing button toward the targets its stylesheet declares for each state. Both use the **standard** scheme's `fast-spatial` spring, as the spec says, whatever the theme's scheme: every theme exports the standard spatial springs for this (foundations, section 3). The corners use the theme's scheme, like any button's. Under reduced motion, the icon jumps.

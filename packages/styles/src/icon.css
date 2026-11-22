@@ -1,0 +1,44 @@
+/*
+ * Icons (`RioIcon`, and the icons Rio's components draw from the app's registered ones). The root
+ * carries `rio-icon`, `data-type`, and `data-mirrored`, which core writes: an `<svg>` for SVG paths,
+ * or a `<span>` around a glyph in an icon font, its ligature's name in `data-ligature`.
+ *
+ * An icon is 24px, the spec's default size, unless the place it sits in sizes it, as a
+ * component's icon slot does. It takes the color of the text around it.
+ */
+
+.rio-icon {
+  display: inline-block;
+  flex: none;
+  inline-size: var(--rio-icon-size, 24px);
+  block-size: var(--rio-icon-size, 24px);
+  vertical-align: middle;
+}
+
+svg.rio-icon {
+  fill: currentColor;
+}
+
+/* An icon font's glyph, as tall as the icon's box, whatever size the box is given */
+span.rio-icon {
+  container-type: size;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+span.rio-icon > * {
+  font-size: 100cqb;
+  line-height: 1;
+}
+
+/* Right to left, an icon that points along the line, drawn for one of Rio's aliases, mirrored */
+.rio-icon[data-mirrored]:dir(rtl) {
+  scale: -1 1;
+}
+
+/* The ligature's name, drawn but not in the page's text */
+.rio-icon > [data-ligature]::before {
+  content: attr(data-ligature);
+}

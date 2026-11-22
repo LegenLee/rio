@@ -12,6 +12,7 @@ import {
 import { onBeforeUnmount, onMounted, onUpdated, useTemplateRef } from 'vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { vRipple } from '../ripple/ripple';
+import RioIcon from '../icon/Icon.vue';
 
 const props = defineProps<{
   variant: DatePickerVariant;
@@ -31,8 +32,11 @@ const emit = defineEmits<{
   select: [date: string, confirm: boolean];
 }>();
 defineSlots<{
+  /** Without one, the `previous` icon registered with `createRio`. */
   'previous-icon'?: () => unknown;
+  /** Without one, the `next` icon registered with `createRio`. */
   'next-icon'?: () => unknown;
+  /** Without one, the `dropdown` icon registered with `createRio`. */
   'dropdown-icon'?: () => unknown;
 }>();
 
@@ -91,7 +95,7 @@ defineExpose({
             variant="standard"
             @click="calendar.goMonths(-1)"
           >
-            <slot name="previous-icon" />
+            <slot name="previous-icon"><RioIcon alias="previous" /></slot>
           </IconButton>
           <button
             v-ripple
@@ -99,14 +103,16 @@ defineExpose({
             @click="calendar.toggleView('months')"
           >
             {{ calendar.monthText() }}
-            <span v-bind="calendar.parts.dropdownIcon()"><slot name="dropdown-icon" /></span>
+            <span v-bind="calendar.parts.dropdownIcon()"
+              ><slot name="dropdown-icon"><RioIcon alias="dropdown" /></slot
+            ></span>
           </button>
           <IconButton
             v-bind="nav(calendar.parts.nextMonth())"
             variant="standard"
             @click="calendar.goMonths(1)"
           >
-            <slot name="next-icon" />
+            <slot name="next-icon"><RioIcon alias="next" /></slot>
           </IconButton>
         </span>
         <span class="rio-date-picker__menu-group">
@@ -115,7 +121,7 @@ defineExpose({
             variant="standard"
             @click="calendar.goMonths(-12)"
           >
-            <slot name="previous-icon" />
+            <slot name="previous-icon"><RioIcon alias="previous" /></slot>
           </IconButton>
           <button
             v-ripple
@@ -123,21 +129,25 @@ defineExpose({
             @click="calendar.toggleView('years')"
           >
             {{ calendar.yearText() }}
-            <span v-bind="calendar.parts.dropdownIcon()"><slot name="dropdown-icon" /></span>
+            <span v-bind="calendar.parts.dropdownIcon()"
+              ><slot name="dropdown-icon"><RioIcon alias="dropdown" /></slot
+            ></span>
           </button>
           <IconButton
             v-bind="nav(calendar.parts.nextYear())"
             variant="standard"
             @click="calendar.goMonths(12)"
           >
-            <slot name="next-icon" />
+            <slot name="next-icon"><RioIcon alias="next" /></slot>
           </IconButton>
         </span>
       </template>
       <template v-else>
         <button v-ripple v-bind="calendar.parts.yearButton()" @click="calendar.toggleView('years')">
           {{ calendar.yearText() }}
-          <span v-bind="calendar.parts.dropdownIcon()"><slot name="dropdown-icon" /></span>
+          <span v-bind="calendar.parts.dropdownIcon()"
+            ><slot name="dropdown-icon"><RioIcon alias="dropdown" /></slot
+          ></span>
         </button>
         <span class="rio-date-picker__menu-group">
           <IconButton
@@ -145,14 +155,14 @@ defineExpose({
             variant="standard"
             @click="calendar.goMonths(-1)"
           >
-            <slot name="previous-icon" />
+            <slot name="previous-icon"><RioIcon alias="previous" /></slot>
           </IconButton>
           <IconButton
             v-bind="nav(calendar.parts.nextMonth())"
             variant="standard"
             @click="calendar.goMonths(1)"
           >
-            <slot name="next-icon" />
+            <slot name="next-icon"><RioIcon alias="next" /></slot>
           </IconButton>
         </span>
       </template>

@@ -60,7 +60,7 @@
   color: var(--_trailing);
 }
 
-.rio-select__arrow > :is(svg, img) {
+.rio-select__arrow > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
 }

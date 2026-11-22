@@ -14,6 +14,7 @@ import { computed, useAttrs, useId, useTemplateRef } from 'vue';
 import { useLocale, useMessages } from '../locale/locale';
 import { useRipple } from '../ripple/ripple';
 import { useChipSetItem } from './context';
+import RioIcon from '../icon/Icon.vue';
 
 // `class` and `style` dress the whole chip; every other attribute, such as `aria-describedby`,
 // and every listener belongs to the chip's action, or to the chip on a `removeOnly` one.
@@ -39,7 +40,10 @@ const slots = defineSlots<{
   icon?: () => unknown;
   /** A leading image, such as a person's avatar, in a 24px circle. It wins over the icon. */
   avatar?: () => unknown;
-  /** The remove button's icon, such as an X. Hidden from assistive technology. */
+  /**
+   * The remove button's icon, such as an X. Hidden from assistive technology. Without one, the
+   * `remove` icon registered with `createRio`.
+   */
   'remove-icon'?: () => unknown;
 }>();
 
@@ -94,7 +98,9 @@ useRipple(useTemplateRef<HTMLElement>('action'), useTemplateRef<HTMLElement>('st
     </component>
     <button v-bind="chip.parts.remove()" @click="chip.handleRemoveClick">
       <span v-bind="chip.parts.removeTouch()" />
-      <span v-bind="chip.parts.removeIcon()"><slot name="remove-icon" /></span>
+      <span v-bind="chip.parts.removeIcon()"
+        ><slot name="remove-icon"><RioIcon alias="remove" /></slot
+      ></span>
     </button>
     <span v-if="chip.showsRemoveBefore()" v-bind="chip.parts.removeBefore()">{{
       chip.removeText().before

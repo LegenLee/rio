@@ -27,6 +27,7 @@ export default defineConfig({
         items: [
           { text: 'Getting started', link: '/guide/getting-started' },
           { text: 'Languages', link: '/guide/languages' },
+          { text: 'Icons', link: '/guide/icons' },
         ],
       },
       {

@@ -21,6 +21,7 @@ import { keepPresses } from '../overlay/presses';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
+import RioIcon from '../icon/Icon.vue';
 
 // `class` and `style` dress the whole picker; every other attribute, such as `id` or
 // `autocomplete`, and every listener belongs to the field's input.
@@ -62,13 +63,23 @@ const model = defineModel<string | undefined>();
 /** Whether the calendar is shown, with `v-model:open`. The picker keeps it when not bound. */
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{
-  /** The field's button that opens the calendar, and the dialog's switch back to it */
+  /**
+   * The field's button that opens the calendar, and the dialog's switch back to it. Without one,
+   * the `calendar` icon registered with `createRio`.
+   */
   'calendar-icon'?: () => unknown;
+  /** Without one, the `previous` icon registered with `createRio`. */
   'previous-icon'?: () => unknown;
+  /** Without one, the `next` icon registered with `createRio`. */
   'next-icon'?: () => unknown;
-  /** The month and year buttons' arrow */
+  /**
+   * The month and year buttons' arrow. Without one, the `dropdown` icon registered with
+   * `createRio`.
+   */
   'dropdown-icon'?: () => unknown;
-  /** Modal: the switch to the text input */
+  /**
+   * Modal: the switch to the text input. Without one, the `edit` icon registered with `createRio`.
+   */
   'edit-icon'?: () => unknown;
 }>();
 
@@ -145,7 +156,7 @@ onBeforeUnmount(() => handle?.detach());
             :disabled
             @click="picker.toggle"
           >
-            <slot name="calendar-icon" />
+            <slot name="calendar-icon"><RioIcon alias="calendar" /></slot>
           </IconButton>
         </template>
       </TextField>

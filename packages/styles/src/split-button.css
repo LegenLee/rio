@@ -179,7 +179,7 @@
   translate: calc(var(--_menu-shift, var(--_menu-shift-rest)) * var(--_start-sign)) 0;
 }
 
-.rio-split-button__menu-icon > :is(svg, img) {
+.rio-split-button__menu-icon > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
 }

@@ -199,7 +199,7 @@ The active item is the one whose submenu is open; its state layer is the hovered
 </RioSubMenu>
 ```
 
-- Slots: `default` (the label), `icon` (gets `{ selected }`), `supporting-text`, `trailing-text` (such as a keyboard shortcut), and `trailing-icon`. Icons are hidden from assistive technology. `RioSubMenu` takes the same slots for its item, except the label, which is its `label` prop, and its `default` slot holds the submenu's items, groups, dividers, and submenus. Rio ships no icons, so the arrow the M3 Design Kit draws on such an item (`arrow_right`) goes in `trailing-icon`.
+- Slots: `default` (the label), `icon` (gets `{ selected }`), `supporting-text`, `trailing-text` (such as a keyboard shortcut), and `trailing-icon`. Icons are hidden from assistive technology. `RioSubMenu` takes the same slots for its item, except the label, which is its `label` prop, and its `default` slot holds the submenu's items, groups, dividers, and submenus. Rio ships no icons, so the arrow the M3 Design Kit draws on such an item (`arrow_right`) goes in `trailing-icon`, or is registered once for the app as `submenu` (see [Icons](../guide/icons.md)).
 - Events: `click` on the item, which a disabled item doesn't emit. `update:open` and `update:modelValue` on the menu. **The app owns `open` and the selection**: the menu asks for changes and waits.
 - `RioMenuGroup` takes a `label`, shown above its items and naming the group. `RioMenuDivider` is a separator.
 - **Give the menu a `label`**, usually the trigger's text. ARIA doesn't require a menu to be named, but a screen reader announces the name on entering it.
