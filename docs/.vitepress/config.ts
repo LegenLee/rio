@@ -43,6 +43,7 @@ export default defineConfig({
           { text: 'Chips', link: '/components/chip' },
           { text: 'Date picker', link: '/components/date-picker' },
           { text: 'Dialog', link: '/components/dialog' },
+          { text: 'Icon', link: '/components/icon' },
           { text: 'Icon button', link: '/components/icon-button' },
           { text: 'Lists', link: '/components/list' },
           { text: 'Loading indicator', link: '/components/loading-indicator' },

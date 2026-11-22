@@ -93,7 +93,7 @@ packages/
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
       dialog.test.ts
     icon/
-      icon.ts               the app's icons by alias and by name, and an icon's parts: SVG paths or a font's glyph (see docs/guide/icons.md)
+      icon.ts               the app's icons by alias and by name, and an icon's parts: SVG paths or a font's glyph (see docs/guide/icons.md, docs/components/icon.md)
       icon.test.ts
     icon-button/
       icon-button.ts        wraps createButton
@@ -451,8 +451,10 @@ Publishing needs a one-time setup on GitHub:
   :::
   ```
 
+  A guide page's examples go in `docs/guide/demos/<page>/` the same way.
+
 - **One adapter draws the examples.** Every adapter renders the same markup (see Core output and Markup contract), so the live examples use the Vue adapter only. When another adapter exists, its code goes next to the Vue code in a code group, and the live example stays Vue.
-- **The site wears Rio's theme.** `docs/.vitepress/theme/` writes the theme variables during server rendering and points VitePress's colors and font at them. Examples sit in `.vp-raw`, which keeps VitePress's styles out (`docs/postcss.config.mjs`), so they look the way they do in an app.
+- **The site wears Rio's theme.** `docs/.vitepress/theme/` writes the theme variables during server rendering and points VitePress's colors and font at them. It registers the Material Design Icons of `docs/guide/icons/mdi.ts` with `createRio`, so a component draws its own icons where an example gives no slot. Examples sit in `.vp-raw`, which keeps VitePress's styles out (`docs/postcss.config.mjs`), so they look the way they do in an app.
 - **Imports come from `src`** through the `@rio-m3e/source` condition, as in the playground, so the site always shows the current code without a build.
 - The build also writes `llms.txt` and `llms-full.txt`, Markdown copies of the docs for AI tools, with each example's code in place of the live example (vitepress-plugin-llms).
 - On GitHub, the Markdown shows `<Demo>` and `:::` blocks as plain text. Read the docs on the site.
