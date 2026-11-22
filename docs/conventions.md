@@ -161,7 +161,7 @@ packages/
       number.ts             parseFloatStrict, a number as Kotlin reads it, for the shapes' parsers; addSteps, for slider and scroll field
       object.ts             resolveProps, which every component with defaults reads its props through
       progress.ts           a value's share of its range and the progressbar ARIA, for progress and loading indicators
-      selection.ts          selectedValues and nextSelection: a group's rules for choosing one or many, for lists
+      selection.ts          selectedValues and nextSelection: a group's rules for choosing one or many, for button groups, chip sets, lists, menus, and selects
       typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/

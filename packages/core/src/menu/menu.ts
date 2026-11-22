@@ -4,6 +4,7 @@ import type {
 } from '../primitives/anchored-position/anchored-position';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { resolveProps } from '../utils/object';
+import { nextSelection, selectedValues } from '../utils/selection';
 
 /** M3E vertical menu color styles: surface-based, or tertiary-based for more emphasis. */
 export const MENU_VARIANTS = ['standard', 'vibrant'] as const;
@@ -100,14 +101,11 @@ export interface MenuApi {
   instant: () => boolean;
 }
 
-const valuesOf = (selected: MenuSelected): MenuValue[] =>
-  selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
-
 export function createMenu(options: MenuOptions): MenuApi {
   const props = () => resolveProps(menuDefaults, options.props());
   const isSelected = (value: MenuValue) => {
     const p = props();
-    return p.selection !== 'none' && valuesOf(p.selected).includes(value);
+    return p.selection !== 'none' && selectedValues(p.selected).includes(value);
   };
 
   return {
@@ -130,15 +128,10 @@ export function createMenu(options: MenuOptions): MenuApi {
     choose(value) {
       const p = props();
       if (p.selection !== 'none' && value !== undefined) {
-        if (p.selection === 'single') {
-          if (!isSelected(value)) options.onChange(value);
-        } else {
-          const current = valuesOf(p.selected);
-          options.onChange(
-            isSelected(value) ? current.filter((other) => other !== value) : [...current, value],
-          );
-          return;
-        }
+        // One at a time, a choice selects; any number at a time, it toggles.
+        const next = nextSelection(p, value, p.selection === 'single' || !isSelected(value));
+        if (next) options.onChange(next.selected);
+        if (p.selection === 'multiple') return;
       }
       options.onOpenChange(false);
     },

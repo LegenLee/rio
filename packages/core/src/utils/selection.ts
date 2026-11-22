@@ -1,4 +1,5 @@
-// The selection rules of a group whose items are chosen one at a time or any number at a time.
+// The selection rules of a group whose items are chosen one at a time or any number at a time:
+// button groups, chip sets, lists, menus, and selects.
 
 /** Whether a group's items can be selected: none, one at a time, or any number. */
 export type GroupSelection = 'none' | 'single' | 'multiple';
@@ -12,7 +13,7 @@ export const selectedValues = <V>(selected: V | V[] | undefined): V[] =>
  * and `required` keeps the last one on. `undefined` when nothing changes.
  */
 export function nextSelection<V>(
-  p: { selection: GroupSelection; required: boolean; selected?: V | V[] },
+  p: { selection: GroupSelection; required?: boolean; selected?: V | V[] },
   value: V,
   on: boolean,
 ): { selected: V | V[] | undefined } | undefined {

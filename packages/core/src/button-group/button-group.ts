@@ -1,6 +1,7 @@
 import type { ButtonShape, ButtonSize } from '../button/button';
 import type { PartAttrs, PartNode } from '../parts';
 import { resolveProps } from '../utils/object';
+import { nextSelection, selectedValues } from '../utils/selection';
 
 /**
  * M3E button group variants. A standard group spaces its buttons and lets a pressed button push
@@ -84,15 +85,12 @@ export interface ButtonGroupApi {
   select: (value: ButtonGroupValue, selected: boolean) => void;
 }
 
-const valuesOf = (selected: ButtonGroupSelected): ButtonGroupValue[] =>
-  selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
-
 export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
   const props = () => resolveProps(buttonGroupDefaults, options.props());
 
   const isSelected = (value: ButtonGroupValue) => {
     const p = props();
-    return p.selection !== 'none' && valuesOf(p.selected).includes(value);
+    return p.selection !== 'none' && selectedValues(p.selected).includes(value);
   };
 
   return {
@@ -113,17 +111,8 @@ export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
     selection: () => props().selection,
     isSelected,
     select(value, selected) {
-      const p = props();
-      if (p.selection === 'none' || isSelected(value) === selected) return;
-      const current = valuesOf(p.selected);
-      if (!selected && p.required && current.length === 1) return;
-      if (p.selection === 'single') {
-        options.onChange(selected ? value : undefined);
-      } else {
-        options.onChange(
-          selected ? [...current, value] : current.filter((other) => other !== value),
-        );
-      }
+      const next = nextSelection(props(), value, selected);
+      if (next) options.onChange(next.selected);
     },
   };
 }

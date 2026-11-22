@@ -7,6 +7,7 @@ import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { hasModifier } from '../utils/keyboard';
 import { linkAttrs } from '../utils/link';
 import { resolveProps } from '../utils/object';
+import { nextSelection, selectedValues } from '../utils/selection';
 
 /** Identifies a filter chip inside a chip set that keeps a selection, through its `value` prop. */
 export type ChipValue = string | number;
@@ -643,14 +644,11 @@ export interface ChipSetApi {
   isTabStop: (key: string) => boolean | undefined;
 }
 
-const valuesOf = (selected: ChipSetSelected): ChipValue[] =>
-  selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
-
 export function createChipSet(options: ChipSetOptions): ChipSetApi {
   const props = () => resolveProps(chipSetDefaults, options.props());
   const isSelected = (value: ChipValue) => {
     const p = props();
-    return p.selection !== 'none' && valuesOf(p.selected).includes(value);
+    return p.selection !== 'none' && selectedValues(p.selected).includes(value);
   };
 
   return {
@@ -664,12 +662,8 @@ export function createChipSet(options: ChipSetOptions): ChipSetApi {
     selection: () => props().selection,
     isSelected,
     select(value, selected) {
-      const p = props();
-      if (p.selection === 'none' || isSelected(value) === selected) return;
-      const current = valuesOf(p.selected);
-      if (!selected && p.required && current.length === 1) return;
-      if (p.selection === 'single') options.onChange(selected ? value : undefined);
-      else options.onChange(selected ? [...current, value] : current.filter((v) => v !== value));
+      const next = nextSelection(props(), value, selected);
+      if (next) options.onChange(next.selected);
     },
     isTabStop(key) {
       const stop = options.tabStop();
