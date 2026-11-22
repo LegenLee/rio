@@ -8,7 +8,9 @@
 // - With `selection`, a list is a list box: its items are options, chosen by a press, Space, or
 //   Enter. Their leading and trailing elements take no presses and no focus (`list.css` and
 //   `attachList`), so a checkbox, a radio button, or a switch there shows the item's state, the
-//   item takes the presses, and their text stays part of the option's name.
+//   item takes the presses, and their text stays part of the option's name. Each option draws the
+//   list's selection control (`control`) in its position (`controlPosition`), unless the app has
+//   content there: a radio button with one, a checkbox with several.
 // - An item has one, two, or three lines: three with an overline and supporting text, or with
 //   supporting text that wraps (`attachListItem` reports it). Three lines align to the top.
 
@@ -25,6 +27,24 @@ export type ListVariant = (typeof LIST_VARIANTS)[number];
 export const LIST_SELECTIONS = ['none', 'single', 'multiple'] as const;
 export type ListSelection = (typeof LIST_SELECTIONS)[number];
 
+/**
+ * The selection control a list box's options draw: a radio button with `single`, a checkbox or a
+ * switch with `multiple`, or none, for an icon or another style the app shows the state with.
+ */
+export const LIST_CONTROLS = ['checkbox', 'radio', 'switch', 'none'] as const;
+export type ListControl = (typeof LIST_CONTROLS)[number];
+
+/** Where an option draws the selection control: before its text, or after it. */
+export const LIST_CONTROL_POSITIONS = ['leading', 'trailing'] as const;
+export type ListControlPosition = (typeof LIST_CONTROL_POSITIONS)[number];
+
+/** The controls each selection takes, its own first */
+const SELECTION_CONTROLS: Record<ListSelection, readonly ListControl[]> = {
+  none: ['none'],
+  single: ['radio', 'none'],
+  multiple: ['checkbox', 'switch', 'none'],
+};
+
 /** Identifies an item in a list with a selection, through its `value` prop. */
 export type ListValue = string | number;
 /** The selected value (`single`) or values (`multiple`). */
@@ -39,6 +59,14 @@ export interface ListProps {
   required?: boolean;
   /** The selected value (`single`) or values (`multiple`). */
   selected?: ListSelected;
+  /**
+   * The selection control each option draws: by default a radio button with `single` and a
+   * checkbox with `multiple`. A control the selection doesn't take, such as a checkbox with
+   * `single`, gives way to its own.
+   */
+  control?: ListControl;
+  /** Where the options draw the control. Defaults to `'trailing'`. */
+  controlPosition?: ListControlPosition;
   /** Names the list for assistive technology. A list box's name says what is chosen. */
   label?: string;
 }
@@ -47,7 +75,8 @@ export const listDefaults = {
   variant: 'standard',
   selection: 'none',
   required: false,
-} satisfies Required<Pick<ListProps, 'variant' | 'selection' | 'required'>>;
+  controlPosition: 'trailing',
+} satisfies Required<Pick<ListProps, 'variant' | 'selection' | 'required' | 'controlPosition'>>;
 
 export interface ListOptions {
   props: () => ListProps;
@@ -69,6 +98,9 @@ export interface ListApi {
   parts: ListParts;
   variant: () => ListVariant;
   selection: () => ListSelection;
+  /** The selection control the options draw, one the selection takes: `none` without a selection. */
+  control: () => ListControl;
+  controlPosition: () => ListControlPosition;
   isSelected: (value: ListValue) => boolean;
   /** Turns the item with this value on or off, as the selection's rules allow. */
   toggle: (value: ListValue) => void;
@@ -100,6 +132,12 @@ export function createList(options: ListOptions): ListApi {
     },
     variant: () => props().variant,
     selection: () => props().selection,
+    control() {
+      const p = props();
+      const takes = SELECTION_CONTROLS[p.selection];
+      return p.control !== undefined && takes.includes(p.control) ? p.control : takes[0]!;
+    },
+    controlPosition: () => props().controlPosition,
     isSelected,
     toggle(value) {
       const next = nextSelection(props(), value, !isSelected(value));
@@ -139,7 +177,10 @@ export interface ListItemContent {
 export interface ListItemOptions {
   props: () => ListItemProps;
   /** The list around the item */
-  list: () => Pick<ListApi, 'selection' | 'isSelected' | 'toggle' | 'isTabStop'>;
+  list: () => Pick<
+    ListApi,
+    'selection' | 'control' | 'controlPosition' | 'isSelected' | 'toggle' | 'isTabStop'
+  >;
   /** The item's key among the list's items, unique in the list */
   key: string;
   content: () => ListItemContent;
@@ -217,6 +258,12 @@ export interface ListItemApi extends Record<ListItemWhen, () => boolean> {
   parts: ListItemParts;
   kind: () => ListItemKind;
   selected: () => boolean;
+  /**
+   * The selection control to draw in the leading or the trailing element: the list's, in its
+   * position, when the adapter has no content there. Draw it with the item's `selected` and
+   * `disabled`; like the app's content there, it takes neither presses nor the focus.
+   */
+  controlIn: (position: ListControlPosition) => Exclude<ListControl, 'none'> | undefined;
   /** One, two, or three lines */
   lines: () => 1 | 2 | 3;
   /**
@@ -238,6 +285,11 @@ export function createListItem(options: ListItemOptions): ListItemApi {
     const { value } = props();
     return kind() === 'option' && value !== undefined && list().isSelected(value);
   };
+  const controlIn = (position: ListControlPosition) => {
+    if (kind() !== 'option' || options.content()[position]) return undefined;
+    const control = list().control();
+    return control !== 'none' && list().controlPosition() === position ? control : undefined;
+  };
   const lines = (): 1 | 2 | 3 => {
     const { overline, supporting } = options.content();
     if ((overline && supporting) || (supporting && options.multiline())) return 3;
@@ -254,12 +306,13 @@ export function createListItem(options: ListItemOptions): ListItemApi {
 
   return {
     acts: () => kind() === 'link' || kind() === 'button',
-    showsLeading: () => options.content().leading,
+    showsLeading: () => options.content().leading || !!controlIn('leading'),
     showsOverline: () => options.content().overline,
     showsSupporting: () => options.content().supporting,
-    showsTrailing: () => options.content().trailing,
+    showsTrailing: () => options.content().trailing || !!controlIn('trailing'),
     kind,
     selected,
+    controlIn,
     lines,
     parts: {
       root() {

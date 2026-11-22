@@ -281,7 +281,8 @@ export interface ScrollFieldApi {
   targetIndex: (near?: number) => number;
   /**
    * The item in the middle, which `item()` marks: as reported, or the value's. An item's part
-   * changes only with it and with the item's text.
+   * changes only with it, with the value's option (`targetIndex()`), with the number of items, and
+   * with the item's text.
    */
   centerIndex: () => number;
   size: () => ScrollFieldSize;

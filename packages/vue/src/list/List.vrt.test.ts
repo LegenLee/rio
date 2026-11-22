@@ -3,7 +3,6 @@ import { describe, expect, test } from 'vitest';
 import { h } from 'vue';
 import Checkbox from '../checkbox/Checkbox.vue';
 import IconButton from '../icon-button/IconButton.vue';
-import Radio from '../radio/Radio.vue';
 import Switch from '../switch/Switch.vue';
 import { icon, renderGallery, SCHEMES } from '../test/vrt';
 import List from './List.vue';
@@ -60,7 +59,14 @@ describe('RioList', () => {
         column([
           h(
             List,
-            { variant: 'segmented', selection: 'single', modelValue: 'b', label: 'Pick one' },
+            // The stars show the selection, in place of a control.
+            {
+              variant: 'segmented',
+              selection: 'single',
+              control: 'none',
+              modelValue: 'b',
+              label: 'Pick one',
+            },
             () => items('single'),
           ),
         ]),
@@ -69,26 +75,29 @@ describe('RioList', () => {
     await expect.element(gallery).toMatchScreenshot(`list-${scheme}`);
   });
 
-  test('selection controls in slots, and secondary actions', async () => {
+  test('selection controls, the list’s and in slots, and secondary actions', async () => {
     const control =
-      (kind: 'checkbox' | 'radio' | 'switch') =>
+      (kind: 'checkbox' | 'switch') =>
       ({ selected }: { selected: boolean }) =>
-        kind === 'checkbox'
-          ? h(Checkbox, { selected })
-          : kind === 'radio'
-            ? h(Radio, { selected })
-            : h(Switch, { selected });
+        kind === 'checkbox' ? h(Checkbox, { selected }) : h(Switch, { selected });
     const gallery = await renderGallery('light', () => [
       [
         column([
-          h(List, { selection: 'single', modelValue: 'small', label: 'Size' }, () => [
-            h(ListItem, { value: 'small' }, { default: () => 'Small', leading: control('radio') }),
-            h(ListItem, { value: 'large' }, { default: () => 'Large', leading: control('radio') }),
-          ]),
+          // The list's radio buttons
+          h(
+            List,
+            { selection: 'single', controlPosition: 'leading', modelValue: 'small', label: 'Size' },
+            () => [
+              h(ListItem, { value: 'small' }, () => 'Small'),
+              h(ListItem, { value: 'large' }, () => 'Large'),
+            ],
+          ),
           h(
             List,
             {
               selection: 'multiple',
+              // The controls in the slots
+              control: 'none',
               modelValue: ['cheese'],
               label: 'Toppings',
               variant: 'segmented',

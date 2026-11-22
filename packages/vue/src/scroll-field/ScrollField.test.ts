@@ -96,6 +96,32 @@ describe('RioScrollField', () => {
       .toBeInTheDocument();
   });
 
+  test('as the value changes, its option is the one selected, before the scroll gets there', async () => {
+    const { root, state, settledOn } = await setup({ props: { min: 0, max: 59 } });
+    const selected = () =>
+      [...root.querySelectorAll('[aria-selected="true"]')].map((el) => el.textContent?.trim());
+    await settledOn('07');
+    state.value = 30;
+    await nextTick();
+    expect(selected()).toEqual(['30']);
+    await settledOn('30');
+    expect(selected()).toEqual(['30']);
+  });
+
+  test('as it starts or stops looping, each value is an option once', async () => {
+    const props = reactive({ min: 0, max: 59, loop: false });
+    const { root, settledOn } = await setup({ props });
+    const ids = () => [...root.querySelectorAll('[role="option"]')].map((el) => el.id);
+    await settledOn('07');
+    for (const loop of [true, false]) {
+      props.loop = loop;
+      await nextTick();
+      expect(ids()).toHaveLength(60);
+      expect(new Set(ids()).size).toBe(60);
+      await settledOn('07');
+    }
+  });
+
   test('looping, the copies around the options are hidden from assistive technology', async () => {
     const { screen, root } = await setup({ props: { min: 0, max: 11, loop: true } });
     expect(screen.getByRole('option').elements()).toHaveLength(12);
@@ -309,10 +335,13 @@ describe('RioScrollField', () => {
   test('its width: at least 100, 120, or 186px, by the longest value', async () => {
     const width = async (props: Record<string, unknown>, value: Value) =>
       (await setup({ props, value })).root.getBoundingClientRect().width;
-    expect(await width({ min: 0, max: 59 }, 7)).toBe(100);
-    expect(await width({ min: 0, max: 100 }, 7)).toBeGreaterThanOrEqual(120);
-    expect(await width({ min: 1000, max: 1010 }, 1007)).toBe(186);
-    expect(await width({ min: 0, max: 59, size: 'large' }, 7)).toBe(186);
+    // Narrow letters, which stay within each width in any font
+    expect(await width({ options: ['ii'] }, 'ii')).toBe(100);
+    expect(await width({ options: ['iii'] }, 'iii')).toBe(120);
+    expect(await width({ options: ['iiii'] }, 'iiii')).toBe(186);
+    expect(await width({ options: ['ii'], size: 'large' }, 'ii')).toBe(186);
+    // Wider text widens the field.
+    expect(await width({ options: ['WWWWWW'] }, 'WWWWWW')).toBeGreaterThan(186);
   });
 
   test('its width stays as values scroll through the middle', async () => {

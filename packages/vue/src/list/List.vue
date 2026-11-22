@@ -17,7 +17,8 @@ interface Props extends Omit<ListProps, 'selected'> {
 }
 
 // No defaults here: core fills them in.
-const { variant, selection, required, label, modelValue } = defineProps<Props>();
+const { variant, selection, required, control, controlPosition, label, modelValue } =
+  defineProps<Props>();
 const emit = defineEmits<{ 'update:modelValue': [selected: ListSelected] }>();
 defineSlots<{
   /** The items (`RioListItem`). With `selection`, those with a `value` are chosen. */
@@ -29,16 +30,23 @@ const tabStop = ref<string>();
 const list = createList({
   // `satisfies` fails the build if a prop added to ListProps is missing here.
   props: () =>
-    ({ variant, selection, required, label, selected: modelValue }) satisfies Record<
-      keyof ListProps,
-      unknown
-    >,
+    ({
+      variant,
+      selection,
+      required,
+      control,
+      controlPosition,
+      label,
+      selected: modelValue,
+    }) satisfies Record<keyof ListProps, unknown>,
   tabStop: () => tabStop.value,
   onChange: (selected) => emit('update:modelValue', selected),
 });
 
 provide(listKey, {
   selection: list.selection,
+  control: list.control,
+  controlPosition: list.controlPosition,
   isSelected: list.isSelected,
   toggle: list.toggle,
   isTabStop: list.isTabStop,

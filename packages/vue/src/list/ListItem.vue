@@ -20,8 +20,11 @@ import {
   useId,
   useTemplateRef,
 } from 'vue';
+import Checkbox from '../checkbox/Checkbox.vue';
 import { vCornerMorph } from '../corner-morph/corner-morph';
+import Radio from '../radio/Radio.vue';
 import { useRipple } from '../ripple/ripple';
+import Switch from '../switch/Switch.vue';
 import { listKey, noList } from './context';
 
 defineOptions({ inheritAttrs: false });
@@ -45,11 +48,15 @@ const slots = defineSlots<{
   supporting?: () => unknown;
   /**
    * Before the text: an icon, an avatar, an image, or a selection control. In a list with
-   * `selection`, it takes neither presses nor the focus: bind `selected` to a checkbox, a radio
-   * button, or a switch there, to show the item's state.
+   * `selection`, it takes neither presses nor the focus, and in place of the list's control, when
+   * `controlPosition` is `leading`: bind `selected` to a checkbox, a radio button, or a switch
+   * there, to show the item's state.
    */
   leading?: (props: { selected: boolean; disabled: boolean }) => unknown;
-  /** After the text: trailing text, an icon, a selection control, or in an action item, buttons. */
+  /**
+   * After the text: trailing text, an icon, a selection control, or in an action item, buttons. In
+   * a list with `selection`, as `leading`, in place of the list's control by default.
+   */
   trailing?: (props: { selected: boolean; disabled: boolean }) => unknown;
 }>();
 
@@ -84,6 +91,10 @@ const item = createListItem({
 });
 
 const slotProps = computed(() => ({ selected: item.selected(), disabled: !!props.disabled }));
+// The list's selection control, where the app's slot leaves room for it
+const controls = { checkbox: Checkbox, radio: Radio, switch: Switch };
+const leadingControl = computed(() => item.controlIn('leading'));
+const trailingControl = computed(() => item.controlIn('trailing'));
 const onClick = (event: MouseEvent) => {
   if (item.handleClick(event)) props.onClick?.(event);
 };
@@ -137,7 +148,9 @@ onBeforeUnmount(() => handle?.detach());
     </component>
     <template v-else>
       <span v-if="item.showsLeading()" v-bind="item.parts.leading()">
-        <slot name="leading" v-bind="slotProps" />
+        <slot name="leading" v-bind="slotProps">
+          <component :is="controls[leadingControl]" v-if="leadingControl" v-bind="slotProps" />
+        </slot>
       </span>
       <span v-bind="item.parts.text()">
         <span v-if="item.showsOverline()" v-bind="item.parts.overline()"
@@ -150,7 +163,9 @@ onBeforeUnmount(() => handle?.detach());
       </span>
     </template>
     <span v-if="item.showsTrailing()" v-bind="item.parts.trailing()">
-      <slot name="trailing" v-bind="slotProps" />
+      <slot name="trailing" v-bind="slotProps">
+        <component :is="controls[trailingControl]" v-if="trailingControl" v-bind="slotProps" />
+      </slot>
     </span>
   </li>
 </template>

@@ -236,7 +236,7 @@ describe('RioList, selection', () => {
 
   test('a control in a slot shows the item’s state, and takes neither the focus nor presses', async () => {
     const { screen, state, container } = await setup(
-      { selection: 'multiple', modelValue: ['cheese'] },
+      { selection: 'multiple', controlPosition: 'leading', modelValue: ['cheese'] },
       toppings,
     );
     const [cheese, olive] = [...container.querySelectorAll<HTMLInputElement>('input')];
@@ -255,6 +255,65 @@ describe('RioList, selection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Before' }));
     await userEvent.tab();
     expect(focused()?.getAttribute('role')).toBe('option');
+  });
+
+  test('each option draws the selection’s control after its text, with its state', async () => {
+    const items = () => [
+      h(ListItem, { value: 'cheese' }, () => 'Cheese'),
+      h(ListItem, { value: 'olive' }, () => 'Olive'),
+      h(ListItem, { value: 'basil', disabled: true }, () => 'Basil'),
+    ];
+    const single = await setup({ selection: 'single', modelValue: 'olive' }, items);
+    const radios = () => [
+      ...single.container.querySelectorAll<HTMLInputElement>(
+        '.rio-list-item__trailing input[type="radio"]',
+      ),
+    ];
+    expect(radios().map((radio) => [radio.checked, radio.disabled])).toEqual([
+      [false, false],
+      [true, false],
+      [false, true],
+    ]);
+    await userEvent.click(single.screen.getByRole('option', { name: 'Cheese' }));
+    expect(single.state.selected).toBe('cheese');
+    await vi.waitFor(() =>
+      expect(radios().map((radio) => radio.checked)).toEqual([true, false, false]),
+    );
+    single.screen.unmount();
+
+    const multiple = await setup({ selection: 'multiple', modelValue: ['cheese'] }, items);
+    const boxes = [
+      ...multiple.container.querySelectorAll<HTMLInputElement>(
+        '.rio-list-item__trailing input[type="checkbox"]',
+      ),
+    ];
+    expect(boxes.map((box) => [box.checked, box.getAttribute('tabindex')])).toEqual([
+      [true, '-1'],
+      [false, '-1'],
+      [false, '-1'],
+    ]);
+    expect(multiple.container.querySelector('.rio-list-item__leading')).toBeNull();
+  });
+
+  test('control and controlPosition: a switch or none, before the text; the app’s slot there wins', async () => {
+    const items = () => [
+      h(ListItem, { value: 'wifi' }, () => 'Wi-Fi'),
+      h(ListItem, { value: 'bluetooth' }, { default: () => 'Bluetooth', leading: () => 'BT' }),
+    ];
+    const switches = await setup(
+      { selection: 'multiple', control: 'switch', controlPosition: 'leading', modelValue: [] },
+      items,
+    );
+    const leading = [...switches.container.querySelectorAll('.rio-list-item__leading')].map((el) =>
+      el.querySelector('[role="switch"]') ? 'switch' : el.textContent?.trim(),
+    );
+    expect(leading).toEqual(['switch', 'BT']);
+    expect(switches.container.querySelector('.rio-list-item__trailing')).toBeNull();
+    switches.screen.unmount();
+
+    const none = await setup({ selection: 'single', control: 'none' }, items);
+    expect(none.container.querySelector('input')).toBeNull();
+    expect(none.container.querySelector('.rio-list-item__trailing')).toBeNull();
   });
 
   test('the text in an option’s slots is part of its name', async () => {
