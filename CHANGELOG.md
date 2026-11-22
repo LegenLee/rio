@@ -4,6 +4,16 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [Unreleased]
+
+### Added
+
+- `createScrollField`'s `itemDeps()` in `@rio-m3e/core`, for adapters: what each item's part and text are made from, by the item. An adapter that renders an item again only when they change, as `RioScrollField` does with `v-memo`, compares these, and an item no longer keeps a part that is out of date.
+
+### Fixed
+
+- A looping `RioScrollField` scrolled past a whole round played the value's transition again as its scroll stopped and it moved at once to the same value in the middle copy. The item it moves to is there as it was now, as after the field is placed again. For adapters: `attachScrollField`'s `onCenterChange` says whether a scroll at once put the item there (`atOnce`), `createScrollField` takes it back (`centerAtOnce`), and the item's part carries `data-instant`, which `scroll-field.css` shows without a transition.
+
 ## [0.6.1] - 2026-11-22
 
 ### Fixed

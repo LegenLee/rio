@@ -205,6 +205,64 @@ describe('the parts', () => {
     expect(reported.parts.item(5)['data-text']).toBe('05');
   });
 
+  describe('itemDeps', () => {
+    interface State {
+      props: ScrollFieldProps;
+      center?: number;
+      atOnce?: boolean;
+    }
+    const fieldOf = (state: State) =>
+      createScrollField({
+        props: () => state.props,
+        ids: { options: 'f' },
+        center: () => state.center,
+        centerAtOnce: () => !!state.atOnce,
+        onChange: vi.fn(),
+        onEditingChange: vi.fn(),
+      });
+    const same = (a: readonly unknown[], b: readonly unknown[]) =>
+      a.length === b.length && a.every((value, i) => Object.is(value, b[i]));
+    const loop: State = { props: { options: ['a', 'b', 'c'], loop: true, value: 'a' }, center: 42 };
+    const states: State[] = [
+      loop,
+      { ...loop, center: 43 },
+      { ...loop, atOnce: true },
+      { ...loop, props: { ...loop.props, value: 'b' } },
+      { ...loop, props: { ...loop.props, loop: false }, center: 1 },
+      { ...loop, props: { ...loop.props, options: ['a', 'b', 'c', 'd'] } },
+      { ...loop, props: { ...loop.props, format: (v) => `${v}.` } },
+      { props: { min: 0, max: 59, value: 7 } },
+      { props: { min: 0, max: 59, value: 7, locale: 'ar-EG' } },
+      { props: { min: 1, max: 60, value: 7 } },
+    ];
+
+    test('equal ones give the same part and text, whatever changed', () => {
+      for (const a of states) {
+        for (const b of states) {
+          const [first, second] = [fieldOf(a), fieldOf(b)];
+          const [before, after] = [first.itemDeps(), second.itemDeps()];
+          for (const item of second.items()) {
+            if (!same(before(item), after(item))) continue;
+            expect(second.parts.item(item)).toEqual(first.parts.item(item));
+            expect(second.itemText(item)).toBe(first.itemText(item));
+          }
+        }
+      }
+    });
+
+    test('a new item in the middle, or a new value, changes only the two items concerned', () => {
+      const changed = (next: State) => {
+        const [before, after] = [fieldOf(loop).itemDeps(), fieldOf(next).itemDeps()];
+        return fieldOf(next)
+          .items()
+          .filter((item) => !same(before(item), after(item)));
+      };
+      expect(changed({ ...loop, center: 43 })).toEqual([42, 43]);
+      expect(changed({ ...loop, props: { ...loop.props, value: 'b' } })).toEqual([42, 43]);
+      expect(changed({ ...loop, atOnce: true })).toEqual([42]);
+    });
+  });
+
   test('the column is out of the tab order, which a browser gives a scrolling element', () => {
     expect(setup().field.parts.viewport()).toEqual({
       class: 'rio-scroll-field__viewport',
