@@ -1,0 +1,38 @@
+/*
+ * Corner morphing, driven by `attachCornerMorph` from `@rio-m3e/core`. A component sets
+ * `--rio-corner-morph-target` to the corner radius it wants in each state. The primitive reads
+ * the targets in px, which needs the registrations below, and springs the inline radii toward
+ * them. It marks the element with `data-corner-morph`.
+ *
+ * Shapes whose sides differ set `--rio-corner-morph-start-target` and
+ * `--rio-corner-morph-end-target` (the corners at the start and end of the line, in the writing
+ * direction, or with the primitive's `axis: 'block'`, at the top and the bottom) with any class or
+ * attribute selector; otherwise both follow `--rio-corner-morph-target`.
+ *
+ * The component also draws its corners from the per-side targets, so it still works without
+ * JavaScript, and lists both targets in its `transition` as `1ms step-end`, so the springs see
+ * them change (see "Primitives" in docs/conventions.md, and button.css).
+ */
+
+@property --rio-corner-morph-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-corner-morph-start-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --rio-corner-morph-end-target {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+:where([data-corner-morph]) {
+  --rio-corner-morph-start-target: var(--rio-corner-morph-target);
+  --rio-corner-morph-end-target: var(--rio-corner-morph-target);
+}

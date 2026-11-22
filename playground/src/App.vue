@@ -31,6 +31,7 @@ import {
   mdiFormatBold,
   mdiFormatItalic,
   mdiFormatUnderline,
+  mdiGestureSwipeVertical,
   mdiHeart,
   mdiHeartOutline,
   mdiKeyboardOutline,
@@ -44,6 +45,8 @@ import {
   mdiShareVariant,
   mdiSkipNext,
   mdiSkipPrevious,
+  mdiVolumeHigh,
+  mdiVolumeOff,
 } from '@mdi/js';
 import {
   BUTTON_SIZES,
@@ -61,25 +64,40 @@ import {
 import {
   RioButton,
   RioButtonGroup,
+  RioAssistChip,
   RioCheckbox,
+  RioChipSet,
+  RioCircularProgress,
   RioDatePicker,
   RioDatePickerDialog,
+  RioDateRangePickerDialog,
   RioDialog,
+  RioFilterChip,
   RioIconButton,
+  RioInputChip,
+  RioLinearProgress,
+  RioList,
+  RioListItem,
+  RioLoadingIndicator,
   RioMenu,
   RioMenuDivider,
   RioMenuGroup,
   RioMenuItem,
   RioRadio,
   RioRadioGroup,
+  RioRangeSlider,
+  RioScrollField,
   RioSelect,
   RioSelectOption,
+  RioSlider,
   RioSplitButton,
+  RioSuggestionChip,
   RioSubMenu,
   RioSwitch,
   RioTextField,
   RioTimeInput,
   RioTimePickerDialog,
+  RioTimeScroll,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
@@ -87,6 +105,30 @@ import { computed, reactive, ref, useTemplateRef } from 'vue';
 import { theme } from './theme';
 
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
+const progress = ref(0.4);
+const chips = reactive({
+  filters: ['wifi'] as (string | number)[],
+  people: ['Ada', 'Grace', 'Alan'],
+  menuOpen: false,
+  size: undefined as string | undefined,
+  last: '',
+});
+const sizeChip = useTemplateRef('sizeChip');
+const scrollFields = reactive({
+  minutes: 15,
+  year: 2026,
+  unit: 'kg',
+  editing: false,
+  invalid: false,
+});
+const sliders = reactive({
+  plain: 40,
+  stops: 60,
+  centered: -20,
+  range: [20, 70] as [number, number],
+  volume: 0,
+  vertical: 30,
+});
 const buttonShape = ref<ButtonShape>('round');
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
@@ -168,17 +210,37 @@ const selects = reactive<{ size?: SelectSelected; font: SelectSelected; toppings
 );
 const PIZZA_TOPPINGS = { cheese: 'Cheese', mushroom: 'Mushroom', olive: 'Olive', basil: 'Basil' };
 const selectSent = ref('');
-const dates = reactive<{ docked?: string; modal?: string; korean?: string; dialog?: string }>({
+const dates = reactive<{
+  docked?: string;
+  modal?: string;
+  korean?: string;
+  dialog?: string;
+  depart?: string;
+  return?: string;
+}>({
   korean: '2026-11-27',
 });
 const dateDialogOpen = ref(false);
-const times = reactive<{ inline?: string; german?: string; dialog?: string; horizontal?: string }>({
+const listPicks = ref<(string | number)[] | string | number | undefined>(['heart']);
+const listOpened = ref('');
+const dateRangeOpen = ref(false);
+const times = reactive<{
+  inline?: string;
+  german?: string;
+  scroll?: string;
+  scrollGerman?: string;
+  dialog?: string;
+  horizontal?: string;
+  scrollDialog?: string;
+}>({
   inline: '07:30',
   german: '19:05',
+  scroll: '07:00',
   horizontal: '14:00',
 });
 const timeDialogOpen = ref(false);
 const timeHorizontalOpen = ref(false);
+const timeScrollOpen = ref(false);
 const submitSelects = (event: SubmitEvent) => {
   const data = new FormData(event.target as HTMLFormElement);
   selectSent.value = [...data].map(([key, value]) => `${key}=${String(value)}`).join(' ');
@@ -1067,6 +1129,25 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         </RioDatePicker>
         <RioButton variant="tonal" @click="dateDialogOpen = true">Due date</RioButton>
         <RioDatePickerDialog v-model="dates.dialog" v-model:open="dateDialogOpen" />
+        <RioButton variant="tonal" @click="dateRangeOpen = true">Trip dates</RioButton>
+        <RioDateRangePickerDialog
+          v-model:start="dates.depart"
+          v-model:end="dates.return"
+          v-model:open="dateRangeOpen"
+          clearable
+          :messages="{ rangeTitle: 'Depart – Return dates' }"
+        >
+          <template #edit-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiPencil" fill="currentColor" />
+            </svg>
+          </template>
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDateRangePickerDialog>
       </div>
       <code>{{ dates }}</code>
     </section>
@@ -1106,8 +1187,93 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
             </svg>
           </template>
         </RioTimePickerDialog>
+        <RioButton variant="tonal" @click="timeScrollOpen = true">Reminder, scroll</RioButton>
+        <RioTimePickerDialog
+          v-model="times.scrollDialog"
+          v-model:open="timeScrollOpen"
+          picker="scroll"
+        >
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #swipe-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiGestureSwipeVertical" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimePickerDialog>
+      </div>
+      <div class="controls">
+        <RioTimeScroll
+          v-for="(key, i) in ['scroll', 'scrollGerman'] as const"
+          :key
+          v-model="times[key]"
+          :locale="i ? 'de-DE' : undefined"
+        >
+          <template #keyboard-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiKeyboardOutline" fill="currentColor" />
+            </svg>
+          </template>
+          <template #swipe-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiGestureSwipeVertical" fill="currentColor" />
+            </svg>
+          </template>
+        </RioTimeScroll>
       </div>
       <code>{{ times }}</code>
+    </section>
+
+    <section class="lists">
+      <RioList variant="segmented" style="inline-size: 320px">
+        <RioListItem @click="listOpened = 'Search'">
+          <template #leading>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiMagnify" fill="currentColor" />
+            </svg>
+          </template>
+          Search
+          <template #supporting>Across every note</template>
+          <template #trailing>
+            <RioIconButton variant="standard" label="More">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path :d="mdiDotsVertical" fill="currentColor" />
+              </svg>
+            </RioIconButton>
+          </template>
+        </RioListItem>
+        <RioListItem href="#lists" @click="listOpened = 'Share'">
+          <template #leading>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiShareVariant" fill="currentColor" />
+            </svg>
+          </template>
+          Share
+          <template #trailing>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiChevronRight" fill="currentColor" />
+            </svg>
+          </template>
+        </RioListItem>
+        <RioListItem disabled @click="listOpened = 'Restore'">Restore</RioListItem>
+      </RioList>
+      <RioList
+        v-model="listPicks"
+        selection="multiple"
+        label="Favorites"
+        style="inline-size: 320px"
+      >
+        <RioListItem v-for="name in ['heart', 'bookmark', 'check']" :key="name" :value="name">
+          <template #leading="{ selected }"><RioCheckbox :selected /></template>
+          {{ name }}
+          <template #overline>Favorite</template>
+          <template #supporting>Chosen with a press, Space, or Enter</template>
+        </RioListItem>
+      </RioList>
+      <code>{{ listOpened || 'nothing opened' }} · {{ listPicks }}</code>
     </section>
 
     <section class="selection">
@@ -1139,6 +1305,87 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <code>toppings={{ toppings }} terms={{ terms }} size={{ size }}</code>
     </section>
 
+    <section class="progress">
+      <RioLinearProgress :value="progress" aria-label="Determinate" />
+      <RioLinearProgress aria-label="Indeterminate" />
+      <RioLinearProgress :value="progress" wavy aria-label="Wavy" />
+      <RioLinearProgress wavy :thickness="8" aria-label="Wavy, indeterminate, thick" />
+      <div class="progress-row">
+        <RioCircularProgress :value="progress" aria-label="Determinate" />
+        <RioCircularProgress aria-label="Indeterminate" />
+        <RioCircularProgress :value="progress" wavy aria-label="Wavy" />
+        <RioCircularProgress wavy :thickness="8" aria-label="Wavy, indeterminate, thick" />
+      </div>
+      <div class="progress-row">
+        <RioLoadingIndicator aria-label="Loading" />
+        <RioLoadingIndicator contained aria-label="Loading, contained" />
+        <RioLoadingIndicator :value="progress" contained aria-label="Loading, determinate" />
+        <RioLoadingIndicator :size="96" aria-label="Loading, large" />
+      </div>
+      <RioButton variant="tonal" @click="progress = progress >= 1 ? 0 : progress + 0.2">
+        Progress {{ Math.round(progress * 100) }}%
+      </RioButton>
+    </section>
+
+    <section class="chips">
+      <RioChipSet aria-label="Assist and suggestion chips">
+        <RioAssistChip @click="chips.last = 'Add to calendar'">
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+          </template>
+          Add to calendar
+        </RioAssistChip>
+        <RioAssistChip elevated @click="chips.last = 'Elevated'">Elevated</RioAssistChip>
+        <RioAssistChip disabled>Disabled</RioAssistChip>
+        <RioSuggestionChip @click="chips.last = 'Sounds good'">Sounds good</RioSuggestionChip>
+        <RioSuggestionChip soft-disabled>Soft-disabled</RioSuggestionChip>
+      </RioChipSet>
+      <RioChipSet v-model="chips.filters" selection="multiple" aria-label="Filter chips">
+        <RioFilterChip v-for="name in ['wifi', 'bluetooth', 'nfc']" :key="name" :value="name">
+          <template #selected-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+          </template>
+          {{ name }}
+        </RioFilterChip>
+        <RioFilterChip
+          ref="sizeChip"
+          v-model:open="chips.menuOpen"
+          menu
+          :selected="chips.size !== undefined"
+        >
+          {{ chips.size ?? 'Size' }}
+          <template #dropdown-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+          </template>
+        </RioFilterChip>
+      </RioChipSet>
+      <RioMenu
+        v-model:open="chips.menuOpen"
+        v-model="chips.size"
+        :anchor="sizeChip"
+        selection="single"
+        label="Size"
+      >
+        <RioMenuItem v-for="size in ['Small', 'Large']" :key="size" :value="size">
+          {{ size }}
+        </RioMenuItem>
+      </RioMenu>
+      <RioChipSet scroll aria-label="Input chips">
+        <RioInputChip
+          v-for="person in chips.people"
+          :key="person"
+          @click="chips.last = person"
+          @remove="chips.people = chips.people.filter((p) => p !== person)"
+        >
+          {{ person }}
+          <template #remove-icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+          </template>
+        </RioInputChip>
+      </RioChipSet>
+      <code>chips={{ chips }}</code>
+    </section>
+
     <section class="switches">
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.plain" />
@@ -1166,6 +1413,67 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <label class="switch-row"><RioSwitch disabled /> Disabled, off</label>
       <label class="switch-row"><RioSwitch disabled selected /> Disabled, on</label>
       <label class="switch-row"><RioSwitch soft-disabled /> Soft-disabled (Tab to it)</label>
+    </section>
+
+    <section class="sliders">
+      <RioSlider v-model="sliders.plain" aria-label="Plain" />
+      <RioSlider
+        v-model="sliders.stops"
+        :step="10"
+        stops
+        value-indicator
+        aria-label="Stops and the value indicator"
+      />
+      <RioSlider
+        v-model="sliders.centered"
+        centered
+        :min="-50"
+        :max="50"
+        value-indicator
+        aria-label="Centered"
+      />
+      <RioRangeSlider v-model="sliders.range" value-indicator aria-label="Range" />
+      <RioSlider v-model="sliders.volume" size="large" aria-label="Volume">
+        <template #icon>
+          <svg viewBox="0 0 24 24">
+            <path :d="sliders.volume === 0 ? mdiVolumeOff : mdiVolumeHigh" fill="currentColor" />
+          </svg>
+        </template>
+      </RioSlider>
+      <div class="slider-row">
+        <RioSlider v-model="sliders.vertical" vertical size="medium" aria-label="Vertical">
+          <template #icon>
+            <svg viewBox="0 0 24 24"><path :d="mdiVolumeHigh" fill="currentColor" /></svg>
+          </template>
+        </RioSlider>
+        <RioSlider :model-value="50" disabled vertical aria-label="Disabled" />
+        <RioSlider :model-value="50" soft-disabled vertical aria-label="Soft-disabled" />
+      </div>
+      <code>sliders={{ sliders }}</code>
+    </section>
+
+    <section class="scroll-fields">
+      <RioScrollField v-model="scrollFields.minutes" :min="0" :max="59" label="Minutes" />
+      <RioScrollField v-model="scrollFields.year" :min="1900" :max="2100" label="Year" />
+      <RioScrollField
+        v-model="scrollFields.unit"
+        :options="['g', 'kg', 'lb', 'oz']"
+        loop
+        label="Unit"
+      />
+      <RioScrollField
+        v-model="scrollFields.minutes"
+        v-model:editing="scrollFields.editing"
+        v-model:invalid="scrollFields.invalid"
+        :min="0"
+        :max="59"
+        label="Minutes, typed"
+      />
+      <RioButton variant="tonal" @click="scrollFields.editing = !scrollFields.editing">
+        Type
+      </RioButton>
+      <RioScrollField :model-value="7" disabled label="Disabled" />
+      <code>scrollFields={{ scrollFields }}</code>
     </section>
 
     <section class="type-scale">
@@ -1312,10 +1620,52 @@ main {
   transform: translateX(288px);
 }
 
+.progress {
+  display: grid;
+  justify-items: start;
+  gap: 24px;
+  max-inline-size: 480px;
+}
+
+.progress > .rio-linear-progress {
+  inline-size: 100%;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.chips {
+  display: grid;
+  gap: 16px;
+}
+
 .switches {
   display: grid;
   justify-items: start;
   gap: 12px;
+}
+
+.scroll-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.sliders {
+  display: grid;
+  gap: 24px;
+  max-inline-size: 480px;
+  padding-block-start: 48px;
+}
+
+.slider-row {
+  display: flex;
+  gap: 48px;
+  padding-inline-start: 56px;
 }
 
 .switch-row {

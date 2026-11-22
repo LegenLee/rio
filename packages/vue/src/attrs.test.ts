@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive, type VNode } from 'vue';
 import Checkbox from './checkbox/Checkbox.vue';
+import InputChip from './chip/InputChip.vue';
 import Menu from './menu/Menu.vue';
 import MenuItem from './menu/MenuItem.vue';
 import SubMenu from './menu/SubMenu.vue';
@@ -12,6 +13,8 @@ import Radio from './radio/Radio.vue';
 import RadioGroup from './radio/RadioGroup.vue';
 import Select from './select/Select.vue';
 import SelectOption from './select/SelectOption.vue';
+import Slider from './slider/Slider.vue';
+import Switch from './switch/Switch.vue';
 import TextField from './text-field/TextField.vue';
 
 /** What the app gives every component: an id list, a class, and `false` for the attribute core sets */
@@ -73,12 +76,36 @@ const CASES: [string, Case][] = [
     },
   ],
   [
+    'RioInputChip',
+    {
+      vnode: ({ on }) => h(InputChip, { ...app('aria-disabled'), softDisabled: on }, () => 'Ada'),
+      target: '.rio-chip__action',
+      set: ['aria-disabled', 'true'],
+    },
+  ],
+  [
     'RioRadio',
     {
       vnode: ({ on }) =>
         h(RadioGroup, { label: 'Size' }, () =>
           h(Radio, { ...app('aria-disabled'), value: 's', softDisabled: on }),
         ),
+      target: 'input',
+      set: ['aria-disabled', 'true'],
+    },
+  ],
+  [
+    'RioSlider',
+    {
+      vnode: ({ on }) => h(Slider, { ...app('aria-disabled'), softDisabled: on }),
+      target: 'input',
+      set: ['aria-disabled', 'true'],
+    },
+  ],
+  [
+    'RioSwitch',
+    {
+      vnode: ({ on }) => h(Switch, { ...app('aria-disabled'), softDisabled: on }),
       target: 'input',
       set: ['aria-disabled', 'true'],
     },

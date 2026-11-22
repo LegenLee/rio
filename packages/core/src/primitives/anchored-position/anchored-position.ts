@@ -26,6 +26,8 @@
 // Not handled: vertical writing modes, and the visual viewport (pinch zoom, or a phone's on-screen
 // keyboard), which can cover part of the window it places against.
 
+import { isRtl } from '../direction/direction';
+
 export type AnchoredSide = 'top' | 'bottom' | 'start' | 'end';
 export type AnchoredAlign = 'start' | 'center' | 'end';
 
@@ -137,7 +139,7 @@ export function attachAnchoredPosition(
     const anchor = isPoint(target)
       ? { left: target.x, right: target.x, top: target.y, bottom: target.y, width: 0 }
       : target.getBoundingClientRect();
-    const rtl = view.getComputedStyle(isPoint(target) ? floating : target).direction === 'rtl';
+    const rtl = isRtl(isPoint(target) ? floating : target);
     const viewport = {
       width: document.documentElement.clientWidth,
       height: document.documentElement.clientHeight,

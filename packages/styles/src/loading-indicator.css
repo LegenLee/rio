@@ -1,0 +1,42 @@
+/*
+ * The loading indicator (M3 Expressive): a shape that morphs as it turns, on its own or contained in
+ * a circle. Values: the spec's tokens and measurements, and Compose's loading indicator tokens (see
+ * docs/components/loading-indicator.md).
+ *
+ * The root carries its size (`--rio-loading-indicator-size`), which core writes, and
+ * `data-contained`. Core's `attachLoadingIndicator` draws the shape into the path, in a 1 by 1
+ * view box: its scale keeps the spec's 38dp in 48dp, whatever the size.
+ *
+ * The app may set `--rio-loading-indicator-color` and `--rio-loading-indicator-container-color`,
+ * as for an indicator in a button.
+ */
+
+.rio-loading-indicator {
+  display: inline-block;
+  flex: none;
+  inline-size: var(--rio-loading-indicator-size, 48px);
+  block-size: var(--rio-loading-indicator-size, 48px);
+  vertical-align: middle;
+  /* The container's shape, full (a circle), which also clips the uncontained indicator, as Compose does */
+  border-radius: 50%;
+  overflow: hidden;
+  color: var(--rio-loading-indicator-color, var(--rio-color-primary));
+}
+
+.rio-loading-indicator[data-contained] {
+  background-color: var(
+    --rio-loading-indicator-container-color,
+    var(--rio-color-primary-container)
+  );
+  color: var(--rio-loading-indicator-color, var(--rio-color-on-primary-container));
+}
+
+.rio-loading-indicator__svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.rio-loading-indicator__indicator {
+  fill: currentColor;
+}

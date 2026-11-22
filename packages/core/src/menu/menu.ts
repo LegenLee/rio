@@ -3,7 +3,8 @@ import type {
   AnchoredSide,
 } from '../primitives/anchored-position/anchored-position';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
+import { nextSelection, selectedValues } from '../utils/selection';
 
 /** M3E vertical menu color styles: surface-based, or tertiary-based for more emphasis. */
 export const MENU_VARIANTS = ['standard', 'vibrant'] as const;
@@ -60,6 +61,13 @@ export interface MenuOptions {
   onChange: (selected: MenuSelected) => void;
   /** Called with the requested `open`, such as `false` once an item is chosen. */
   onOpenChange: (open: boolean) => void;
+  /** The menu's id: a submenu's, which its item points at */
+  id?: string;
+  /**
+   * Whether the menu has the inactive shape, with another open menu of its tree active, from
+   * `attachMenu`'s `onInactiveChange`, which the adapter keeps
+   */
+  inactive?: () => boolean;
 }
 
 export interface MenuParts {
@@ -93,14 +101,11 @@ export interface MenuApi {
   instant: () => boolean;
 }
 
-const valuesOf = (selected: MenuSelected): MenuValue[] =>
-  selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
-
 export function createMenu(options: MenuOptions): MenuApi {
-  const props = () => ({ ...menuDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(menuDefaults, options.props());
   const isSelected = (value: MenuValue) => {
     const p = props();
-    return p.selection !== 'none' && valuesOf(p.selected).includes(value);
+    return p.selection !== 'none' && selectedValues(p.selected).includes(value);
   };
 
   return {
@@ -110,9 +115,11 @@ export function createMenu(options: MenuOptions): MenuApi {
         return {
           class: 'rio-menu',
           role: 'menu',
+          id: options.id,
           'aria-label': p.label,
           'data-variant': p.variant,
           'data-instant': p.instant ? '' : undefined,
+          'data-inactive': options.inactive?.() ? '' : undefined,
         };
       },
     },
@@ -121,15 +128,10 @@ export function createMenu(options: MenuOptions): MenuApi {
     choose(value) {
       const p = props();
       if (p.selection !== 'none' && value !== undefined) {
-        if (p.selection === 'single') {
-          if (!isSelected(value)) options.onChange(value);
-        } else {
-          const current = valuesOf(p.selected);
-          options.onChange(
-            isSelected(value) ? current.filter((other) => other !== value) : [...current, value],
-          );
-          return;
-        }
+        // One at a time, a choice selects; any number at a time, it toggles.
+        const next = nextSelection(p, value, p.selection === 'single' || !isSelected(value));
+        if (next) options.onChange(next.selected);
+        if (p.selection === 'multiple') return;
       }
       options.onOpenChange(false);
     },
@@ -184,6 +186,8 @@ export interface MenuItemOptions<E extends CancelableEvent = MouseEvent> {
     open: () => boolean;
     /** Asks for the submenu to open. */
     onOpen: () => void;
+    /** The submenu's id, which the item invokes as a popover */
+    menuId: string;
   };
 }
 
@@ -243,7 +247,7 @@ const NO_CONTENT: MenuItemContent = {
 export function createMenuItem<E extends CancelableEvent = MouseEvent>(
   options: MenuItemOptions<E>,
 ): MenuItemApi<E> {
-  const props = () => ({ ...menuItemDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(menuItemDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   // `menuitemradio` or `menuitemcheckbox` when the menu keeps a selection and the item has a value.
   // An item that opens a submenu is never chosen, so it is neither.
@@ -272,6 +276,10 @@ export function createMenuItem<E extends CancelableEvent = MouseEvent>(
           'aria-checked': k ? String(selected()) : undefined,
           'aria-haspopup': options.submenu ? 'menu' : undefined,
           'aria-expanded': options.submenu ? String(options.submenu.open()) : undefined,
+          // The item invokes the submenu, so a press on it isn't a press outside, which would close
+          // it. The browser only ever shows it: `attachSubMenu` opens it through the adapter.
+          popovertarget: options.submenu?.menuId,
+          popovertargetaction: options.submenu ? 'show' : undefined,
           // Not native `disabled`: disabled items stay focusable.
           'aria-disabled': p.disabled ? 'true' : undefined,
           'data-selected': k ? String(selected()) : undefined,
@@ -328,6 +336,10 @@ export interface SubMenuOptions {
   onChange: (selected: MenuSelected) => void;
   /** Called with the requested `open`: `true` for a click on its item. */
   onOpenChange: (open: boolean) => void;
+  /** The submenu's id, unique in the document, which its item points at. The adapter makes it. */
+  ids: { menu: string };
+  /** As a menu's `inactive` */
+  inactive?: () => boolean;
 }
 
 export interface SubMenuApi {
@@ -359,6 +371,8 @@ export function createSubMenu(options: SubMenuOptions): SubMenuApi {
       };
     },
     onChange: options.onChange,
+    id: options.ids.menu,
+    inactive: options.inactive,
     // A choice in a submenu closes the whole menu, not only the submenu.
     onOpenChange: (open) => {
       const parent = options.menu?.();
@@ -371,7 +385,11 @@ export function createSubMenu(options: SubMenuOptions): SubMenuApi {
     props: () => ({ disabled: options.props().disabled }),
     content: options.content,
     onClick: () => {},
-    submenu: { open: options.open, onOpen: () => options.onOpenChange(true) },
+    submenu: {
+      open: options.open,
+      onOpen: () => options.onOpenChange(true),
+      menuId: options.ids.menu,
+    },
   });
   return { item, menu };
 }

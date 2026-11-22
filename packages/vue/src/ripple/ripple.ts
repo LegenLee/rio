@@ -1,6 +1,6 @@
 import { attachRipple, type RippleHandle } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/ripple.css';
-import type { ObjectDirective } from 'vue';
+import { watch, type ObjectDirective, type Ref } from 'vue';
 
 const handles = new WeakMap<HTMLElement, RippleHandle>();
 
@@ -32,3 +32,23 @@ export const vRipple: ObjectDirective<HTMLElement, boolean | undefined> = {
     sync(el, false);
   },
 };
+
+/**
+ * For a component whose presses ripple on one of its parts: presses on `element` ripple on
+ * `surface`, as on a checkbox's input and its state part. Attaches again when either element is
+ * replaced, as when a chip turns into a link, and detaches as the component unmounts.
+ */
+export function useRipple(
+  element: Readonly<Ref<HTMLElement | null>>,
+  surface: Readonly<Ref<HTMLElement | null>>,
+) {
+  watch(
+    [element, surface],
+    ([el, state], _, onCleanup) => {
+      if (!el || !state) return;
+      const ripple = attachRipple(el, { surface: state });
+      onCleanup(() => ripple.detach());
+    },
+    { flush: 'post' },
+  );
+}

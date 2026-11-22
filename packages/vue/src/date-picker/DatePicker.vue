@@ -2,12 +2,12 @@
 import {
   attachDatePickerMenu,
   createDatePicker,
-  initialPickerState,
+  initialDatePickerState,
   type DatePickerMenuDomHandle,
   type DatePickerMessages,
   type DatePickerProps,
   type DatePickerVariant,
-  type PickerState,
+  type DatePickerState,
   type TextFieldVariant,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/anchored-position.css';
@@ -17,6 +17,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, useTemplateRef, watch }
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
+import { keepPresses } from '../overlay/presses';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
@@ -73,7 +74,7 @@ defineSlots<{
 
 const locale = useLocale(() => props.locale);
 const messages = useMessages('datePicker', locale, () => props.messages);
-const state = reactive<PickerState>(initialPickerState(model.value, locale.value, props));
+const state = reactive<DatePickerState>(initialDatePickerState(model.value, locale.value, props));
 const picker = createDatePicker({
   // `satisfies` fails the build if a prop added to DatePickerProps is missing here.
   props: () =>
@@ -150,7 +151,7 @@ onBeforeUnmount(() => handle?.detach());
       </TextField>
     </div>
     <input v-if="picker.submits()" v-bind="picker.parts.formValue()" />
-    <div v-if="picker.docked()" ref="menu" v-bind="picker.parts.menu()">
+    <div v-if="picker.docked()" ref="menu" v-bind="picker.parts.menu()" v-on="keepPresses">
       <template v-if="open">
         <DatePickerCalendar
           v-model:month="state.month"

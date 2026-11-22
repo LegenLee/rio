@@ -20,7 +20,9 @@
 //   adapter's selection; resetting the selection is the app's.
 
 import { attachAnchoredPosition } from '../primitives/anchored-position/anchored-position';
+import { attachFormReset } from '../primitives/form-reset/form-reset';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import { FOCUSABLE_SELECTOR } from '../utils/focus';
 import { createTypeahead } from '../utils/typeahead';
 
 export interface SelectDomElements {
@@ -55,7 +57,6 @@ export interface SelectDomHandle {
   detach(): void;
 }
 
-const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
 /** How many options Page Up and Page Down move */
 const PAGE = 10;
 
@@ -211,7 +212,7 @@ export function attachSelect(
 
   // A press on the container, outside anything in it that takes the focus itself
   const ownPress = (event: Event) => {
-    const other = (event.target as Element).closest(FOCUSABLE);
+    const other = (event.target as Element).closest(FOCUSABLE_SELECTOR);
     return !other || other === field || !container.contains(other);
   };
   const onPointerDown = (event: PointerEvent) => {
@@ -237,21 +238,13 @@ export function attachSelect(
   const onNativeChange = () =>
     options.onNativeChange([...native.selectedOptions].map((option) => option.value));
   const onNativeFocus = () => field.focus();
-  // The reset event comes before the form puts its controls back.
-  let resetTimer: ReturnType<typeof setTimeout> | undefined;
-  const onReset = (event: Event) => {
-    if (event.target !== native.form) return;
-    clearTimeout(resetTimer);
-    resetTimer = setTimeout(update);
-  };
-
   field.addEventListener('keydown', onFieldKeydown);
   listbox.addEventListener('keydown', onListKeydown);
   container.addEventListener('pointerdown', onPointerDown);
   container.addEventListener('click', onClick);
   native.addEventListener('change', onNativeChange);
   native.addEventListener('focus', onNativeFocus);
-  document.addEventListener('reset', onReset, { capture: true });
+  const reset = attachFormReset([native], update);
   update();
 
   return {
@@ -271,14 +264,13 @@ export function attachSelect(
     },
     update,
     detach() {
-      clearTimeout(resetTimer);
+      reset.detach();
       field.removeEventListener('keydown', onFieldKeydown);
       listbox.removeEventListener('keydown', onListKeydown);
       container.removeEventListener('pointerdown', onPointerDown);
       container.removeEventListener('click', onClick);
       native.removeEventListener('change', onNativeChange);
       native.removeEventListener('focus', onNativeFocus);
-      document.removeEventListener('reset', onReset, { capture: true });
       overlay.detach();
       anchored.detach();
     },

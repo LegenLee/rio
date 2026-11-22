@@ -1,7 +1,7 @@
 import { mdiDeleteOutline } from '@mdi/js';
 import { attachDialog, type DialogCancelEvent, type DialogRole } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive, type VNode } from 'vue';
@@ -205,6 +205,25 @@ describe('RioDialog', () => {
     expect(document.activeElement).toBe(button('Discard'));
   });
 
+  test('Tab with Alt, Ctrl, or Meta is left to the browser', async () => {
+    const { button, open } = await setup({
+      content: () => [h('p', null, 'Your draft will be lost.'), h('a', { href: '#' }, 'Details')],
+    });
+    await open();
+    // On the last button, where Tab alone goes round to the first
+    const last = button('Discard');
+    last.focus();
+    const tab = (init: KeyboardEventInit) =>
+      last.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true, ...init }),
+      );
+    for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+      expect(tab({ [modifier]: true }), modifier).toBe(true);
+      expect(document.activeElement).toBe(last);
+    }
+    expect(tab({})).toBe(false);
+  });
+
   test('in a list of radio buttons, the focus goes to the checked one', async () => {
     const tones = ['None', 'Callisto', 'Ganymede', 'Luna'];
     const { open } = await setup({
@@ -221,6 +240,28 @@ describe('RioDialog', () => {
     expect((document.activeElement as HTMLInputElement).value).toBe('Luna');
   });
 
+  test('a press in something inside that keeps it, as a menu does, is never one on the scrim', async () => {
+    const { dialog, open, state } = await setup({
+      content: () =>
+        h(
+          'div',
+          { class: 'keeps', onPointerdown: (event: Event) => event.stopPropagation() },
+          'Menu',
+        ),
+    });
+    await open();
+    const root = dialog();
+    const box = root.getBoundingClientRect();
+    const outside = { clientX: box.left - 10, clientY: box.top + 10, bubbles: true };
+    // A press on the scrim that no click follows, as when the pointer is released outside the window
+    root.dispatchEvent(new PointerEvent('pointerdown', outside));
+    // Then a press inside, released on the scrim: the click goes to the dialog, at the scrim.
+    root.querySelector('.keeps')!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    root.dispatchEvent(new MouseEvent('click', outside));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(state.open).toBe(true);
+  });
+
   test('long text with nothing to focus takes the focus itself, after the buttons', async () => {
     const lines = Array.from({ length: 60 }, (_, index) => h('p', null, `Line ${index + 1}`));
     const { dialog, button, open } = await setup({ content: () => lines });
@@ -234,6 +275,16 @@ describe('RioDialog', () => {
     expect(document.activeElement).toBe(button('Discard'));
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(content);
+  });
+
+  // Chromium focuses content that scrolls on its own; WebKit needs the dialog to, once the content
+  // has rendered its tabindex.
+  test('long text with nothing else to focus takes the focus as the dialog opens', async () => {
+    const lines = Array.from({ length: 60 }, (_, index) => h('p', null, `Line ${index + 1}`));
+    const { dialog, open } = await setup({ content: () => lines, actions: () => [] });
+    await open();
+    const content = dialog().querySelector<HTMLElement>('.rio-dialog__content')!;
+    await vi.waitFor(() => expect(document.activeElement).toBe(content));
   });
 
   test('Tab skips disabled and hidden elements at the ends', async () => {

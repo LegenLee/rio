@@ -59,7 +59,10 @@ describe('parts', () => {
 
   test('the inner parts carry their classes, and only the label is read out', () => {
     const { parts } = setup().button;
-    expect(parts.touch()).toEqual({ class: 'rio-button__touch', 'aria-hidden': 'true' });
+    expect(parts.touch()).toEqual({
+      class: 'rio-button__touch rio-touch-target',
+      'aria-hidden': 'true',
+    });
     expect(parts.icon()).toEqual({ class: 'rio-button__icon', 'aria-hidden': 'true' });
     expect(parts.label()).toEqual({ class: 'rio-button__label' });
   });

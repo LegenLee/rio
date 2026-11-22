@@ -29,6 +29,7 @@ const mount = (options: RioOptions, component: Component = { render: () => null 
 
 afterEach(() => root.style.removeProperty('color-scheme'));
 
+// What the theme writes is `attachTheme`'s, tested in @rio-m3e/tokens; these check the wiring.
 describe('createRio, the theme', () => {
   test('is on the root before the app mounts, following the system’s light or dark', () => {
     let seen = '';
@@ -45,15 +46,6 @@ describe('createRio, the theme', () => {
     unmount();
     expect(root.style.getPropertyValue('--rio-color-primary')).toBe('');
     expect(root.style.colorScheme).toBe('');
-  });
-
-  test('colorScheme picks one, or false leaves the app’s own', () => {
-    const { unmount } = mount({ theme: { sourceColor: '#6750a4', colorScheme: 'dark' } });
-    expect(root.style.colorScheme).toBe('dark');
-    unmount();
-    root.style.colorScheme = 'light';
-    mount({ theme: { sourceColor: '#6750a4', colorScheme: false } });
-    expect(root.style.colorScheme).toBe('light');
   });
 
   test('a ref writes it again as it changes, and taking it away takes the theme off', async () => {

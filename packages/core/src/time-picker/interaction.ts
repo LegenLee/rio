@@ -9,13 +9,17 @@
 //   Up to the one before; on a 24-hour clock, 11 leads to 12 on the inner ring, and 23 back to 0.
 //   Enter and Space pick the number, without going on to the minutes.
 // - The numbers overlap, 60 of them for the minutes, so the pointer goes through them to the dial:
-//   the number nearest the pointer, the one a press would pick, shows its hover state
-//   (`data-hovered`), rather than the one drawn on top.
+//   `onHover` reports the number nearest the pointer, the one a press would pick, for its hover
+//   state, rather than the one drawn on top.
 // - On the AM and PM buttons, the arrow keys choose the other one, as in a radio group.
 // - A text field focused other than by the pointer, as by Tab or as the dialog opens, has its text
 //   selected, so typing replaces both digits.
+// - When the hour's or the minute's scroll field has the focus and gives way to the text input, as
+//   Space or Enter on it switch to it, that field's text input takes the focus.
 // - After the adapter shows the other field's numbers, the focus, when it was on a number, goes to
 //   where the dial starts, whether the adapter replaced the numbers or reused them.
+
+import { hasModifier } from '../utils/keyboard';
 
 /** The rings' radii, as fractions of the dial's size */
 const OUTER = 102 / 256;
@@ -29,6 +33,8 @@ export interface TimePickerDomOptions {
   onPick: (value: number, release: boolean) => void;
   /** AM or PM chosen with the arrow keys */
   onPeriod: (pm: boolean) => void;
+  /** The number nearest a pointer that hovers over the dial, or none, as it changes */
+  onHover: (value: number | undefined) => void;
 }
 
 export interface TimePickerDomHandle {
@@ -63,23 +69,24 @@ export function attachTimePicker(
     return index + (inner ? 12 : 0);
   };
 
-  /** Where a pointer that hovers is over the dial */
-  let hoverAt: { x: number; y: number } | undefined;
+  /**
+   * Where a pointer that hovers is over the dial, and which dial: one rendered afresh, as on
+   * opening again, has no pointer over it until the pointer moves.
+   */
+  let hoverAt: { x: number; y: number; face: Element | null } | undefined;
+  let hovered: number | undefined;
   const showHover = () => {
     const face = dial();
-    for (const number of root.querySelectorAll('.rio-time-picker__number[data-hovered]')) {
-      number.removeAttribute('data-hovered');
-    }
-    if (!face || !hoverAt) return;
-    const value = valueAt(face, hoverAt.x, hoverAt.y);
-    face
-      .querySelector(`.rio-time-picker__number[data-value="${value}"]`)
-      ?.setAttribute('data-hovered', '');
+    if (hoverAt && hoverAt.face !== face) hoverAt = undefined;
+    const value = face && hoverAt ? valueAt(face, hoverAt.x, hoverAt.y) : undefined;
+    if (value === hovered) return;
+    hovered = value;
+    options.onHover(value);
   };
   const onHover = (event: PointerEvent) => {
     if (event.pointerType === 'touch') return;
     const over = (event.target as Element).closest('.rio-time-picker__dial');
-    hoverAt = over || dragging ? { x: event.clientX, y: event.clientY } : undefined;
+    hoverAt = over || dragging ? { x: event.clientX, y: event.clientY, face: dial() } : undefined;
     showHover();
   };
   const onPointerLeave = () => {
@@ -92,6 +99,8 @@ export function attachTimePicker(
   let pressedField: Element | undefined;
   const onPointerDown = (event: PointerEvent) => {
     pressedField = (event.target as Element).closest('.rio-time-picker__input') ?? undefined;
+    // A press elsewhere, as on the mode button where it takes no focus, isn't the scroll field's.
+    if (!(event.target as Element).closest('.rio-time-picker__scroll')) scrolledField = undefined;
     const face = (event.target as Element).closest<HTMLElement>('.rio-time-picker__dial');
     if (!face || event.button !== 0) return;
     // The dial takes the press; the focus stays where it is.
@@ -114,6 +123,8 @@ export function attachTimePicker(
 
   /** The field whose numbers had the focus, so it moves when the dial shows the other field */
   let focusedField: string | undefined;
+  /** The field whose scroll field had the focus, so its text input takes it in its place */
+  let scrolledField: string | undefined;
   /** The field whose toggle was activated from the keyboard, until the dial shows it */
   let entering: string | undefined;
   const enterDial = () => {
@@ -130,7 +141,7 @@ export function attachTimePicker(
     queueMicrotask(enterDial);
   };
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     const target = event.target as HTMLElement;
     const forward = ['ArrowRight', 'ArrowDown'].includes(event.key);
     const back = ['ArrowLeft', 'ArrowUp'].includes(event.key);
@@ -158,6 +169,7 @@ export function attachTimePicker(
     focusedField = target.matches('.rio-time-picker__number')
       ? dial()?.dataset.selection
       : undefined;
+    scrolledField = target.closest<HTMLElement>('.rio-time-picker__scroll')?.dataset.field;
     if (target.matches('.rio-time-picker__input') && target !== pressedField) {
       (target as HTMLInputElement).select();
     }
@@ -177,11 +189,16 @@ export function attachTimePicker(
   return {
     sync() {
       enterDial();
-      // The adapter may have reused a number for another value.
+      // The dial may show the other field's numbers now, another one under the pointer.
       showHover();
-      if (focusedField === undefined) return;
       const active = document.activeElement;
       const lost = !active || active === document.body || !active.isConnected;
+      if (lost && scrolledField !== undefined) {
+        root
+          .querySelector<HTMLElement>(`.rio-time-picker__input[data-field="${scrolledField}"]`)
+          ?.focus();
+      }
+      if (focusedField === undefined) return;
       if (lost || dial()?.dataset.selection !== focusedField) start()?.focus();
     },
     detach() {

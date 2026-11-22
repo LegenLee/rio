@@ -67,7 +67,7 @@ const rio = createRio({ theme: { sourceColor: '#6750a4' } });
 const head = `<style>${rio.css}</style>`;
 ```
 
-Without Vue, `@rio-m3e/tokens` does the same: `applyTheme(element, options)` writes the variables on an element, and `createThemeCss(options)` returns the stylesheet.
+Without Vue, `@rio-m3e/tokens` does the same: `attachTheme(element, theme)` writes the variables and the `color-scheme` on an element, and its handle writes another theme over them (`update`) or takes them off (`detach`); `createThemeCss(theme)` returns the stylesheet.
 
 ## Load Roboto
 

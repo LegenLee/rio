@@ -15,6 +15,12 @@ import {
   type TypographyVar,
 } from './typography/typography';
 
+/**
+ * The `color-scheme` that picks each color's light or dark value: `'light dark'` follows the
+ * system. `false` writes none, for an app that sets it itself.
+ */
+export type ThemeColorScheme = 'light dark' | 'light' | 'dark' | false;
+
 export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
   /** Defaults to `'expressive'`. */
   motion?: MotionScheme;
@@ -22,15 +28,16 @@ export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
   shapes?: ShapeOverrides;
   /** Font-family values: `{ brand: '"Roboto Flex", sans-serif' }`. Both default to Roboto. */
   typefaces?: TypefaceOverrides;
+  /**
+   * The `color-scheme` `attachTheme` and `createThemeCss` write with the variables. Defaults to
+   * `'light dark'`. The variables alone (`createThemeVariables`) leave it out.
+   */
+  colorScheme?: ThemeColorScheme;
 }
 
 export type ThemeVar = ColorVar | ElevationVar | MotionVar | ShapeVar | StateVar | TypographyVar;
 
-/**
- * The `color-scheme` that picks each color's light or dark value: `'light dark'` follows the
- * system. `false` writes none, for an app that sets it itself.
- */
-export type ThemeColorScheme = 'light dark' | 'light' | 'dark' | false;
+const DEFAULT_COLOR_SCHEME: ThemeColorScheme = 'light dark';
 
 /**
  * Every CSS variable in the theme.
@@ -44,7 +51,7 @@ export type ThemeColorScheme = 'light dark' | 'light' | 'dark' | false;
  * - State: state-layer opacities and focus indicator dimensions. Fixed values.
  */
 export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
-  const { motion = 'expressive', shapes, typefaces, ...color } = options;
+  const { motion = 'expressive', shapes, typefaces, colorScheme: _, ...color } = options;
   const light = createColorScheme({ ...color, dark: false });
   const dark = createColorScheme({ ...color, dark: true });
   const vars = {} as Record<ThemeVar, string>;
@@ -61,25 +68,41 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
   );
 }
 
-/**
- * A CSS string for SSR or static stylesheets, with a `color-scheme`, `'light dark'` unless
- * `colorScheme` says otherwise.
- */
-export function createThemeCss(
-  options: ThemeOptions & { selector?: string; colorScheme?: ThemeColorScheme },
-): string {
-  const { selector = ':root', colorScheme = 'light dark', ...rest } = options;
+/** A CSS string for SSR or static stylesheets: the variables and the `color-scheme` */
+export function createThemeCss(options: ThemeOptions & { selector?: string }): string {
+  const { selector = ':root', colorScheme = DEFAULT_COLOR_SCHEME, ...rest } = options;
   const lines = Object.entries(createThemeVariables(rest)).map(([k, v]) => `  ${k}: ${v};`);
   if (colorScheme) lines.unshift(`  color-scheme: ${colorScheme};`);
   return `${selector} {\n${lines.join('\n')}\n}\n`;
 }
 
+export interface ThemeHandle {
+  /** Writes another theme in place of the one written, or takes it off without one. */
+  update(options: ThemeOptions | undefined): void;
+  /** Takes off everything it wrote. */
+  detach(): void;
+}
+
 /**
- * Sets the theme variables as inline styles on an element.
- * It doesn't touch `color-scheme`; set that yourself.
+ * Writes the theme on an element, as inline styles: the variables and the `color-scheme`. Pass the
+ * document's root for the whole page. Only what it wrote changes later: `update` writes another
+ * theme over it, taking off what the new one leaves out, and `detach` takes it all off.
  */
-export function applyTheme(target: HTMLElement, options: ThemeOptions): void {
-  for (const [k, v] of Object.entries(createThemeVariables(options))) {
-    target.style.setProperty(k, v);
-  }
+export function attachTheme(target: HTMLElement, options?: ThemeOptions): ThemeHandle {
+  let written = new Set<string>();
+  const update = (theme: ThemeOptions | undefined) => {
+    const next = new Map<string, string>();
+    if (theme) {
+      const { colorScheme = DEFAULT_COLOR_SCHEME } = theme;
+      for (const [name, value] of Object.entries(createThemeVariables(theme))) {
+        next.set(name, value);
+      }
+      if (colorScheme) next.set('color-scheme', colorScheme);
+    }
+    for (const name of written) if (!next.has(name)) target.style.removeProperty(name);
+    for (const [name, value] of next) target.style.setProperty(name, value);
+    written = new Set(next.keys());
+  };
+  update(options);
+  return { update, detach: () => update(undefined) };
 }

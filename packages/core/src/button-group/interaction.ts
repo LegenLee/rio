@@ -13,12 +13,10 @@
 // Every element child of the group counts as an item, in DOM order, or the element inside a
 // tooltip's wrapper, which has no box.
 
-import {
-  createSpring,
-  prefersReducedMotion,
-  readSpringParams,
-  type Spring,
-} from '../primitives/spring/spring';
+import { isRtl } from '../primitives/direction/direction';
+import { prefersReducedMotion } from '../primitives/reduced-motion/reduced-motion';
+import { createSpring, readSpringParams, type Spring } from '../primitives/spring/spring';
+import { hasModifier } from '../utils/keyboard';
 
 export interface ButtonGroupInteractionOptions {
   /**
@@ -49,12 +47,12 @@ export function attachButtonGroup(
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (hasModifier(event) || event.shiftKey) return;
     const focusable = items().filter((el) => !el.matches(':disabled') && el.tabIndex >= 0);
     const index = focusable.findIndex((el) => el.contains(document.activeElement));
     if (index === -1) return;
     // In right-to-left layouts the next button is on the left.
-    const forward = (event.key === 'ArrowRight') !== (getComputedStyle(root).direction === 'rtl');
+    const forward = (event.key === 'ArrowRight') !== isRtl(root);
     const next = focusable[index + (forward ? 1 : -1)];
     if (!next) return;
     event.preventDefault();

@@ -1,6 +1,9 @@
 import type { RioMessages } from '../messages';
 
 export const en: RioMessages = {
+  chip: {
+    remove: 'Remove {label}',
+  },
   datePicker: {
     title: 'Select date',
     noDateSelected: 'Selected date',
@@ -25,6 +28,16 @@ export const en: RioMessages = {
     beforeMin: 'Choose {min} or later',
     afterMax: 'Choose {max} or earlier',
     unavailable: 'This date isn’t available',
+    rangeTitle: 'Select dates',
+    rangeHeadline: '{start} – {end}',
+    startDate: 'Start date',
+    endDate: 'End date',
+    invalidRange: 'Choose an end date after the start date',
+    startRequired: 'Enter a start date',
+  },
+  slider: {
+    rangeStart: 'Minimum',
+    rangeEnd: 'Maximum',
   },
   timePicker: {
     selectTime: 'Select time',
@@ -39,6 +52,7 @@ export const en: RioMessages = {
     period: 'Select AM or PM',
     switchToInput: 'Toggle input picker',
     switchToDial: 'Toggle dial picker',
+    switchToScroll: 'Toggle scroll picker',
     cancel: 'Cancel',
     ok: 'OK',
     invalidHour12: 'Hour must be 1–12',

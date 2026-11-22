@@ -1,6 +1,9 @@
 import type { RioMessages } from '../messages';
 
 export const ko: RioMessages = {
+  chip: {
+    remove: '{label} 삭제',
+  },
   datePicker: {
     title: '날짜 선택',
     noDateSelected: '선택한 날짜',
@@ -25,6 +28,16 @@ export const ko: RioMessages = {
     beforeMin: '{min} 이후 날짜를 선택하세요',
     afterMax: '{max} 이전 날짜를 선택하세요',
     unavailable: '선택할 수 없는 날짜입니다',
+    rangeTitle: '기간 선택',
+    rangeHeadline: '{start} ~ {end}',
+    startDate: '시작일',
+    endDate: '종료일',
+    invalidRange: '시작일 이후의 종료일을 선택하세요',
+    startRequired: '시작일을 입력하세요',
+  },
+  slider: {
+    rangeStart: '최솟값',
+    rangeEnd: '최댓값',
   },
   timePicker: {
     selectTime: '시간 선택',
@@ -39,6 +52,7 @@ export const ko: RioMessages = {
     period: '오전 또는 오후 선택',
     switchToInput: '입력 선택기로 전환',
     switchToDial: '다이얼 선택기로 전환',
+    switchToScroll: '스크롤 선택기로 전환',
     cancel: '취소',
     ok: '확인',
     invalidHour12: '시는 1부터 12까지입니다',

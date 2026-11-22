@@ -1,21 +1,37 @@
 import { describe, expect, test } from 'vitest';
-import { omitUndefined } from './object';
+import { resolveProps } from './object';
 
-describe('omitUndefined', () => {
-  test('drops undefined properties and keeps the other falsy ones', () => {
-    expect(omitUndefined({ a: undefined, b: null, c: 0, d: false, e: '' })).toEqual({
-      b: null,
-      c: 0,
-      d: false,
-      e: '',
+describe('resolveProps', () => {
+  const defaults = { size: 'small', shape: 'round', toggle: false };
+
+  test('a prop given wins; one left out or undefined takes the default', () => {
+    expect(resolveProps(defaults, { size: 'large', shape: undefined })).toEqual({
+      size: 'large',
+      shape: 'round',
+      toggle: false,
     });
   });
 
-  test('lets defaults show through when spread', () => {
-    const defaults = { size: 'small', shape: 'round' };
-    expect({ ...defaults, ...omitUndefined({ size: undefined, shape: 'square' }) }).toEqual({
-      size: 'small',
-      shape: 'square',
+  test('keeps the other falsy values', () => {
+    expect(resolveProps({ a: 1, b: 1, c: 1, d: 1 }, { a: null, b: 0, c: false, d: '' })).toEqual({
+      a: null,
+      b: 0,
+      c: false,
+      d: '',
     });
+  });
+
+  test('keeps the props that have no default, undefined ones left out', () => {
+    expect(resolveProps(defaults, { href: '/a', value: undefined })).toEqual({
+      ...defaults,
+      href: '/a',
+    });
+  });
+
+  test('changes neither the defaults nor the props', () => {
+    const props = { size: undefined };
+    resolveProps(defaults, props);
+    expect(defaults.size).toBe('small');
+    expect(props).toEqual({ size: undefined });
   });
 });

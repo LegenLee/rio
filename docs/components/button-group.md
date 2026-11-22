@@ -144,7 +144,7 @@ A connected group is as wide as the space it's given. The first group keeps one 
 
 ### Connected: corners
 
-- Each button's start and end sides spring separately. The stylesheet sets `--rio-shape-morph-start-target` and `--rio-shape-morph-end-target` per position: the first button's start and the last button's end use the group's outer shape, and facing corners use the inner size, which tightens when pressed and opens up fully when selected. Sides follow the writing direction, so right-to-left layouts mirror them.
+- Each button's start and end sides spring separately. The stylesheet sets `--rio-corner-morph-start-target` and `--rio-corner-morph-end-target` per position: the first button's start and the last button's end use the group's outer shape, and facing corners use the inner size, which tightens when pressed and opens up fully when selected. Sides follow the writing direction, so right-to-left layouts mirror them.
 - **Round groups** use half the button height for "full" and for the selected 50%, so the corners animate into each other.
 - **Square groups** use the inner size for the outer corners too. The spec's list of square outer corners matches the inner sizes, except at extra small (see below).
 - Buttons share the group's width equally, and extra small and small icon buttons keep a 48px minimum width.

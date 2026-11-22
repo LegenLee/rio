@@ -9,6 +9,8 @@
 // - Tab closes the menu and moves on from the element that opened it.
 // - Closing after a choice or Escape gives the focus back to the anchor, or to whatever had it
 //   before. A click elsewhere leaves the focus where the click put it.
+// - A right-click in an open menu opens nothing: the browser's own menu doesn't show over it. On a
+//   field that takes text, it does, for pasting and spelling.
 //
 // Submenus (`attachSubMenu`) are menus too, with these on top:
 // - The pointer opens one after resting on its item for a moment, and a click opens it at once.
@@ -21,7 +23,7 @@
 //   first item. Left and Escape close it and give the focus back to its item. Tab and a choice
 //   close the whole menu.
 // - The menu with the pointer or the focus has the active shape, and the other open menus around
-//   it the inactive one (`data-inactive`).
+//   it the inactive one: `onInactiveChange` tells each menu as it changes.
 //
 // Not yet: opening a menu from its trigger with the arrow keys.
 
@@ -31,8 +33,10 @@ import {
   type AnchoredSide,
   type AnchorPoint,
 } from '../primitives/anchored-position/anchored-position';
+import { isRtl } from '../primitives/direction/direction';
 import { attachOverlay } from '../primitives/overlay/overlay';
-import { omitUndefined } from '../utils/object';
+import { hasModifier } from '../utils/keyboard';
+import { resolveProps } from '../utils/object';
 import { createTypeahead } from '../utils/typeahead';
 import { menuDefaults, type MenuProps } from './menu';
 
@@ -55,6 +59,8 @@ export interface MenuDomOptions {
    * overlay opening. The adapter sets `open` to false.
    */
   onClose: () => void;
+  /** The menu takes the inactive shape, or the active one again, for `createMenu`'s `inactive`. */
+  onInactiveChange?: (inactive: boolean) => void;
 }
 
 export interface MenuDomHandle {
@@ -75,6 +81,8 @@ export interface SubMenuDomOptions {
    * elsewhere. The adapter sets its `open` to match.
    */
   onOpenChange: (open: boolean) => void;
+  /** As a menu's `onInactiveChange` */
+  onInactiveChange?: (inactive: boolean) => void;
 }
 
 export interface SubMenuDomHandle {
@@ -162,15 +170,32 @@ const endGrace = (state: MenuState) => {
 };
 
 // The open menus of one tree, a menu and its open submenus, share the active shape: the one the
-// pointer or the focus was last in has it, and the others get `data-inactive`. With one menu open,
-// it is simply active.
+// pointer or the focus was last in has it, and the others are inactive. With one menu open, it is
+// simply active. Each menu hears of its own as it changes.
 const menuAround = (element: Element) => element.parentElement?.closest<HTMLElement>('.rio-menu');
 const topOf = (menu: HTMLElement) => {
   let top = menu;
   for (let up = menuAround(menu); up; up = menuAround(up)) top = up;
   return top;
 };
+/** A field that takes text, where a right-click keeps the browser's menu */
+const TEXT_FIELD = [
+  'input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"],' +
+    ' [type="button"], [type="submit"], [type="reset"], [type="image"])',
+  'textarea',
+  '[contenteditable]:not([contenteditable="false"])',
+].join(', ');
 const activeMenus = new WeakMap<HTMLElement, HTMLElement>();
+const shapes = new WeakMap<
+  HTMLElement,
+  { inactive: boolean; report?: (inactive: boolean) => void }
+>();
+const setInactive = (menu: HTMLElement, inactive: boolean) => {
+  const shape = shapes.get(menu);
+  if (!shape || shape.inactive === inactive) return;
+  shape.inactive = inactive;
+  shape.report?.(inactive);
+};
 const shapeTree = (menu: HTMLElement, active?: HTMLElement) => {
   const top = topOf(menu);
   if (active) activeMenus.set(top, active);
@@ -180,8 +205,7 @@ const shapeTree = (menu: HTMLElement, active?: HTMLElement) => {
   const open = [top, ...top.querySelectorAll<HTMLElement>('.rio-menu')].filter((each) =>
     each.matches(':popover-open'),
   );
-  for (const each of open)
-    each.toggleAttribute('data-inactive', open.length > 1 && each !== current);
+  for (const each of open) setInactive(each, open.length > 1 && each !== current);
 };
 
 type Placement = Pick<MenuProps, 'side' | 'align' | 'offset'> & { alignOffset?: number };
@@ -208,6 +232,7 @@ function setup(
 ): MenuDom {
   const document = root.ownerDocument;
   const view = document.defaultView!;
+  shapes.set(root, { inactive: false, report: options.onInactiveChange });
   // A menu moved to a new anchor during a press is closed by the browser when the press ends;
   // it opens again at the new anchor instead of telling the adapter (see `afterPress`).
   let reanchoring = false;
@@ -260,7 +285,7 @@ function setup(
   };
 
   const place = () => {
-    const p = { ...menuDefaults, alignOffset: 0, ...omitUndefined(options.props()) };
+    const p = resolveProps({ ...menuDefaults, alignOffset: 0 }, options.props());
     const key = `${p.side} ${p.align} ${p.offset} ${p.alignOffset}`;
     if (anchored && key === placement) return anchored;
     anchored?.detach();
@@ -296,7 +321,7 @@ function setup(
   state.typing = search.typing;
 
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     // Tab closes the whole menu, from a submenu too, so the outermost menu takes it.
     if (event.key === 'Tab') {
       if (nested) return;
@@ -311,7 +336,7 @@ function setup(
     // through `focusin`: a window without the system's focus doesn't fire it.
     if (activeMenus.get(topOf(root)) !== root) shapeTree(root, root);
     const handled = () => event.preventDefault();
-    if (nested && event.key === (isRtl() ? 'ArrowRight' : 'ArrowLeft')) {
+    if (nested && event.key === (isRtl(root) ? 'ArrowRight' : 'ArrowLeft')) {
       handled();
       options.onClose();
       return;
@@ -341,8 +366,6 @@ function setup(
     }
   };
   root.addEventListener('keydown', onKeydown);
-
-  const isRtl = () => view.getComputedStyle(root).direction === 'rtl';
 
   // The pointer over the menu's own items opens the submenu of the one it rests on and closes the
   // others, except while it heads for an open submenu across other items (`MenuState.grace`). Only
@@ -380,6 +403,11 @@ function setup(
     state.openers.get(item)?.hover();
   };
   root.addEventListener('pointermove', onPointerMove);
+  const onContextMenuIn = (event: MouseEvent) => {
+    if ((event.target as Element).closest(TEXT_FIELD)) return;
+    event.preventDefault();
+  };
+  root.addEventListener('contextmenu', onContextMenuIn);
   // The focus moving into the menu, from the keyboard, makes it the active one too.
   const onFocusIn = (event: FocusEvent) => {
     if ((event.target as Element).closest('[role="menu"]') === root) shapeTree(root, root);
@@ -537,6 +565,7 @@ function setup(
     detach() {
       root.removeEventListener('keydown', onKeydown);
       root.removeEventListener('pointermove', onPointerMove);
+      root.removeEventListener('contextmenu', onContextMenuIn);
       root.removeEventListener('focusin', onFocusIn);
       endGrace(state);
       document.removeEventListener('contextmenu', onContextMenu, { capture: true });
@@ -550,11 +579,10 @@ function setup(
       afterPress = undefined;
       overlay.detach();
       anchored?.detach();
+      shapes.delete(root);
     },
   };
 }
-
-let submenuIds = 0;
 
 /**
  * A submenu's behavior in the DOM: a menu (see `attachMenu`) that `item` opens, shown beside it.
@@ -565,7 +593,6 @@ export function attachSubMenu(
   root: HTMLElement,
   options: SubMenuDomOptions,
 ): SubMenuDomHandle {
-  const view = item.ownerDocument.defaultView!;
   const parent = item.closest<HTMLElement>('[role="menu"]');
   /** Whether the submenu is open, as last `sync`ed */
   let open = false;
@@ -583,17 +610,19 @@ export function attachSubMenu(
   };
   const dom = setup(
     root,
-    { anchor: () => item, props: () => SUBMENU_PLACEMENT, onClose: () => request(false) },
+    {
+      anchor: () => item,
+      props: () => SUBMENU_PLACEMENT,
+      onClose: () => request(false),
+      onInactiveChange: options.onInactiveChange,
+    },
     { focusOnShow: () => focusIn },
   );
   const disabled = () => item.getAttribute('aria-disabled') === 'true';
 
-  // The item invokes the submenu, so a click on it isn't a click outside, which would close the open
-  // submenu. The click opens it through the adapter (`handleClick`), not the browser, which is told
-  // to only ever show it, and is then stopped.
-  root.id ||= `rio-submenu-${++submenuIds}`;
-  item.setAttribute('popovertarget', root.id);
-  item.setAttribute('popovertargetaction', 'show');
+  // The item invokes the submenu (`popovertarget`), so a click on it isn't a click outside, which
+  // would close the open submenu. The click opens it through the adapter (`handleClick`), not the
+  // browser, and is then stopped.
   // A click from the keyboard or assistive technology has no pointer behind it (`detail` 0), and
   // moves the focus in, as the keys do.
   const onClickFirst = (event: MouseEvent) => {
@@ -675,8 +704,8 @@ export function attachSubMenu(
   // Right (left in right-to-left layouts), Enter, and Space open it with the focus on its first
   // item. A space while letters are being typed is part of the search.
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
-    const forward = view.getComputedStyle(item).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+    if (event.defaultPrevented || hasModifier(event)) return;
+    const forward = isRtl(item) ? 'ArrowLeft' : 'ArrowRight';
     const space = event.key === ' ' && !(parent && stateOf(parent).typing());
     if (event.key !== forward && event.key !== 'Enter' && !space) return;
     // Also keeps Enter and Space from clicking the item.
@@ -700,8 +729,6 @@ export function attachSubMenu(
       item.removeEventListener('click', onClick);
       item.removeEventListener('pointerleave', onPointerLeave);
       item.removeEventListener('keydown', onKeydown);
-      item.removeAttribute('popovertarget');
-      item.removeAttribute('popovertargetaction');
       if (parent && stateOf(parent).openers.get(item) === opener) {
         stateOf(parent).openers.delete(item);
       }

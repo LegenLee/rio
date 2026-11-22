@@ -16,3 +16,19 @@
 .rio-focus-ring[data-focus-ring='inner']:focus-visible {
   outline-offset: var(--rio-state-focus-indicator-inner-offset);
 }
+
+/*
+ * A ring on another element than the one with the focus, as on a checkbox's circle while its
+ * input has it. The element that draws it carries `rio-focus-ring-target`, and the component's
+ * stylesheet sets `outline-style: solid` on it while the element it rings for has keyboard focus.
+ * `data-focus-ring='inner'` draws it inside.
+ */
+.rio-focus-ring-target {
+  outline: var(--rio-state-focus-indicator-thickness) none
+    var(--rio-focus-ring-color, var(--rio-color-secondary));
+  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+}
+
+.rio-focus-ring-target[data-focus-ring='inner'] {
+  outline-offset: var(--rio-state-focus-indicator-inner-offset);
+}

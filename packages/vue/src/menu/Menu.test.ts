@@ -18,6 +18,7 @@ import Menu from './Menu.vue';
 import MenuDivider from './MenuDivider.vue';
 import MenuGroup from './MenuGroup.vue';
 import MenuItem from './MenuItem.vue';
+import { eventsLeaving } from '../test/events';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -99,6 +100,62 @@ const fadeFrom = (menu: HTMLElement) => {
 };
 
 describe('RioMenu', () => {
+  test('keys with Alt, Ctrl, or Meta are left to the app', async () => {
+    const { opened, isOpen } = await setup();
+    await opened();
+    const start = focusedText();
+    for (const key of ['ArrowDown', 'End', 'Tab']) {
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        const press = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          [modifier]: true,
+        });
+        document.activeElement!.dispatchEvent(press);
+        expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+      }
+    }
+    expect(focusedText()).toBe(start);
+    expect(isOpen()).toBe(true);
+  });
+
+  test('a right-click on a field in it opens the browser’s menu, for pasting', async () => {
+    const { opened } = await setup({
+      items: () => [
+        h('input', { 'aria-label': 'Filter' }),
+        h('input', { type: 'checkbox', 'aria-label': 'Exact' }),
+      ],
+    });
+    await opened();
+    const rightClick = (selector: string) => {
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      document.querySelector(selector)!.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(rightClick('input[aria-label="Filter"]')).toBe(false);
+    // A checkbox takes no text.
+    expect(rightClick('input[aria-label="Exact"]')).toBe(true);
+  });
+
+  test('a right-click in it opens nothing, not the browser’s own menu either', async () => {
+    const { opened, screen } = await setup();
+    await opened();
+    const item = screen.getByRole('menuitem', { name: 'Cut' }).element();
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    item.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  test("clicks and presses in it stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { opened, menu, screen } = await setup();
+    await opened();
+    const out = eventsLeaving(menu);
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Cut' }));
+    expect(out).toEqual(['keydown']);
+  });
+
   test('opens next to its anchor, named, with the focus on the first item', async () => {
     const { screen, opened, menu, trigger } = await setup();
     await opened();

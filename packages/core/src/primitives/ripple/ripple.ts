@@ -4,6 +4,8 @@
 // Behavior follows Material Web's ripple, Google's web implementation: a touch delay so scrolling
 // doesn't ripple, a minimum visible time, and a centered ripple for keyboard activation.
 
+import { prefersReducedMotion } from '../reduced-motion/reduced-motion';
+
 /** Touch presses wait this long, so a scroll that starts on the element doesn't ripple. */
 const TOUCH_DELAY_MS = 150;
 /** A press stays visible at least this long, even for a quick tap. */
@@ -23,9 +25,6 @@ export interface RippleHandle {
 }
 
 const isDisabled = (el: Element) => el.matches(':disabled, [aria-disabled="true"]');
-
-const reducedMotion = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface RippleOptions {
   /**
@@ -78,7 +77,7 @@ export function attachRipple(element: HTMLElement, options: RippleOptions = {}):
     animation?.cancel();
     animation = surface.animate([frame(from, radius.from), frame(to, radius.to)], {
       pseudoElement: '::after',
-      duration: reducedMotion() ? 0 : GROW_MS,
+      duration: prefersReducedMotion() ? 0 : GROW_MS,
       easing: GROW_EASING,
       fill: 'forwards',
     });

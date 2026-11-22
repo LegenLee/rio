@@ -3,9 +3,9 @@
 Design tokens for [Rio](https://github.com/LegenLee/rio), a Material 3 Expressive implementation: color schemes from a source color, elevation, motion, shape, typography, and states, as `--rio-*` CSS variables.
 
 ```ts
-import { applyTheme } from '@rio-m3e/tokens';
+import { attachTheme } from '@rio-m3e/tokens';
 
-applyTheme(document.documentElement, { sourceColor: '#6750a4' });
+attachTheme(document.documentElement, { sourceColor: '#6750a4' });
 ```
 
 `createThemeCss` returns the same variables as a stylesheet, for server rendering or a static file.

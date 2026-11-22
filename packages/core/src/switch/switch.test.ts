@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createSwitch, type SwitchContent, type SwitchProps } from './switch';
+import { createSwitch, type SwitchContent, type SwitchKeyEvent, type SwitchProps } from './switch';
 
 const setup = (props: SwitchProps = {}, content?: SwitchContent) => {
   const onChange = vi.fn();
@@ -9,43 +9,51 @@ const setup = (props: SwitchProps = {}, content?: SwitchContent) => {
   };
 };
 
-const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent;
+const key = (name: string, init: Partial<Omit<SwitchKeyEvent, 'key' | 'preventDefault'>> = {}) => ({
+  key: name,
+  repeat: false,
+  altKey: false,
+  ctrlKey: false,
+  metaKey: false,
+  defaultPrevented: false,
+  ...init,
+  preventDefault: vi.fn(),
+});
 
 describe('parts', () => {
-  test('the root is an off switch button that never submits a form', () => {
-    expect(setup().sw.parts.root()).toEqual({
-      class: 'rio-switch rio-focus-ring',
-      type: 'button',
-      role: 'switch',
-      'aria-checked': 'false',
-      disabled: undefined,
-      'aria-disabled': undefined,
+  test('the root is the track, off; the input is a native checkbox with the switch role', () => {
+    const { parts } = setup().sw;
+    expect(parts.root()).toEqual({
+      class: 'rio-switch rio-focus-ring-target',
       'data-selected': 'false',
       'data-icon': undefined,
+      'data-disabled': undefined,
     });
-  });
-
-  test('reflects the selected state', () => {
-    expect(setup({ selected: true }).sw.parts.root()).toMatchObject({
-      'aria-checked': 'true',
-      'data-selected': 'true',
-    });
-  });
-
-  test('disabled is native, softDisabled is aria-disabled', () => {
-    expect(setup({ disabled: true }).sw.parts.root()).toMatchObject({
-      disabled: '',
+    expect(parts.input()).toEqual({
+      class: 'rio-switch__input',
+      type: 'checkbox',
+      role: 'switch',
+      disabled: undefined,
       'aria-disabled': undefined,
     });
-    expect(setup({ softDisabled: true }).sw.parts.root()).toMatchObject({
-      disabled: undefined,
-      'aria-disabled': 'true',
-    });
+  });
+
+  test('reflects the selected state on the root; the input is checked by attachCheckable', () => {
+    expect(setup({ selected: true }).sw.parts.root()['data-selected']).toBe('true');
+  });
+
+  test('disabled is native, softDisabled is aria-disabled; either dims the root', () => {
+    const disabled = setup({ disabled: true }).sw;
+    expect(disabled.parts.input()).toMatchObject({ disabled: '', 'aria-disabled': undefined });
+    expect(disabled.parts.root()['data-disabled']).toBe('');
+    const soft = setup({ softDisabled: true }).sw;
+    expect(soft.parts.input()).toMatchObject({ disabled: undefined, 'aria-disabled': 'true' });
+    expect(soft.parts.root()['data-disabled']).toBe('');
+    expect([disabled.blocked(), soft.blocked(), setup().sw.blocked()]).toEqual([true, true, false]);
   });
 
   test('the inner parts carry their classes and stay out of the accessibility tree', () => {
     const { parts } = setup().sw;
-    expect(parts.touch()).toEqual({ class: 'rio-switch__touch', 'aria-hidden': 'true' });
     expect(parts.state()).toEqual({ class: 'rio-switch__state', 'aria-hidden': 'true' });
     expect(parts.handle()).toEqual({ class: 'rio-switch__handle', 'aria-hidden': 'true' });
     expect(parts.icon()).toEqual({ class: 'rio-switch__icon' });
@@ -80,21 +88,55 @@ describe('showsIcon', () => {
   });
 });
 
-describe('handleClick', () => {
-  test('requests the opposite value', () => {
+describe('handleKeydown', () => {
+  test('Enter requests the opposite value, and keeps the form from submitting', () => {
     const { sw, onChange } = setup({ selected: true });
-    sw.handleClick(click());
+    const event = key('Enter');
+    sw.handleKeydown(event);
     expect(onChange).toHaveBeenCalledWith(false);
+    expect(event.preventDefault).toHaveBeenCalled();
   });
 
-  test.each<SwitchProps>([{ disabled: true }, { softDisabled: true }])(
-    'blocks the click when %o',
-    (props) => {
-      const { sw, onChange } = setup(props);
-      const event = click();
-      sw.handleClick(event);
+  test('other keys are the browser’s: Space toggles the checkbox itself', () => {
+    const { sw, onChange } = setup();
+    const event = key(' ');
+    sw.handleKeydown(event);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
+
+  test('held down, Enter toggles once, and still keeps the form from submitting', () => {
+    const { sw, onChange } = setup();
+    sw.handleKeydown(key('Enter'));
+    const repeat = key('Enter', { repeat: true });
+    sw.handleKeydown(repeat);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(repeat.preventDefault).toHaveBeenCalled();
+  });
+
+  test.each([{ altKey: true }, { ctrlKey: true }, { metaKey: true }, { defaultPrevented: true }])(
+    'Enter is left alone with %o',
+    (init) => {
+      const { sw, onChange } = setup();
+      const event = key('Enter', init);
+      sw.handleKeydown(event);
       expect(onChange).not.toHaveBeenCalled();
-      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.preventDefault).not.toHaveBeenCalled();
     },
   );
+
+  test.each<SwitchProps>([{ disabled: true }, { softDisabled: true }])(
+    'Enter changes nothing when %o',
+    (props) => {
+      const { sw, onChange } = setup(props);
+      sw.handleKeydown(key('Enter'));
+      expect(onChange).not.toHaveBeenCalled();
+    },
+  );
+});
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const { sw } = setup({ selected: undefined, disabled: undefined, softDisabled: undefined });
+  expect(sw.parts.root()).toMatchObject({ 'data-selected': 'false', 'data-disabled': undefined });
+  expect(sw.blocked()).toBe(false);
 });

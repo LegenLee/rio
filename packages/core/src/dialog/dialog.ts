@@ -1,5 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /**
  * The dialog's ARIA role: `alertdialog` for a prompt that asks for a response, such as a
@@ -29,10 +29,21 @@ export interface DialogContent {
   actions: boolean;
 }
 
+/** How the content overflows, from `attachDialog`'s `onOverflowChange`, which the adapter keeps */
+export interface DialogOverflow {
+  /** More of the content is hidden above, or below: the dividers show. */
+  top: boolean;
+  bottom: boolean;
+  /** The content scrolls, with nothing inside that takes the focus, so it takes it itself. */
+  focusable: boolean;
+}
+
 export interface DialogOptions {
   props: () => DialogProps;
   /** Without it, the dialog has only its content. */
   content?: () => DialogContent;
+  /** Without it, the content doesn't overflow. */
+  overflow?: () => DialogOverflow;
   /** Ids for the parts the dialog refers to, unique in the document. The adapter makes them. */
   ids: { headline: string; content: string };
 }
@@ -74,7 +85,7 @@ export interface DialogApi extends Record<DialogWhen, () => boolean> {
 const NO_CONTENT: DialogContent = { icon: false, headline: false, actions: false };
 
 export function createDialog(options: DialogOptions): DialogApi {
-  const props = () => ({ ...dialogDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(dialogDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   const showsIcon = () => content().icon;
   const showsHeadline = () => content().headline;
@@ -98,12 +109,18 @@ export function createDialog(options: DialogOptions): DialogApi {
       },
       icon: () => ({ class: 'rio-dialog__icon', 'aria-hidden': 'true' }),
       headline: () => ({ class: 'rio-dialog__headline', id: ids.headline }),
-      content: () => ({
-        class: 'rio-dialog__content rio-focus-ring',
-        id: ids.content,
-        // It takes the focus only to scroll (see `attachDialog`), and its edges meet the dialog's.
-        'data-focus-ring': 'inner',
-      }),
+      content: () => {
+        const overflow = options.overflow?.();
+        return {
+          class: 'rio-dialog__content rio-focus-ring',
+          id: ids.content,
+          // It takes the focus only to scroll, and its edges meet the dialog's.
+          tabindex: overflow?.focusable ? '0' : undefined,
+          'data-focus-ring': 'inner',
+          'data-overflow-top': overflow?.top ? '' : undefined,
+          'data-overflow-bottom': overflow?.bottom ? '' : undefined,
+        };
+      },
       actions: () => ({ class: 'rio-dialog__actions' }),
     },
     showsIcon,

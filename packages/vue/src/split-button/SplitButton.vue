@@ -8,11 +8,12 @@ import {
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/button.css';
 import '@rio-m3e/styles/split-button.css';
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
 import { vRipple } from '../ripple/ripple';
-import { vShapeMorph } from '../shape-morph/shape-morph';
+import { vCornerMorph } from '../corner-morph/corner-morph';
 
 // No defaults here: core fills them in.
 const { menuLabel, label, variant, size, open, popup, disabled, softDisabled, type } =
@@ -70,7 +71,7 @@ onBeforeUnmount(() => handle?.detach());
     <button
       ref="leading"
       v-ripple
-      v-shape-morph
+      v-corner-morph
       v-bind="sb.parts.leading()"
       @click="sb.handleLeadingClick"
     >
@@ -81,7 +82,7 @@ onBeforeUnmount(() => handle?.detach());
     <button
       ref="trailing"
       v-ripple
-      v-shape-morph
+      v-corner-morph
       v-bind="sb.parts.trailing()"
       @click="sb.handleTrailingClick"
     >

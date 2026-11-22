@@ -1,0 +1,345 @@
+/*
+ * Chips (M3): assist, filter, input, and suggestion, and the chip set. Values come from the spec's
+ * token tables and measurements, which Material Web's component tokens (`_md-comp-*-chip.scss`,
+ * Material 3 v34.0.21) match.
+ *
+ * The root carries `data-type`, plus `data-selected`, `data-elevated`, `data-icon`, `data-avatar`,
+ * `data-trailing`, `data-remove-only`, and `data-disabled`, as core's chip parts set them. The
+ * state part draws the state layer and the ripple over the whole chip in its own color, so a press
+ * can show the color it leads to. Type and state rules sit inside `:where()`, so the disabled rules
+ * always win.
+ */
+
+.rio-chip {
+  --_container: transparent;
+  --_outline: var(--rio-color-outline-variant);
+  --_focus-outline: var(--rio-color-on-surface-variant);
+  --_label: var(--rio-color-on-surface-variant);
+  --_leading: var(--rio-color-primary);
+  --_trailing: var(--rio-color-on-surface-variant);
+  --_state: var(--_label);
+  --_pressed: var(--_state);
+  --_elevation: var(--rio-elevation-level0);
+  --_hover-elevation: var(--_elevation);
+  /* The spec's paddings from the container's edge; the border, always 1px, takes its share. */
+  --_start: 16px;
+  --_end: 16px;
+
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  block-size: 32px;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: calc(var(--_start) - 1px) calc(var(--_end) - 1px);
+  /* Apart, so the width holds even where the color's variable is missing */
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--_outline);
+  border-radius: var(--rio-shape-corner-small);
+  background-color: var(--_container);
+  box-shadow: var(--_elevation);
+  color: var(--_label);
+  font: var(--rio-typescale-label-large);
+  letter-spacing: var(--rio-typescale-label-large-tracking);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--rio-motion-fast-effects),
+    border-color var(--rio-motion-fast-effects),
+    color var(--rio-motion-fast-effects),
+    box-shadow var(--rio-motion-fast-effects);
+}
+
+/* Types */
+
+.rio-chip:where([data-type='assist']) {
+  --_label: var(--rio-color-on-surface);
+  --_focus-outline: var(--rio-color-on-surface);
+}
+
+.rio-chip:where([data-type='input']) {
+  --_leading: var(--rio-color-on-surface-variant);
+  /* The remove button sits 8px from the end. */
+  --_end: 8px;
+}
+
+/* An unselected filter chip's press shows the selected chip's color, and the other way round. */
+.rio-chip:where([data-type='filter']) {
+  --_pressed: var(--rio-color-on-secondary-container);
+}
+
+.rio-chip:where([data-icon]) {
+  --_start: 8px;
+}
+
+.rio-chip:where([data-avatar]) {
+  --_start: 4px;
+}
+
+.rio-chip:where([data-trailing]) {
+  --_end: 8px;
+}
+
+.rio-chip:where([data-elevated]) {
+  --_container: var(--rio-color-surface-container-low);
+  --_outline: transparent;
+  --_focus-outline: transparent;
+  --_elevation: var(--rio-elevation-level1);
+  --_hover-elevation: var(--rio-elevation-level2);
+}
+
+.rio-chip:where([data-type='filter'][data-selected='true']) {
+  --_container: var(--rio-color-secondary-container);
+  --_outline: transparent;
+  --_focus-outline: transparent;
+  --_label: var(--rio-color-on-secondary-container);
+  --_leading: var(--rio-color-on-secondary-container);
+  --_trailing: var(--rio-color-on-secondary-container);
+  --_pressed: var(--rio-color-on-surface-variant);
+  --_hover-elevation: var(--rio-elevation-level1);
+}
+
+.rio-chip:where([data-type='filter'][data-selected='true'][data-elevated]) {
+  --_hover-elevation: var(--rio-elevation-level2);
+}
+
+/* States */
+
+@media (hover: hover) {
+  .rio-chip:hover {
+    box-shadow: var(--_hover-elevation);
+  }
+
+  .rio-chip:hover > .rio-chip__state::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-chip:is(:focus-visible, :has(> .rio-chip__action:focus-visible)) {
+  border-color: var(--_focus-outline);
+}
+
+.rio-chip:is(:focus-visible, :has(> .rio-chip__action:focus-visible)) > .rio-chip__state::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+/* A menu chip stays pressed while its menu is open. */
+.rio-chip[aria-expanded='true'] > .rio-chip__state::before {
+  opacity: var(--rio-state-pressed-state-layer-opacity);
+}
+
+/* The focus ring goes round the chip when its action has the focus (`base/focus-ring.css`), and
+   when a remove-only chip's remove button has it. */
+.rio-chip:has(> .rio-chip__action:focus-visible),
+.rio-chip[data-remove-only]:has(> .rio-chip__remove:focus-visible) {
+  outline-style: solid;
+}
+
+.rio-chip[data-remove-only] > .rio-chip__remove:focus-visible {
+  outline: none;
+}
+
+/* Disabled, native or soft */
+
+.rio-chip[data-disabled] {
+  --_label: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  --_leading: var(--_label);
+  --_trailing: var(--_label);
+  --_outline: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+  --_focus-outline: var(--_outline);
+  --_elevation: none;
+  --_hover-elevation: none;
+  cursor: default;
+}
+
+.rio-chip[data-disabled]:where([data-selected='true'], [data-elevated]) {
+  --_container: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+  --_outline: transparent;
+  --_focus-outline: transparent;
+}
+
+.rio-chip[data-disabled] > .rio-chip__state {
+  display: none;
+}
+
+.rio-chip[data-disabled] .rio-chip__avatar {
+  opacity: var(--rio-state-disabled-state-layer-opacity);
+}
+
+/* Parts */
+
+/* The chip is 32px tall, below the spec's 48px minimum target. */
+/* The state layer on ::before and the ripple on ::after, over the border too */
+.rio-chip__state {
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  color: var(--_state);
+  pointer-events: none;
+}
+
+.rio-chip__state::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+.rio-chip__state[data-pressed] {
+  color: var(--_pressed);
+}
+
+.rio-chip__icon,
+.rio-chip__trailing,
+.rio-chip__remove-icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.rio-chip__icon {
+  color: var(--_leading);
+}
+
+.rio-chip__trailing,
+.rio-chip__remove-icon {
+  color: var(--_trailing);
+}
+
+.rio-chip__trailing {
+  transition: rotate var(--rio-motion-fast-spatial);
+}
+
+/* A menu chip's dropdown icon turns over while the menu is open. */
+.rio-chip[aria-expanded='true'] .rio-chip__trailing {
+  rotate: 180deg;
+}
+
+.rio-chip__avatar {
+  display: inline-flex;
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+  overflow: hidden;
+  border-radius: var(--rio-shape-corner-full);
+}
+
+:is(.rio-chip__icon, .rio-chip__trailing, .rio-chip__remove-icon, .rio-chip__avatar)
+  > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* The input chip's action holds the start of the chip, so a press there reaches it. With an action
+   of its own, the chip is at least 88px wide, so the remove button's 48px target leaves it room. */
+.rio-chip:where([data-type='input']) {
+  padding-inline-start: 0;
+}
+
+.rio-chip:where([data-type='input']):not([data-remove-only]) {
+  min-inline-size: 88px;
+}
+
+.rio-chip__action {
+  display: inline-flex;
+  /* Takes the room a minimum width adds, so the remove button stays at the end. */
+  flex: 1 0 auto;
+  align-items: center;
+  align-self: stretch;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  padding-inline-start: calc(var(--_start) - 1px);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The remove button: the 18px icon, with its own state layer in a 24px circle around it */
+.rio-chip__remove {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--rio-shape-corner-full);
+  background: none;
+  color: var(--_trailing);
+  cursor: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rio-chip__remove::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--rio-motion-fast-effects);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .rio-chip:not([data-disabled]) .rio-chip__remove:hover::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-chip:not([data-disabled]) .rio-chip__remove:is(:focus-visible, :active)::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+/* The chip set: wrapped rows 8px apart, or one row that scrolls */
+
+.rio-chip-set {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rio-chip-set[data-scroll] {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  /* Room for the focus rings, which the scrolling would cut off */
+  margin: -6px;
+  padding: 6px;
+  scrollbar-width: none;
+}
+
+@media (forced-colors: active) {
+  .rio-chip__state,
+  .rio-chip__remove::before {
+    display: none;
+  }
+
+  .rio-chip:where([data-type='filter'][data-selected='true']) {
+    border-color: Highlight;
+  }
+}

@@ -2,11 +2,11 @@
 import {
   attachDialog,
   createDatePickerDialog,
-  initialPickerState,
+  initialDatePickerState,
   type DatePickerDialogProps,
   type DatePickerMessages,
   type DialogDomHandle,
-  type PickerState,
+  type DatePickerState,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
@@ -27,6 +27,7 @@ import {
 import Button from '../button/Button.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { useLocale, useMessages } from '../locale/locale';
+import { keepPresses } from '../overlay/presses';
 import TextField from '../text-field/TextField.vue';
 import DatePickerCalendar from './DatePickerCalendar.vue';
 
@@ -67,7 +68,7 @@ defineSlots<{
 
 const locale = useLocale(() => props.locale);
 const messages = useMessages('datePicker', locale, () => props.messages);
-const state = reactive<PickerState>(initialPickerState(model.value, locale.value, props));
+const state = reactive<DatePickerState>(initialDatePickerState(model.value, locale.value, props));
 // The content renders from opening until the closing motion ends.
 const rendered = ref(open.value);
 
@@ -132,19 +133,7 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <!-- Clicks and presses stay in the dialog, as in RioDialog. -->
-  <dialog
-    ref="root"
-    v-bind="dialog.parts.root()"
-    @click.stop
-    @auxclick.stop
-    @dblclick.stop
-    @pointerdown.stop
-    @pointerup.stop
-    @mousedown.stop
-    @mouseup.stop
-    @contextmenu.stop
-  >
+  <dialog ref="root" v-bind="dialog.parts.root()" v-on="keepPresses">
     <template v-if="rendered">
       <div v-bind="dialog.parts.header()">
         <span v-bind="dialog.parts.title()">{{ messages.title }}</span>

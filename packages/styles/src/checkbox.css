@@ -46,9 +46,17 @@
 }
 
 .rio-checkbox[data-disabled] {
-  --_outline: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_outline: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_outline-active: var(--_outline);
-  --_container: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_container: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_icon: var(--rio-color-surface);
 }
 
@@ -56,6 +64,10 @@
   position: absolute;
   inset: 0;
   z-index: 1;
+  /* WebKit keeps a native checkbox at its own size between the insets; the size stretches it over
+     the target. */
+  inline-size: 100%;
+  block-size: 100%;
   margin: 0;
   opacity: 0;
   cursor: pointer;
@@ -104,9 +116,7 @@
 }
 
 .rio-checkbox__input:focus-visible ~ .rio-checkbox__state {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 .rio-checkbox__input:is(:focus-visible, [data-pressed]) ~ .rio-checkbox__container {

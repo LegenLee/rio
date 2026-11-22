@@ -1,5 +1,5 @@
 import type { PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /** M3 text field variants: the same field, with a filled container or an outline. */
 export const TEXT_FIELD_VARIANTS = ['filled', 'outlined'] as const;
@@ -175,7 +175,7 @@ export interface TextFieldApi extends Record<TextFieldWhen, () => boolean> {
 const NO_CONTENT: TextFieldContent = { leadingIcon: false, trailingIcon: false };
 
 export function createTextField(options: TextFieldOptions): TextFieldApi {
-  const props = () => ({ ...textFieldDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(textFieldDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   const { ids } = options;
 
@@ -228,7 +228,14 @@ export function createTextField(options: TextFieldOptions): TextFieldApi {
         };
       },
       frame: () => ({ class: 'rio-text-field__frame' }),
-      container: () => ({ class: 'rio-text-field__container' }),
+      container: () => {
+        const p = props();
+        return {
+          class: 'rio-text-field__container',
+          // A text area's least height, which the stylesheet works out from its rows
+          style: p.multiline ? `--rio-text-field-rows: ${p.rows}` : undefined,
+        };
+      },
       outline: () => ({ class: 'rio-text-field__outline', 'aria-hidden': 'true' }),
       outlineStart: () => ({ class: 'rio-text-field__outline-start' }),
       outlineNotch: () => ({ class: 'rio-text-field__outline-notch' }),

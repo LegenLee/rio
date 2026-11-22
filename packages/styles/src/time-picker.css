@@ -1,7 +1,9 @@
 /*
- * M3 Expressive time pickers: the input time picker on the page, and the dial time picker in a
- * modal dialog, which switches to the text input. The dialog has a basic dialog's container and
- * motion (`dialog.css`); the mode button and the actions are an icon button and text buttons.
+ * M3 Expressive time pickers: the input time picker on the page; the scroll time picker on the
+ * page, which switches to the text input; and the dial or scroll time picker in a modal dialog,
+ * which switches to the text input too. The scroll fields are scroll fields (`scroll-field.css`).
+ * The dialog has a basic dialog's container and motion (`dialog.css`); the mode buttons and the
+ * actions are icon buttons and text buttons.
  *
  * Values come from the spec page's Expressive tokens: fields 100 × 120px (132px wide on a 24-hour
  * vertical dial) on `surface-container-lowest`, a 16px separator, AM and PM 56px wide in a dialog,
@@ -15,6 +17,11 @@
  * horizontally, AM and PM sit 16px below the fields, the dial 52px beside them, with 24px padding.
  * The numbers sit 102px from the dial's center, and 74px on a 24-hour dial's inner ring, as the
  * M3 Design Kit has them.
+ *
+ * The scroll fields are 100px wide. On the page, the measurement drawing draws them 136px tall, in
+ * a picker 140px tall at least, with AM, PM, and the mode button 40px each, 8px apart, beside them;
+ * the token for the gap between their values, 24px, puts each value in a 60px slot, 8px more than a
+ * scroll field's. In a dialog, the token makes them 120px tall, as a scroll field is.
  */
 
 .rio-time-picker {
@@ -109,6 +116,40 @@
   letter-spacing: var(--rio-typescale-body-small-tracking);
 }
 
+/* The scroll fields: on the page, taller, their values further apart. Over scroll-field.css's size,
+   whichever loads last. */
+.rio-time-picker .rio-time-picker__scroll {
+  inline-size: var(--_field-width);
+  block-size: var(--_field-height);
+}
+
+.rio-time-picker:not(.rio-dialog)[data-mode='scroll'] {
+  --_field-height: 136px;
+}
+
+.rio-time-picker:not(.rio-dialog) .rio-time-picker__scroll {
+  --rio-scroll-field-item-height: 3.75rem;
+}
+
+/* On the page, the mode button sits under AM and PM, beside the fields, and keeps its place without
+   them and in the text input, whose fields and their supporting text are 140px tall. */
+.rio-time-picker__body:has(> .rio-time-picker__toggle) {
+  grid-template-rows: calc(2 * var(--_period-height) + 8px) 1fr;
+  row-gap: 8px;
+  min-block-size: 140px;
+}
+
+.rio-time-picker__body:has(> .rio-time-picker__toggle) > .rio-time-picker__fields {
+  grid-row: 1 / -1;
+}
+
+.rio-time-picker__toggle {
+  display: flex;
+  justify-content: center;
+  grid-column: 2;
+  grid-row: 2;
+}
+
 .rio-time-picker__separator {
   display: flex;
   align-items: center;
@@ -128,9 +169,9 @@
 
 .rio-time-picker__period-button {
   /* Round is half the height rather than corner-full, so it springs into the selected shape. */
-  --rio-shape-morph-target: calc(var(--_period-height) / 2);
-  --rio-shape-morph-start-target: var(--rio-shape-morph-target);
-  --rio-shape-morph-end-target: var(--rio-shape-morph-target);
+  --rio-corner-morph-target: calc(var(--_period-height) / 2);
+  --rio-corner-morph-start-target: var(--rio-corner-morph-target);
+  --rio-corner-morph-end-target: var(--rio-corner-morph-target);
 
   flex: none;
   inline-size: var(--_period-width);
@@ -138,35 +179,26 @@
   margin: 0;
   padding: 0;
   border: 0;
-  border-start-start-radius: var(--rio-shape-morph-start-target);
-  border-end-start-radius: var(--rio-shape-morph-start-target);
-  border-start-end-radius: var(--rio-shape-morph-end-target);
-  border-end-end-radius: var(--rio-shape-morph-end-target);
+  border-start-start-radius: var(--rio-corner-morph-start-target);
+  border-end-start-radius: var(--rio-corner-morph-start-target);
+  border-start-end-radius: var(--rio-corner-morph-end-target);
+  border-end-end-radius: var(--rio-corner-morph-end-target);
   background-color: var(--rio-color-surface-container-lowest);
   color: var(--rio-color-on-surface-variant);
   font: var(--rio-typescale-title-medium);
   letter-spacing: var(--rio-typescale-title-medium-tracking);
   cursor: pointer;
-  /* The corners move with a spring (base/shape-morph.css); its targets change at once. */
+  /* The corners move with a spring (base/corner-morph.css); its targets change at once. */
   transition:
     background-color var(--rio-motion-fast-effects),
     color var(--rio-motion-fast-effects),
-    --rio-shape-morph-start-target 1ms step-end,
-    --rio-shape-morph-end-target 1ms step-end;
+    --rio-corner-morph-start-target 1ms step-end,
+    --rio-corner-morph-end-target 1ms step-end;
 }
 
 /* The target reaches 48px, past the 40px buttons. Physical, like `translate`. */
-.rio-time-picker__touch {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  inline-size: max(100%, 48px);
-  block-size: max(100%, 48px);
-  translate: -50% -50%;
-}
-
 .rio-time-picker__period-button[data-selected] {
-  --rio-shape-morph-target: var(--_period-selected);
+  --rio-corner-morph-target: var(--_period-selected);
 
   background-color: var(--rio-color-primary-container);
   color: var(--rio-color-on-primary-container);

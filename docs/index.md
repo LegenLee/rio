@@ -5,16 +5,7 @@ hero:
   name: Rio
   text: Material 3 Expressive for Vue
   tagline: Components that follow the M3 Expressive spec, with spring motion and themes made from one color.
-  actions:
-    - theme: brand
-      text: Get started
-      link: /guide/getting-started
-    - theme: alt
-      text: Components
-      link: /components/button
-    - theme: alt
-      text: GitHub
-      link: https://github.com/LegenLee/rio
+  # No `actions`: the hero's links are Rio buttons, in .vitepress/theme/components/HeroActions.vue.
 
 features:
   - title: Follows the spec

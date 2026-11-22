@@ -24,6 +24,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
+import { keepPresses } from '../overlay/presses';
 import { selectKey, type SelectOptionEntry } from './context';
 
 // `class` and `style` dress the whole select; every other attribute, such as `id` or
@@ -224,7 +225,7 @@ onBeforeUnmount(() => handle?.detach());
         >{{ select.supportingTextNow() }}</span
       >
     </div>
-    <div ref="listbox" v-bind="select.parts.listbox()">
+    <div ref="listbox" v-bind="select.parts.listbox()" v-on="keepPresses">
       <slot />
     </div>
   </div>

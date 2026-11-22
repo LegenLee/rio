@@ -3,11 +3,12 @@ import { createIconButton, type IconButtonProps } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
+import '@rio-m3e/styles/base/touch-target.css';
 import '@rio-m3e/styles/button.css';
 import '@rio-m3e/styles/icon-button.css';
 import { useButtonGroupItem } from '../button-group/context';
 import { vRipple } from '../ripple/ripple';
-import { vShapeMorph } from '../shape-morph/shape-morph';
+import { vCornerMorph } from '../corner-morph/corner-morph';
 
 // No defaults here: core fills them in, after a surrounding button group has filled in its size
 // and shape.
@@ -70,7 +71,7 @@ const button = createIconButton({
   <component
     :is="button.isLink() ? 'a' : 'button'"
     v-ripple
-    v-shape-morph
+    v-corner-morph
     v-bind="button.parts.root()"
     @click="button.handleClick"
   >

@@ -167,7 +167,7 @@ The soft-disabled buttons stay focusable. Press Tab to reach them.
 - **Focused**: the spec says the inner corners change when focused, but the tokens give only hovered and pressed sizes, which are the same. Rio uses that size for focus too. Focus here means keyboard focus (`:focus-visible`), as for the focus ring, so a click doesn't count.
 - **When open, the trailing button is fully round.** The token says 50%, which in CSS would make the trailing buttons that are wider than tall (extra small and small) elliptical. Rio reads it as half the height, a pill, the way "full" works for the outer corners.
 - **Disabled** buttons don't react to hover, focus, or press, so their facing corners stay at rest. A disabled trailing button that is open stays fully round, and only loses the open state layer to the disabled colors. The split button pages don't cover this case; Rio follows the button spec's toggle figures, where a disabled selected button keeps its selected shape and only its colors change.
-- The corners move on the `fast-spatial` spring, each side separately (`attachShapeMorph`, as in the connected button group). Right-to-left layouts mirror them.
+- The corners move on the `fast-spatial` spring, each side separately (`attachCornerMorph`, as in the connected button group). Right-to-left layouts mirror them.
 
 ### Open
 

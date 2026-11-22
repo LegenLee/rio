@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { messagesFor } from '../locale/messages';
 import {
   createTimePicker,
-  initialTimeState,
+  initialTimePickerState,
   type TimePickerProps,
   type TimePickerState,
 } from './time-picker';
@@ -11,13 +11,13 @@ const en = messagesFor('en').timePicker;
 
 /** A picker whose adapter takes every change it is asked for */
 const setup = (
-  variant: 'inline' | 'dialog',
+  variant: 'inline' | 'scroll' | 'dialog',
   props: Partial<TimePickerProps> = {},
   initial: Partial<TimePickerState> = {},
 ) => {
   const current: TimePickerProps = { locale: 'en-US', rendered: true, ...props };
   const state: TimePickerState = {
-    ...initialTimeState(current.value),
+    ...initialTimePickerState(current.value),
     ...(variant === 'inline' ? { mode: 'input' as const } : {}),
     ...initial,
   };
@@ -33,7 +33,7 @@ const setup = (
     onOpenChange,
     onStateChange: (next) => Object.assign(state, next),
   });
-  if (variant === 'inline') picker.valueChanged();
+  if (variant !== 'dialog') picker.valueChanged();
   else picker.opened();
   return { picker, state, props: current, onChange, onOpenChange };
 };
@@ -214,11 +214,11 @@ describe('createTimePicker, inline', () => {
 describe('createTimePicker, dialog', () => {
   test('each opening starts from the value, on the hours, in the initial mode', () => {
     const { picker, state } = setup('dialog', { value: '19:05' });
-    expect(state).toMatchObject({ draft: '19:05', pm: true, selection: 'hour', mode: 'dial' });
+    expect(state).toMatchObject({ draft: '19:05', pm: true, selection: 'hour', mode: 'picker' });
     picker.dialPick(3, true);
     picker.switchMode();
     picker.opened();
-    expect(state).toMatchObject({ draft: '19:05', selection: 'hour', mode: 'dial' });
+    expect(state).toMatchObject({ draft: '19:05', selection: 'hour', mode: 'picker' });
     const typed = setup('dialog', { value: '19:05', initialMode: 'input' });
     expect(typed.state).toMatchObject({ mode: 'input', hourText: '07', minuteText: '05' });
   });
@@ -276,6 +276,17 @@ describe('createTimePicker, dialog', () => {
     expect(state.draft).toBe('03:05');
     picker.dialPick(15);
     expect(state.draft).toBe('15:05');
+  });
+
+  test('the number a pointer hovers nearest shows it, as the adapter keeps it', () => {
+    const { picker, state } = setup('dialog', { value: '19:05' });
+    const [, , , three, four] = picker.dialItems();
+    picker.hover(3);
+    expect(state.hovered).toBe(3);
+    expect(picker.parts.dialItem(three!)['data-hovered']).toBe('');
+    expect(picker.parts.dialItem(four!)['data-hovered']).toBeUndefined();
+    picker.hover(undefined);
+    expect(picker.parts.dialItem(three!)['data-hovered']).toBeUndefined();
   });
 
   test('only a click without a pointer picks a number; the pointer picks through the dial', () => {
@@ -399,7 +410,7 @@ describe('createTimePicker, dialog', () => {
     expect(picker.showsDial()).toBe(false);
     picker.hourInput('9');
     picker.switchMode();
-    expect(state).toMatchObject({ mode: 'dial', draft: '21:05', selection: 'hour' });
+    expect(state).toMatchObject({ mode: 'picker', draft: '21:05', selection: 'hour' });
   });
 
   test('switching back with an error leaves the draft and the error behind', () => {
@@ -409,7 +420,7 @@ describe('createTimePicker, dialog', () => {
     picker.commitText();
     expect(state.invalid).toBe('hour');
     picker.switchMode();
-    expect(state).toMatchObject({ mode: 'dial', draft: '19:05', invalid: undefined });
+    expect(state).toMatchObject({ mode: 'picker', draft: '19:05', invalid: undefined });
   });
 
   test('the mode button says what it switches to; the dialog is named for its mode', () => {
@@ -423,7 +434,10 @@ describe('createTimePicker, dialog', () => {
       'data-hour-cycle': '12',
     });
     picker.switchMode();
-    expect(picker.modeButtonLabel()).toBe('Toggle dial picker');
+    expect([picker.modeButtonLabel(), picker.modeButtonIcon()]).toEqual([
+      'Toggle dial picker',
+      'clock',
+    ]);
     expect(picker.parts.root()['aria-label']).toBe('Enter time');
     expect(setup('dialog', { layout: 'horizontal' }).picker.parts.root()['data-layout']).toBe(
       'horizontal',
@@ -488,5 +502,137 @@ describe('createTimePicker, dialog', () => {
       false,
       false,
     ]);
+  });
+});
+
+describe('createTimePicker, scroll fields', () => {
+  test('the fields go round the hours as the clock counts them, and the minutes', () => {
+    const { picker } = setup('scroll', { value: '19:05' });
+    expect(picker.scrollField('hour')).toEqual({
+      value: 7,
+      min: 1,
+      max: 12,
+      loop: true,
+      label: 'Hour',
+      locale: 'en-US',
+    });
+    expect(picker.scrollField('minute')).toEqual({
+      value: 5,
+      min: 0,
+      max: 59,
+      loop: true,
+      label: 'Minute',
+      locale: 'en-US',
+    });
+    expect(
+      setup('scroll', { value: '19:05', hourCycle: 24 }).picker.scrollField('hour'),
+    ).toMatchObject({ value: 19, min: 0, max: 23 });
+    expect(setup('scroll', { value: '00:30' }).picker.scrollField('hour').value).toBe(12);
+  });
+
+  test('without a time, they show 12:00 AM, and a change sets the time', () => {
+    const { picker, onChange } = setup('scroll');
+    expect([picker.scrollField('hour').value, picker.scrollField('minute').value]).toEqual([12, 0]);
+    expect(onChange).not.toHaveBeenCalled();
+    picker.scrollPick('minute', 30);
+    expect(onChange).toHaveBeenLastCalledWith('00:30');
+    const period = setup('scroll');
+    period.picker.selectPeriod(false);
+    expect(period.onChange).not.toHaveBeenCalled();
+    period.picker.selectPeriod(true);
+    expect(period.onChange).toHaveBeenLastCalledWith('12:00');
+  });
+
+  test('an hour keeps the half of the day', () => {
+    const { picker, onChange } = setup('scroll', { value: '19:05' });
+    picker.scrollPick('hour', 9);
+    expect(onChange).toHaveBeenLastCalledWith('21:05');
+    picker.scrollPick('hour', 12);
+    expect(onChange).toHaveBeenLastCalledWith('12:05');
+    picker.scrollPick('minute', 59);
+    expect(onChange).toHaveBeenLastCalledWith('12:59');
+    const day = setup('scroll', { value: '19:05', hourCycle: 24 });
+    day.picker.scrollPick('hour', 3);
+    expect(day.onChange).toHaveBeenLastCalledWith('03:05');
+  });
+
+  test('the fields are scroll fields, with the mode button beside them', () => {
+    const { picker } = setup('scroll', { value: '19:05' });
+    expect(picker.parts.root()).toMatchObject({
+      class: 'rio-time-picker',
+      'aria-label': undefined,
+      'data-mode': 'scroll',
+    });
+    expect(picker.parts.hourField()).toEqual({
+      class: 'rio-time-picker__scroll',
+      'data-field': 'hour',
+    });
+    expect(picker.parts.minuteField()['data-field']).toBe('minute');
+    expect([picker.showsScroll(), picker.showsToggle(), picker.showsDial()]).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    expect(setup('inline').picker.showsToggle()).toBe(false);
+    expect(setup('dialog').picker.showsToggle()).toBe(false);
+  });
+
+  test('the fields switch to the text input, which carries the time and gives it back', () => {
+    const { picker, state, onChange } = setup('scroll', { value: '19:05' });
+    expect([picker.modeButtonLabel(), picker.modeButtonIcon()]).toEqual([
+      'Toggle input picker',
+      'keyboard',
+    ]);
+    picker.handleScrollEditing(true);
+    expect(state).toMatchObject({ mode: 'input', hourText: '07', minuteText: '05' });
+    expect([picker.textInput(), picker.showsScroll()]).toEqual([true, false]);
+    expect(picker.parts.root()['data-mode']).toBe('input');
+    expect(picker.parts.hourField()['data-field']).toBe('hour');
+    expect([picker.modeButtonLabel(), picker.modeButtonIcon()]).toEqual([
+      'Toggle scroll picker',
+      'swipe',
+    ]);
+    picker.handleScrollEditing(true);
+    picker.handleScrollEditing(false);
+    expect(state.mode).toBe('input');
+    picker.hourInput('9');
+    picker.switchMode();
+    expect(state.mode).toBe('picker');
+    expect(onChange).toHaveBeenLastCalledWith('21:05');
+  });
+
+  test('back on the fields, text that isn’t a time is dropped, and empty text clears it', () => {
+    const { picker, state, onChange } = setup('scroll', { value: '19:05' });
+    picker.switchMode();
+    picker.hourInput('99');
+    picker.commitText();
+    expect(state.invalid).toBe('hour');
+    picker.switchMode();
+    expect(state).toMatchObject({ mode: 'picker', invalid: undefined });
+    expect(onChange).not.toHaveBeenCalled();
+    picker.switchMode();
+    picker.hourInput('');
+    picker.minuteInput('');
+    picker.switchMode();
+    expect(onChange).toHaveBeenLastCalledWith(undefined);
+  });
+
+  test('a dialog with the scroll fields sets the draft, and switches to the text input', () => {
+    const { picker, state, onChange } = setup('dialog', { value: '19:05', picker: 'scroll' });
+    expect(picker.parts.root()).toMatchObject({
+      'aria-label': 'Select time',
+      'data-mode': 'scroll',
+    });
+    expect([picker.showsScroll(), picker.showsDial()]).toEqual([true, false]);
+    picker.scrollPick('minute', 45);
+    expect(state.draft).toBe('19:45');
+    expect(onChange).not.toHaveBeenCalled();
+    picker.switchMode();
+    expect(picker.modeButtonLabel()).toBe('Toggle scroll picker');
+    expect(picker.parts.root()['aria-label']).toBe('Enter time');
+    const typed = setup('dialog', { value: '19:05', picker: 'scroll', initialMode: 'input' });
+    expect(typed.state.mode).toBe('input');
+    typed.picker.switchMode();
+    expect(typed.picker.parts.root()['data-mode']).toBe('scroll');
   });
 });

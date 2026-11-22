@@ -4,8 +4,10 @@ import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive } from 'vue';
 import LocaleProvider from '../locale/LocaleProvider.vue';
+import { eventsLeaving } from '../test/events';
 import TimeInput from './TimeInput.vue';
 import TimePickerDialog from './TimePickerDialog.vue';
+import TimeScroll from './TimeScroll.vue';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -50,7 +52,7 @@ const setupDialog = async (props: Record<string, unknown> = {}, value?: string) 
               open: state.open,
               'onUpdate:open': (next: boolean) => (state.open = next),
             },
-            { 'keyboard-icon': () => 'K', 'clock-icon': () => 'C' },
+            { 'keyboard-icon': () => 'K', 'clock-icon': () => 'C', 'swipe-icon': () => 'S' },
           ),
         ]),
     ),
@@ -80,6 +82,36 @@ const setupDialog = async (props: Record<string, unknown> = {}, value?: string) 
       `.rio-time-picker__field[data-field="${name.toLowerCase()}"]`,
     )!;
   return { screen, state, container, dialog, open, dial, selected, point, press, field };
+};
+
+/** A scroll time picker with a button after it */
+const setupScroll = async (props: Record<string, unknown> = {}, value?: string) => {
+  const state = reactive({ value });
+  const screen = await render(
+    defineComponent(
+      () => () =>
+        h('div', { style: { ...theme, padding: '40px' } }, [
+          h(
+            TimeScroll,
+            {
+              locale: 'en-US',
+              ...props,
+              modelValue: state.value,
+              'onUpdate:modelValue': (next: string | undefined) => (state.value = next),
+            },
+            { 'keyboard-icon': () => 'K', 'swipe-icon': () => 'S' },
+          ),
+          h('button', { type: 'button' }, 'After'),
+        ]),
+    ),
+  );
+  const container = screen.container as HTMLElement;
+  const field = (name: 'Hour' | 'Minute') =>
+    container.querySelector<HTMLElement>(`[role="listbox"][aria-label="${name}"]`)!;
+  /** The option a field selects */
+  const selected = (name: 'Hour' | 'Minute') =>
+    field(name).querySelector('[aria-selected="true"]')?.textContent?.trim();
+  return { screen, state, container, field, selected };
 };
 
 const focused = () => document.activeElement as HTMLElement | null;
@@ -230,6 +262,160 @@ describe('RioTimeInput', () => {
   });
 });
 
+describe('RioTimeScroll', () => {
+  test('the hours and the minutes are list boxes that go round, named Hour and Minute', async () => {
+    const english = await setupScroll({}, '19:05');
+    expect([english.selected('Hour'), english.selected('Minute')]).toEqual(['07', '05']);
+    const hours = english.field('Hour').querySelectorAll('[role="option"]:not([aria-hidden])');
+    expect([...hours].map((option) => option.textContent?.trim())).toEqual([
+      '01',
+      '02',
+      '03',
+      '04',
+      '05',
+      '06',
+      '07',
+      '08',
+      '09',
+      '10',
+      '11',
+      '12',
+    ]);
+    expect(
+      english.field('Minute').querySelectorAll('[role="option"]:not([aria-hidden])'),
+    ).toHaveLength(60);
+    await expect
+      .element(english.screen.getByRole('radio', { name: 'PM' }))
+      .toHaveAttribute('aria-checked', 'true');
+    english.screen.unmount();
+
+    const german = await setupScroll({ locale: 'de-DE' }, '19:05');
+    expect(german.selected('Hour')).toBe('19');
+    expect(
+      german.field('Hour').querySelectorAll('[role="option"]:not([aria-hidden])'),
+    ).toHaveLength(24);
+    expect(german.container.querySelector('[role="radiogroup"]')).toBeNull();
+  });
+
+  test('Up and Down move through the hours in the same half of the day, round 12', async () => {
+    const { state, field } = await setupScroll({}, '19:05');
+    field('Hour').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(state.value).toBe('20:05');
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    expect(state.value).toBe('18:05');
+    state.value = '12:30';
+    await vi.waitFor(() =>
+      expect(field('Hour').querySelector('[aria-selected="true"]')?.textContent?.trim()).toBe('12'),
+    );
+    await userEvent.keyboard('{ArrowDown}');
+    expect(state.value).toBe('13:30');
+    field('Minute').focus();
+    await userEvent.keyboard('{ArrowUp}');
+    expect(state.value).toBe('13:29');
+  });
+
+  test('without a time, it shows 12:00 AM, and the time comes with the first change', async () => {
+    const { screen, state, selected } = await setupScroll();
+    expect([selected('Hour'), selected('Minute')]).toEqual(['12', '00']);
+    await userEvent.click(screen.getByRole('radio', { name: 'AM' }));
+    expect(state.value).toBeUndefined();
+    await userEvent.click(screen.getByRole('radio', { name: 'PM' }));
+    expect(state.value).toBe('12:00');
+  });
+
+  test('Enter or Space on a field switches to the text input, onto that field', async () => {
+    const { screen, container, field } = await setupScroll({}, '19:05');
+    field('Minute').focus();
+    await userEvent.keyboard('{Enter}');
+    const minute = await vi.waitFor(() => {
+      expect(focused()?.matches('input[aria-label="Minute"]')).toBe(true);
+      return focused() as HTMLInputElement;
+    });
+    expect([minute.value, minute.selectionStart, minute.selectionEnd]).toEqual(['05', 0, 2]);
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle scroll picker' }));
+    field('Hour').focus();
+    await userEvent.keyboard(' ');
+    await vi.waitFor(() => expect(focused()?.matches('input[aria-label="Hour"]')).toBe(true));
+    expect((focused() as HTMLInputElement).value).toBe('07');
+  });
+
+  test('the mode button switches to the text input and back, with the typed time', async () => {
+    const { screen, state, selected } = await setupScroll({}, '19:05');
+    const toggle = screen.getByRole('button', { name: 'Toggle input picker' });
+    await expect.element(toggle).toHaveTextContent('K');
+    await userEvent.click(toggle);
+    const hour = screen.getByRole('textbox', { name: 'Hour' });
+    await expect.element(hour).toHaveValue('07');
+    await expect
+      .element(screen.getByRole('button', { name: 'Toggle scroll picker' }))
+      .toHaveTextContent('S');
+    await userEvent.fill(hour, '9');
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle scroll picker' }));
+    expect(state.value).toBe('21:05');
+    await vi.waitFor(() => expect(selected('Hour')).toBe('09'));
+    // The button stays where it is, with the focus.
+    expect(focused()).toBe(screen.getByRole('button', { name: 'Toggle input picker' }).element());
+  });
+
+  test('a press on the mode button leaves the focus off the text input, where buttons take none', async () => {
+    const { screen, field } = await setupScroll({}, '19:05');
+    await userEvent.click(field('Hour'));
+    // As in Safari: the press takes the focus away, and the button doesn't take it.
+    const toggle = screen.getByRole('button', { name: 'Toggle input picker' }).element();
+    toggle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, buttons: 1 }));
+    focused()?.blur();
+    (toggle as HTMLElement).click();
+    await expect.element(screen.getByRole('textbox', { name: 'Hour' })).toBeVisible();
+    expect(focused()).toBe(document.body);
+  });
+
+  test('the fields are 100 × 136 in a picker 140px tall; AM, PM, and the mode button are 40px, 8px apart', async () => {
+    const { container, field } = await setupScroll({}, '19:05');
+    const picker = container.querySelector('.rio-time-picker')!.getBoundingClientRect();
+    const hour = field('Hour').getBoundingClientRect();
+    const minute = field('Minute').getBoundingClientRect();
+    expect([hour.width, hour.height, picker.height]).toEqual([100, 136, 140]);
+    const [am, pm] = [...container.querySelectorAll('.rio-time-picker__period-button')].map(
+      (button) => button.getBoundingClientRect(),
+    );
+    const toggle = container.querySelector('.rio-icon-button')!.getBoundingClientRect();
+    expect([am!.top, pm!.top - am!.bottom, toggle.top - pm!.bottom, toggle.bottom]).toEqual([
+      hour.top,
+      8,
+      8,
+      hour.bottom,
+    ]);
+    expect([am!.left - minute.right, toggle.height, toggle.left]).toEqual([8, 40, am!.left]);
+  });
+
+  test.each(['en-US', 'de-DE'])(
+    'the mode button keeps its place, in %s and in the text input, at the fields’ bottom',
+    async (locale) => {
+      const { screen, container, field } = await setupScroll({ locale }, '19:05');
+      const picker = () => container.querySelector('.rio-time-picker')!.getBoundingClientRect();
+      const toggle = () => container.querySelector('.rio-icon-button')!.getBoundingClientRect();
+      const minute = field('Minute').getBoundingClientRect();
+      const before = toggle();
+      expect([before.bottom, before.left - minute.right]).toEqual([minute.bottom, 8]);
+      await userEvent.click(screen.getByRole('button', { name: 'Toggle input picker' }));
+      await expect.element(screen.getByRole('textbox', { name: 'Hour' })).toBeVisible();
+      expect([toggle().top, toggle().left, picker().height]).toEqual([
+        before.top,
+        before.left,
+        140,
+      ]);
+    },
+  );
+
+  test('the values sit 60px apart, 8px more than a scroll field’s', async () => {
+    const { field } = await setupScroll({}, '19:05');
+    const [first, second] = field('Hour').querySelectorAll('[role="option"]');
+    expect(second!.getBoundingClientRect().top - first!.getBoundingClientRect().top).toBe(60);
+  });
+});
+
 describe('RioTimePickerDialog', () => {
   test('opens on the dial, named, with the focus on the hour', async () => {
     const { screen, open, field, selected } = await setupDialog({}, '07:30');
@@ -298,6 +484,25 @@ describe('RioTimePickerDialog', () => {
     await vi.waitFor(() => expect(hovered()).toEqual([]));
   });
 
+  // Chromium tells a resting pointer of the content changing under it, which clears the hover on its
+  // own; WebKit needs the picker to see that the dial is a new one.
+  test('opened again under a resting pointer, no number shows hover until the pointer moves', async () => {
+    const { open, dial, point, dialog } = await setupDialog({}, '07:30');
+    await open();
+    const hovered = () =>
+      [...dial().querySelectorAll<HTMLElement>('[data-hovered]')].map((item) => item.dataset.value);
+    await userEvent.hover(page.elementLocator(dial()), { position: point(90) });
+    await vi.waitFor(() => expect(hovered()).toEqual(['3']));
+    await userEvent.keyboard('{Escape}');
+    await vi.waitFor(() => expect(dialog.querySelector('.rio-time-picker__dial')).toBeNull());
+    // The focus is back on the button that opened it.
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(dialog.querySelector('.rio-time-picker__dial')).not.toBeNull());
+    expect(hovered()).toEqual([]);
+    await userEvent.hover(page.elementLocator(dial()), { position: point(92) });
+    await vi.waitFor(() => expect(hovered()).toEqual(['3']));
+  });
+
   test('a press doesn’t take the focus from where it is', async () => {
     const { open, press, field } = await setupDialog({}, '07:30');
     await open();
@@ -344,6 +549,27 @@ describe('RioTimePickerDialog', () => {
     expect(selected()).toBe('2');
     expect(dialog.querySelector('.rio-time-picker__dial')!.getAttribute('aria-label')).toBe('Hour');
     expect(focused()?.dataset.value).toBe('2');
+  });
+
+  test('on the dial, keys with Alt, Ctrl, or Meta are left to the app', async () => {
+    const { open, selected } = await setupDialog({}, '07:30');
+    await open();
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(focused()?.getAttribute('aria-label')).toBe('Hour 12 of 12'));
+    for (const key of ['ArrowLeft', 'Home', 'Enter']) {
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        const press = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          [modifier]: true,
+        });
+        focused()!.dispatchEvent(press);
+        expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+      }
+    }
+    expect(focused()?.getAttribute('aria-label')).toBe('Hour 12 of 12');
+    expect(selected()).toBe('7');
   });
 
   test('Space on the minute shows the minutes and moves onto them, at 0', async () => {
@@ -522,6 +748,15 @@ describe('RioTimePickerDialog', () => {
     expect(state.value).toBe('07:45');
   });
 
+  test("clicks and presses in the dialog stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { open, dialog, press } = await setupDialog({}, '07:30');
+    await open();
+    const out = eventsLeaving(() => dialog);
+    await userEvent.keyboard('{ArrowUp}');
+    await press(90);
+    expect(out).toEqual(['keydown']);
+  });
+
   test('layout fixes the dial beside or below the fields; it defaults to auto', async () => {
     const { dialog } = await setupDialog();
     expect(dialog.dataset.layout).toBe('auto');
@@ -613,6 +848,63 @@ describe('RioTimePickerDialog', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Toggle dial picker' }))
       .toHaveTextContent('C');
+  });
+});
+
+describe('RioTimePickerDialog, scroll fields', () => {
+  test('opens on the scroll fields, with the focus on the hour; OK sets the time', async () => {
+    const { screen, state, open, dialog } = await setupDialog({ picker: 'scroll' }, '07:30');
+    await open();
+    await expect.element(screen.getByRole('dialog', { name: 'Select time' })).toBeVisible();
+    expect(dialog.querySelector('.rio-time-picker__dial')).toBeNull();
+    expect(focused()?.matches('[role="listbox"][aria-label="Hour"]')).toBe(true);
+    await userEvent.keyboard('{ArrowDown}');
+    expect(state.value).toBe('07:30');
+    await userEvent.click(screen.getByRole('button', { name: 'OK' }));
+    expect(state.value).toBe('08:30');
+  });
+
+  test('the fields are 100 × 120, their values 52px apart', async () => {
+    const { open, dialog } = await setupDialog({ picker: 'scroll' }, '07:30');
+    await open();
+    const hour = dialog.querySelector<HTMLElement>('[role="listbox"][aria-label="Hour"]')!;
+    expect([hour.offsetWidth, hour.offsetHeight]).toEqual([100, 120]);
+    const [first, second] = hour.querySelectorAll('[role="option"]');
+    expect(second!.getBoundingClientRect().top - first!.getBoundingClientRect().top).toBe(52);
+  });
+
+  test('Enter on a field switches to the text input rather than confirming', async () => {
+    const { screen, state, open, dialog } = await setupDialog({ picker: 'scroll' }, '07:30');
+    await open();
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(focused()?.matches('input[aria-label="Hour"]')).toBe(true));
+    expect(dialog.open).toBe(true);
+    await expect.element(screen.getByRole('dialog', { name: 'Enter time' })).toBeVisible();
+    await userEvent.keyboard('9{Enter}');
+    expect(state.value).toBe('09:30');
+  });
+
+  test('the mode button switches to the text input and back, with the swipe icon', async () => {
+    const { screen, open, dialog } = await setupDialog({ picker: 'scroll' }, '07:30');
+    await open();
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle input picker' }));
+    const back = screen.getByRole('button', { name: 'Toggle scroll picker' });
+    await expect.element(back).toHaveTextContent('S');
+    await userEvent.fill(screen.getByRole('textbox', { name: 'Hour' }), '10');
+    await userEvent.click(back);
+    await vi.waitFor(() =>
+      expect(
+        dialog.querySelector('[aria-label="Hour"] [aria-selected="true"]')?.textContent?.trim(),
+      ).toBe('10'),
+    );
+  });
+
+  test('initialMode starts in the text input, and goes back to the scroll fields', async () => {
+    const { screen, open } = await setupDialog({ picker: 'scroll', initialMode: 'input' }, '07:30');
+    await open();
+    await expect.element(screen.getByRole('textbox', { name: 'Hour' })).toHaveValue('07');
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle scroll picker' }));
+    await expect.element(screen.getByRole('listbox', { name: 'Hour' })).toBeVisible();
   });
 });
 

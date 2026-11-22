@@ -44,11 +44,22 @@ export interface DatePickerMessages {
   afterMax: string;
   /** A date the app made unavailable */
   unavailable: string;
+  /** Above the range picker's headline */
+  rangeTitle: string;
+  /** The range picker's headline, `{start}` and `{end}` the dates or the words below */
+  rangeHeadline: string;
+  /** The range's ends: the headline's words while there is none, and the text fields' labels */
+  startDate: string;
+  endDate: string;
+  /** A typed end date before the start date */
+  invalidRange: string;
+  /** A typed end date without a start date */
+  startRequired: string;
 }
 
 /** The time picker's text */
 export interface TimePickerMessages {
-  /** The dialog's name on the dial */
+  /** The dialog's name on the dial or the scroll fields */
   selectTime: string;
   /** The dialog's name in the text input */
   enterTime: string;
@@ -67,9 +78,10 @@ export interface TimePickerMessages {
   dialMinute: string;
   /** Names the AM and PM buttons together */
   period: string;
-  /** The dialog's mode button on the dial, and in the text input */
+  /** The mode button on the dial or the scroll fields, and in the text input, back to either */
   switchToInput: string;
   switchToDial: string;
+  switchToScroll: string;
   cancel: string;
   ok: string;
   /** Typed hours outside 1 to 12, or 0 to 23 */
@@ -78,8 +90,21 @@ export interface TimePickerMessages {
   invalidMinute: string;
 }
 
+/** An input chip's remove button. `{label}` stands for the chip's label. */
+export interface ChipMessages {
+  remove: string;
+}
+
+/** The range slider's inputs, as assistive technology names them inside the app's group. */
+export interface SliderMessages {
+  rangeStart: string;
+  rangeEnd: string;
+}
+
 export interface RioMessages {
+  chip: ChipMessages;
   datePicker: DatePickerMessages;
+  slider: SliderMessages;
   timePicker: TimePickerMessages;
 }
 

@@ -30,7 +30,10 @@ describe('createIconButton', () => {
 
   test('shares the touch and icon parts with the button', () => {
     const { parts } = setup().button;
-    expect(parts.touch()).toEqual({ class: 'rio-button__touch', 'aria-hidden': 'true' });
+    expect(parts.touch()).toEqual({
+      class: 'rio-button__touch rio-touch-target',
+      'aria-hidden': 'true',
+    });
     expect(parts.icon()).toEqual({ class: 'rio-button__icon', 'aria-hidden': 'true' });
   });
 
@@ -73,5 +76,20 @@ describe('createIconButton', () => {
     expect(button.showsSelectedIcon()).toBe(false);
     button.handleClick(click());
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const { button } = setup({
+    variant: undefined,
+    width: undefined,
+    size: undefined,
+    type: undefined,
+  });
+  expect(button.parts.root()).toMatchObject({
+    'data-variant': 'filled',
+    'data-width': 'default',
+    'data-size': 'small',
+    type: 'button',
   });
 });

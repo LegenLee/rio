@@ -1,0 +1,261 @@
+/*
+ * M3 Expressive lists: a column of items, standard, or segmented with 2px gaps and rounded ends.
+ * An item is an option, an action (a link or a button), or static. Core's parts write
+ * `data-variant` on the list, and `data-kind`, `data-lines`, `data-selected`, and
+ * `data-disabled` on the items.
+ *
+ * Values come from the spec page's token table (List - Common) and its measurement drawing: items
+ * 56, 72, or 88px tall for one, two, or three lines, 16px of padding at the sides and 10px above
+ * and below, 12px between the leading element, the text, and the trailing element; 20px icons and
+ * a 40px avatar; the label body large, the supporting text body medium, the overline and the
+ * trailing text label small. The container is `surface`, `secondary-container` when selected. The
+ * corners are 4px, 12px under the pointer, and 16px focused, pressed, or selected, springing from
+ * one to the other; a segmented list's ends keep 16px. The focus ring sits 3px inside the item.
+ */
+
+.rio-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rio-list[data-variant='segmented'] {
+  gap: 2px;
+}
+
+.rio-list-item {
+  --_radius: var(--rio-shape-corner-extra-small);
+  --_outer: var(--rio-shape-corner-large);
+  --_lead: var(--rio-color-on-surface-variant);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-block-size: 56px;
+  padding: 10px 16px;
+  background-color: var(--rio-color-surface);
+  color: var(--rio-color-on-surface);
+  font: var(--rio-typescale-body-large);
+  letter-spacing: var(--rio-typescale-body-large-tracking);
+  /* The corners spring toward their targets (base/corner-morph.css): the top and the bottom. */
+  --rio-corner-morph-target: var(--_radius);
+  --rio-corner-morph-start-target: var(--rio-corner-morph-target);
+  --rio-corner-morph-end-target: var(--rio-corner-morph-target);
+  border-start-start-radius: var(--rio-corner-morph-start-target);
+  border-start-end-radius: var(--rio-corner-morph-start-target);
+  border-end-start-radius: var(--rio-corner-morph-end-target);
+  border-end-end-radius: var(--rio-corner-morph-end-target);
+  transition:
+    background-color var(--rio-motion-fast-effects),
+    color var(--rio-motion-fast-effects),
+    --rio-corner-morph-start-target 1ms step-end,
+    --rio-corner-morph-end-target 1ms step-end;
+}
+
+.rio-list-item[data-lines='2'] {
+  min-block-size: 72px;
+}
+
+/* Three lines align to the top. */
+.rio-list-item[data-lines='3'] {
+  align-items: flex-start;
+  min-block-size: 88px;
+}
+
+/* A segmented list's ends keep their round outer corners. */
+.rio-list[data-variant='segmented'] > .rio-list-item:first-child {
+  --rio-corner-morph-start-target: var(--_outer);
+}
+
+.rio-list[data-variant='segmented'] > .rio-list-item:last-child {
+  --rio-corner-morph-end-target: var(--_outer);
+}
+
+/* The action lays the leading element and the text out as the item does, and takes presses on the
+   whole item: its `::after` covers it, under the trailing element. */
+.rio-list-item__action {
+  display: flex;
+  flex: 1;
+  align-items: inherit;
+  gap: 12px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.rio-list-item__action::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.rio-list-item[data-disabled],
+.rio-list-item[data-disabled] > .rio-list-item__action {
+  cursor: default;
+}
+
+.rio-list-item[data-kind='option'] {
+  cursor: pointer;
+}
+
+/* The trailing element sits over the action's press area; only what takes the focus in it takes
+   presses, so the rest of it presses the action. An option's leading and trailing elements take
+   no presses at all, so a control there leaves them to the option. */
+.rio-list-item__trailing {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-label-small);
+  letter-spacing: var(--rio-typescale-label-small-tracking);
+}
+
+.rio-list-item:is([data-kind='link'], [data-kind='button']) > .rio-list-item__trailing,
+.rio-list-item[data-kind='option'] > :is(.rio-list-item__leading, .rio-list-item__trailing) {
+  pointer-events: none;
+}
+
+.rio-list-item:is([data-kind='link'], [data-kind='button'])
+  > .rio-list-item__trailing
+  :is(a[href], button, input, select, textarea, [tabindex]) {
+  pointer-events: auto;
+}
+
+.rio-list-item__leading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--_lead);
+}
+
+.rio-list-item__leading > :is(svg, img.rio-list-item__icon),
+.rio-list-item__trailing > svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.rio-list-item__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.rio-list-item__overline {
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-label-small);
+  letter-spacing: var(--rio-typescale-label-small-tracking);
+}
+
+.rio-list-item__supporting {
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-body-medium);
+  letter-spacing: var(--rio-typescale-body-medium-tracking);
+}
+
+/* The state layer and the ripple cover the whole item, whatever takes the press. */
+.rio-list-item:is([data-kind='option'], [data-kind='link'], [data-kind='button'])::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--rio-color-on-surface);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+@media (hover: hover) {
+  .rio-list-item:is([data-kind='option'], [data-kind='link'], [data-kind='button']):not(
+      [data-disabled]
+    ):hover {
+    --_radius: var(--rio-shape-corner-medium);
+  }
+
+  .rio-list-item:is([data-kind='option'], [data-kind='link'], [data-kind='button']):not(
+      [data-disabled]
+    ):hover::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-list-item:is(
+  [data-kind='option']:focus-visible,
+  :has(> .rio-list-item__action:focus-visible)
+) {
+  --_radius: var(--rio-shape-corner-large);
+
+  outline-style: solid;
+}
+
+.rio-list-item:is(
+    [data-kind='option']:focus-visible,
+    :has(> .rio-list-item__action:focus-visible)
+  ):not([data-disabled])::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+.rio-list-item:not([data-disabled])[data-pressed] {
+  --_radius: var(--rio-shape-corner-large);
+}
+
+.rio-list-item:not([data-ripple], [data-disabled]):is(:active, [data-pressed])::before {
+  opacity: var(--rio-state-pressed-state-layer-opacity);
+}
+
+/* Selected: the container fills, and the corners round. */
+.rio-list-item[data-selected] {
+  --_radius: var(--rio-shape-corner-large);
+  --_lead: var(--rio-color-on-secondary-container);
+
+  background-color: var(--rio-color-secondary-container);
+  color: var(--rio-color-on-secondary-container);
+}
+
+.rio-list-item[data-selected]
+  :is(.rio-list-item__overline, .rio-list-item__supporting, .rio-list-item__trailing) {
+  color: var(--rio-color-on-secondary-container);
+}
+
+/* Disabled */
+.rio-list-item[data-disabled] {
+  --_lead: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+
+  color: var(--_lead);
+}
+
+.rio-list-item[data-disabled]
+  :is(.rio-list-item__overline, .rio-list-item__supporting, .rio-list-item__trailing) {
+  color: var(--_lead);
+}
+
+.rio-list-item[data-disabled][data-selected] {
+  background-color: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+}

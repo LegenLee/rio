@@ -4,7 +4,7 @@ import { ELEVATION_LEVELS } from './elevation/elevation';
 import { MOTION_TOKENS, SPATIAL_MOTION_TOKENS, createMotionVariables } from './motion/motion';
 import { SHAPE_CORNERS } from './shape/shape';
 import { createStateVariables } from './state/state';
-import { applyTheme, createThemeCss, createThemeVariables } from './theme';
+import { attachTheme, createThemeCss, createThemeVariables } from './theme';
 import { createTypographyVariables } from './typography/typography';
 
 const options = { sourceColor: '#6750a4' };
@@ -67,11 +67,56 @@ describe('createThemeCss', () => {
   });
 });
 
-describe('applyTheme', () => {
-  test('sets every variable on the target without touching color-scheme', () => {
-    const set = new Map<string, string>();
-    const target = { style: { setProperty: (k: string, v: string) => set.set(k, v) } };
-    applyTheme(target as unknown as HTMLElement, options);
-    expect(Object.fromEntries(set)).toEqual(createThemeVariables(options));
+describe('attachTheme', () => {
+  /** An element's inline style, as far as the theme uses it */
+  const element = (initial: Record<string, string> = {}) => {
+    const props = new Map(Object.entries(initial));
+    const style = {
+      setProperty: (name: string, value: string) => props.set(name, value),
+      removeProperty: (name: string) => props.delete(name),
+      getPropertyValue: (name: string) => props.get(name) ?? '',
+    };
+    return { target: { style } as unknown as HTMLElement, props };
+  };
+  const primary = (sourceColor: string) =>
+    createThemeVariables({ sourceColor })['--rio-color-primary'];
+
+  test('writes every variable and the color-scheme, following the system by default', () => {
+    const { target, props } = element();
+    attachTheme(target, options);
+    expect(props.get('color-scheme')).toBe('light dark');
+    expect(Object.fromEntries([...props].filter(([name]) => name !== 'color-scheme'))).toEqual(
+      createThemeVariables(options),
+    );
+  });
+
+  test('colorScheme picks one, or false leaves the element’s own', () => {
+    const dark = element();
+    attachTheme(dark.target, { ...options, colorScheme: 'dark' });
+    expect(dark.props.get('color-scheme')).toBe('dark');
+    const own = element({ 'color-scheme': 'light' });
+    const handle = attachTheme(own.target, { ...options, colorScheme: false });
+    expect(own.props.get('color-scheme')).toBe('light');
+    handle.detach();
+    expect(own.props.get('color-scheme')).toBe('light');
+  });
+
+  test('update writes another theme over it, and takes off what the new one leaves out', () => {
+    const { target, props } = element();
+    const handle = attachTheme(target, options);
+    handle.update({ sourceColor: '#006a6a', colorScheme: false });
+    expect(props.get('--rio-color-primary')).toBe(primary('#006a6a'));
+    expect(props.has('color-scheme')).toBe(false);
+    handle.update(undefined);
+    expect(props.size).toBe(0);
+  });
+
+  test('detach takes off what it wrote, and only that', () => {
+    const { target, props } = element({ '--app-gutter': '16px' });
+    const handle = attachTheme(target);
+    expect(props.size).toBe(1);
+    handle.update(options);
+    handle.detach();
+    expect(Object.fromEntries(props)).toEqual({ '--app-gutter': '16px' });
   });
 });

@@ -110,8 +110,10 @@ The soft-disabled switch stays focusable. Press Tab to reach it.
 
 - Event: `update:selected`.
 - Slots: `selected-icon` and `unselected-icon`. **Rio ships no icons**; apps bring their own. Each slot shows only in its state, and the handle grows to the icon size while one is showing. Fill only `selected-icon` for the spec's "icon on selected switch" configuration. The icons are hidden from assistive technology.
-- The root is `<button type="button" role="switch" aria-checked>`. A button satisfies the spec's keyboard table natively (both Space and Enter activate it); a checkbox would need Enter handled by hand. `type="button"` keeps it from submitting a form.
-- **Labels**: wrap the switch and its text in a `<label>`. A button is a labelable element, so the text becomes its accessible name and clicking the text toggles the switch.
+- **A native checkbox with the switch role** (`<input type="checkbox" role="switch">`, Rio's choice), transparent, sits over the track and out to the 48px target, as in `RioCheckbox`. It takes the presses and the focus, and the browser keeps it checked as the app's `selected` has it (`attachCheckable`). Space toggles it natively; Enter, which the spec's keyboard table asks for too, is `createSwitch`'s `handleKeydown`: it doesn't submit the form, and held down it toggles once, as Space does. Enter with Alt, Ctrl, or Meta, or one the app already handled (`preventDefault`), is left to the app and the browser (Rio's choice).
+- **It takes part in forms**: `name`, `value`, `required`, and `form` go to the input. While on, it submits `value` (`on` by default) under `name`; while off, nothing, as a checkbox does (Rio's choice). `required` makes the form invalid until it is on. A form's reset leaves the app's `selected`, which the switch keeps showing; resetting it is the app's.
+- `class` and `style` dress the track; every other attribute, such as `id` or `aria-label`, and every listener goes to the input.
+- **Labels**: wrap the switch and its text in a `<label>`, or point one at its `id`. The text becomes its accessible name, and clicking it toggles the switch.
 - **Disabled** works as on the button: `disabled` is native and not focusable, and `softDisabled` (`aria-disabled`) stays focusable while presses and drags are blocked. See [button.md](button.md) for the deviation note.
 
 ### Motion
@@ -124,7 +126,7 @@ The soft-disabled switch stays focusable. Press Tab to reach it.
 
 - **Touch and pen drag the handle; the mouse clicks**, as the spec lists them. This uses `attachDrag` from `@rio-m3e/core`.
 - A drag starts after the pointer moves 8px, so a short touch stays a tap.
-- While dragging, the handle follows the finger, clamped to the track, and grows to the pressed size (`data-dragging`).
+- While dragging, the handle follows the finger, clamped to the track, and grows to the pressed size (`data-dragging`, on the input).
 - On release, a fast flick (over 300px/s) picks the side it's heading to. Otherwise the handle goes to whichever side its center is on. The spring starts at the finger's speed.
 - The click the browser fires after the gesture is swallowed, so a drag never toggles twice.
 - The track sets `touch-action: pan-y`, so horizontal drags reach the switch while vertical ones still scroll the page. If the browser takes over to scroll, the drag is cancelled and the handle returns.
@@ -132,17 +134,12 @@ The soft-disabled switch stays focusable. Press Tab to reach it.
 
 ### Ripple and state layer
 
-- Presses land on the whole switch, but the ripple and the state layer draw in the 40px circle around the handle. This uses `attachRipple(root, { surface })`: the surface draws and sets the ripple's size, and both elements get `data-pressed`.
-- An invisible `rio-switch__touch` element extends the 32px track to the 48px target.
+- Presses land on the input, over the whole track, but the ripple and the state layer draw in the 40px circle around the handle. This uses `attachRipple(input, { surface })`: the surface draws and sets the ripple's size, and both elements get `data-pressed`, which the track reads with `:has()`.
 
 ### Values and their sources
 
 - Measurements and colors come from Material Web's component tokens (`_md-comp-switch.scss`, Material 3 v34.0.21), which match the spec's measurements table and token tables.
 - Behavior comes from the spec's guidelines and accessibility pages. Flutter's switch also supports dragging; Compose's and Material Web's don't.
-
-### Not yet
-
-- **Form participation**: a button submits no value. A hidden input for `name` and `value` can be added later, as with link buttons.
 
 ## Sources
 

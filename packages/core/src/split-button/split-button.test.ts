@@ -76,7 +76,10 @@ describe('parts', () => {
   test('the inner parts carry their classes', () => {
     const { parts } = setup().button;
     expect(parts.root()).toEqual({ class: 'rio-split-button' });
-    expect(parts.touch()).toEqual({ class: 'rio-button__touch', 'aria-hidden': 'true' });
+    expect(parts.touch()).toEqual({
+      class: 'rio-button__touch rio-touch-target',
+      'aria-hidden': 'true',
+    });
     expect(parts.menuIcon()).toEqual({
       class: 'rio-split-button__menu-icon',
       'aria-hidden': 'true',

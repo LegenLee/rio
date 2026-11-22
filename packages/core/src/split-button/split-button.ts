@@ -1,6 +1,6 @@
 import { createButton, type ButtonSize } from '../button/button';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
 
 /** Split button colors: the button's, without text. */
 export const SPLIT_BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated'] as const;
@@ -126,7 +126,7 @@ export interface SplitButtonApi<E extends CancelableEvent = MouseEvent> {
 export function createSplitButton<E extends CancelableEvent = MouseEvent>(
   options: SplitButtonOptions<E>,
 ): SplitButtonApi<E> {
-  const props = () => ({ ...splitButtonDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(splitButtonDefaults, options.props());
   const content = () => options.content?.() ?? { icon: false, label: true };
 
   // Both halves behave like buttons: the same sizes, colors, disabled handling, and click guard.

@@ -3,16 +3,15 @@
 // - The whole container reads as the field, so a press on it outside the input, such as on the
 //   padding, the label, or a decorative icon, focuses the input, with the caret at the end. Presses
 //   on something that takes the focus itself, such as an icon button, are left to it.
-// - A text area can be made taller by dragging the container's corner, but never shorter than
-//   its `rows`.
+// - A text area can be made taller by dragging the container's corner: a press there is left to
+//   the browser.
+
+import { FOCUSABLE_SELECTOR } from '../utils/focus';
 
 export interface TextFieldDomHandle {
-  /** Call it after the props changed, as `rows` may have. */
-  update(): void;
   detach(): void;
 }
 
-const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
 /** The corner a resizable container is dragged from, in px each way */
 const RESIZE_CORNER = 16;
 
@@ -24,7 +23,7 @@ export function attachTextField(
     const control = input();
     if (!control || control.disabled || event.button !== 0) return;
     const target = event.target as Element;
-    if (target.closest(FOCUSABLE) || target.closest('label')) return;
+    if (target.closest(FOCUSABLE_SELECTOR) || target.closest('label')) return;
     // A press on a text area's resize corner drags it.
     const style = getComputedStyle(container);
     if (target === container && style.resize !== 'none') {
@@ -45,23 +44,10 @@ export function attachTextField(
     }
   };
 
-  // The stylesheet works out a text area's least height from its rows.
-  const update = () => {
-    const control = input();
-    if (control instanceof HTMLTextAreaElement) {
-      container.style.setProperty('--rio-text-field-rows', String(control.rows));
-    } else {
-      container.style.removeProperty('--rio-text-field-rows');
-    }
-  };
-
   container.addEventListener('pointerdown', onPointerDown);
-  update();
   return {
-    update,
     detach() {
       container.removeEventListener('pointerdown', onPointerDown);
-      container.style.removeProperty('--rio-text-field-rows');
     },
   };
 }

@@ -1,0 +1,459 @@
+/*
+ * Slider and range slider (M3 Expressive). Values: the spec's token tables, measurements, and
+ * color roles (see docs/components/slider.md).
+ *
+ * The root lays out the tracks and the handles from the values core writes in its `style`, as
+ * fractions of the range: `--rio-slider-value`, or `--rio-slider-start` and `--rio-slider-end` on
+ * the range slider (`data-range`). A handle at a fraction f sits `--rio-slider-inset` from the
+ * root's start, plus f of the rest: on the stop indicators, which sit that far in from the
+ * track's ends. The tracks leave a gap around each handle, and the centered slider's (`data-centered`)
+ * one at the middle. Lengths along the slider come from the root's size as a container, so the
+ * stop indicators line up across the tracks.
+ *
+ * The inputs are transparent over the root and take no presses: the root takes them, and core's
+ * `attachSlider` moves the handles. An input carries `data-pressed` while pressed, which the root
+ * reads with `:has()`, as it reads the input's focus. The range slider's inputs and handles carry
+ * `data-thumb`, `start` or `end`.
+ */
+
+/* The handles' widths narrow while pressed or focused; registered, so the gaps follow them. */
+@property --rio-slider-handle-width {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 4px;
+}
+
+@property --rio-slider-end-handle-width {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 4px;
+}
+
+/* Registered so core reads them in px */
+@property --rio-slider-inset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --rio-slider-icon-room {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+.rio-slider {
+  /* XS, the default size */
+  --_track: 16px;
+  --_outer-corner: 8px;
+  --_handle: 44px;
+  --_icon: 24px;
+  --_icon-padding: 6px;
+  /* Next to a handle, and at the centered slider's middle */
+  --_inner-corner: 2px;
+
+  /* The stop indicators are 4px, 4px in from the track's ends: their centers sit 6px in. Core
+     reads it to place the pointer. */
+  --rio-slider-inset: 6px;
+  /* The active track's length the inset icon needs; core reads it. */
+  --rio-slider-icon-room: calc(var(--_icon) + 2 * var(--_icon-padding));
+  --rio-slider-handle-width: 4px;
+  --rio-slider-end-handle-width: 4px;
+
+  --_active: var(--rio-color-primary);
+  --_inactive: var(--rio-color-secondary-container);
+  --_handle-color: var(--rio-color-primary);
+  --_stop-active: var(--rio-color-on-primary);
+  --_stop-inactive: var(--rio-color-on-secondary-container);
+  --_icon-active: var(--rio-color-on-primary);
+  --_icon-inactive: var(--rio-color-on-secondary-container);
+
+  /* Where a fraction sits along the slider */
+  --_length: 100cqi;
+  --_travel: calc(var(--_length) - 2 * var(--rio-slider-inset));
+  --_at-value: calc(var(--rio-slider-inset) + var(--rio-slider-value, 0) * var(--_travel));
+  --_at-start: calc(var(--rio-slider-inset) + var(--rio-slider-start, 0) * var(--_travel));
+  --_at-end: calc(var(--rio-slider-inset) + var(--rio-slider-end, 1) * var(--_travel));
+  --_at-middle: calc(var(--rio-slider-inset) + 0.5 * var(--_travel));
+  /* The tracks keep 6px from a handle's sides, and 2px from the centered slider's middle. */
+  --_gap: calc(var(--rio-slider-handle-width) / 2 + 6px);
+  --_end-gap: calc(var(--rio-slider-end-handle-width) / 2 + 6px);
+  --_middle-gap: 2px;
+
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  block-size: max(var(--_handle), 48px);
+  container-type: inline-size;
+  /* Swipes across the slider still scroll the page. */
+  touch-action: pan-y;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    --rio-slider-handle-width var(--rio-motion-fast-spatial),
+    --rio-slider-end-handle-width var(--rio-motion-fast-spatial);
+}
+
+.rio-slider[data-size='small'] {
+  --_track: 24px;
+}
+
+.rio-slider[data-size='medium'] {
+  --_track: 40px;
+  --_outer-corner: 12px;
+  --_handle: 52px;
+}
+
+.rio-slider[data-size='large'] {
+  --_track: 56px;
+  --_outer-corner: 16px;
+  --_handle: 68px;
+}
+
+.rio-slider[data-size='xlarge'] {
+  --_track: 96px;
+  --_outer-corner: 28px;
+  --_handle: 108px;
+  --_icon: 32px;
+  --_icon-padding: 8px;
+}
+
+/* Vertical: from the bottom up, and as tall as the app makes it */
+.rio-slider[data-vertical] {
+  --_length: 100cqb;
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: max(var(--_handle), 48px);
+  block-size: 200px;
+  container-type: size;
+  touch-action: pan-x;
+}
+
+/* Pressing or focusing a handle narrows it to 2px */
+.rio-slider:not([data-disabled]):has(
+    > .rio-slider__input:not([data-thumb='end']):is(:focus-visible, [data-pressed])
+  ) {
+  --rio-slider-handle-width: 2px;
+}
+
+.rio-slider:not([data-disabled]):has(
+    > .rio-slider__input[data-thumb='end']:is(:focus-visible, [data-pressed])
+  ) {
+  --rio-slider-end-handle-width: 2px;
+}
+
+/* Disabled, native or soft */
+.rio-slider[data-disabled] {
+  --_active: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  --_inactive: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
+  --_handle-color: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  --_stop-active: var(--rio-color-inverse-on-surface);
+  --_stop-inactive: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  --_icon-active: var(--rio-color-inverse-on-surface);
+  --_icon-inactive: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+  cursor: default;
+}
+
+/* Tracks: each runs from `--_from` to `--_to`, with `--_lower-corner` at its lower values' end
+   and `--_upper-corner` at the other. */
+
+.rio-slider__track-lower,
+.rio-slider__track-active,
+.rio-slider__track-upper {
+  --_from: 0px;
+  --_to: var(--_length);
+  --_lower-corner: var(--_inner-corner);
+  --_upper-corner: var(--_inner-corner);
+  --_stop: var(--_stop-inactive);
+  --_dot: radial-gradient(circle 2px at center, var(--_stop) 1.5px, transparent 2px);
+  /* Where the first dot's box starts, from the track's start; and the box's length */
+  --_dot-at: 0px;
+  --_dot-size: 4px;
+
+  position: absolute;
+  box-sizing: border-box;
+  inset-block-start: calc(50% - var(--_track) / 2);
+  inset-inline-start: var(--_from);
+  inline-size: max(0px, var(--_to) - var(--_from));
+  block-size: var(--_track);
+  border-start-start-radius: var(--_lower-corner);
+  border-end-start-radius: var(--_lower-corner);
+  border-start-end-radius: var(--_upper-corner);
+  border-end-end-radius: var(--_upper-corner);
+  background-color: var(--_inactive);
+  background-position: var(--_dot-at) center;
+  background-size: var(--_dot-size) 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.rio-slider:dir(rtl)
+  :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
+  background-position: right var(--_dot-at) center;
+}
+
+.rio-slider__track-active {
+  --_to: calc(var(--_at-value) - var(--_gap));
+  --_lower-corner: var(--_outer-corner);
+  --_stop: var(--_stop-active);
+  background-color: var(--_active);
+}
+
+.rio-slider__track-upper {
+  --_from: calc(var(--_at-value) + var(--_gap));
+  --_upper-corner: var(--_outer-corner);
+}
+
+.rio-slider__track-lower {
+  --_lower-corner: var(--_outer-corner);
+}
+
+/* Centered: the active track runs between the middle and the handle, on whichever side. */
+.rio-slider[data-centered] .rio-slider__track-lower {
+  --_to: min(var(--_at-middle) - var(--_middle-gap), var(--_at-value) - var(--_gap));
+}
+
+.rio-slider[data-centered] .rio-slider__track-active {
+  --_from: min(var(--_at-middle) + var(--_middle-gap), var(--_at-value) + var(--_gap));
+  --_to: max(var(--_at-middle) - var(--_middle-gap), var(--_at-value) - var(--_gap));
+  --_lower-corner: var(--_inner-corner);
+}
+
+.rio-slider[data-centered] .rio-slider__track-upper {
+  --_from: max(var(--_at-middle) + var(--_middle-gap), var(--_at-value) + var(--_gap));
+}
+
+/* Range: the active track runs between the handles. */
+.rio-slider[data-range] .rio-slider__track-lower {
+  --_to: calc(var(--_at-start) - var(--_gap));
+}
+
+.rio-slider[data-range] .rio-slider__track-active {
+  --_from: calc(var(--_at-start) + var(--_gap));
+  --_to: calc(var(--_at-end) - var(--_end-gap));
+  --_lower-corner: var(--_inner-corner);
+}
+
+.rio-slider[data-range] .rio-slider__track-upper {
+  --_from: calc(var(--_at-end) + var(--_end-gap));
+}
+
+/* Stop indicators. The inactive tracks show one at their end of the slider, so the end stays
+   visible against the background; with `stops`, every track shows one at each step. */
+
+.rio-slider__track-upper {
+  --_dot-at: calc(var(--_length) - var(--rio-slider-inset) - 2px - var(--_from));
+  background-image: var(--_dot);
+}
+
+.rio-slider__track-lower {
+  --_dot-at: calc(var(--rio-slider-inset) - 2px);
+  background-image: var(--_dot);
+}
+
+.rio-slider[data-stops]
+  :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
+  --_dot-size: calc(var(--_travel) / var(--rio-slider-stops, 1));
+  --_dot-at: calc(var(--rio-slider-inset) - var(--_dot-size) / 2 - var(--_from));
+  background-image: var(--_dot);
+  background-repeat: repeat-x;
+}
+
+/* Vertical tracks run along the block axis, from the bottom. */
+.rio-slider[data-vertical]
+  :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
+  inset-block-start: auto;
+  inset-block-end: var(--_from);
+  inset-inline-start: calc(50% - var(--_track) / 2);
+  inline-size: var(--_track);
+  block-size: max(0px, var(--_to) - var(--_from));
+  border-start-start-radius: var(--_upper-corner);
+  border-start-end-radius: var(--_upper-corner);
+  border-end-start-radius: var(--_lower-corner);
+  border-end-end-radius: var(--_lower-corner);
+  background-position: center bottom var(--_dot-at);
+  background-size: 100% var(--_dot-size);
+}
+
+.rio-slider[data-vertical][data-stops]
+  :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
+  background-repeat: repeat-y;
+}
+
+/* Handles */
+
+.rio-slider__handle {
+  --_at: var(--_at-value);
+  --_width: var(--rio-slider-handle-width);
+
+  position: absolute;
+  box-sizing: border-box;
+  inset-block-start: calc(50% - var(--_handle) / 2);
+  inset-inline-start: var(--_at);
+  inline-size: var(--_width);
+  block-size: var(--_handle);
+  margin-inline-start: calc(var(--_width) / -2);
+  border-radius: var(--rio-shape-corner-full);
+  background-color: var(--_handle-color);
+  pointer-events: none;
+}
+
+.rio-slider__handle[data-thumb='start'] {
+  --_at: var(--_at-start);
+}
+
+.rio-slider__handle[data-thumb='end'] {
+  --_at: var(--_at-end);
+  --_width: var(--rio-slider-end-handle-width);
+}
+
+.rio-slider[data-vertical] .rio-slider__handle {
+  inset-block-start: auto;
+  inset-block-end: var(--_at);
+  inset-inline-start: calc(50% - var(--_handle) / 2);
+  inline-size: var(--_handle);
+  block-size: var(--_width);
+  margin-inline-start: 0;
+  margin-block-end: calc(var(--_width) / -2);
+}
+
+/* The focus ring goes round the handle (`base/focus-ring.css`). */
+.rio-slider:has(> .rio-slider__input:not([data-thumb='end']):focus-visible)
+  .rio-slider__handle:not([data-thumb='end']),
+.rio-slider:has(> .rio-slider__input[data-thumb='end']:focus-visible)
+  .rio-slider__handle[data-thumb='end'] {
+  outline-style: solid;
+}
+
+/* The value indicator: 4px over the handle, or beside it on a vertical slider */
+
+.rio-slider__value-indicator {
+  position: absolute;
+  inset-block-end: calc(100% + 4px);
+  left: 50%;
+  box-sizing: border-box;
+  min-inline-size: 48px;
+  block-size: 44px;
+  padding: 12px 16px;
+  border-radius: var(--rio-shape-corner-full);
+  background-color: var(--rio-color-inverse-surface);
+  color: var(--rio-color-inverse-on-surface);
+  font: 400 14px / 20px var(--rio-typeface-plain);
+  letter-spacing: 0.5px;
+  text-align: center;
+  white-space: nowrap;
+  translate: -50% 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+.rio-slider[data-vertical] .rio-slider__value-indicator {
+  inset-block-end: auto;
+  top: 50%;
+  left: auto;
+  inset-inline-end: calc(100% + 4px);
+  translate: 0 -50%;
+}
+
+.rio-slider:not([data-disabled]):has(
+    > .rio-slider__input:not([data-thumb='end']):is(:focus-visible, [data-pressed])
+  )
+  .rio-slider__handle:not([data-thumb='end'])
+  .rio-slider__value-indicator,
+.rio-slider:not([data-disabled]):has(
+    > .rio-slider__input[data-thumb='end']:is(:focus-visible, [data-pressed])
+  )
+  .rio-slider__handle[data-thumb='end']
+  .rio-slider__value-indicator {
+  opacity: 1;
+}
+
+/* The inset icon: at the active track's start, or past the handle on the inactive track when the
+   active one is too short for it (`data-icon-inactive`) */
+
+.rio-slider__icon {
+  position: absolute;
+  display: inline-flex;
+  inset-block-start: calc(50% - var(--_icon) / 2);
+  inset-inline-start: var(--_icon-padding);
+  inline-size: var(--_icon);
+  block-size: var(--_icon);
+  color: var(--_icon-active);
+  pointer-events: none;
+}
+
+.rio-slider[data-icon-inactive] .rio-slider__icon {
+  inset-inline-start: calc(var(--_at-value) + var(--_gap) + var(--_icon-padding));
+  color: var(--_icon-inactive);
+}
+
+.rio-slider[data-vertical] .rio-slider__icon {
+  inset-block-start: auto;
+  inset-block-end: var(--_icon-padding);
+  inset-inline-start: calc(50% - var(--_icon) / 2);
+}
+
+.rio-slider[data-vertical][data-icon-inactive] .rio-slider__icon {
+  inset-block-end: calc(var(--_at-value) + var(--_gap) + var(--_icon-padding));
+}
+
+.rio-slider__icon > :is(svg, img) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* The inputs: transparent over the slider. They take the focus and the keys, not the pointer. */
+.rio-slider__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  appearance: none;
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .rio-slider {
+    forced-color-adjust: none;
+    --_active: Highlight;
+    --_inactive: GrayText;
+    --_handle-color: CanvasText;
+    --_stop-active: HighlightText;
+    --_stop-inactive: Canvas;
+    --_icon-active: HighlightText;
+    --_icon-inactive: Canvas;
+  }
+
+  .rio-slider[data-disabled] {
+    --_active: GrayText;
+    --_handle-color: GrayText;
+  }
+
+  .rio-slider__value-indicator {
+    border: 1px solid CanvasText;
+    background-color: Canvas;
+    color: CanvasText;
+  }
+}

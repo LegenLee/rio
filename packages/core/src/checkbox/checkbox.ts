@@ -1,4 +1,6 @@
 import type { PartAttrs, PartNode } from '../parts';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
+import { resolveProps } from '../utils/object';
 
 export interface CheckboxProps {
   /** Whether the checkbox is checked. */
@@ -72,11 +74,8 @@ export interface CheckboxApi {
 }
 
 export function createCheckbox(options: CheckboxOptions): CheckboxApi {
-  const props = () => ({ ...checkboxDefaults, ...options.props() });
-  const unavailable = () => {
-    const p = props();
-    return !!p.disabled || !!p.softDisabled;
-  };
+  const props = () => resolveProps(checkboxDefaults, options.props());
+  const unavailable = () => isBlocked(props());
 
   return {
     parts: {
@@ -95,12 +94,11 @@ export function createCheckbox(options: CheckboxOptions): CheckboxApi {
         return {
           class: 'rio-checkbox__input',
           type: 'checkbox',
-          disabled: p.disabled ? '' : undefined,
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           'aria-invalid': p.error ? 'true' : undefined,
         };
       },
-      state: () => ({ class: 'rio-checkbox__state', 'aria-hidden': 'true' }),
+      state: () => ({ class: 'rio-checkbox__state rio-focus-ring-target', 'aria-hidden': 'true' }),
       container: () => ({ class: 'rio-checkbox__container', 'aria-hidden': 'true' }),
       icon: () => ({ class: 'rio-checkbox__icon' }),
     },

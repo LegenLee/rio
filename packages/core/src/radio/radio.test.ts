@@ -47,3 +47,9 @@ describe('createRadio', () => {
     expect(soft.blocked()).toBe(true);
   });
 });
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const radio = setup({ selected: undefined, disabled: undefined, softDisabled: undefined });
+  expect(radio.blocked()).toBe(false);
+  expect(radio.parts.input()).toMatchObject({ disabled: undefined, 'aria-disabled': undefined });
+});

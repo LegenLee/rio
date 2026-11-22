@@ -149,6 +149,7 @@ M3 leaves the select as a pattern, a text field and a menu, rather than a compon
 - **Placement**: below the field, lined up at its start, or above it without room there. It follows the field as the page scrolls.
 - **Width**: at least as wide as the field, as Material Web's select and Compose's `ExposedDropdownMenu` make it, and up to 280px, the baseline menu's limit, for options longer than the field.
 - **It closes** when an option is chosen (except with `multiple`), on Escape, on Tab, and on a click outside. Opening another unrelated menu, or a modal dialog, closes it too.
+- **Clicks and presses in the list stay in it** (Rio's choice), as in dialogs and tooltips: choosing an option doesn't reach a card or a row around the select with its own click. Keys go on. Code that listens for clicks on the document doesn't get them either, unless it listens while capturing, as VueUse's `onClickOutside` does.
 - Disabling the select closes its list.
 
 ### Keyboard and focus

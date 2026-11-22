@@ -85,11 +85,12 @@ A [dialog](./dialog.md#a-list-that-scrolls) also holds a group of radio buttons.
 
 | `RioRadio` prop | Type                                        | Default |
 | --------------- | ------------------------------------------- | ------- |
-| `value`         | `string \| number`, required                | —       |
+| `value`         | `string \| number`, required in a group     | —       |
+| `selected`      | `boolean`: outside a group, shows it        | `false` |
 | `disabled`      | `boolean`: native, not focusable            | `false` |
 | `softDisabled`  | `boolean`: `aria-disabled`, still focusable | `false` |
 
-- **`RioRadioGroup` holds the selection**, as a button group does: it is a `role="radiogroup"` named by `label` (or the app's `aria-labelledby`), and gives the radio buttons inside a shared `name`. A `RioRadio` outside a group throws an error.
+- **`RioRadioGroup` holds the selection**, as a button group does: it is a `role="radiogroup"` named by `label` (or the app's `aria-labelledby`), and gives the radio buttons inside a shared `name`. A `RioRadio` in a group without a `value` throws an error. Outside a group, a radio button only shows `selected`, and nothing changes it: it is for drawing a list item's state ([list.md](list.md)).
 - **Native `<input type="radio">`s** sit invisible over each 48px target, with the ring drawn under them. The browser moves the tab stop and the arrow keys within the group, wraps around, skips disabled ones, and submits the selected value with a form.
 - **The app wraps each in a `<label>` with its text**, as with the checkbox and the switch. The group stacks what it holds; the labels' layout is the app's.
 - **Attributes**: on `RioRadio`, `class` and `style` go to the root; every other attribute and listener goes to the input.

@@ -167,6 +167,29 @@ describe('RioButtonGroup', () => {
       expect(document.activeElement).toBe(a);
     });
 
+    test('arrow keys with Alt, Ctrl, Meta, or Shift are left to the app', async () => {
+      const screen = await render(ButtonGroup, {
+        slots: { default: () => [h(Button, () => 'A'), h(Button, () => 'B')] },
+      });
+      const [a, b] = screen.getByRole('button').elements() as HTMLElement[];
+      a!.focus();
+      const arrow = (init: KeyboardEventInit) =>
+        a!.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'ArrowRight',
+            bubbles: true,
+            cancelable: true,
+            ...init,
+          }),
+        );
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey', 'shiftKey']) {
+        expect(arrow({ [modifier]: true }), modifier).toBe(true);
+        expect(document.activeElement).toBe(a);
+      }
+      expect(arrow({})).toBe(false);
+      expect(document.activeElement).toBe(b);
+    });
+
     test('in right-to-left layouts, the left arrow goes forward', async () => {
       const screen = await render(ButtonGroup, {
         attrs: { dir: 'rtl' },

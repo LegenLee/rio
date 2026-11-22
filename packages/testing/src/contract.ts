@@ -44,7 +44,7 @@ function check<P extends string, W extends string>(
   path: string,
   inner: boolean,
 ): void {
-  expect(element.tagName.toLowerCase(), `${path}: tag`).toBe(node.tag);
+  expect(element.localName, `${path}: tag`).toBe(node.tag);
 
   const attrs = api.parts[node.part]();
   for (const [name, value] of Object.entries(attrs)) {

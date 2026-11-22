@@ -1,6 +1,8 @@
 // Times as `HH:MM` on a 24-hour clock, the form `<input type="time">` takes, and what a language
 // says about them through `Intl`: whether it counts 12 or 24 hours, and its AM and PM.
 
+import { dateTimeFormat } from '../utils/intl';
+
 export interface Time {
   /** 0 to 23 */
   hour: number;
@@ -30,7 +32,7 @@ export type HourCycle = 12 | 24;
 /** The hours a language counts, from `Intl` */
 export function hourCycleOf(locale: string): HourCycle {
   try {
-    const cycle = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
+    const cycle = dateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
     return cycle === 'h11' || cycle === 'h12' ? 12 : 24;
   } catch {
     return 24;
@@ -46,23 +48,12 @@ export const isPm = (hour: number) => hour >= 12;
 /** The 24-hour hour for a 12-hour one and a half of the day */
 export const hour24 = (hour: number, pm: boolean) => (hour % 12) + (pm ? 12 : 0);
 
-const periods = new Map<string, [string, string]>();
-
 /** How a language says AM and PM, from `Intl` */
 export function dayPeriods(locale: string): [am: string, pm: string] {
-  let names = periods.get(locale);
-  if (!names) {
-    const formatter = new Intl.DateTimeFormat(locale, {
-      hour: 'numeric',
-      hourCycle: 'h12',
-      timeZone: 'UTC',
-    });
-    const name = (hour: number) =>
-      formatter
-        .formatToParts(new Date(Date.UTC(2026, 0, 1, hour)))
-        .find((part) => part.type === 'dayPeriod')?.value ?? (hour < 12 ? 'AM' : 'PM');
-    names = [name(9), name(21)];
-    periods.set(locale, names);
-  }
-  return names;
+  const formatter = dateTimeFormat(locale, { hour: 'numeric', hourCycle: 'h12', timeZone: 'UTC' });
+  const name = (hour: number) =>
+    formatter
+      .formatToParts(new Date(Date.UTC(2026, 0, 1, hour)))
+      .find((part) => part.type === 'dayPeriod')?.value ?? (hour < 12 ? 'AM' : 'PM');
+  return [name(9), name(21)];
 }

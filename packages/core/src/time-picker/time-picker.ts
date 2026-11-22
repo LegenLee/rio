@@ -1,6 +1,7 @@
 import { formatNumber } from '../date-picker/date';
 import { formatMessage, type TimePickerMessages } from '../locale/messages';
 import type { PartAttrs, PartNode } from '../parts';
+import type { ScrollFieldProps, ScrollFieldValue } from '../scroll-field/scroll-field';
 import {
   dayPeriods,
   hour12,
@@ -17,8 +18,12 @@ import {
 export const TIME_PICKER_LAYOUTS = ['auto', 'vertical', 'horizontal'] as const;
 export type TimePickerLayout = (typeof TIME_PICKER_LAYOUTS)[number];
 
-/** The dial, or the text input */
-export type TimePickerMode = 'dial' | 'input';
+/** The pickers a dialog can show beside the text input: the dial, or the scroll fields */
+export const TIME_PICKER_KINDS = ['dial', 'scroll'] as const;
+export type TimePickerKind = (typeof TIME_PICKER_KINDS)[number];
+
+/** What a time picker shows: its dial or scroll fields, or the text input */
+export type TimePickerMode = 'picker' | 'input';
 
 /** The field the dial sets */
 export type TimeSelection = 'hour' | 'minute';
@@ -36,7 +41,10 @@ export interface TimePickerState {
   invalid?: TimeSelection;
   /** Which field the dial sets */
   selection: TimeSelection;
+  /** The picker, or the text input */
   mode: TimePickerMode;
+  /** The number nearest a pointer that hovers over the dial, which shows its hover state */
+  hovered?: number;
 }
 
 export interface TimePickerProps {
@@ -50,7 +58,9 @@ export interface TimePickerProps {
   hourCycle?: HourCycle;
   /** The dialog's layout. Defaults to `'auto'`. */
   layout?: TimePickerLayout;
-  /** What the dialog starts in. Defaults to `'dial'`. */
+  /** The dialog's picker, which switches to the text input. Defaults to `'dial'`. */
+  picker?: TimePickerKind;
+  /** What the dialog starts in. Defaults to `'picker'`. */
   initialMode?: TimePickerMode;
   /** Whether the dialog's content renders: from opening until the closing motion ends */
   rendered?: boolean;
@@ -58,8 +68,11 @@ export interface TimePickerProps {
 
 export interface TimePickerOptions {
   props: () => TimePickerProps;
-  /** `'inline'` is the text input on the page; `'dialog'`, the modal with the dial. */
-  variant: 'inline' | 'dialog';
+  /**
+   * `'inline'` is the text input on the page; `'scroll'`, the scroll fields on the page, which
+   * switch to the text input; `'dialog'`, the modal, with the dial or the scroll fields.
+   */
+  variant: 'inline' | 'scroll' | 'dialog';
   messages: () => TimePickerMessages;
   state: () => TimePickerState;
   /** Ids for the parts that refer to each other, unique in the document */
@@ -90,7 +103,10 @@ export interface TimePickerParts {
   body: () => PartAttrs;
   /** The hour field, the separator, and the minute field */
   fields: () => PartAttrs;
-  /** In the dial mode, a toggle button; in the text input, an `<input>` */
+  /**
+   * On the dial, a toggle button; on the scroll fields, a scroll field's root, with the props of
+   * `scrollField`; in the text input, an `<input>`.
+   */
   hourField: () => PartAttrs;
   separator: () => PartAttrs;
   minuteField: () => PartAttrs;
@@ -105,6 +121,8 @@ export interface TimePickerParts {
   pm: () => PartAttrs;
   /** Inside AM and PM, a target that reaches 48px past the 40px buttons */
   periodTouch: () => PartAttrs;
+  /** On the page, the scroll fields' mode button (`iconButtonSkeleton`), under AM and PM */
+  toggle: () => PartAttrs;
   /** The dial: a group of the numbers, over its face, with the selector's track and handle */
   dial: () => PartAttrs;
   dialTrack: () => PartAttrs;
@@ -118,7 +136,14 @@ export interface TimePickerParts {
   actions: () => PartAttrs;
 }
 
-type TimePickerWhen = 'showsPeriod' | 'showsDial' | 'textInput' | 'showsError' | 'rendered';
+type TimePickerWhen =
+  | 'showsPeriod'
+  | 'showsDial'
+  | 'showsScroll'
+  | 'textInput'
+  | 'showsToggle'
+  | 'showsError'
+  | 'rendered';
 
 const bodySkeleton: PartNode<TimePickerPart, TimePickerWhen> = {
   part: 'body',
@@ -128,14 +153,24 @@ const bodySkeleton: PartNode<TimePickerPart, TimePickerWhen> = {
     // The fields, with their supporting text in the text input
     { part: 'fields', tag: 'div', content: true },
     { part: 'period', tag: 'div', when: 'showsPeriod', content: true },
+    // The mode button
+    { part: 'toggle', tag: 'div', when: 'showsToggle', content: true },
     // The track, the handle, the center, and the numbers
     { part: 'dial', tag: 'div', when: 'showsDial', content: true },
   ],
 };
 
-type TimePickerPart = 'root' | 'body' | 'fields' | 'period' | 'dial' | 'error' | 'actions';
+type TimePickerPart =
+  | 'root'
+  | 'body'
+  | 'fields'
+  | 'period'
+  | 'toggle'
+  | 'dial'
+  | 'error'
+  | 'actions';
 
-/** The input time picker on the page */
+/** The time picker on the page: the text input, or the scroll fields */
 export const timePickerSkeleton: PartNode<TimePickerPart, TimePickerWhen> = {
   part: 'root',
   tag: 'div',
@@ -166,10 +201,17 @@ export interface TimePickerApi extends Record<TimePickerWhen, () => boolean> {
   fieldNames: () => [hour: string, minute: string];
   /** The numbers on the dial for the field it sets */
   dialItems: () => DialItem[];
+  /** The hour's or the minute's scroll field: its value, its range, and its name */
+  scrollField: (field: TimeSelection) => ScrollFieldProps;
   /** The text of the error under the fields, or nothing */
   error: () => string;
   /** The label of the button that switches modes */
   modeButtonLabel: () => string;
+  /**
+   * The mode button's icon: a keyboard on the picker; in the text input, a clock back to the dial,
+   * or a swipe back to the scroll fields.
+   */
+  modeButtonIcon: () => 'keyboard' | 'clock' | 'swipe';
   /** The dial mode's hour and minute toggles */
   selectField: (selection: TimeSelection) => void;
   /** AM or PM chosen */
@@ -184,12 +226,21 @@ export interface TimePickerApi extends Record<TimePickerWhen, () => boolean> {
    * technology make, picks it; the pointer picks through the dial (`attachTimePicker`).
    */
   handleNumberClick: (event: { detail: number }, value: number) => void;
+  /** A value the hour's or the minute's scroll field moved to */
+  scrollPick: (field: TimeSelection, value: ScrollFieldValue) => void;
+  /** The number a pointer hovers nearest on the dial, or none (`attachTimePicker`'s `onHover`) */
+  hover: (value: number | undefined) => void;
   hourInput: (text: string) => void;
   minuteInput: (text: string) => void;
   /** Reads the text fields: call it on Enter and on their `change`. */
   commitText: () => void;
-  /** The dialog's mode button */
+  /** The mode button: the picker switches to the text input, or back. */
   switchMode: () => void;
+  /**
+   * Attach to the scroll fields' request to take typed text (their `onEditingChange`): they don't
+   * take it, and the picker switches to the text input in their place.
+   */
+  handleScrollEditing: (editing: boolean) => void;
   /** The dialog opened: it starts from the value, in the initial mode, on the hour. */
   opened: () => void;
   /** The value or the language changed: the inline fields show it afresh. */
@@ -201,7 +252,7 @@ export interface TimePickerApi extends Record<TimePickerWhen, () => boolean> {
 const pad = (value: number) => String(value).padStart(2, '0');
 
 /** The state a time picker starts from */
-export const initialTimeState = (value: string | undefined): TimePickerState => {
+export const initialTimePickerState = (value: string | undefined): TimePickerState => {
   const time = parseTime(value);
   return {
     draft: value,
@@ -210,7 +261,8 @@ export const initialTimeState = (value: string | undefined): TimePickerState => 
     minuteText: '',
     invalid: undefined,
     selection: 'hour',
-    mode: 'dial',
+    mode: 'picker',
+    hovered: undefined,
   };
 };
 
@@ -219,13 +271,17 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
   const state = () => options.state();
   const messages = () => options.messages();
   const dialog = options.variant === 'dialog';
+  const scroll = options.variant === 'scroll';
   const cycle = (): HourCycle => props().hourCycle ?? hourCycleOf(props().locale);
   const number = (value: number) => formatNumber(value, props().locale);
   const twoDigits = (value: number) => (value < 10 ? number(0) : '') + number(value);
   /** The time the fields show: the draft in the dialog, the value inline */
   const shown = (): Time | undefined => parseTime(dialog ? state().draft : props().value);
-  const mode = (): TimePickerMode => (dialog ? state().mode : 'input');
-  const textInput = () => mode() === 'input';
+  const kind = (): TimePickerKind => (scroll ? 'scroll' : (props().picker ?? 'dial'));
+  /** What shows: the dial, the scroll fields, or the text input */
+  const view = (): TimePickerKind | 'input' =>
+    options.variant === 'inline' || state().mode === 'input' ? 'input' : kind();
+  const textInput = () => view() === 'input';
   const rendered = () => !dialog || !!props().rendered;
 
   const hourShown = (time: Time) => (cycle() === 12 ? hour12(time.hour) : time.hour);
@@ -233,8 +289,8 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
     hourText: time ? pad(hourShown(time)) : '',
     minuteText: time ? pad(time.minute) : '',
   });
-  /** The time on the dial: midnight until there is one */
-  const dialTime = (): Time => shown() ?? { hour: 0, minute: 0 };
+  /** The time the dial or the scroll fields show: 12:00 AM, or PM, until there is one */
+  const shownTime = (): Time => shown() ?? { hour: state().pm ? 12 : 0, minute: 0 };
   const pmNow = () => {
     const time = shown();
     return time ? isPm(time.hour) : state().pm;
@@ -244,6 +300,12 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
     const value = writeTime(time);
     if (dialog) options.onStateChange({ draft: value, pm: isPm(time.hour) });
     else if (value !== props().value) options.onChange(value);
+  };
+  /** Sets the hour, as the clock counts it, or the minute of the time shown */
+  const pick = (field: TimeSelection, value: number) => {
+    const time = shownTime();
+    const hour = cycle() === 12 ? hour24(value, isPm(time.hour)) : value;
+    set(field === 'minute' ? { hour: time.hour, minute: value } : { hour, minute: time.minute });
   };
 
   /** Reads the text fields into a time, or the field that isn't one */
@@ -280,6 +342,11 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
     'aria-label': label,
     'aria-invalid': state().invalid === field ? 'true' : undefined,
     'aria-describedby': state().invalid === field ? options.ids.error : undefined,
+    'data-field': field,
+  });
+  const scrollPart = (field: TimeSelection): PartAttrs => ({
+    class: 'rio-time-picker__scroll',
+    'data-field': field,
   });
   const toggleField = (selection: TimeSelection, label: string): PartAttrs => ({
     class: 'rio-time-picker__field rio-state-layer rio-focus-ring',
@@ -293,19 +360,21 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
   const api: TimePickerApi = {
     hourCycle: cycle,
     showsPeriod: () => rendered() && cycle() === 12,
-    showsDial: () => rendered() && mode() === 'dial',
+    showsDial: () => rendered() && view() === 'dial',
+    showsScroll: () => rendered() && view() === 'scroll',
     textInput,
+    showsToggle: () => scroll,
     showsError: () => rendered() && !!state().invalid,
     rendered,
     parts: {
       root: () => ({
         class: dialog ? 'rio-dialog rio-time-picker rio-time-picker-dialog' : 'rio-time-picker',
         'aria-label': dialog
-          ? mode() === 'dial'
-            ? messages().selectTime
-            : messages().enterTime
+          ? textInput()
+            ? messages().enterTime
+            : messages().selectTime
           : undefined,
-        'data-mode': mode(),
+        'data-mode': view(),
         'data-layout': dialog ? (props().layout ?? 'auto') : undefined,
         'data-hour-cycle': String(cycle()),
       }),
@@ -314,20 +383,24 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
       hourField: () =>
         textInput()
           ? inputField('hour', messages().hour)
-          : toggleField(
-              'hour',
-              formatMessage(messages().hourToggle, {
-                hour: String(hourShown(dialTime())),
-              }),
-            ),
+          : view() === 'scroll'
+            ? scrollPart('hour')
+            : toggleField(
+                'hour',
+                formatMessage(messages().hourToggle, {
+                  hour: String(hourShown(shownTime())),
+                }),
+              ),
       separator: () => ({ class: 'rio-time-picker__separator', 'aria-hidden': 'true' }),
       minuteField: () =>
         textInput()
           ? inputField('minute', messages().minute)
-          : toggleField(
-              'minute',
-              formatMessage(messages().minuteToggle, { minute: String(dialTime().minute) }),
-            ),
+          : view() === 'scroll'
+            ? scrollPart('minute')
+            : toggleField(
+                'minute',
+                formatMessage(messages().minuteToggle, { minute: String(shownTime().minute) }),
+              ),
       unit: () => ({ class: 'rio-time-picker__unit' }),
       hourLabel: () => ({ class: 'rio-time-picker__label', 'aria-hidden': 'true' }),
       minuteLabel: () => ({ class: 'rio-time-picker__label', 'aria-hidden': 'true' }),
@@ -344,7 +417,10 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
         tabindex: pmNow() ? '-1' : '0',
         'data-selected': pmNow() ? undefined : '',
       }),
-      periodTouch: () => ({ class: 'rio-time-picker__touch', 'aria-hidden': 'true' }),
+      periodTouch: () => ({
+        class: 'rio-time-picker__touch rio-touch-target',
+        'aria-hidden': 'true',
+      }),
       pm: () => ({
         class: 'rio-time-picker__period-button rio-state-layer rio-focus-ring',
         type: 'button',
@@ -353,6 +429,7 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
         tabindex: pmNow() ? '0' : '-1',
         'data-selected': pmNow() ? '' : undefined,
       }),
+      toggle: () => ({ class: 'rio-time-picker__toggle' }),
       dial: () => {
         const selected = selectedItem();
         return {
@@ -389,6 +466,7 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
           'data-inner': item.inner ? '' : undefined,
           'data-selected': selected ? '' : undefined,
           'data-unlabeled': item.label ? undefined : '',
+          'data-hovered': state().hovered === item.value ? '' : undefined,
         };
       },
       error: () => ({
@@ -399,64 +477,86 @@ export function createTimePicker(options: TimePickerOptions): TimePickerApi {
       actions: () => ({ class: 'rio-time-picker__actions' }),
     },
     // The dial's toggles show the language's digits; the text input, what was typed.
-    hourText: () => (textInput() ? state().hourText : twoDigits(hourShown(dialTime()))),
-    minuteText: () => (textInput() ? state().minuteText : twoDigits(dialTime().minute)),
+    hourText: () => (textInput() ? state().hourText : twoDigits(hourShown(shownTime()))),
+    minuteText: () => (textInput() ? state().minuteText : twoDigits(shownTime().minute)),
     periodNames: () => dayPeriods(props().locale),
     fieldNames: () => [messages().hour, messages().minute],
     dialItems,
+    scrollField(field) {
+      const time = shownTime();
+      const common = { loop: true, locale: props().locale };
+      if (field === 'minute') {
+        return { ...common, value: time.minute, min: 0, max: 59, label: messages().minute };
+      }
+      const twelve = cycle() === 12;
+      return {
+        ...common,
+        value: hourShown(time),
+        min: twelve ? 1 : 0,
+        max: twelve ? 12 : 23,
+        label: messages().hour,
+      };
+    },
     error() {
       const { invalid } = state();
       if (invalid === 'minute') return messages().invalidMinute;
       if (invalid !== 'hour') return '';
       return cycle() === 12 ? messages().invalidHour12 : messages().invalidHour24;
     },
-    modeButtonLabel: () => (mode() === 'dial' ? messages().switchToInput : messages().switchToDial),
+    modeButtonLabel: () =>
+      !textInput()
+        ? messages().switchToInput
+        : kind() === 'dial'
+          ? messages().switchToDial
+          : messages().switchToScroll,
+    modeButtonIcon: () => (!textInput() ? 'keyboard' : kind() === 'dial' ? 'clock' : 'swipe'),
     selectField: (selection) => options.onStateChange({ selection }),
     selectPeriod(pm) {
-      const time = shown();
-      if (!time) {
+      // The scroll fields show a time without one: AM or PM sets it.
+      if (!shown() && !scroll) {
         options.onStateChange({ pm });
         return;
       }
+      const time = shownTime();
       if (isPm(time.hour) === pm) return;
-      set({ hour: hour24(hour12(time.hour), pm), minute: time.minute });
+      set({ hour: hour24(time.hour, pm), minute: time.minute });
     },
     dialPick(value, release = false) {
-      const time = shown() ?? { hour: state().pm ? 12 : 0, minute: 0 };
-      if (state().selection === 'hour') {
-        const hour = cycle() === 12 ? hour24(hour12(value), isPm(time.hour)) : value;
-        set({ hour, minute: time.minute });
-        if (release) options.onStateChange({ selection: 'minute' });
-      } else {
-        set({ hour: time.hour, minute: value });
-      }
+      const { selection } = state();
+      pick(selection, value);
+      if (release && selection === 'hour') options.onStateChange({ selection: 'minute' });
+    },
+    scrollPick(field, value) {
+      if (typeof value === 'number') pick(field, value);
     },
     handleNumberClick(event, value) {
       if (event.detail === 0) api.dialPick(value);
     },
+    hover: (hovered) => options.onStateChange({ hovered }),
     hourInput: (hourText) => options.onStateChange({ hourText }),
     minuteInput: (minuteText) => options.onStateChange({ minuteText }),
     commitText,
     switchMode() {
-      if (state().mode === 'dial') {
+      if (state().mode !== 'input') {
         options.onStateChange({ mode: 'input', invalid: undefined, ...fieldsFrom(shown()) });
         return;
       }
+      // Back to the picker with the time typed; text that isn't one is dropped.
       const result = read();
-      options.onStateChange({
-        mode: 'dial',
-        invalid: undefined,
-        selection: 'hour',
-        ...(result.time ? { draft: writeTime(result.time), pm: isPm(result.time.hour) } : {}),
-      });
+      options.onStateChange({ mode: 'picker', invalid: undefined, selection: 'hour' });
+      if (result.time) set(result.time);
+      else if (result.empty && !dialog && props().value !== undefined) options.onChange(undefined);
+    },
+    handleScrollEditing(editing) {
+      if (editing && state().mode !== 'input') api.switchMode();
     },
     opened() {
-      const start = initialTimeState(props().value);
+      const start = initialTimePickerState(props().value);
       const time = parseTime(props().value);
       options.onStateChange({
         ...start,
         draft: props().value ?? writeTime({ hour: 0, minute: 0 }),
-        mode: props().initialMode ?? 'dial',
+        mode: props().initialMode ?? 'picker',
         ...fieldsFrom(time),
       });
     },

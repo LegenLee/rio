@@ -33,7 +33,7 @@
 /*
  * Both buttons: the corners at the ends of the split button are round, and the facing ones are
  * small. Hovering, focusing, or pressing a button rounds its facing corners more, and opening the
- * menu rounds the trailing button fully. Each side springs on its own (see base/shape-morph.css).
+ * menu rounds the trailing button fully. Each side springs on its own (see base/corner-morph.css).
  */
 .rio-split-button > .rio-button {
   /* Small */
@@ -53,8 +53,8 @@
  * order. The corners show these targets (button.css).
  */
 .rio-split-button > .rio-button[data-variant] {
-  --rio-shape-morph-start-target: var(--_start);
-  --rio-shape-morph-end-target: var(--_end);
+  --rio-corner-morph-start-target: var(--_start);
+  --rio-corner-morph-end-target: var(--_end);
 }
 
 .rio-split-button > .rio-button:where([data-size='xsmall']) {
@@ -165,7 +165,7 @@
   --_menu-shift-rest: var(--rio-split-button-menu-shift-target);
   /* The button's spring targets (button.css), and the menu icon's. */
   --rio-spring-targets:
-    --rio-shape-morph-start-target 1ms step-end, --rio-shape-morph-end-target 1ms step-end,
+    --rio-corner-morph-start-target 1ms step-end, --rio-corner-morph-end-target 1ms step-end,
     --rio-split-button-menu-turn-target 1ms step-end,
     --rio-split-button-menu-shift-target 1ms step-end;
 }

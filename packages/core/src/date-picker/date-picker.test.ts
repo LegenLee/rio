@@ -5,7 +5,7 @@ import {
   createDatePicker,
   createDatePickerDialog,
   dateHeadline,
-  initialPickerState,
+  initialDatePickerState,
   type DatePickerDialogProps,
   type DatePickerProps,
   dateInputPattern,
@@ -152,6 +152,15 @@ describe('createCalendar', () => {
     expect(setup().calendar.years()).toHaveLength(201);
   });
 
+  test('without min and max, the years reach past 1900 to 2100 to take in the dates shown', () => {
+    const old = setup({ selected: '1850-06-01', month: '1850-06', focused: '1850-06-01' });
+    expect([old.calendar.years()[0], old.calendar.years().at(-1)]).toEqual([1850, 2100]);
+    const later = setup({ month: '2150-01', focused: '2150-01-10' });
+    expect(later.calendar.years().at(-1)).toBe(2150);
+    const limited = setup({ min: '1950-01-01', selected: '1850-06-01' });
+    expect(limited.calendar.years()[0]).toBe(1950);
+  });
+
   test('a month that can’t be reached is unavailable in the list', () => {
     const { calendar, onMonthChange } = setup({ min: '2026-05-10' });
     expect(calendar.parts.monthOption(4)['aria-disabled']).toBe('true');
@@ -219,7 +228,7 @@ describe('the field', () => {
 
 describe('createDatePicker', () => {
   const setup = (props: Partial<DatePickerProps> = {}) => {
-    let state = initialPickerState(props.value, 'en-US');
+    let state = initialDatePickerState(props.value, 'en-US');
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
     const picker = createDatePicker({
@@ -271,11 +280,15 @@ describe('createDatePicker', () => {
   });
 
   test('Alt+Down and the calendar button open it with the focus in; disabled, nothing opens', () => {
-    const { picker, onOpenChange } = setup();
+    const { picker, onOpenChange, state } = setup();
     const event = key('ArrowDown', true);
     picker.handleFieldKeydown(event);
     expect(event.preventDefault).toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(picker.focusOnOpen()).toBe(true);
+    // It is the adapter's state, and opening, which starts the rest afresh, leaves it.
+    expect(state().focusOnOpen).toBe(true);
+    picker.opened();
     expect(picker.focusOnOpen()).toBe(true);
     const disabled = setup({ disabled: true });
     disabled.picker.toggle();
@@ -326,7 +339,7 @@ describe('createDatePicker', () => {
 
 describe('createDatePickerDialog', () => {
   const setup = (props: Partial<DatePickerDialogProps> = {}) => {
-    let state = initialPickerState(props.value, 'en-US');
+    let state = initialDatePickerState(props.value, 'en-US');
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
     const dialog = createDatePickerDialog({

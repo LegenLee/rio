@@ -12,6 +12,8 @@
 // - A form's reset puts the input back to its default, unchecked; the input then shows the
 //   adapter's state again. Resetting the state is the app's.
 
+import { attachFormReset } from '../form-reset/form-reset';
+
 export interface CheckableOptions {
   /** Whether the input is checked, as the adapter has it. */
   checked: () => boolean;
@@ -50,26 +52,17 @@ export function attachCheckable(
     if (blocked()) sync();
     else options.onChange(input.checked);
   };
-  // The reset event comes before the form puts its inputs back.
-  let resetTimer: ReturnType<typeof setTimeout> | undefined;
-  const document = input.ownerDocument;
-  const onReset = (event: Event) => {
-    if (event.target !== input.form) return;
-    clearTimeout(resetTimer);
-    resetTimer = setTimeout(sync);
-  };
   input.addEventListener('click', onClick);
   input.addEventListener('change', onChange);
-  document.addEventListener('reset', onReset, { capture: true });
+  const reset = attachFormReset([input], sync);
   sync();
 
   return {
     sync,
     detach() {
-      clearTimeout(resetTimer);
+      reset.detach();
       input.removeEventListener('click', onClick);
       input.removeEventListener('change', onChange);
-      document.removeEventListener('reset', onReset, { capture: true });
     },
   };
 }

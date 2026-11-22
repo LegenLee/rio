@@ -7,6 +7,9 @@
 // - At either end, the arrow keys wrap around to the other end in Chromium, and stop in WebKit.
 //   When the focus stays put, the group moves it to the other end and selects that radio button.
 
+import { isRtl } from '../primitives/direction/direction';
+import { hasModifier } from '../utils/keyboard';
+
 export interface RadioGroupDomHandle {
   detach(): void;
 }
@@ -33,11 +36,11 @@ export function attachRadioGroup(root: HTMLElement): RadioGroupDomHandle {
 
   let wrapTimer: ReturnType<typeof setTimeout> | undefined;
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.defaultPrevented || hasModifier(event)) return;
     const from = event.target;
     if (!(from instanceof HTMLInputElement) || from.type !== 'radio') return;
     // In right-to-left layouts the next radio button is on the left.
-    const rtl = getComputedStyle(from).direction === 'rtl';
+    const rtl = isRtl(from);
     const forward = event.key === 'ArrowDown' || event.key === (rtl ? 'ArrowLeft' : 'ArrowRight');
     const backward = event.key === 'ArrowUp' || event.key === (rtl ? 'ArrowRight' : 'ArrowLeft');
     if (!forward && !backward) return;

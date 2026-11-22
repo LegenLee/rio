@@ -1,7 +1,8 @@
 import type { MenuVariant } from '../menu/menu';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import type { TextFieldVariant } from '../text-field/text-field';
-import { omitUndefined } from '../utils/object';
+import { resolveProps } from '../utils/object';
+import { nextSelection, selectedValues as valuesOf } from '../utils/selection';
 
 /** Identifies an option, through its `value` prop. */
 export type SelectValue = string | number;
@@ -221,11 +222,8 @@ export interface SelectApi extends Record<SelectWhen, () => boolean> {
 
 const NO_CONTENT: SelectContent = { leadingIcon: false };
 
-const valuesOf = (selected: SelectSelected): SelectValue[] =>
-  selected === undefined ? [] : Array.isArray(selected) ? selected : [selected];
-
 export function createSelect(options: SelectOptions): SelectApi {
-  const props = () => ({ ...selectDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(selectDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
   const { ids } = options;
 
@@ -344,15 +342,14 @@ export function createSelect(options: SelectOptions): SelectApi {
     isSelected,
     choose(value) {
       const p = props();
-      if (p.multiple) {
-        const current = selectedValues();
-        options.onChange(
-          isSelected(value) ? current.filter((other) => other !== value) : [...current, value],
-        );
-        return;
-      }
-      if (!isSelected(value)) options.onChange(value);
-      options.onOpenChange(false);
+      // One at a time, a choice selects; with `multiple`, it toggles.
+      const next = nextSelection(
+        { selection: p.multiple ? 'multiple' : 'single', selected: p.selected },
+        value,
+        !p.multiple || !isSelected(value),
+      );
+      if (next) options.onChange(next.selected);
+      if (!p.multiple) options.onOpenChange(false);
     },
     nativeChanged(values) {
       const chosen = options
@@ -462,7 +459,7 @@ const NO_OPTION_CONTENT: SelectOptionContent = {
 export function createSelectOption<E extends CancelableEvent = MouseEvent>(
   options: SelectOptionOptions<E>,
 ): SelectOptionApi<E> {
-  const props = () => ({ ...selectOptionDefaults, ...omitUndefined(options.props()) });
+  const props = () => resolveProps(selectOptionDefaults, options.props());
   const content = () => options.content?.() ?? NO_OPTION_CONTENT;
   const selected = () => !!options.select()?.isSelected(options.props().value);
 

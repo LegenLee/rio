@@ -7,6 +7,7 @@ import LocaleProvider from '../locale/LocaleProvider.vue';
 import { createRio } from '../rio/rio';
 import DatePicker from './DatePicker.vue';
 import DatePickerDialog from './DatePickerDialog.vue';
+import { eventsLeaving } from '../test/events';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -62,6 +63,17 @@ const setup = async ({ value, props = {} }: Setup = {}) => {
 const focusedDate = () => (document.activeElement as HTMLElement | null)?.dataset.date;
 
 describe('RioDatePicker, docked', () => {
+  test("clicks and presses in the calendar stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { input, menu, isOpen, day } = await setup({ value: '2026-11-27' });
+    input.focus();
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await vi.waitFor(() => expect(isOpen()).toBe(true));
+    const out = eventsLeaving(() => menu()!);
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.click(day('2026-11-10'));
+    expect(out).toEqual(['keydown']);
+  });
+
   test('the field writes the date the language’s way, and says the format', async () => {
     const { screen, input } = await setup({ value: '2026-11-27' });
     expect(input.value).toBe('11/27/2026');
@@ -254,6 +266,25 @@ describe('RioDatePicker, docked', () => {
     expect(year.bottom).toBeLessThanOrEqual(box.bottom);
   });
 
+  test('keys with Alt, Ctrl, or Meta are left to the app', async () => {
+    const { screen } = await setup({ value: '2026-11-27' });
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    await vi.waitFor(() => expect(focusedDate()).toBe('2026-11-27'));
+    for (const key of ['ArrowRight', 'PageDown', 'Enter']) {
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+        const press = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          [modifier]: true,
+        });
+        document.activeElement!.dispatchEvent(press);
+        expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+      }
+    }
+    expect(focusedDate()).toBe('2026-11-27');
+  });
+
   test('min and max: days outside can’t be chosen, and the arrows stop', async () => {
     const { screen, day, state } = await setup({
       value: '2026-11-15',
@@ -333,6 +364,17 @@ describe('RioDatePicker, modal', () => {
     await userEvent.click(screen.getByRole('button', { name: 'OK' }));
     expect(state.value).toBe('2026-11-03');
     await vi.waitFor(() => expect(dialog.open).toBe(false));
+  });
+
+  test("clicks and presses in the dialog stay in it, rather than reaching the app's markup; keys go on", async () => {
+    const { screen, container } = await setup({ value: '2026-11-27', props: { variant: 'modal' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
+    const dialog = container.querySelector('dialog')!;
+    await vi.waitFor(() => expect(focusedDate()).toBe('2026-11-27'));
+    const out = eventsLeaving(() => dialog);
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.click(dialog.querySelector<HTMLElement>('[data-date="2026-11-03"]')!);
+    expect(out).toEqual(['keydown']);
   });
 
   test('the text input reads the date on OK, and keeps the dialog on an error', async () => {

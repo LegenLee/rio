@@ -70,10 +70,11 @@ export {
   type TypographyVar,
 } from './typography/typography';
 export {
-  applyTheme,
+  attachTheme,
   createThemeCss,
   createThemeVariables,
   type ThemeColorScheme,
+  type ThemeHandle,
   type ThemeOptions,
   type ThemeVar,
 } from './theme';

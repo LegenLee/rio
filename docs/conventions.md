@@ -9,12 +9,15 @@ How the Rio repository is organized and how code in it is written. Read this bef
 | `@rio-m3e/tokens`  | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
 | `@rio-m3e/core`    | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
 | `@rio-m3e/styles`  | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
-| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`.                                                                                                       | `core`, `styles`                                     |
+| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`. `createRio` wires the theme of `tokens` (`attachTheme`) and the language into the app.                | `core`, `styles`, `tokens`                           |
 | `@rio-m3e/testing` | Test helpers the adapters share, such as `expectSkeleton` for the contract tests. Private: never published, no build.                                    | `core`                                               |
 | `playground`       | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
 | `docs`             | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
+
+- **The component APIs keep nothing between calls.** Whatever a component needs to remember, such as whether the date picker opened from the keyboard, is state the adapter holds, which `core` asks to change through `onChange`, `on<State>Change`, or `onStateChange`.
+- **DOM behaviors report too.** What an `attach*` finds out about the elements the adapter renders, such as where the pointer hovers on the time picker's dial, whether a dialog's content overflows, or which open menu is inactive, it reports through a callback; the adapter keeps it, and the parts render it as attributes. A DOM behavior writes directly only where the adapter doesn't render (the app's own element a tooltip describes, the document's root, a primitive's own marks such as `data-ripple`); marks it puts on and takes off around a single press, such as the slider's `data-pressed` and `data-dragging`; a native control's own state, which the browser changes too, put back to the adapter's, such as an input's `checked` or `value`; and values no render could keep up with: ones that change every frame, such as a spring's or a drag's, and ones undone within the same task. Detaching never takes off what a part renders.
 
 ## Folder layout
 
@@ -38,15 +41,27 @@ packages/
         anchored-position.ts  places a floating element next to an anchor (see Overlays)
       checkable/
         checkable.ts        keeps a native checkbox or radio button in line with the adapter's state
+      corner-morph/
+        corner-morph.ts     the corner radius, on top of spring-property
+      direction/
+        direction.ts        isRtl: whether an element lays out right to left, for what mirrors
       drag/
         drag.ts
+      form-reset/
+        form-reset.ts       tells when a form has put its controls back, for the components that show the adapter's state on them
       overlay/
         overlay.ts          the top layer and the order of Rio's overlays (see Overlays)
+      reduced-motion/
+        reduced-motion.ts   prefersReducedMotion, for the spatial motion JavaScript drives
       ripple/
         ripple.ts
         ripple.test.ts
-      shape-morph/
-        shape-morph.ts      the corner radius, on top of spring-property
+      shapes/               the Material shape library and morphs, ported from androidx (see Ported code)
+        morph.ts            Morph.kt, and so on: one file for each of the original's
+        material-shapes.ts  Compose Material3's MaterialShapes, by name
+        path.ts             cubicsPath: cubics as SVG path data (Rio's own)
+        goldens.test.ts     the port against the original's output
+        __goldens__/        that output, as JSON (see Goldens)
       spring/
         spring.ts           spring math and driver, used by other primitives
       spring-property/
@@ -60,12 +75,19 @@ packages/
     checkbox/
       checkbox.ts           props, parts, and what a change asks for
       checkbox.test.ts
+    chip/
+      chip.ts               assist, filter, input, and suggestion chips, and the chip set: props, parts, selection
+      interaction.ts        the chip set's tab stop, arrow keys, and focus after a removal (DOM, tested through the Vue components)
+      chip.test.ts
     date-picker/
       date.ts               ISO dates and months, and writing and reading them as a language does
+      calendar-shared.ts    what the month calendar and the range calendar share: limits, names, keys (internal)
       date-picker.ts        the calendar, the field's reading, and the docked and modal pickers' parts
-      interaction.ts        the calendar's keys and focus; the docked calendar's popover (DOM, tested through the Vue components)
+      date-range-picker.ts  the range calendar, its window of months, and the range dialog's parts
+      interaction.ts        the calendars' keys and focus; the range calendar's months as they scroll; the docked calendar's popover (DOM, tested through the Vue components)
       date.test.ts
       date-picker.test.ts
+      date-range-picker.test.ts
     dialog/
       dialog.ts             props, parts, and the role
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
@@ -73,6 +95,14 @@ packages/
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
+    list/
+      list.ts               the list and its items: props, parts, roles, the selection, and the number of lines
+      interaction.ts        the list's tab stop and keys, which reach the secondary actions; an item's wrapping text (DOM, tested through the Vue components)
+      list.test.ts
+    loading-indicator/
+      loading-indicator.ts  props, parts, the loop's and a value's moments, and the shape drawn at each
+      interaction.ts        drawing the shape every frame while it loops (DOM, tested through the Vue component)
+      loading-indicator.test.ts
     locale/
       locale.ts             the language a component uses, and the first day of its week (see docs/guide/languages.md)
       messages.ts           the message tables' shape, lookup, and placeholders
@@ -82,16 +112,28 @@ packages/
       menu.ts               the menu, its items, submenus, groups, and dividers: props, parts, selection
       interaction.ts        opening, placement, keyboard, focus, and submenus (DOM, tested through the Vue components)
       menu.test.ts
+    progress/
+      progress.ts           linear and circular indicators: props, parts, and the waves' paths
+      interaction.ts        drawing the waves over the flat indicators, every frame (DOM, tested through the Vue components)
+      progress.test.ts
     radio/
       radio.ts              the group and its radio buttons: props and parts
       interaction.ts        Shift+Tab into a group with nothing selected (DOM, tested through the Vue components)
       radio.test.ts
+    scroll-field/
+      scroll-field.ts       props, parts, keys, the values it takes, and the text typed for them
+      interaction.ts        the native scroll and its snapping, and typing (DOM, tested through the Vue component)
+      scroll-field.test.ts
+    slider/
+      slider.ts             the slider and the range slider: props, parts, and the values they take
+      interaction.ts        the pointer, the inputs' values, and the inset icon's room (DOM, tested through the Vue components)
+      slider.test.ts
     split-button/
       split-button.ts       two createButtons, and the trailing one's menu state
       menu-icon.ts          the menu icon's springs (DOM, tested through the Vue component)
       split-button.test.ts
     switch/
-      switch.ts             props, attributes, click handling
+      switch.ts             props, parts, and Enter, over a native checkbox
       handle.ts             the handle's springs and drag (DOM, tested through the Vue component)
       switch.test.ts
     text-field/
@@ -100,8 +142,8 @@ packages/
       text-field.test.ts
     time-picker/
       time.ts               HH:MM times, and a language's clock and its AM and PM
-      time-picker.ts        the input picker and the dialog: their parts, the dial's numbers, and reading typed times
-      interaction.ts        the dial's pointer and keys, and AM and PM's arrow keys (DOM, tested through the Vue components)
+      time-picker.ts        the input and scroll pickers and the dialog: their parts, the dial's numbers, the scroll fields' props, and reading typed times
+      interaction.ts        the dial's pointer and keys, AM and PM's arrow keys, and the focus from a scroll field to its text input (DOM, tested through the Vue components)
       time.test.ts
       time-picker.test.ts
     tooltip/
@@ -110,24 +152,40 @@ packages/
       tooltip.test.ts
     parts.ts                PartAttrs, CancelableEvent, and mergePartAttrs (see Core output)
     utils/                  level 2 helpers (see Shared helpers)
-      object.ts             omitUndefined, for button and button-group
+      css.ts                parsePx: a computed px length as a number, for the DOM behaviors
+      disabled.ts           isBlocked and disabledAttrs: disabled and soft-disabled, for every component with both
+      focus.ts              FOCUSABLE_SELECTOR: the elements that take the focus themselves, for text field and select
+      intl.ts               dateTimeFormat and numberFormat: one Intl format for each language and options
+      keyboard.ts           hasModifier: Alt, Ctrl, or Meta held, for the keys components leave to shortcuts
+      link.ts               linkAttrs: an `<a>`'s attributes as a link, disabled or not, for buttons and chips
+      number.ts             parseFloatStrict, a number as Kotlin reads it, for the shapes' parsers; addSteps, for slider and scroll field
+      object.ts             resolveProps, which every component with defaults reads its props through
+      progress.ts           a value's share of its range and the progressbar ARIA, for progress and loading indicators
+      selection.ts          selectedValues and nextSelection: a group's rules for choosing one or many, for button groups, chip sets, lists, menus, and selects
       typeahead.ts          moving by typing the start of a label, for menu and select
     index.ts
   styles/src/
     base/                   CSS shared across components
       anchored-position.css pairs with core's primitives/anchored-position
-      focus-ring.css
-      reduced-motion.css    imported by every component that uses motion tokens
+      corner-morph.css      pairs with core's primitives/corner-morph
+      focus-ring.css        the keyboard focus ring: on the focused element, or with `rio-focus-ring-target` on another that rings for it
+      reduced-motion.css    imported by every component that uses motion tokens; pairs with core's primitives/reduced-motion
       ripple.css            pairs with core's primitives/ripple
-      shape-morph.css       pairs with core's primitives/shape-morph
       state-layer.css
+      touch-target.css      the 48px press target of buttons, chips, and the time picker's period buttons
     button.css
     button-group.css
     checkbox.css
+    chip.css                the four chips and the chip set
     dialog.css
     icon-button.css         layered on top of button.css
+    list.css                the list and its items, standard and segmented
+    loading-indicator.css
     menu.css
+    progress.css            the linear and circular indicators, flat, and their indeterminate motion
     radio.css               the radio buttons and their group
+    scroll-field.css
+    slider.css              the slider and the range slider
     split-button.css        layered on top of button.css
     switch.css
     text-field.css
@@ -140,20 +198,48 @@ packages/
       context.ts            what the group provides; buttons read it with useButtonGroupItem
     checkbox/
       Checkbox.vue          a native checkbox; class and style on the root, other attributes on the input
+    chip/
+      AssistChip.vue
+      FilterChip.vue
+      InputChip.vue         class and style on the root, other attributes on the chip's action
+      SuggestionChip.vue
+      ChipSet.vue           holds the selection and the tab stop, and gives the chips their keys
+      context.ts            what the set provides to its chips
+      Chip.vrt.test.ts      screenshot test (see Visual regression)
+    corner-morph/
+      corner-morph.ts       v-corner-morph, used inside components (not exported yet)
     dialog/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
     icon-button/
       IconButton.vue
+    list/
+      List.vue              the list, which keeps the selection and the tab stop
+      ListItem.vue          class and style on the <li>, other attributes on the link or button when there is one
+      context.ts            what a list provides to its items
+    loading-indicator/
+      LoadingIndicator.vue
+      LoadingIndicator.vrt.test.ts  screenshot test (see Visual regression)
+    progress/
+      LinearProgress.vue
+      CircularProgress.vue
+      Progress.vrt.test.ts  screenshot test (see Visual regression)
+    overlay/
+      presses.ts            keepPresses: stops core's OVERLAY_PRESS_EVENTS on an overlay's root, with v-on
     radio/
       RadioGroup.vue        holds the selection and gives the radio buttons their name
       Radio.vue
       context.ts            what the group provides to its radio buttons
     ripple/
-      ripple.ts             the v-ripple directive
-    shape-morph/
-      shape-morph.ts        v-shape-morph, used inside components (not exported yet)
+      ripple.ts             the v-ripple directive, and useRipple for presses that ripple on a part
+    scroll-field/
+      ScrollField.vue
+      ScrollField.vrt.test.ts  screenshot test (see Visual regression)
+    slider/
+      Slider.vue            a native range input; class and style on the root, other attributes on the input
+      RangeSlider.vue       two native range inputs in a group, which takes the app's attributes
+      Slider.vrt.test.ts    screenshot test (see Visual regression)
     switch/
-      Switch.vue
+      Switch.vue            a native checkbox; class and style on the root, other attributes on the input
       Switch.vrt.test.ts    screenshot test (see Visual regression)
     text-field/
       TextField.vue         class and style on the root, other attributes on the input
@@ -206,7 +292,7 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
   - `style` carries only Rio's own custom properties, as `name: value` declarations separated by `;` (the time picker's `--rio-time-picker-angle`), for values the stylesheet can't select on.
 - **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
-  - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-shape-morph`.
+  - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-corner-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.
   - More values: the value itself. `data-variant`, `data-size`, `data-shape`, `data-width`.
 - **Events stay out of the bundles.** `core` exposes named handlers, such as `handleClick`. Each adapter wires them in its own syntax (`@click`, `onClick`, `on:click`).
@@ -227,7 +313,8 @@ Each component also exports its **skeleton** (`buttonSkeleton`, a `PartNode` tre
 
 How an adapter turns `core`'s API into components.
 
-- **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
+- **An adapter holds only what its framework needs.** If a second adapter would have to write the same code again (DOM work, a default, a type), it belongs in `core`, or in `tokens` for the theme.
+- **Defaults live in `core`.** Adapters declare props without defaults, and `core` fills in whatever is still undefined. Every component with defaults (`switchDefaults`, `sliderDefaults`, ...) reads its props through `resolveProps` (`utils/object.ts`), which takes a prop passed as `undefined` as its default. Vue passes an absent string prop that way, and so does an adapter that hands on a prop the app left out, as a React one would. That leaves room for a button group to supply the size or shape a button didn't set. In Vue, list each prop twice (in the destructuring and in the getter passed to `core`) and end the getter with `satisfies Record<keyof ButtonProps, unknown>`, so a prop missing from the getter fails the build instead of silently disappearing.
   - One catch: Vue turns an absent boolean prop into `false`. That is harmless while every boolean default in `core` is `false`. A boolean whose default is `true` needs `= undefined` in the destructuring, which stops the cast and lets `core`'s default through.
 - **Each adapter decides what belongs to its framework**: the framework versions it supports (its `peerDependencies`), how state and its callbacks are named in the framework's idiom (Vue's `v-model:selected`; in React, a controlled `selected` with `onSelectedChange`), and its file names (see File naming). Within one adapter, every component follows the same naming.
 - **Rio's CSS variables fit the framework's `style` types.** Apps put `createThemeVariables(…)` and Rio's public variables (`--rio-focus-ring-color`, `--rio-spring-targets`) in `style`. Vue's `CSSProperties` takes any `--*` key already. React's leaves custom properties out on purpose and points to module augmentation, so a React adapter adds `--rio-*` keys, and only those, to React's `CSSProperties`; `@rio-m3e/tokens` stays free of any framework's types.
@@ -237,16 +324,16 @@ How an adapter turns `core`'s API into components.
 A primitive is a DOM behavior that several components share, such as the press ripple. Primitives live in `core/src/primitives/` and are public API, exported from `core/src/index.ts` for every adapter to use.
 
 - **Only behaviors that need JavaScript.** If CSS alone can do it, it belongs in `styles/src/base/` instead. The state layer and the focus ring turned out to be CSS-only; the ripple needs the press position, and the spring needs per-frame math.
-- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `shape-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation.
+- **Not every primitive attaches to an element.** `spring/` is math plus a value driver (`solveSpring`, `createSpring`), which element primitives such as `corner-morph/` build on. It still lives in `primitives/` because it exists to drive DOM animation. `shapes/` is math too: polygons and the morphs between them, which components draw.
 - **DOM behavior that belongs to one component** stays in that component's folder in `core` (for example `switch/handle.ts`), built from primitives. It moves into `primitives/` once a second component needs it, like a shared helper.
 - **Shape: `attachX(element)` returns `{ detach() }`.** It takes a real element, adds listeners or animations, and gives back a handle that undoes everything. Adapters attach on mount and detach before unmount.
 - **State goes out through `data-*` attributes** on the element (`data-ripple`, `data-pressed`), so CSS can react without knowing about the JavaScript.
 - **Visuals go in a paired base stylesheet**: `primitives/ripple/ripple.ts` pairs with `styles/src/base/ripple.css`. The primitive handles behavior, and the stylesheet handles appearance.
 - **The stylesheet selects on the primitive's data attribute, not on a class** (`[data-ripple]`, not `.rio-ripple`). Vue rewrites `class` whenever a `:class` binding changes and would drop a class the primitive added, but it leaves attributes it doesn't own alone.
 - **Adapters expose primitives in their framework's idiom.** In Vue, that's a directive (`vRipple` → `v-ripple`) that attaches on mount, detaches before unmount, and imports the paired stylesheet. A React adapter would use a hook instead.
-- **Springs see their targets through a transition.** A stylesheet that declares a target for `attachSpringProperty` (directly, or through `attachShapeMorph`) does two things on the element:
+- **Springs see their targets through a transition.** A stylesheet that declares a target for `attachSpringProperty` (directly, or through `attachCornerMorph`) does two things on the element:
   - It lists the target in `transition` as `<target> 1ms step-end`. While the element is rendered, the browser then reports every change of the target, whatever causes it: a state attribute, `:hover`, a theme variable on an ancestor, or the element's position among its siblings. A change made while it isn't rendered (`display: none`, or out of the document) makes no transition; the primitive catches up, without animating, when the element shows again. Without the transition, including when the app's CSS replaces the `transition` list, the spring never moves and the stylesheet's value shows.
-  - It draws the animated property from the target, not from the expression behind it: `border-start-start-radius: var(--rio-shape-morph-start-target)`, not `var(--_radius)`. `step-end` holds the old value until the spring takes over, so the new value doesn't flash for a frame first.
+  - It draws the animated property from the target, not from the expression behind it: `border-start-start-radius: var(--rio-corner-morph-start-target)`, not `var(--_radius)`. `step-end` holds the old value until the spring takes over, so the new value doesn't flash for a frame first.
 
   CSS can't add to a `transition` list, so components keep their spring targets in the public `--rio-spring-targets` and end their `transition` with `var(--rio-spring-targets)`. A stylesheet that springs more targets on an element extends the variable, as the split button's trailing button does, and an app that sets its own `transition` on one of these elements includes it. The variable is defined only on elements that spring, so it doesn't belong in a `transition` anywhere else: an undefined `var()` drops the whole declaration.
 
@@ -266,7 +353,7 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
   - A transient overlay, such as a tooltip, closes when any other overlay opens. Tooltips are `manual` popovers, since Safari doesn't support `popover="hint"` yet.
   - `covered()` tells whether an overlay opened later, other than a transient one, is still open. A click on a dialog's scrim asks the dialog to close only when nothing covers it, so the click closes the menu over it first (Rio's choice).
   - Each document keeps its own record, so overlays in an iframe stack among themselves.
-- **Adapters keep clicks and presses in a tooltip or a dialog**, in their framework's own events. The overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape. Core can't do it: frameworks such as React handle events at the app's root, so a native `stopPropagation()` in the overlay would hide every click in it from the app. Vue stops them on the overlay's element (`@click.stop`); a React adapter would stop React's events where its portal begins.
+- **Adapters keep clicks and presses in an overlay**, in their framework's own events: a dialog, a tooltip, a menu and its submenus, a select's list, and the docked date picker's calendar. The overlay shows in the top layer but sits in the app's markup, where a card or a row around it may handle clicks of its own. Keys go on, for Escape. Core can't stop them: frameworks such as React handle events at the app's root, so a native `stopPropagation()` in the overlay would hide every click in it from the app. Core names the events (`OVERLAY_PRESS_EVENTS`); Vue stops each on the overlay's root with `v-on="keepPresses"`, and a React adapter would stop React's events on the overlay's root.
 - **`open` stays the adapter's,** with one limit. The adapter calls `show()` and `hide()`, and `onClose(reason)` tells it when an overlay closes or asks to close on its own:
   - `'escape'`: Escape, or the back gesture on a dialog. This one is a request: the overlay is still open, and the adapter can turn it down, as a dialog with unsaved changes might.
   - `'dismiss'`: the browser closed it, after a click outside or another popover or modal dialog opening. A closing popover's `beforetoggle` can't be canceled, so this can't be stopped.
@@ -294,7 +381,19 @@ A helper moves up only when a second caller actually needs it.
 - Rename on the way up. A short local name like `kebab` becomes `kebabCase` once it's shared.
 - Helpers are not public API. Functions users call, such as `colorVar` and `elevationVar`, live in their feature folder and are exported from `index.ts`. Helpers never are.
 - Helpers are pure functions. Nothing in `utils/` or `shared` touches the DOM or a framework. DOM behaviors are primitives.
+- A helper may keep what it made for the next call with the same arguments, as `utils/intl.ts` keeps `Intl` formats; what it returns stays the same.
 - Helpers get tests, next to the source like everything else.
+
+## Ported code
+
+Where the spec has no web version and Google's implementation is open source, Rio may port it rather than write its own. The shape library is one: `core/src/primitives/shapes/` is androidx graphics-shapes and Compose Material3's `MaterialShapes`, in TypeScript.
+
+- **One commit.** Port from one androidx commit (`079e2e3` today), and link the files at it. Moving to a newer one moves every ported file and the goldens together.
+- **The original's structure inside, Rio's API outside.** Each of the original's files becomes one file (all but `Format.kt`, which only formats debug output), internals and classes included, so a change upstream can be followed line by line. What is exported turns into plain data and functions (`createMorph` for `Morph`, `roundedPolygon` for `RoundedPolygon`'s constructors). Since the files hold internals too, `index.ts` exports from them by name, never with `export *`.
+- **Each file says where it came from**: the original file and commit, its copyright line ("Copyright 2022 The Android Open Source Project"), the Apache License 2.0, and after "Changed:", what Rio changed. `NOTICE` credits the projects ported.
+- **Numbers are 64-bit.** Android computes in 32-bit Floats; the port doesn't imitate their rounding. Where that changes the outcome, it follows what the original's code and comments mean.
+- **The original's bugs are fixed where its intent is clear**, with a comment at the spot that says what the original does and what Rio does instead, and a line in the file's header. Differences a user could see are listed in `foundations.md`.
+- **Tested against the original's output** (see Goldens). Tests ported from the original sit next to the code, as Rio's own do.
 
 ## Code style
 
@@ -318,7 +417,7 @@ In all of them, keep three kinds of statements apart and label them:
 - **Recommendations**: guidance prose on m3.material.io (dos, don'ts, "should").
 - **In Rio**: what Rio decides on top, with the reason.
 
-From Compose Material3, use only the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never rely on `private` or `internal` code, and link the files at the androidx commit you read.
+From Compose Material3, take what the spec says only from the public interface: signatures, `*Defaults` objects, `tokens/*.kt`, and public KDoc and samples. Never present `private` or `internal` code as the spec. Where the spec leaves something out that only Compose's implementation has, such as the loading indicator's motion, Rio may follow it as its own choice: say so under In Rio. Either way, link the files at the androidx commit you read.
 
 Rio's defaults follow the spec. Recommendations become options or component-level practice, and never quietly change a default. Never present a Rio decision as the spec. Where Rio goes against the spec or a recommendation, mark the spot with a quoted note that starts with **Deviation from the spec.** or **Deviation from a recommendation.**, and say what Rio does instead and why. See the ripple's touch delay in `docs/foundations.md`, section 6.
 
@@ -366,6 +465,15 @@ Vitest runs three projects, configured in the root `vitest.config.ts`:
 - Assert exact values for anything transcribed from a spec, and keep a second copy of the spec values in the test, written independently of the source (see `elevation.test.ts`). A typo in the source then fails the test instead of slipping through.
 - Use snapshots for output too large to write by hand (see `color.test.ts`). Snapshots live in `__snapshots__/` next to the test and are committed.
 - Review snapshot diffs like code. An unexpected diff after a dependency upgrade, such as MCU, is a regression until proven otherwise. Update snapshots with `pnpm test --run -u` only when the change is intended.
+
+### Goldens
+
+Ported code is tested against what the original returns. `scripts/shapes-goldens/` is a Kotlin program that runs graphics-shapes 1.1.0 on the JVM (its code matches the commit Rio ports) and Compose's `MaterialShapes` on fixed inputs, and writes their output to `packages/core/src/primitives/shapes/__goldens__/*.json`. `goldens.test.ts` builds the same inputs with the port and compares.
+
+- The goldens are committed and only read: neither CI nor `pnpm test` needs a JVM. Regenerate them, with JDK 21, when the port moves to another commit or for new cases (`scripts/shapes-goldens/README.md`).
+- Compare within 1e-4, since Kotlin computes in 32-bit Floats.
+- A case where the port differs on purpose stays in the goldens, and the test checks it against something else, such as `DEVIATIONS` and `TIED_MORPHS` in `goldens.test.ts`; it is never dropped.
+- oxfmt skips `__goldens__/` (`ignorePatterns` in `.oxfmtrc.json`).
 
 ### Rendering and behavior
 
@@ -427,7 +535,7 @@ Each version goes to npm and to a GitHub release, as the same four tarballs. The
 
 - **Versions move together.** Every published package under `packages/` has the same version, and the tag is that version with a `v` (`v0.1.0`). Private packages, such as `testing`, keep `0.0.0`; the release scripts skip them. Before 1.0, a minor version may break the API.
 - **CHANGELOG.md** gets a `## [x.y.z] - date` section for each release, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, plus a link reference at the bottom. The release notes are that section, followed by a `pnpm add` line.
-- **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`. That's why `NOTICE` is in each package's `files`.
+- **Tarballs** come from `pnpm release:pack`, which builds and packs each package into `release/`. Each tarball carries the repository's `LICENSE` and `NOTICE`, which Apache-2.0 requires with every copy; the NOTICE also credits material-color-utilities, bundled in `@rio-m3e/tokens`, and the androidx code ported into `@rio-m3e/core`. That's why `NOTICE` is in each package's `files`.
 - **Preview the notes** with `pnpm release:notes v0.1.0`. The script fails if a package's version doesn't match the tag or the changelog has no section for it.
 - **npm publishing is trusted publishing** (OIDC) from `.github/workflows/publish.yml`. No npm token is stored anywhere, and npm attaches provenance, which needs the `repository` field in each `package.json`. `publishConfig.access` is `public` because scoped packages are private by default.
 

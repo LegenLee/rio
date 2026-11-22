@@ -17,7 +17,8 @@
 //
 // A drag can take manual control with `hold()` and give it back with `release(velocity)`.
 
-import { createSpring, prefersReducedMotion, readSpringParams } from '../spring/spring';
+import { prefersReducedMotion } from '../reduced-motion/reduced-motion';
+import { createSpring, readSpringParams } from '../spring/spring';
 
 export interface SpringPropertyOptions {
   /**

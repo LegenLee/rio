@@ -10,7 +10,8 @@ import {
 import '@rio-m3e/styles/base/anchored-position.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/menu.css';
-import { onBeforeUnmount, onMounted, provide, useTemplateRef, watch } from 'vue';
+import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue';
+import { keepPresses } from '../overlay/presses';
 import { menuContextOf, menuKey } from './context';
 
 // `v-model` without an argument binds `modelValue`; core calls the same thing `selected`.
@@ -37,6 +38,8 @@ defineSlots<{
   default?: () => unknown;
 }>();
 
+/** The inactive shape, with another open menu of its tree active */
+const inactive = ref(false);
 const menu = createMenu({
   // `satisfies` fails the build if a prop added to MenuProps is missing here.
   props: () =>
@@ -53,6 +56,7 @@ const menu = createMenu({
     }) satisfies Record<keyof MenuProps, unknown>,
   onChange: (selected) => emit('update:modelValue', selected),
   onOpenChange: (next) => emit('update:open', next),
+  inactive: () => inactive.value,
 });
 
 provide(menuKey, menuContextOf(menu));
@@ -68,6 +72,7 @@ onMounted(() => {
     anchor: anchorTarget,
     props: () => ({ side, align, offset }),
     onClose: () => emit('update:open', false),
+    onInactiveChange: (next) => (inactive.value = next),
   });
   handle.sync(!!open);
 });
@@ -94,7 +99,7 @@ onBeforeUnmount(() => handle?.detach());
 </script>
 
 <template>
-  <div ref="root" v-bind="menu.parts.root()">
+  <div ref="root" v-bind="menu.parts.root()" v-on="keepPresses">
     <slot />
   </div>
 </template>

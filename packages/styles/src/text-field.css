@@ -160,7 +160,11 @@
 
 /* Disabled */
 .rio-text-field[data-disabled] {
-  --_label: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_label: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_input: var(--_label);
   --_affix: var(--_label);
   --_icon: var(--_label);
@@ -203,7 +207,7 @@
 
 /*
  * A text area can be made taller from the corner, but never shorter than its rows:
- * `attachTextField` sets `--rio-text-field-rows`, and the content's padding is 32px in all.
+ * the container's part sets `--rio-text-field-rows`, and the content's padding is 32px in all.
  */
 .rio-text-field[data-multiline] .rio-text-field__container {
   min-block-size: calc(var(--rio-text-field-rows, 3) * 1lh + 32px);

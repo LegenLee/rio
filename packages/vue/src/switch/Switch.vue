@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { attachRipple, attachSwitchHandle, createSwitch, type SwitchProps } from '@rio-m3e/core';
+import {
+  attachCheckable,
+  attachSwitchHandle,
+  createSwitch,
+  mergePartAttrs,
+  type CheckableHandle,
+  type SwitchProps,
+} from '@rio-m3e/core';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
 import '@rio-m3e/styles/switch.css';
-import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, onUpdated, useTemplateRef } from 'vue';
+import { useRipple } from '../ripple/ripple';
+
+// `class` and `style` dress the whole switch; every other attribute, such as `id`, `name`,
+// `value`, `required`, or `aria-label`, and every listener belongs to the input.
+defineOptions({ inheritAttrs: false });
 
 const { selected, disabled, softDisabled } = defineProps<SwitchProps>();
 const emit = defineEmits<{ 'update:selected': [selected: boolean] }>();
@@ -15,7 +27,11 @@ const slots = defineSlots<{
   'unselected-icon'?: () => unknown;
 }>();
 
-const onChange = (next: boolean) => emit('update:selected', next);
+const onChange = (next: boolean) => {
+  emit('update:selected', next);
+  // The input shows the app's state again, whether or not it followed.
+  void nextTick(() => checkable?.sync());
+};
 const sw = createSwitch({
   // `satisfies` fails the build if a prop added to SwitchProps is missing here.
   props: () => ({ selected, disabled, softDisabled }) satisfies Record<keyof SwitchProps, unknown>,
@@ -26,23 +42,35 @@ const sw = createSwitch({
   onChange,
 });
 
-const root = useTemplateRef<HTMLButtonElement>('root');
+const root = useTemplateRef<HTMLSpanElement>('root');
+const input = useTemplateRef<HTMLInputElement>('input');
 const state = useTemplateRef<HTMLSpanElement>('state');
+useRipple(input, state);
+let checkable: CheckableHandle | undefined;
 let handles: { detach(): void }[] = [];
 
 onMounted(() => {
+  checkable = attachCheckable(input.value!, {
+    checked: () => !!selected,
+    blocked: sw.blocked,
+    onChange,
+  });
   handles = [
-    attachRipple(root.value!, { surface: state.value! }),
-    attachSwitchHandle(root.value!, { selected: () => selected, onChange }),
+    checkable,
+    attachSwitchHandle(root.value!, { input: input.value!, selected: () => !!selected, onChange }),
   ];
 });
-
+onUpdated(() => checkable?.sync());
 onBeforeUnmount(() => handles.forEach((handle) => handle.detach()));
 </script>
 
 <template>
-  <button ref="root" v-bind="sw.parts.root()" @click="sw.handleClick">
-    <span v-bind="sw.parts.touch()" />
+  <span ref="root" v-bind="sw.parts.root()" :class="$attrs.class" :style="$attrs.style">
+    <input
+      ref="input"
+      v-bind="mergePartAttrs({ ...$attrs, class: undefined, style: undefined }, sw.parts.input())"
+      @keydown="sw.handleKeydown"
+    />
     <span ref="state" v-bind="sw.parts.state()" />
     <span v-bind="sw.parts.handle()">
       <span v-if="sw.showsIcon()" v-bind="sw.parts.icon()">
@@ -50,5 +78,5 @@ onBeforeUnmount(() => handles.forEach((handle) => handle.detach()));
         <slot v-else name="unselected-icon" />
       </span>
     </span>
-  </button>
+  </span>
 </template>

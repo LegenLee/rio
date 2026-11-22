@@ -160,7 +160,7 @@ Each token becomes three CSS variables. The names don't include the scheme.
 | `--rio-motion-fast-spatial-damping`   | `0.6`                                       | The raw spring, for the spring solver                                                                   |
 | `--rio-motion-fast-spatial-stiffness` | `800`                                       | The raw spring, for the spring solver                                                                   |
 
-- The theme picks the scheme: `applyTheme(el, { sourceColor, motion: 'standard' })`.
+- The theme picks the scheme: `createRio({ theme: { sourceColor, motion: 'standard' } })`.
 - **Rio defaults to `'expressive'`.** The spec itself names no default scheme. Rio follows the recommendation here because it is an M3E library.
 - Because the names are shared, a subtree can switch schemes by overriding the variables, the same way Compose swaps the motion scheme for one element.
 - **The standard spatial springs are always there too**, whatever the theme's scheme: `--rio-motion-standard-{fast|default|slow}-spatial-{damping|stiffness}`. A few components use the standard scheme by spec, such as the split button's menu icon, and read these.
@@ -170,8 +170,8 @@ Each token becomes three CSS variables. The names don't include the scheme.
   - `createSpring()` animates a number with `requestAnimationFrame`. A new target takes over from the current position and velocity, so an interrupted press reverses without a jolt.
   - `readSpringParams(el, token)` reads a token's spring from the element's `-damping` and `-stiffness` variables. Reading from CSS lets a subtree that swaps schemes change its springs too, and keeps `core` independent of `tokens`.
   - `attachSpringProperty(el, { target, apply })` is the general form. The stylesheet declares a target length or angle for each state in a registered custom property, and the spring follows it whenever it changes. The stylesheet also gives the target an instant transition, so while the element is rendered the browser reports every change as a transition event, whatever caused it: a state attribute, `:hover`, a theme applied after the components mounted, or a change of position in a group. A change made while the element isn't rendered is caught up when it shows again. So the spring starts from what is on screen. If the app's CSS replaces the element's `transition` list, the spring stays still and the stylesheet's value shows; to add transitions to a Rio element that springs, end the list with `var(--rio-spring-targets)`, for example `transition: opacity 200ms, var(--rio-spring-targets)`. Those elements are the button, the icon button, the switch, and the split button's two buttons (`.rio-split-button__leading` and `.rio-split-button__trailing`). Don't use it anywhere else, such as on a button group or on the split button's root: the variable isn't defined there, so the whole `transition` declaration would be dropped. A drag can take over with `hold()` and hand back with `release(velocity)`.
-  - A theme applied after the components mounted moves their targets once, so shapes spring into place at load. Apply the theme before mounting (`applyTheme` before `mount`, or `createThemeCss` in a stylesheet) to avoid it.
-  - `attachShapeMorph(el)` uses it for the corner radius, toward the `--rio-shape-morph-target` its stylesheet declares (`@rio-m3e/styles/base/shape-morph.css`). The start and end sides spring separately, so a stylesheet can give them different targets (`--rio-shape-morph-start-target` and `-end-target`), as the connected button group does. The button uses it for its press and selection shapes.
+  - A theme applied after the components mounted moves their targets once, so shapes spring into place at load. Apply the theme before mounting (`createRio`, which writes it as the app installs Rio, or `createThemeCss` in a stylesheet) to avoid it.
+  - `attachCornerMorph(el)` uses it for the corner radius, toward the `--rio-corner-morph-target` its stylesheet declares (`@rio-m3e/styles/base/corner-morph.css`). The start and end sides spring separately, so a stylesheet can give them different targets (`--rio-corner-morph-start-target` and `-end-target`), as the connected button group does; with `axis: 'block'`, the sides are the top and the bottom, as for a segmented list's ends. The button uses it for its press and selection shapes.
   - The button group uses `createSpring` directly for the pressed button's width and its neighbors'.
   - The switch uses it for its handle's position and size, and `attachDrag` lets touch and pen drag the handle. The spring then starts at the finger's speed.
   - The split button uses it for its menu icon's turn and offset, on the standard scheme's `fast-spatial` spring.
@@ -186,7 +186,8 @@ Each token becomes three CSS variables. The names don't include the scheme.
 - Spatial motion moves things: position, size, rotation, and corner radius. Movement and overshoot are what reduced motion is meant to prevent, so they go.
 - Effects motion changes color and opacity. Short fades don't cause that discomfort, so they stay. This matches iOS's Reduce Motion, which keeps crossfades. Android's "Remove animations" goes further and drops everything.
 - Switching to the standard scheme was considered and rejected. Standard still moves and still overshoots slightly (y 1.06), and the spec presents it as a product style, not an accessibility mode.
-- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. The ripple applies the same rule in JavaScript: it skips the growing wave and keeps the fade. `attachShapeMorph` jumps straight to its target.
+- **Implementation**: `@rio-m3e/styles/base/reduced-motion.css` sets the three spatial tokens and their `-duration` parts to `0ms` on every element, with `!important`. That beats the inline theme variables and any subtree that swaps schemes. Components that use motion tokens import it. In JavaScript, `prefersReducedMotion()` from `@rio-m3e/core` applies the same rule: the ripple skips the growing wave and keeps the fade, `attachCornerMorph` jumps straight to its target, and a wavy progress indicator's wave holds still.
+- **Indeterminate indicators keep moving**: the progress indicators and the loading indicator. That movement is what says the process is going on, so taking it away would take away what they mean. The loading indicator's morphs stop overshooting.
 
 ## 4. Shape corners with a radius scale
 
@@ -225,9 +226,25 @@ The scale has ten steps, named for how rounded the corner is. Three of them (`la
 - Each step is a CSS variable: `--rio-shape-corner-<step>`, for example `--rio-shape-corner-medium`.
 - `full` is `9999px`, the same value as Material Web's token. It works for static shapes but animates badly: a transition from `9999px` to `12px` stays fully round until the very end. Components that morph between `full` and another step must use half their height instead.
 - The partial tokens need no extra variables. Components set individual corners with logical properties such as `border-start-start-radius`, so shapes also flip correctly in right-to-left layouts.
-- **Resizing a step**: `applyTheme(el, { sourceColor, shapes: { medium: 16 } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
+- **Resizing a step**: `createRio({ theme: { sourceColor, shapes: { medium: 16 } } })`. Only the eight middle steps can be resized; `none` and `full` are fixed, as in Compose's `Shapes`.
 - **Remapping a component** will be a component-level variable, defined with each component.
-- The shape library and shape morphing are out of scope for v0.1. The press effect on M3E buttons is a corner radius animation, which CSS handles.
+- The press effect on M3E buttons is a corner radius animation, which CSS handles.
+
+#### The shape library and shape morphing
+
+The spec has no web version, so Rio ports Google's own: androidx graphics-shapes, the engine behind Compose's shapes, and Compose Material3's `MaterialShapes`, at androidx `079e2e3`. It is in `@rio-m3e/core`, and the loading indicator is built on it.
+
+- **The 35 shapes by name**: `materialShape('cookie-9-sided')`, with the names in `MATERIAL_SHAPES`. Shapes of your own come from `roundedPolygon`, `circlePolygon`, `rectanglePolygon`, `starPolygon`, `pillPolygon`, `pillStarPolygon`, and `polygonFromFeatures`, or from an SVG path with `featuresFromSvgPath`. `serializeFeatures` and `parseFeatures` keep a shape's features as text.
+- **Morphs**: `createMorph(start, end)` gives the shape in between at any progress, as cubics (`cubics(progress)`), and `cubicsPath(cubics)` writes cubics as SVG path data, for a `<path>`'s `d` or CSS's `path()`.
+- **Plain data and functions** (Rio's choice): a polygon is a plain object and a cubic a tuple of eight numbers, and where the original has classes and methods, Rio has functions, such as `transformPolygon`, `normalizePolygon`, and `polygonBounds`. Inside, the port keeps the original's structure.
+- **Checked against the original**: the tests compare the port with what the original library returns on the JVM, within 1e-4, for the shape functions with a range of options, the 35 shapes, morphs (the loading indicator's frame by frame), SVG paths, and serialization. See [conventions.md](conventions.md).
+- **It differs from Android** where Android's 32-bit numbers or the original's bugs change the outcome. Rio computes in 64 bits without imitating 32-bit rounding, and follows what the original's code and comments mean:
+  - A morph can pair two shapes' corners differently where two candidates are equal in theory: in 32 bits they come out equal and the original keeps their order, while in 64 bits rounding tells them apart. The start and end shapes are the same, but the shapes in between differ, as from a triangle to a square.
+  - A corner on a straight line between its neighbors, as two of the pixel circle's, is convex or not by rounding, and a morph pairs it accordingly, so the shapes in between can differ, as from a heart to a pixel circle.
+  - A 90° SVG arc becomes 2 cubics, as the original's comment means; Android's comes out a little over 90° and takes 3.
+  - `pillStarPolygon` with a `startLocation` above 0 places the vertices past the start where they belong.
+  - `featuresFromSvgPath` keeps the last side of the first shape in a path of several; turns quadratic curves (`Q`, `T`) into cubics exactly, as SVG defines them; reflects a `T` or `S` after `Z` from the current point; keeps the first corner of a path that starts with an empty segment; and finds corners and their convexity by how the path turns, also where a curve's control points sit on its ends, as when a tool draws a straight line as a curve.
+  - `serializeFeatures` writes numbers in full and never with an exponent, which the original's `parseFeatures` would misread.
 
 ## 5. Set text with a type scale
 
@@ -294,7 +311,7 @@ Each style becomes six CSS variables, and the emphasized set uses the spec's `em
 
 - **The default value is `Roboto, system-ui, sans-serif`.** The fallbacks aren't in the spec. They are there because Roboto may not be loaded on the web, and CSS expects a generic family at the end of `font-family`.
 - Rio doesn't load any font itself. Load Roboto in the app; otherwise the system font is used.
-- Override with `applyTheme(el, { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } })`.
+- Override with `createRio({ theme: { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } } })`.
 
 ### 5.3 Language height (not implemented yet)
 
@@ -396,10 +413,12 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 ### In Rio
 
 - Each token is a CSS variable with the same name: `--rio-state-hover-state-layer-opacity`, `--rio-state-focus-indicator-thickness`, and so on. They are part of the theme variables.
+- **Every disabled 38% reads `--rio-state-disabled-state-layer-opacity`** (Rio's choice): labels, icons, outlines, handles, tracks, and some containers, such as a checked checkbox's, in every component, so a theme changes them all at once. Where a component's tokens give another disabled opacity, such as 12% for a chip's outline or a switch's track, 4% for a filled text field's container, and 10% for a button's container, it stays a number.
 - **`@rio-m3e/styles/base/state-layer.css`**: the class `rio-state-layer` draws the overlay with `currentColor`, so a component sets its content color and the layer follows. The overlay sits on a `::before` with `z-index: -1` inside an isolated element, which places it between the container and the content. Later rules win, so only one state shows: pressed beats focus, and focus beats hover.
 - Hover applies only under `@media (hover: hover)`, because touch screens keep `:hover` after a tap.
 - The fade uses the `fast-effects` motion token, following the low-emphasis fade recommendation with the spec's token for opacity changes.
-- **`@rio-m3e/styles/base/focus-ring.css`**: the class `rio-focus-ring` draws an `outline` on `:focus-visible`, so only keyboard-style focus shows it. The color defaults to `secondary` and can be changed through `--rio-focus-ring-color`. `data-focus-ring="inner"` uses the inner offset.
+- **`@rio-m3e/styles/base/focus-ring.css`**: the class `rio-focus-ring` draws an `outline` on `:focus-visible`, so only keyboard-style focus shows it. The color defaults to `secondary` and can be changed through `--rio-focus-ring-color`. `data-focus-ring="inner"` uses the inner offset. Where the ring goes round another element than the one with the focus, as a checkbox's circle while its hidden input has it, that element carries `rio-focus-ring-target`: the base stylesheet gives it the ring's width, color, and offset, and the component's stylesheet only sets `outline-style: solid` while the focus is where it rings for. The checkbox, the radio button, the switch, the input chip, the slider's handles, the scroll field while typing, and the list item draw it so.
+- **`@rio-m3e/styles/base/touch-target.css`**: the class `rio-touch-target`, on an empty element inside a pressable one, takes presses at least 48 × 48px around the element's center, so a smaller element still has the 48dp target. Buttons, chips, and the time picker's period buttons render it as their `touch` parts.
 - **Ripple**: `attachRipple(el)` from `@rio-m3e/core` adds a press ripple to any element, like Flutter's InkWell. `@rio-m3e/styles/base/ripple.css` draws it on every element the primitive marks with `data-ripple`, so no class is needed.
   - In Vue, use the `v-ripple` directive (`vRipple` from `@rio-m3e/vue`), which also loads the stylesheet. `v-ripple="false"` turns it off.
   - **It only draws the ripple.** It doesn't make an element pressable: put it on a `button` or a link, or give the element a role, focusability, and keyboard handling yourself. Making things pressable is the job of components such as the button.
@@ -420,15 +439,15 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 
 | Item                                               | Package                 | Status                                                                                                                                                                  |
 | -------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `applyTheme`, `createThemeCss`                                                                                                               |
-| Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`applyTheme`, `createThemeCss`).                                                |
+| Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `attachTheme`, `createThemeCss`                                                                                                              |
+| Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`attachTheme`, `createThemeCss`).                                               |
 | Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
 | Spring solver (handles interruptions and gestures) | `core`, `tokens`        | Done: `solveSpring`, `createSpring`, `readSpringParams`, and the `-damping` and `-stiffness` motion variables.                                                          |
-| Shape morph (corner radius)                        | `core`, `styles`        | Done: `attachShapeMorph`, `base/shape-morph.css`, built on `attachSpringProperty`.                                                                                      |
+| Corner morph (corner radius)                       | `core`, `styles`        | Done: `attachCornerMorph`, `base/corner-morph.css`, built on `attachSpringProperty`.                                                                                    |
 | Drag                                               | `core`                  | Done: `attachDrag` (touch and pen by default, threshold, release velocity, click swallowing).                                                                           |
 | Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
-| Shape: shape library and morphing                  | —                       | Not planned for v0.1. The spec lists it as unavailable on the web.                                                                                                      |
+| Shape: shape library and morphing                  | `core`                  | Done: `materialShape`, the polygon functions, `createMorph`, `featuresFromSvgPath`, and `cubicsPath`, ported from androidx graphics-shapes. See section 4.              |
 | Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
 | Typography: language height                        | `tokens`                | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
 | Typography: variable font axes                     | `tokens`                | Not yet. See section 5.4.                                                                                                                                               |
@@ -466,6 +485,10 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 ### Implementation reference (not spec)
 
 - [Material Web `ripple/internal/ripple.ts` and `_ripple.scss` @ d872455](https://github.com/material-components/material-web/tree/d872455c4be56022da2095349b30ef46e0b55bc3/ripple/internal): Google's web ripple. Rio's `attachRipple` follows its behavior (touch delay, minimum press time, keyboard ripple, growth and fade timings) with its own code and structure.
+
+### Ported code (not spec)
+
+- [androidx graphics-shapes @ 079e2e3](https://github.com/androidx/androidx/tree/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/graphics/graphics-shapes/src/commonMain/kotlin/androidx/graphics/shapes) and Compose Material3's [`MaterialShapes.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/MaterialShapes.kt) at the same commit, Apache-2.0: ported to `@rio-m3e/core` as Rio's shape library. The tests compare it with graphics-shapes 1.1.0, whose code matches that commit.
 
 ### Design reference (not spec)
 

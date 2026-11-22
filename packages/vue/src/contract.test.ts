@@ -6,11 +6,23 @@ import {
   buttonLinkSkeleton,
   buttonSkeleton,
   calendarSkeleton,
+  createList,
+  createListItem,
+  listItemActionSkeleton,
+  listItemSkeleton,
+  listSkeleton,
+  type ListItemProps,
+  type ListProps,
+  createDateRangePickerDialog,
+  createRangeCalendar,
+  dateRangePickerDialogSkeleton,
+  initialDateRangePickerState,
+  rangeCalendarSkeleton,
   checkboxSkeleton,
   createCalendar,
   createDatePicker,
   createTimePicker,
-  initialTimeState,
+  initialTimePickerState,
   timePickerDialogSkeleton,
   timePickerSkeleton,
   type PartAttrs,
@@ -20,7 +32,7 @@ import {
   createDatePickerDialog,
   datePickerDialogSkeleton,
   datePickerSkeleton,
-  initialPickerState,
+  initialDatePickerState,
   messagesFor,
   dialogSkeleton,
   createButton,
@@ -38,6 +50,43 @@ import {
   createSelectOption,
   createSubMenu,
   createSwitch,
+  circularProgressSkeleton,
+  createCircularProgress,
+  createLinearProgress,
+  createLoadingIndicator,
+  linearProgressSkeleton,
+  loadingIndicatorSkeleton,
+  type CircularProgressProps,
+  type LinearProgressProps,
+  type LoadingIndicatorProps,
+  actionChipLinkSkeleton,
+  actionChipSkeleton,
+  chipSetSkeleton,
+  createAssistChip,
+  createChipSet,
+  createFilterChip,
+  createInputChip,
+  createSuggestionChip,
+  filterChipSkeleton,
+  inputChipRemoveOnlySkeleton,
+  inputChipSkeleton,
+  type ActionChipContent,
+  type AssistChipProps,
+  type FilterChipContent,
+  type FilterChipProps,
+  type InputChipContent,
+  type InputChipProps,
+  createRangeSlider,
+  createScrollField,
+  createSlider,
+  rangeSliderSkeleton,
+  scrollFieldSkeleton,
+  sliderSkeleton,
+  type RangeSliderProps,
+  type SliderContent,
+  type ScrollFieldProps,
+  type ScrollFieldValue,
+  type SliderProps,
   createTextField,
   createTooltip,
   createSplitButton,
@@ -85,16 +134,21 @@ import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { userEvent } from 'vitest/browser';
-import { createApp, h } from 'vue';
+import { createApp, defineComponent, h } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
 import Checkbox from './checkbox/Checkbox.vue';
 import DatePicker from './date-picker/DatePicker.vue';
 import DatePickerCalendar from './date-picker/DatePickerCalendar.vue';
 import DatePickerDialog from './date-picker/DatePickerDialog.vue';
+import DateRangeCalendar from './date-picker/DateRangeCalendar.vue';
+import DateRangePickerDialog from './date-picker/DateRangePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
+import List from './list/List.vue';
+import ListItem from './list/ListItem.vue';
 import Menu from './menu/Menu.vue';
+import ScrollField from './scroll-field/ScrollField.vue';
 import MenuDivider from './menu/MenuDivider.vue';
 import MenuGroup from './menu/MenuGroup.vue';
 import MenuItem from './menu/MenuItem.vue';
@@ -105,9 +159,20 @@ import Select from './select/Select.vue';
 import SelectOption from './select/SelectOption.vue';
 import SplitButton from './split-button/SplitButton.vue';
 import Switch from './switch/Switch.vue';
+import CircularProgress from './progress/CircularProgress.vue';
+import LinearProgress from './progress/LinearProgress.vue';
+import LoadingIndicator from './loading-indicator/LoadingIndicator.vue';
+import AssistChip from './chip/AssistChip.vue';
+import ChipSet from './chip/ChipSet.vue';
+import FilterChip from './chip/FilterChip.vue';
+import InputChip from './chip/InputChip.vue';
+import SuggestionChip from './chip/SuggestionChip.vue';
+import RangeSlider from './slider/RangeSlider.vue';
+import Slider from './slider/Slider.vue';
 import TextField from './text-field/TextField.vue';
 import TimeInput from './time-picker/TimeInput.vue';
 import TimePickerDialog from './time-picker/TimePickerDialog.vue';
+import TimeScroll from './time-picker/TimeScroll.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -220,6 +285,304 @@ describe('RioSwitch', () => {
     // When the icon part renders, which icon fills it is core's call too.
     const icon = findPart(rootOf(screen), switchSkeleton, 'icon', api);
     if (icon) expect(icon.textContent).toBe(api.showsSelectedIcon() ? '✓' : '✕');
+  });
+});
+
+describe('RioSlider', () => {
+  const none = { icon: false };
+  const icon = { icon: true };
+
+  test.each<[string, Omit<SliderProps, 'value'> & { modelValue?: number }, SliderContent]>([
+    ['by default', {}, none],
+    ['with stops', { modelValue: 30, stops: true, step: 10 }, none],
+    ['centered', { modelValue: 20, centered: true, min: -50, max: 50 }, none],
+    ['centered, with an icon it doesn’t show', { centered: true, size: 'large' }, icon],
+    ['extra small, with an icon it doesn’t show', {}, icon],
+    [
+      'vertical and large, with the value indicator',
+      { vertical: true, size: 'large', valueIndicator: true, modelValue: 70 },
+      none,
+    ],
+    ['medium, with an inset icon', { size: 'medium', modelValue: 50 }, icon],
+    ['disabled', { disabled: true, modelValue: 40 }, none],
+    ['soft-disabled', { softDisabled: true }, none],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, and format',
+      {
+        min: 10,
+        max: 90,
+        step: 5,
+        size: 'small',
+        modelValue: 40,
+        format: (value: number) => `${value}%`,
+      },
+      none,
+    ],
+  ])('%s', async (_, { modelValue, ...props }, content) => {
+    const screen = await render(Slider, {
+      props: { modelValue, ...props },
+      slots: content.icon ? { icon: () => '♪' } : {},
+    });
+    const api = createSlider({
+      props: () => ({ ...props, value: modelValue }),
+      content: () => content,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), sliderSkeleton, api);
+    const indicator = findPart(rootOf(screen), sliderSkeleton, 'valueIndicator', api);
+    if (indicator) expect(indicator.textContent).toBe(api.valueText());
+  });
+});
+
+describe('RioRangeSlider', () => {
+  const messages = () => messagesFor('en').slider;
+
+  test.each<[string, Omit<RangeSliderProps, 'value'> & { modelValue?: [number, number] }]>([
+    ['by default', {}],
+    ['with stops and a name', { modelValue: [20, 60], stops: true, step: 10, name: 'price' }],
+    [
+      'vertical and extra large, with the value indicators',
+      { vertical: true, size: 'xlarge', valueIndicator: true, modelValue: [5, 95] },
+    ],
+    ['disabled', { disabled: true }],
+    ['soft-disabled', { softDisabled: true, modelValue: [30, 30] }],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, and format',
+      {
+        min: -10,
+        max: 10,
+        step: 0.5,
+        size: 'medium',
+        modelValue: [-2.5, 4],
+        format: (value: number) => `${value}°`,
+      },
+    ],
+  ])('%s', async (_, { modelValue, ...props }) => {
+    const screen = await render(RangeSlider, {
+      props: { locale: 'en-US', modelValue, ...props },
+    });
+    const api = createRangeSlider({
+      props: () => ({ locale: 'en-US', ...props, value: modelValue }),
+      messages,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), rangeSliderSkeleton, api);
+    const start = findPart(rootOf(screen), rangeSliderSkeleton, 'startValueIndicator', api);
+    if (start) expect(start.textContent).toBe(api.valueText(0));
+    const end = findPart(rootOf(screen), rangeSliderSkeleton, 'endValueIndicator', api);
+    if (end) expect(end.textContent).toBe(api.valueText(1));
+  });
+});
+
+describe.each([
+  ['RioAssistChip', AssistChip, createAssistChip],
+  ['RioSuggestionChip', SuggestionChip, createSuggestionChip],
+] as const)('%s', (_, Chip, create) => {
+  test.each<[string, AssistChipProps, ActionChipContent]>([
+    ['plain', {}, { icon: false }],
+    ['elevated, with an icon', { elevated: true }, { icon: true }],
+    ['a link', { href: '#here' }, { icon: true }],
+    ['a disabled link', { href: '#here', disabled: true }, { icon: false }],
+    ['a soft-disabled link', { href: '#here', softDisabled: true }, { icon: false }],
+    ['disabled', { disabled: true }, { icon: true }],
+    ['soft-disabled', { softDisabled: true }, { icon: false }],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(Chip, {
+      props,
+      slots: { default: () => 'Book', ...(content.icon ? { icon: () => h('svg') } : {}) },
+    });
+    const api = create({ props: () => props, content: () => content, onClick: noop });
+    expectSkeleton(rootOf(screen), api.isLink() ? actionChipLinkSkeleton : actionChipSkeleton, api);
+  });
+});
+
+describe('RioFilterChip', () => {
+  const all = { icon: true, selectedIcon: true, dropdownIcon: true };
+  const none = { icon: false, selectedIcon: false, dropdownIcon: false };
+
+  test.each<[string, FilterChipProps, FilterChipContent]>([
+    ['unselected, with every icon', {}, all],
+    ['selected, with every icon', { selected: true }, all],
+    ['selected, without a selected icon', { selected: true }, { ...none, icon: true }],
+    ['a menu chip, open', { menu: true, open: true, selected: true }, all],
+    ['elevated and disabled', { elevated: true, disabled: true, selected: true }, none],
+    ['soft-disabled, with a value', { softDisabled: true, value: 'a' }, all],
+  ])('%s', async (_, props, content) => {
+    const screen = await render(FilterChip, {
+      props,
+      slots: {
+        default: () => 'Wi-Fi',
+        ...(content.icon ? { icon: () => 'i' } : {}),
+        ...(content.selectedIcon ? { 'selected-icon': () => '✓' } : {}),
+        ...(content.dropdownIcon ? { 'dropdown-icon': () => '▾' } : {}),
+      },
+    });
+    const api = createFilterChip({
+      props: () => props,
+      content: () => content,
+      onClick: noop,
+      onChange: noop,
+      onOpenChange: noop,
+    });
+    expectSkeleton(rootOf(screen), filterChipSkeleton, api);
+    // Which icon fills the icon part is core's call too.
+    const icon = findPart(rootOf(screen), filterChipSkeleton, 'icon', api);
+    if (icon) expect(icon.textContent).toBe(api.showsSelectedIcon() ? '✓' : 'i');
+  });
+});
+
+describe('RioInputChip', () => {
+  test.each<[string, InputChipProps & { locale?: string }, InputChipContent]>([
+    ['plain', {}, { icon: false, avatar: false }],
+    ['with an avatar over its icon', {}, { icon: true, avatar: true }],
+    ['with an icon, in Korean', { locale: 'ko' }, { icon: true, avatar: false }],
+    ['remove-only', { removeOnly: true }, { icon: false, avatar: false }],
+    ['disabled', { disabled: true }, { icon: false, avatar: true }],
+    ['soft-disabled', { softDisabled: true }, { icon: true, avatar: false }],
+  ])('%s', async (_, { locale = 'en', ...props }, content) => {
+    const screen = await render(InputChip, {
+      props: { ...props, locale },
+      slots: {
+        default: () => 'Ada',
+        'remove-icon': () => h('svg'),
+        ...(content.icon ? { icon: () => h('svg') } : {}),
+        ...(content.avatar ? { avatar: () => h('img') } : {}),
+      },
+    });
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const id = root.querySelector('.rio-chip__label')!.id.replace(/-label$/, '');
+    const api = createInputChip({
+      props: () => props,
+      content: () => content,
+      messages: () => messagesFor(locale).chip,
+      ids: {
+        label: `${id}-label`,
+        removeBefore: `${id}-remove-before`,
+        removeAfter: `${id}-remove-after`,
+      },
+      onClick: noop,
+      onRemove: noop,
+    });
+    expectSkeleton(root, api.isAction() ? inputChipSkeleton : inputChipRemoveOnlySkeleton, api);
+    const before = findPart(root, inputChipSkeleton, 'removeBefore', api);
+    if (before) expect(before.textContent).toBe(api.removeText().before);
+    const after = findPart(root, inputChipSkeleton, 'removeAfter', api);
+    if (after) expect(after.textContent).toBe(api.removeText().after);
+  });
+});
+
+describe('RioChipSet', () => {
+  test.each([
+    ['plain', {}],
+    [
+      'scrolling, with a selection',
+      { scroll: true, selection: 'multiple' as const, modelValue: ['a'] },
+    ],
+  ])('%s', async (_, props) => {
+    const screen = await render(ChipSet, {
+      props,
+      slots: { default: () => h(AssistChip, null, () => 'One') },
+    });
+    const { modelValue, ...rest } = props as { modelValue?: string[] };
+    const api = createChipSet({
+      props: () => ({ ...rest, selected: modelValue }),
+      tabStop: () => undefined,
+      onChange: noop,
+    });
+    expectSkeleton(rootOf(screen), chipSetSkeleton, api);
+  });
+});
+
+describe('RioLinearProgress', () => {
+  test.each<[string, LinearProgressProps]>([
+    ['determinate', { value: 0.4 }],
+    ['indeterminate', {}],
+    ['empty', { value: 0 }],
+    ['wavy and full', { value: 1, wavy: true }],
+    // Every non-boolean prop away from its default
+    ['with its own range and thickness, wavy', { value: 30, max: 120, thickness: 8, wavy: true }],
+  ])('%s', async (_, props) => {
+    const screen = await render(LinearProgress, { props });
+    const api = createLinearProgress({ props: () => props });
+    expectSkeleton(rootOf(screen), linearProgressSkeleton, api);
+  });
+});
+
+describe('RioLoadingIndicator', () => {
+  test.each<[string, LoadingIndicatorProps]>([
+    ['indeterminate', {}],
+    ['determinate and contained', { value: 0.5, contained: true }],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, and shapes',
+      { value: 1, max: 4, size: 96, shapes: ['heart', 'sunny'] },
+    ],
+  ])('%s', async (_, props) => {
+    const screen = await render(LoadingIndicator, { props });
+    const api = createLoadingIndicator({ props: () => props });
+    expectSkeleton(rootOf(screen), loadingIndicatorSkeleton, api);
+  });
+});
+
+describe('RioCircularProgress', () => {
+  test.each<[string, CircularProgressProps]>([
+    ['determinate', { value: 0.4 }],
+    ['indeterminate', {}],
+    ['wavy', { value: 0.6, wavy: true }],
+    // Every non-boolean prop away from its default
+    ['with its own range, thickness, and size', { value: 3, max: 4, thickness: 8, size: 96 }],
+  ])('%s', async (_, props) => {
+    const screen = await render(CircularProgress, { props });
+    const api = createCircularProgress({ props: () => props });
+    expectSkeleton(rootOf(screen), circularProgressSkeleton, api);
+  });
+});
+
+describe('RioScrollField', () => {
+  test.each<[string, Omit<ScrollFieldProps, 'value'> & { modelValue?: ScrollFieldValue }]>([
+    ['by default', {}],
+    ['looping, with options', { options: ['g', 'kg', 'lb'], modelValue: 'kg', loop: true }],
+    ['editing, invalid', { editing: true, invalid: true, modelValue: 7, min: 0, max: 59 }],
+    ['disabled', { disabled: true }],
+    ['soft-disabled, submitting with a form', { softDisabled: true, name: 'minutes' }],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, label, language, and format',
+      {
+        min: 10,
+        max: 90,
+        step: 5,
+        size: 'large',
+        label: 'Weight',
+        locale: 'ar-EG',
+        modelValue: 40,
+        format: (value: ScrollFieldValue) => `${value} kg`,
+      },
+    ],
+  ])('%s', async (_, { modelValue, ...props }) => {
+    const screen = await render(ScrollField, { props: { modelValue, ...props } });
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const options = root.querySelector('[role="option"]')!.id.replace(/-\d+$/, '');
+    const api = createScrollField({
+      props: () => ({ ...props, value: modelValue }),
+      ids: { options },
+      onChange: noop,
+      onEditingChange: noop,
+    });
+    expectSkeleton(root, scrollFieldSkeleton, api);
+    // The items carry the attributes core gives each, and their text.
+    const items = root.querySelectorAll('.rio-scroll-field__item');
+    expect(items).toHaveLength(api.items().length);
+    for (const index of [0, api.targetIndex(), api.items().length - 1]) {
+      for (const [name, value] of Object.entries(api.parts.item(index))) {
+        expect(items[index]!.getAttribute(name), `${index} ${name}`).toBe(value ?? null);
+      }
+      expect(items[index]!.textContent?.trim()).toBe(api.itemText(index));
+    }
   });
 });
 
@@ -381,6 +744,8 @@ describe('RioSubMenu', () => {
       slots: { default: () => h(SubMenu, { ...rest, modelValue: selected }, slots) },
     });
     const parent = createMenu({ props: () => menuProps, onChange: noop, onOpenChange: noop });
+    // The item, then the submenu after it
+    const [item, menu] = rootOf(screen).children;
     const api = createSubMenu({
       props: () => props,
       content: () => content,
@@ -388,9 +753,9 @@ describe('RioSubMenu', () => {
       open: () => false,
       onChange: noop,
       onOpenChange: noop,
+      ids: { menu: menu!.id },
     });
-    // The item, then the submenu after it
-    const [item, menu] = rootOf(screen).children;
+    expect(menu!.id).not.toBe('');
     expectSkeleton(item!, menuItemSkeleton, api.item);
     expectSkeleton(menu!, menuSkeleton, api.menu);
   });
@@ -750,7 +1115,7 @@ describe('RioDatePicker', () => {
         locale: 'en-US',
       }),
       messages,
-      state: () => initialPickerState(value, 'en-US'),
+      state: () => initialDatePickerState(value, 'en-US'),
       onChange: noop,
       onOpenChange: noop,
       onStateChange: noop,
@@ -807,7 +1172,7 @@ describe('RioDatePickerDialog', () => {
     const api = createDatePickerDialog({
       props: () => ({ locale: 'en-US', rendered: false }),
       messages: () => messagesFor('en').datePicker,
-      state: () => initialPickerState(undefined, 'en-US'),
+      state: () => initialDatePickerState(undefined, 'en-US'),
       ids: { title: 'x', headline: 'y' },
       onChange: noop,
       onOpenChange: noop,
@@ -837,13 +1202,213 @@ describe('RioDatePickerDialog', () => {
     const api = createDatePickerDialog({
       props: () => ({ locale: 'en-US', rendered: true }),
       messages: () => messagesFor('en').datePicker,
-      state: () => ({ ...initialPickerState(undefined, 'en-US'), mode }),
+      state: () => ({ ...initialDatePickerState(undefined, 'en-US'), mode }),
       ids: { title, headline: title.replace(/-title$/, '-headline') },
       onChange: noop,
       onOpenChange: noop,
       onStateChange: noop,
     });
     expectSkeleton(root, datePickerDialogSkeleton, api);
+  });
+});
+
+describe('RioList', () => {
+  test.each<[string, ListProps]>([
+    ['static, standard', {}],
+    [
+      'one at a time, segmented, named',
+      { selection: 'single', variant: 'segmented', label: 'Size' },
+    ],
+    ['any number', { selection: 'multiple', selected: ['a'] }],
+  ])('%s', async (_, { selected, ...props }) => {
+    const screen = await render(List, {
+      props: { ...props, modelValue: selected },
+      slots: { default: () => [h(ListItem, { value: 'a' }, () => 'A')] },
+    });
+    const root = rootOf(screen);
+    // The tab stop is the item `attachList` reports, read back from the rendered item.
+    const stop = root.querySelector<HTMLElement>('[tabindex="0"]')?.dataset.listFocus;
+    const api = createList({
+      props: () => ({ ...props, selected }),
+      tabStop: () => stop,
+      onChange: noop,
+    });
+    expectSkeleton(root, listSkeleton, api);
+  });
+});
+
+describe('RioListItem', () => {
+  const content = { leading: true, overline: true, supporting: true, trailing: true };
+  const slots = {
+    default: () => 'Label',
+    leading: () => 'L',
+    overline: () => 'O',
+    supporting: () => 'S',
+    trailing: () => 'T',
+  };
+  test.each<[string, ListItemProps, ListProps]>([
+    ['static', {}, {}],
+    ['a link', { href: '/inbox' }, {}],
+    ['a button, disabled', { action: true, disabled: true }, {}],
+    ['an option, selected', { value: 'a' }, { selection: 'single', selected: 'a' }],
+  ])('%s, with every part', async (_, props, listProps) => {
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h(List, { ...listProps, modelValue: listProps.selected }, () =>
+            h(
+              ListItem,
+              {
+                value: props.value,
+                href: props.href,
+                disabled: props.disabled,
+                onClick: props.action ? noop : undefined,
+              },
+              slots,
+            ),
+          ),
+      ),
+    );
+    const root = rootOf(screen).querySelector<HTMLElement>('.rio-list-item')!;
+    const key =
+      root.querySelector<HTMLElement>('[data-list-focus]')?.dataset.listFocus ??
+      root.dataset.listFocus ??
+      'static';
+    const list = createList({ props: () => listProps, tabStop: () => key, onChange: noop });
+    const api = createListItem({
+      props: () => props,
+      list: () => list,
+      key,
+      content: () => content,
+      multiline: () => false,
+    });
+    const skeleton =
+      api.kind() === 'link'
+        ? listItemActionSkeleton('a')
+        : api.kind() === 'button'
+          ? listItemActionSkeleton('button')
+          : listItemSkeleton;
+    expectSkeleton(root, skeleton, api);
+    expect(root.querySelector('.rio-list-item__label')!.textContent).toBe('Label');
+  });
+});
+
+describe('the range picker’s calendar', () => {
+  test('the weekdays, and the months with their days', async () => {
+    const props = {
+      start: '2026-08-17',
+      end: '2026-09-02',
+      focused: '2026-08-17',
+      firstMonth: '2026-07',
+      lastMonth: '2026-09',
+      locale: 'en-US',
+      min: '2026-07-10',
+    };
+    const screen = await render(DateRangeCalendar, { props });
+    const api = createRangeCalendar({
+      props: () => props,
+      onSelect: noop,
+      onFocusChange: noop,
+      onMonthsChange: noop,
+    });
+    const root = rootOf(screen);
+    expectSkeleton(root, rangeCalendarSkeleton, api);
+    const weekdays = root.querySelector('.rio-date-picker__weekdays')!.children;
+    expect(weekdays).toHaveLength(7);
+    api.weekdays().forEach((day, i) => {
+      expectPart(weekdays[i], 'span', api.parts.weekday(day));
+      expect(weekdays[i]!.textContent?.trim()).toBe(api.weekdayText(day));
+    });
+    const months = root.querySelector('.rio-date-picker__months')!.children;
+    expect(months).toHaveLength(api.months().length);
+    api.months().forEach((month, i) => {
+      const element = months[i]!;
+      expectPart(element, 'div', api.parts.month(month));
+      const [subhead, grid] = element.children;
+      expectPart(subhead, 'div', api.parts.subhead(month));
+      expect(subhead!.textContent?.trim()).toBe(api.monthText(month));
+      expectPart(grid, 'table', api.parts.grid(month));
+      const rows = grid!.querySelectorAll(':scope > tbody > tr');
+      expect(rows).toHaveLength(api.weeks(month).length);
+      api.weeks(month).forEach((week, w) =>
+        week.forEach((date, d) => {
+          const cell = rows[w]!.children[d]!;
+          expectPart(cell, 'td', api.parts.cell(date, month));
+          const day = cell.querySelector('button');
+          if (!api.showsDay(date, month)) {
+            expect(day, date).toBeNull();
+            return;
+          }
+          expectPart(day, 'button', api.parts.day(date));
+          expect(day!.textContent?.trim()).toBe(api.dayText(date));
+        }),
+      );
+    });
+  });
+});
+
+describe('RioDateRangePickerDialog', () => {
+  const dialogApi = (
+    state: Parameters<typeof createDateRangePickerDialog>[0]['state'],
+    ids = { title: 'x', headline: 'y' },
+    rendered = true,
+  ) =>
+    createDateRangePickerDialog({
+      props: () => ({ locale: 'en-US', rendered }),
+      messages: () => messagesFor('en').datePicker,
+      state,
+      ids,
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+
+  test('closed, it renders nothing inside', async () => {
+    const screen = await render(DateRangePickerDialog, { props: { locale: 'en-US' } });
+    const api = dialogApi(
+      () => initialDateRangePickerState(undefined, undefined, 'en-US'),
+      undefined,
+      false,
+    );
+    expectSkeleton(rootOf(screen), dateRangePickerDialogSkeleton, {
+      ...api,
+      parts: { ...api.parts, root: () => ({ class: api.parts.root().class }) },
+    });
+  });
+
+  // Mounted with `createApp`, as the date picker's dialog is
+  test.each(['calendar', 'input'] as const)('open, in the %s', async (mode) => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const app = createApp(() =>
+      h(DateRangePickerDialog, {
+        locale: 'en-US',
+        open: true,
+        start: '2026-08-17',
+        end: '2026-08-23',
+        initialMode: mode,
+      }),
+    );
+    app.mount(host);
+    onTestFinished(() => {
+      app.unmount();
+      host.remove();
+    });
+    const root = host.querySelector('dialog')!;
+    await vi.waitFor(() => expect(root.open).toBe(true));
+    const title = root.querySelector('.rio-date-picker-dialog__title')!.id;
+    const api = dialogApi(
+      () => ({ ...initialDateRangePickerState('2026-08-17', '2026-08-23', 'en-US'), mode }),
+      { title, headline: title.replace(/-title$/, '-headline') },
+    );
+    expectSkeleton(root, dateRangePickerDialogSkeleton, api);
+    // The header: the title, the headline, and the mode button
+    const header = root.querySelector('.rio-date-picker-dialog__header')!.children;
+    expect(header).toHaveLength(3);
+    const [titleElement, headline, modeButton] = header;
+    expectPart(titleElement, 'span', api.parts.title());
+    expectPart(headline, 'span', api.parts.headline());
+    expect(headline!.textContent?.trim()).toBe(api.headline());
+    expect(modeButton!.getAttribute('aria-label')).toBe(api.modeButtonLabel());
   });
 });
 
@@ -874,12 +1439,48 @@ const expectTimePickerContent = (root: Element, api: TimePickerApi) => {
     expectPart(minute!.children[0], 'input', api.parts.minuteField());
     expectPart(minute!.children[1], 'span', api.parts.minuteLabel());
     expect(fields.children).toHaveLength(3);
+  } else if (api.showsScroll()) {
+    const [hour, separator, minute] = fields.children;
+    expectPart(separator, 'span', api.parts.separator());
+    expect(fields.children).toHaveLength(3);
+    // Scroll fields, each with the props core gives it
+    for (const [element, field] of [
+      [hour, 'hour'],
+      [minute, 'minute'],
+    ] as const) {
+      expectPart(
+        element,
+        'div',
+        field === 'hour' ? api.parts.hourField() : api.parts.minuteField(),
+      );
+      const options = element!.querySelector('[role="option"]')!.id.replace(/-\d+$/, '');
+      const scroll = createScrollField({
+        props: () => api.scrollField(field),
+        ids: { options },
+        onChange: noop,
+        onEditingChange: noop,
+      });
+      expectSkeleton(element!, scrollFieldSkeleton, scroll);
+    }
   } else {
     const [hour, separator, minute] = fields.children;
     expectPart(hour, 'button', api.parts.hourField());
     expectPart(separator, 'span', api.parts.separator());
     expectPart(minute, 'button', api.parts.minuteField());
     expect(fields.children).toHaveLength(3);
+  }
+  const toggle = root.querySelector('.rio-time-picker__toggle');
+  if (api.showsToggle()) {
+    // The mode button, named for the mode it switches to
+    const props = { variant: 'standard', label: api.modeButtonLabel() } as const;
+    const button = createIconButton({
+      props: () => props,
+      content: () => ({ selectedIcon: false }),
+      onClick: noop,
+      onChange: noop,
+    });
+    expect(toggle!.children).toHaveLength(1);
+    expectSkeleton(toggle!.children[0]!, iconButtonSkeleton, button);
   }
   const period = root.querySelector('.rio-time-picker__period');
   if (api.showsPeriod()) {
@@ -904,7 +1505,7 @@ const expectTimePickerContent = (root: Element, api: TimePickerApi) => {
 };
 
 const timePicker = (
-  variant: 'inline' | 'dialog',
+  variant: 'inline' | 'scroll' | 'dialog',
   props: TimePickerProps,
   state: TimePickerState,
   error = 'error',
@@ -931,7 +1532,7 @@ describe('RioTimeInput', () => {
       'inline',
       { locale, value: '19:05' },
       {
-        ...initialTimeState('19:05'),
+        ...initialTimePickerState('19:05'),
         mode: 'input',
         hourText: twelve ? '07' : '19',
         minuteText: '05',
@@ -950,7 +1551,7 @@ describe('RioTimeInput', () => {
       'inline',
       { locale: 'en-US', value: '19:05' },
       {
-        ...initialTimeState('19:05'),
+        ...initialTimePickerState('19:05'),
         mode: 'input',
         hourText: '13',
         minuteText: '05',
@@ -963,13 +1564,39 @@ describe('RioTimeInput', () => {
   });
 });
 
+describe('RioTimeScroll', () => {
+  test.each<[string, string, string | undefined]>([
+    ['12 hours, with AM and PM', 'en-US', '19:05'],
+    ['24 hours', 'de-DE', '19:05'],
+    ['without a time', 'en-US', undefined],
+  ])('%s', async (_, locale, value) => {
+    const screen = await render(TimeScroll, { props: { locale, modelValue: value } });
+    const api = timePicker('scroll', { locale, value }, initialTimePickerState(value));
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+
+  test('switched to the text input', async () => {
+    const screen = await render(TimeScroll, { props: { locale: 'en-US', modelValue: '19:05' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle input picker' }));
+    await vi.waitFor(() => rootOf(screen).querySelector('input')!);
+    const api = timePicker(
+      'scroll',
+      { locale: 'en-US', value: '19:05' },
+      { ...initialTimePickerState('19:05'), mode: 'input', hourText: '07', minuteText: '05' },
+    );
+    expectSkeleton(rootOf(screen), timePickerSkeleton, api);
+    expectTimePickerContent(rootOf(screen), api);
+  });
+});
+
 describe('RioTimePickerDialog', () => {
   test('closed, it renders nothing inside', async () => {
     const screen = await render(TimePickerDialog, { props: { locale: 'en-US' } });
     const api = timePicker(
       'dialog',
       { locale: 'en-US', rendered: false },
-      initialTimeState(undefined),
+      initialTimePickerState(undefined),
     );
     expectSkeleton(rootOf(screen), timePickerDialogSkeleton, api);
   });
@@ -985,6 +1612,12 @@ describe('RioTimePickerDialog', () => {
       { mode: 'input', hourText: '07', minuteText: '30' },
     ],
     ['the dial, 24 hours', { hourCycle: 24 }, {}],
+    ['the scroll fields', { picker: 'scroll' }, {}],
+    [
+      'the text input, from the scroll fields',
+      { picker: 'scroll', initialMode: 'input' },
+      { mode: 'input', hourText: '07', minuteText: '30' },
+    ],
   ])('open: %s', async (_, props, state) => {
     const host = document.body.appendChild(document.createElement('div'));
     const app = createApp(() =>
@@ -1003,7 +1636,7 @@ describe('RioTimePickerDialog', () => {
     const api = timePicker(
       'dialog',
       { locale: 'en-US', value: '07:30', open: true, rendered: true, ...props },
-      { ...initialTimeState('07:30'), hourText: '07', minuteText: '30', ...state },
+      { ...initialTimePickerState('07:30'), hourText: '07', minuteText: '30', ...state },
     );
     expectSkeleton(root, timePickerDialogSkeleton, api);
     expectTimePickerContent(root, api);

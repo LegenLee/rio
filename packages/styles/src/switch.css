@@ -7,9 +7,10 @@
  * `--_handle-size` toward them, which show the targets at rest. The targets get an instant
  * transition so the springs see them change. Without JavaScript the handle simply jumps.
  *
- * The root carries `data-selected`, plus `data-pressed` (from the ripple), `data-dragging` (from
- * the drag), and `data-icon` when the handle shows an icon. State rules sit inside `:where()` so
- * the disabled rules always win.
+ * The root is the track, and carries `data-selected`, `data-icon` when the handle shows an icon,
+ * and `data-disabled`. Over it, a transparent native checkbox takes the presses, the focus, and
+ * the form: it carries `data-pressed` (from the ripple) and `data-dragging` (from the drag), which
+ * the root reads with `:has()`. State rules sit inside `:where()` so the disabled rules always win.
  */
 
 @property --rio-switch-handle-x-target {
@@ -63,16 +64,12 @@
   box-sizing: border-box;
   inline-size: var(--_track-width);
   block-size: var(--_track-height);
-  margin: 0;
-  padding: 0;
   border: var(--_outline-width) solid var(--_outline);
   border-radius: var(--rio-shape-corner-full);
   background-color: var(--_track);
   vertical-align: middle;
-  cursor: pointer;
   /* Horizontal drags belong to the handle; vertical ones still scroll the page. */
   touch-action: pan-y;
-  -webkit-tap-highlight-color: transparent;
   /* The handle's spring targets get an instant transition, which is how the springs see them
      change (core's spring-property). Public, as on the button (button.css). */
   --rio-spring-targets:
@@ -101,7 +98,7 @@
 }
 
 /* Pressing or dragging grows the handle */
-.rio-switch:is([data-pressed], [data-dragging]) {
+.rio-switch:has(> .rio-switch__input:is([data-pressed], [data-dragging])) {
   --rio-switch-handle-size-target: 28px;
 }
 
@@ -117,38 +114,79 @@
   }
 }
 
-.rio-switch:is(:focus-visible, [data-pressed], [data-dragging]) .rio-switch__handle {
+.rio-switch:has(> .rio-switch__input:is(:focus-visible, [data-pressed], [data-dragging]))
+  .rio-switch__handle {
   background-color: var(--_handle-active);
 }
 
-.rio-switch:focus-visible .rio-switch__state::before {
+.rio-switch:has(> .rio-switch__input:focus-visible) .rio-switch__state::before {
   opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+/* The focus ring goes round the track (`base/focus-ring.css`). */
+.rio-switch:has(> .rio-switch__input:focus-visible) {
+  outline-style: solid;
 }
 
 /* Disabled, native or soft: the track at 12%, the unselected handle and the icons at 38% */
 
-.rio-switch:is(:disabled, [aria-disabled='true']) {
+.rio-switch[data-disabled] {
   --_track: color-mix(in srgb, var(--rio-color-surface-container-highest) 12%, transparent);
   --_outline: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
-  --_handle: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_handle: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
   --_handle-active: var(--_handle);
-  --_icon: color-mix(in srgb, var(--rio-color-surface-container-highest) 38%, transparent);
-  cursor: default;
+  --_icon: color-mix(
+    in srgb,
+    var(--rio-color-surface-container-highest)
+      calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
 }
 
-.rio-switch:is(:disabled, [aria-disabled='true']):where([data-selected='true']) {
+.rio-switch[data-disabled]:where([data-selected='true']) {
   --_track: color-mix(in srgb, var(--rio-color-on-surface) 12%, transparent);
   --_outline: transparent;
   --_handle: var(--rio-color-surface);
   --_handle-active: var(--rio-color-surface);
-  --_icon: color-mix(in srgb, var(--rio-color-on-surface) 38%, transparent);
+  --_icon: color-mix(
+    in srgb,
+    var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
 }
 
-.rio-switch:is(:disabled, [aria-disabled='true']) .rio-switch__state::before {
+.rio-switch[data-disabled] .rio-switch__state::before {
   opacity: 0;
 }
 
 /* Parts */
+
+/*
+ * The input, transparent, over the whole track and out to the spec's 48px target: the track is
+ * 32px tall. Physical, like `translate`: a logical start would flip in right-to-left layouts and
+ * push the target off the switch.
+ */
+.rio-switch__input {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  inline-size: max(var(--_track-width), 48px);
+  block-size: max(var(--_track-height), 48px);
+  margin: 0;
+  translate: -50% -50%;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rio-switch[data-disabled] .rio-switch__input {
+  cursor: default;
+}
 
 /* The 40px circle around the handle: the state layer on ::before, the ripple on ::after */
 .rio-switch .rio-switch__state {
@@ -197,18 +235,6 @@
 .rio-switch__icon > :is(svg, img) {
   inline-size: 100%;
   block-size: 100%;
-}
-
-/* The track is 32px tall, below the spec's 48px minimum target. */
-.rio-switch__touch {
-  position: absolute;
-  /* Physical, like `translate`: a logical start would flip in right-to-left layouts and push the
-     target off the switch. */
-  top: 50%;
-  left: 50%;
-  inline-size: max(100%, 48px);
-  block-size: max(100%, 48px);
-  translate: -50% -50%;
 }
 
 @media (forced-colors: active) {

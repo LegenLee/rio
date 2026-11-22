@@ -20,7 +20,10 @@ describe('createCheckbox', () => {
       'aria-disabled': undefined,
       'aria-invalid': undefined,
     });
-    expect(checkbox.parts.state()).toEqual({ class: 'rio-checkbox__state', 'aria-hidden': 'true' });
+    expect(checkbox.parts.state()).toEqual({
+      class: 'rio-checkbox__state rio-focus-ring-target',
+      'aria-hidden': 'true',
+    });
     expect(checkbox.parts.container()).toEqual({
       class: 'rio-checkbox__container',
       'aria-hidden': 'true',
@@ -53,4 +56,14 @@ describe('createCheckbox', () => {
     expect(soft.parts.root()['data-disabled']).toBe('');
     expect(soft.blocked()).toBe(true);
   });
+});
+
+test('props an adapter passes as undefined take the defaults', () => {
+  const checkbox = setup({ selected: undefined, indeterminate: undefined, error: undefined });
+  expect(checkbox.parts.root()).toMatchObject({
+    'data-selected': 'false',
+    'data-indeterminate': undefined,
+    'data-error': undefined,
+  });
+  expect(checkbox.next(true)).toBe(true);
 });

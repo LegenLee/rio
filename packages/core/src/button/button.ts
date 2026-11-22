@@ -1,6 +1,8 @@
 import type { ButtonGroupValue } from '../button-group/button-group';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
-import { omitUndefined } from '../utils/object';
+import { disabledAttrs, isBlocked } from '../utils/disabled';
+import { linkAttrs } from '../utils/link';
+import { resolveProps } from '../utils/object';
 
 export const BUTTON_VARIANTS = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
@@ -116,26 +118,18 @@ export interface ButtonApi<E extends CancelableEvent = MouseEvent> {
 const isLink = (p: ButtonProps) => p.href !== undefined;
 const isToggle = (p: ButtonProps) => !!p.toggle && p.variant !== 'text' && !isLink(p);
 
-/** Defaults under the given props, skipping props that are explicitly `undefined`. */
-const resolve = (props: ButtonProps) => ({ ...buttonDefaults, ...omitUndefined(props) });
-
 export function createButton<E extends CancelableEvent = MouseEvent>(
   options: ButtonOptions<E>,
 ): ButtonApi<E> {
   return {
     parts: {
       root() {
-        const p = resolve(options.props());
+        /** Defaults under the given props, skipping props that are explicitly `undefined`. */
+        const p = resolveProps(buttonDefaults, options.props());
         if (isLink(p)) {
-          const unavailable = p.disabled || p.softDisabled;
           return {
             class: 'rio-button rio-state-layer rio-focus-ring',
-            href: unavailable ? undefined : p.href,
-            // Without `href`, an `<a>` is a placeholder; the role makes it a link again, disabled.
-            role: unavailable ? 'link' : undefined,
-            'aria-disabled': unavailable ? 'true' : undefined,
-            // Only the soft variant keeps the focus.
-            tabindex: p.softDisabled && !p.disabled ? '0' : undefined,
+            ...linkAttrs(p),
             'data-variant': p.variant,
             'data-size': p.size,
             'data-shape': p.shape,
@@ -145,9 +139,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
         return {
           class: 'rio-button rio-state-layer rio-focus-ring',
           type: p.type,
-          disabled: p.disabled ? '' : undefined,
-          // Native disabled already says it; aria-disabled is only for the soft variant.
-          'aria-disabled': p.softDisabled && !p.disabled ? 'true' : undefined,
+          ...disabledAttrs(p),
           'aria-pressed': toggle ? String(p.selected) : undefined,
           'data-variant': p.variant,
           'data-size': p.size,
@@ -155,7 +147,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
           'data-selected': toggle ? String(p.selected) : undefined,
         };
       },
-      touch: () => ({ class: 'rio-button__touch', 'aria-hidden': 'true' }),
+      touch: () => ({ class: 'rio-button__touch rio-touch-target', 'aria-hidden': 'true' }),
       // The icon only decorates; the label names the button.
       icon: () => ({ class: 'rio-button__icon', 'aria-hidden': 'true' }),
       label: () => ({ class: 'rio-button__label' }),
@@ -164,7 +156,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
     isLink: () => isLink(options.props()),
     handleClick(event) {
       const p = options.props();
-      if (p.disabled || p.softDisabled) {
+      if (isBlocked(p)) {
         // Keyboard and pointer clicks still reach a soft-disabled button. Stop form submission too.
         event.preventDefault();
         return;

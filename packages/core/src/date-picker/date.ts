@@ -2,6 +2,8 @@
 // `YYYY-MM`, in the Gregorian calendar. The arithmetic goes through `Date` in UTC, so no time zone
 // shifts a day. Writing and reading dates the way a language does goes through `Intl`.
 
+import { dateTimeFormat, numberFormat } from '../utils/intl';
+
 export type DatePart = 'year' | 'month' | 'day';
 
 interface Ymd {
@@ -89,37 +91,18 @@ export const clampDate = (iso: string, min?: string, max?: string) =>
 
 // Writing and reading dates as a language does
 
-const formatters = new Map<string, Intl.DateTimeFormat>();
-
 /** Writes a date with `Intl`, in the Gregorian calendar. */
-export const formatDate = (iso: string, locale: string, options: Intl.DateTimeFormatOptions) => {
-  const key = `${locale} ${JSON.stringify(options)}`;
-  let formatter = formatters.get(key);
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat(locale, {
-      ...options,
-      calendar: 'gregory',
-      timeZone: 'UTC',
-    });
-    formatters.set(key, formatter);
-  }
-  return formatter.format(toUtc(parse(iso)!));
-};
-
-const numberFormats = new Map<string, Intl.NumberFormat>();
+export const formatDate = (iso: string, locale: string, options: Intl.DateTimeFormatOptions) =>
+  dateTimeFormat(locale, { ...options, calendar: 'gregory', timeZone: 'UTC' }).format(
+    toUtc(parse(iso)!),
+  );
 
 /**
  * Writes a number, such as a day or a year, in the language's digits, without grouping and without
  * the words a date format adds, such as 일 in Korean.
  */
-export const formatNumber = (value: number, locale: string) => {
-  let formatter = numberFormats.get(locale);
-  if (!formatter) {
-    formatter = new Intl.NumberFormat(locale, { useGrouping: false });
-    numberFormats.set(locale, formatter);
-  }
-  return formatter.format(value);
-};
+export const formatNumber = (value: number, locale: string) =>
+  numberFormat(locale, { useGrouping: false }).format(value);
 
 /** How a language writes a date in numbers, such as 11/27/2026 or 27.11.2026 */
 export interface DateFormat {
@@ -134,7 +117,7 @@ const BIDI_MARKS = /[\u200E\u200F\u061C]/g;
 
 /** The numeric date format of a language, from `Intl`, with Latin digits */
 export function dateFormat(locale: string): DateFormat {
-  const parts = new Intl.DateTimeFormat(locale, {
+  const parts = dateTimeFormat(locale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

@@ -3,9 +3,10 @@
  * rotation, corner radius) becomes instant. Effects motion (color, opacity) keeps its short fades,
  * which don't cause the discomfort reduced motion is meant to prevent.
  *
- * Every element gets the override, with !important, so it beats the theme variables `applyTheme`
+ * Every element gets the override, with !important, so it beats the theme variables `attachTheme`
  * sets inline on the root, and any subtree that swaps motion schemes. Components that use the
- * motion tokens import this file. The ripple follows the same rule in JavaScript.
+ * motion tokens import this file. In JavaScript, core's `prefersReducedMotion`
+ * (`primitives/reduced-motion`) carries the same rule to the ripple and the springs.
  */
 
 @media (prefers-reduced-motion: reduce) {

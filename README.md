@@ -44,10 +44,32 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Date picker
 - [x] Time picker
 
-### Later
+### v0.6 (Form controls)
 
-- [ ] Form value for the switch
+- [x] Form value for the switch
+- [x] Slider
+- [x] Scroll time picker
+- [x] Date range picker
+- [x] Chips
+- [x] List, List Items
+- [x] Loading progress bars
+- [x] Loading indicator with shape morphs
+- [x] Scroll fields
+
+### v0.6.1
+
+- [ ] Icons
 - [ ] Language-specific line heights and variable font axes
+
+### v0.7 (Layouts)
+
+- [ ] App bar
+- [ ] FABs
+- [ ] Navigation drawer + rails
+- [ ] Cards
+- [ ] Sheets
+- [ ] Toolbars
+- [ ] Full-screen dialogs (date-pickers, time-pickers, etc)
 
 ## Usage
 

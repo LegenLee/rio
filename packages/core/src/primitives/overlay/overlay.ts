@@ -33,6 +33,22 @@
 export type OverlayMode = 'auto' | 'manual' | 'modal';
 
 /**
+ * The events of a click or a press, which an overlay keeps to itself: the adapter stops each on the
+ * overlay's root, in its own event system, so a card or a row around the overlay's place in the
+ * markup doesn't take them, nor do listeners on the document. Keys go on.
+ */
+export const OVERLAY_PRESS_EVENTS = [
+  'click',
+  'auxclick',
+  'dblclick',
+  'pointerdown',
+  'pointerup',
+  'mousedown',
+  'mouseup',
+  'contextmenu',
+] as const;
+
+/**
  * Why an overlay closed, or asks to close, without the adapter asking:
  * - `'escape'`: Escape, or the back gesture on a dialog. The overlay is still open, and the adapter
  *   can turn the request down, as a dialog with unsaved changes might.

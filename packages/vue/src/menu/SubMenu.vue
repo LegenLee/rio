@@ -12,7 +12,16 @@ import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/menu.css';
-import { inject, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue';
+import {
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  useId,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import { vRipple } from '../ripple/ripple';
 import { menuContextOf, menuKey } from './context';
 
@@ -48,6 +57,8 @@ const slots = defineSlots<{
 
 const parent = inject(menuKey, undefined);
 const open = ref(false);
+const inactive = ref(false);
+const id = useId();
 const sub = createSubMenu({
   // `satisfies` fails the build if a prop added to SubMenuProps is missing here.
   props: () =>
@@ -65,6 +76,8 @@ const sub = createSubMenu({
   open: () => open.value,
   onChange: (selected) => emit('update:modelValue', selected),
   onOpenChange: (next) => (open.value = next),
+  ids: { menu: `${id}-menu` },
+  inactive: () => inactive.value,
 });
 const { item } = sub;
 provide(menuKey, menuContextOf(sub.menu));
@@ -75,6 +88,7 @@ let handle: SubMenuDomHandle | undefined;
 onMounted(() => {
   handle = attachSubMenu(itemElement.value!, root.value!, {
     onOpenChange: (next) => (open.value = next),
+    onInactiveChange: (next) => (inactive.value = next),
   });
   handle.sync(open.value);
 });
@@ -109,6 +123,7 @@ onBeforeUnmount(() => handle?.detach());
       <slot name="trailing-icon" />
     </span>
   </button>
+  <!-- Inside the menu's own element, which keeps clicks and presses in. -->
   <div ref="root" v-bind="sub.menu.parts.root()">
     <slot />
   </div>

@@ -1,4 +1,4 @@
-import type { MenuSelected } from '@rio-m3e/core';
+import { attachSubMenu, type MenuSelected } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
@@ -7,6 +7,7 @@ import { defineComponent, h, ref } from 'vue';
 import Menu from './Menu.vue';
 import MenuItem from './MenuItem.vue';
 import SubMenu from './SubMenu.vue';
+import { eventsLeaving } from '../test/events';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -124,6 +125,16 @@ const pointAt = (element: Element) => {
 };
 
 describe('RioSubMenu', () => {
+  // The submenu is inside the menu's element, which keeps them in.
+  test('clicks and presses in it, and on its item, stay in the menus', async () => {
+    const { item, menu, isOpen } = await setup();
+    const out = eventsLeaving(() => menu('File'));
+    await userEvent.click(item('Share'));
+    await vi.waitFor(() => expect(isOpen('Share')).toBe(true));
+    await userEvent.click(item('Email'));
+    expect(out).toEqual([]);
+  });
+
   test('opens and closes without a warning from Vue', async () => {
     // Opening and closing render it again; a warning from Vue fails the test (`test/setup.ts`).
     const { item, isOpen } = await setup();
@@ -196,10 +207,11 @@ describe('RioSubMenu', () => {
       const { item, menu, isOpen } = await setup();
       pointAt(item('Share'));
       await vi.waitFor(() => expect(isOpen('Share')).toBe(true));
+      // The adapter renders the shapes it is told of.
+      await vi.waitFor(() => expect(menu('Share').hasAttribute('data-inactive')).toBe(true));
       expect(menu('File').hasAttribute('data-inactive')).toBe(false);
-      expect(menu('Share').hasAttribute('data-inactive')).toBe(true);
       pointAt(item('Email'));
-      expect(menu('File').hasAttribute('data-inactive')).toBe(true);
+      await vi.waitFor(() => expect(menu('File').hasAttribute('data-inactive')).toBe(true));
       expect(menu('Share').hasAttribute('data-inactive')).toBe(false);
       await vi.waitFor(() =>
         expect(getComputedStyle(menu('File')).borderTopLeftRadius).toBe(
@@ -265,6 +277,14 @@ describe('RioSubMenu', () => {
       await vi.waitFor(() => expect(isOpen('Share')).toBe(false));
     });
 
+    test('detaching leaves the item’s link to the submenu, which its part renders', async () => {
+      const { item, menu } = await setup();
+      // As an adapter may detach and attach again without a render, as React's StrictMode does
+      attachSubMenu(item('Share'), menu('Share'), { onOpenChange: () => {} }).detach();
+      expect(item('Share').getAttribute('popovertarget')).toBe(menu('Share').id);
+      expect(item('Share').getAttribute('popovertargetaction')).toBe('show');
+    });
+
     test('a click opens it at once, and another click on its item keeps it open', async () => {
       const { item, isOpen } = await setup();
       await userEvent.click(item('Share'));
@@ -322,6 +342,25 @@ describe('RioSubMenu', () => {
         expect(isOpen('File')).toBe(true);
       },
     );
+
+    test('Right, Enter, and Space with Alt, Ctrl, or Meta are left to the app', async () => {
+      const { item, isOpen } = await setup();
+      item('Share').focus();
+      for (const key of ['ArrowRight', 'Enter', ' ']) {
+        for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+          const press = new KeyboardEvent('keydown', {
+            key,
+            bubbles: true,
+            cancelable: true,
+            [modifier]: true,
+          });
+          item('Share').dispatchEvent(press);
+          expect(press.defaultPrevented, `${modifier} ${key}`).toBe(false);
+        }
+      }
+      await pause(100);
+      expect(isOpen('Share')).toBe(false);
+    });
 
     test('in right-to-left layouts, Left opens it and Right closes it', async () => {
       const { item, isOpen } = await setup({ dir: 'rtl' });

@@ -4,7 +4,7 @@ import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
-import { defineComponent, h, reactive } from 'vue';
+import { defineComponent, h, reactive, ref } from 'vue';
 import IconButton from '../icon-button/IconButton.vue';
 import { icon } from '../test/vrt';
 import TextField from './TextField.vue';
@@ -208,6 +208,25 @@ describe('RioTextField', () => {
     expect(input.getBoundingClientRect().height).toBeGreaterThan(72);
   });
 
+  test('its least height follows its rows, as they change', async () => {
+    const rows = ref(3);
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h(TextField, { label: 'Notes', multiline: true, rows: rows.value, style: theme }),
+      ),
+    );
+    const container = (screen.container as HTMLElement).querySelector<HTMLElement>(
+      '.rio-text-field__container',
+    )!;
+    const least = () => parseFloat(getComputedStyle(container).minBlockSize);
+    const three = least();
+    rows.value = 5;
+    await vi.waitFor(() => expect(least()).toBeGreaterThan(three));
+    const line = (least() - three) / 2;
+    expect(least()).toBeCloseTo(5 * line + 32, 0);
+  });
+
   test('a drag from the corner resizes it, rather than focusing the input', async () => {
     const { part, container: screen } = await setup({ label: 'Notes', multiline: true });
     const container = part('container')!;
@@ -312,6 +331,42 @@ describe('RioTextField', () => {
     await userEvent.click(clear);
     expect(state.clicks).toBe(1);
     expect(document.activeElement).toBe(clear);
+  });
+
+  test('a press on anything in the field that takes the focus itself is left to it', async () => {
+    const screen = await render(
+      defineComponent(
+        () => () =>
+          h(
+            TextField,
+            { label: 'Search', modelValue: '' },
+            {
+              'trailing-icon': () => [
+                h('a', { href: '#', 'data-kind': '' }, 'a'),
+                h('button', { type: 'button', 'data-kind': '' }, 'b'),
+                h('input', { 'data-kind': '' }),
+                h('select', { 'data-kind': '' }),
+                h('textarea', { 'data-kind': '' }),
+                h('span', { tabindex: '-1', 'data-kind': '' }, 't'),
+                h('span', { contenteditable: '', 'data-kind': '' }, 'c'),
+                h('span', { class: 'plain' }, 'p'),
+              ],
+            },
+          ),
+      ),
+    );
+    const root = screen.container.querySelector<HTMLElement>('.rio-text-field')!;
+    /** Whether the field let the press through, as the browser takes it */
+    const leftAlone = (el: Element) =>
+      el.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }),
+      );
+    // The field's own input too, where a press places the caret.
+    const own = root.querySelector('.rio-text-field__input')!;
+    for (const el of [own, ...root.querySelectorAll('[data-kind]')]) {
+      expect(leftAlone(el), el.outerHTML).toBe(true);
+    }
+    expect(leftAlone(root.querySelector('.plain')!)).toBe(false);
   });
 
   test('disabled: the input is disabled, and a press doesn’t focus it', async () => {

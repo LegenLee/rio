@@ -1,11 +1,12 @@
 import type { RadioValue } from '@rio-m3e/core';
 import { createThemeVariables } from '@rio-m3e/tokens';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive } from 'vue';
 import Radio from './Radio.vue';
 import RadioGroup from './RadioGroup.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -81,6 +82,12 @@ describe('RioRadioGroup and RioRadio', () => {
     expect(root.dataset.selected).toBe('true');
   });
 
+  test('a press on the input ripples on the state part', async () => {
+    const { input } = await setup();
+    const state = input('Luna').parentElement!.querySelector('.rio-radio__state')!;
+    expect(state.hasAttribute('data-ripple')).toBe(true);
+  });
+
   test('a click on the label selects it too', async () => {
     const { state, input } = await setup();
     const label = input('Ganymede').closest('label')!;
@@ -130,6 +137,28 @@ describe('RioRadioGroup and RioRadio', () => {
     press(input('Luna'), 'ArrowUp');
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(document.activeElement).toBe(input('Luna'));
+  });
+
+  test('right to left, Left goes forward: at the end, round to the first', async () => {
+    const { state, group, input } = await setup({ selected: 'Luna' });
+    group.dir = 'rtl';
+    input('Luna').focus();
+    input('Luna').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    await expect.poll(() => document.activeElement).toBe(input('Callisto'));
+    expect(state.changes).toEqual(['Callisto']);
+  });
+
+  test('at an end, the arrows with Alt, Ctrl, or Meta are left to the browser', async () => {
+    const { state, input } = await setup({ selected: 'Luna' });
+    input('Luna').focus();
+    for (const modifier of ['altKey', 'ctrlKey', 'metaKey']) {
+      input('Luna').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, [modifier]: true }),
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.activeElement).toBe(input('Luna'));
+    expect(state.changes).toEqual([]);
   });
 
   test('Space selects the focused one', async () => {
@@ -184,26 +213,58 @@ describe('RioRadioGroup and RioRadio', () => {
     expect([...new FormData(form)]).toEqual([['tone', 'Luna']]);
   });
 
-  test('lays out at the 48px target, stacked', async () => {
+  test('lays out at the 48px target, stacked, with the input over all of it', async () => {
     const { input } = await setup();
     const first = input('Callisto').closest('.rio-radio')!.getBoundingClientRect();
     const second = input('Ganymede').closest('.rio-radio')!.getBoundingClientRect();
+    const target = input('Callisto').getBoundingClientRect();
     const icon = input('Callisto').parentElement!.querySelector('.rio-radio__icon')!;
     expect([first.width, first.height]).toEqual([48, 48]);
+    expect([target.left, target.top, target.width, target.height]).toEqual([
+      first.left,
+      first.top,
+      48,
+      48,
+    ]);
     expect(second.top - first.top).toBe(48);
     expect(icon.getBoundingClientRect().width).toBe(20);
   });
 
-  test('a radio button outside a group is an error', async () => {
+  test('in a group, a radio button without a value is an error', async () => {
     const errors: unknown[] = [];
     const host = document.body.appendChild(document.createElement('div'));
     const { createApp } = await import('vue');
-    const app = createApp(() => h(Radio, { value: 'a' }));
+    const app = createApp(() => h(RadioGroup, null, () => h(Radio)));
     app.config.errorHandler = (error) => errors.push(error);
     app.config.warnHandler = () => {};
     app.mount(host);
     app.unmount();
     host.remove();
-    expect(String(errors[0])).toContain('RioRadioGroup');
+    expect(String(errors[0])).toContain('needs a value');
+  });
+
+  test('outside a group, a radio button only shows selected', async () => {
+    const screen = await render(Radio, { props: { selected: true } });
+    const input = (screen.container as HTMLElement).querySelector('input')!;
+    expect(input.checked).toBe(true);
+    await screen.rerender({ selected: false });
+    expect(input.checked).toBe(false);
+    await userEvent.click(input);
+    await vi.waitFor(() => expect(input.checked).toBe(false));
+  });
+});
+
+describe('RioRadio, the focus ring', () => {
+  test('goes round the circle while the input has keyboard focus', async () => {
+    const screen = await render(() =>
+      h('div', { style: { ...theme, padding: '40px' } }, [
+        h(RadioGroup, { label: 'Size' }, () => h(Radio, { value: 'a' })),
+      ]),
+    );
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('input')!,
+      container.querySelector('.rio-radio__state')!,
+    );
   });
 });
