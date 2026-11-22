@@ -58,7 +58,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 ### v0.6.3
 
-- [ ] Icons
+- [x] Icons
 - [x] Language-specific line heights and variable font axes
 
 ### v0.7 (Layouts)
