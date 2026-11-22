@@ -570,6 +570,8 @@ describe('RioScrollField', () => {
     const api = createScrollField({
       props: () => ({ ...props, value: modelValue }),
       ids: { options },
+      // As `attachScrollField` reports the first placement: the value's item, at once
+      centerAtOnce: () => true,
       onChange: noop,
       onEditingChange: noop,
     });

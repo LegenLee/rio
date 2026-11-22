@@ -56,7 +56,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Loading indicator with shape morphs
 - [x] Scroll fields
 
-### v0.6.1
+### v0.6.3
 
 - [ ] Icons
 - [ ] Language-specific line heights and variable font axes

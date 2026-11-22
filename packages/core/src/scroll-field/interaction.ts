@@ -1,8 +1,9 @@
 // The scroll field's behavior in the DOM.
 //
 // - The viewport scrolls the column itself, with the platform's momentum, and snaps an item to the
-//   middle. As the item in the middle changes, it is reported (`onCenterChange`), and whether the
-//   person scrolled it there: with a trackpad, a touch, or a pen.
+//   middle. As the item in the middle changes, it is reported (`onCenterChange`), with whether the
+//   person scrolled it there, with a trackpad, a touch, or a pen, and whether a scroll at once put
+//   it there, as a looping field's move to the middle copy.
 // - A notch of a mouse wheel moves one value, as an arrow key does (`onStep`): a wheel event in
 //   lines or pages, or in pixels as far as an item or more. Smaller ones, as a trackpad's, scroll.
 //   Over a field that doesn't take it, the page scrolls instead.
@@ -34,8 +35,11 @@ export interface ScrollFieldDomOptions {
   readText: (text: string) => ScrollFieldValue | undefined;
   /** What text completes to (`completeText` from `createScrollField`). */
   completeText: (text: string) => string | undefined;
-  /** The item in the middle changed; `byPerson` when the person scrolled it there. */
-  onCenterChange: (index: number, byPerson: boolean) => void;
+  /**
+   * The item in the middle changed: `byPerson` when the person scrolled it there, `atOnce` when a
+   * scroll at once put it there.
+   */
+  onCenterChange: (index: number, byPerson: boolean, atOnce: boolean) => void;
   /** The value the person typed, or the one from before editing as they cancel it */
   onChange: (value: ScrollFieldValue) => void;
   /** The value now, for Escape to put back */
@@ -83,10 +87,10 @@ export function attachScrollField(
   const itemHeight = () => viewport?.firstElementChild?.getBoundingClientRect().height ?? 0;
   const itemCount = () => viewport?.childElementCount ?? 0;
 
-  const report = (index: number, byPerson: boolean) => {
+  const report = (index: number, byPerson: boolean, atOnce = false) => {
     if (index === center) return;
     center = index;
-    options.onCenterChange(index, byPerson);
+    options.onCenterChange(index, byPerson, atOnce);
   };
 
   const scrollTo = (index: number, smooth: boolean) => {
@@ -99,7 +103,7 @@ export function attachScrollField(
         heading = undefined;
         viewport.scrollTo({ top, behavior: 'auto' });
       }
-      report(index, false);
+      report(index, false, true);
       return;
     }
     if (smooth) {
@@ -111,7 +115,7 @@ export function attachScrollField(
     // At once, in place of a smooth scroll on its way
     driver = undefined;
     heading = undefined;
-    report(index, false);
+    report(index, false, true);
     viewport.scrollTo({ top, behavior: 'auto' });
   };
 
@@ -138,6 +142,7 @@ export function attachScrollField(
     const away = target - options.targetIndex();
     if (driver === 'rio' && Math.abs(away) > itemCount() / 4 && from !== undefined) {
       viewport.scrollTo({ top: viewport.scrollTop - away * itemHeight(), behavior: 'auto' });
+      report(Math.round(viewport.scrollTop / itemHeight()), false, true);
       target -= away;
       // Moving the scroll stopped the smooth one.
       scrollTo(target, !prefersReducedMotion());

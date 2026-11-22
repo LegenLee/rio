@@ -267,11 +267,19 @@ describe('RioScrollField', () => {
     const tops: number[] = [];
     const onScroll = () => tops.push(viewport.scrollTop / height);
     viewport.addEventListener('scroll', onScroll);
+    // Items a move by whole copies puts in the middle, which show it without a transition
+    let instant = 0;
+    const marks = new MutationObserver((records) => {
+      instant += records.filter((r) => (r.target as Element).hasAttribute('data-instant')).length;
+    });
+    marks.observe(viewport, { subtree: true, attributeFilter: ['data-instant'] });
     // A mouse wheel turned fast, past the copies on that side
     for (let notch = 0; notch < 50; notch++) {
       viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, cancelable: true }));
       await new Promise((resolve) => setTimeout(resolve, 30));
     }
+    marks.disconnect();
+    expect(instant).toBeGreaterThan(0);
     expect(state.value).toBe('c');
     await settledOn('c');
     viewport.removeEventListener('scroll', onScroll);
@@ -326,6 +334,31 @@ describe('RioScrollField', () => {
     }
     expect(furthest - start).toBeLessThan(1);
     await settledOn('07');
+  });
+
+  test('looping past a whole round, the value moves to the middle copy without its transition', async () => {
+    const { root, state, viewport, items, middle, settledOn } = await setup({
+      props: { options: ['a', 'b', 'c'], loop: true },
+      value: 'a',
+    });
+    await settledOn('a');
+    const first = items().indexOf(middle()!);
+    const height = viewport.firstElementChild!.getBoundingClientRect().height;
+    let there = false;
+    const onScroll = () => (there ||= viewport.scrollTop / height > first + 3.5);
+    viewport.addEventListener('scroll', onScroll);
+    // Four steps before the scroll moves, into the next copy
+    for (let step = 0; step < 4; step++) {
+      root.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+      await nextTick();
+    }
+    expect(state.value).toBe('b');
+    await vi.waitFor(() => expect(there).toBe(true), { timeout: 3000 });
+    viewport.removeEventListener('scroll', onScroll);
+    // Back in the middle copy, past which it scrolled, once the scroll stops
+    await vi.waitFor(() => expect(items().indexOf(middle()!)).toBe(first + 1), { timeout: 3000 });
+    expect(middle()!.hasAttribute('data-selected')).toBe(true);
+    expect(middle()!.getAnimations()).toHaveLength(0);
   });
 
   test('placed again at once while it scrolls, the next step goes on from there', async () => {

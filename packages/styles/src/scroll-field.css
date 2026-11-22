@@ -5,7 +5,8 @@
  *
  * The root carries `data-size`, `data-editing`, `data-invalid`, and `data-disabled`, which core
  * writes. The viewport scrolls the items and snaps one to its middle; that one, as core's
- * `attachScrollField` reports it, carries `data-selected`.
+ * `attachScrollField` reports it, carries `data-selected`, and `data-instant` when a scroll at once
+ * put it there.
  */
 
 .rio-scroll-field {
@@ -108,6 +109,12 @@
   letter-spacing: var(--rio-typescale-emphasized-display-large-tracking);
   color: var(--rio-color-on-surface);
   cursor: default;
+}
+
+/* An item a scroll put in the middle at once, as a looping field's move to the middle copy of the
+   same value, is there as it was, without a transition. */
+.rio-scroll-field__item[data-instant] {
+  transition: none;
 }
 
 /* Each item keeps the width of its text written as the value in the middle is, so the field keeps

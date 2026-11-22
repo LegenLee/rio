@@ -210,6 +210,11 @@ export interface ScrollFieldOptions {
    * (`onCenterChange`). The adapter keeps it. Until then, the value's item.
    */
   center?: () => number | undefined;
+  /**
+   * Whether a scroll at once put the item in the middle there, as `attachScrollField` reports it
+   * (`onCenterChange`). Its part then shows it in the middle without a transition.
+   */
+  centerAtOnce?: () => boolean;
   /** Called with the requested value. Adapters wire it to v-model, a callback prop, and so on. */
   onChange: (value: ScrollFieldValue) => void;
   /** Called to start or end editing. */
@@ -279,12 +284,14 @@ export interface ScrollFieldApi {
   valueText: () => string;
   /** The value's item nearest `near`, counted across the copies; in the middle copy without it. */
   targetIndex: (near?: number) => number;
-  /**
-   * The item in the middle, which `item()` marks: as reported, or the value's. An item's part
-   * changes only with it, with the value's option (`targetIndex()`), with the number of items, and
-   * with the item's text.
-   */
+  /** The item in the middle, which `item()` marks: as reported, or the value's. */
   centerIndex: () => number;
+  /**
+   * What each item's part and text are made from, by the item: an adapter that renders an item
+   * again only when they change, such as with Vue's `v-memo`, compares these. Equal ones give the
+   * same part and text. Take it once for a render, and call it for each item.
+   */
+  itemDeps: () => (item: number) => readonly unknown[];
   size: () => ScrollFieldSize;
   showsInput: () => boolean;
   showsHiddenInput: () => boolean;
@@ -327,6 +334,11 @@ export function createScrollField(options: ScrollFieldOptions): ScrollFieldApi {
     return Math.min(copies() - 1, Math.max(0, copy)) * n + index();
   };
   const centerIndex = () => options.center?.() ?? targetIndex();
+  const itemText = (item: number) => {
+    // Read for every item on each render: the props as given, without the defaults filled in
+    const raw = options.props();
+    return scrollFieldText(valueOf(raw, item % countOf(raw)), raw);
+  };
   const optionId = (at: number) => `${options.ids.options}-${at}`;
   const size = () => {
     const p = props();
@@ -393,6 +405,7 @@ export function createScrollField(options: ScrollFieldOptions): ScrollFieldApi {
           // The stylesheet sizes each item for its text written as the value in the middle is.
           'data-text': text,
           'data-selected': item === center ? '' : undefined,
+          'data-instant': item === center && options.centerAtOnce?.() ? '' : undefined,
         };
       },
       input() {
@@ -420,16 +433,25 @@ export function createScrollField(options: ScrollFieldOptions): ScrollFieldApi {
       },
     },
     items: () => Array.from({ length: copies() * count() }, (_, i) => i),
-    itemText(item) {
-      // Read for every item on each render: the props as given, without the defaults filled in
-      const raw = options.props();
-      return scrollFieldText(valueOf(raw, item % countOf(raw)), raw);
-    },
+    itemText,
     values,
     value,
     valueText: () => scrollFieldText(value(), props()),
     targetIndex,
     centerIndex,
+    itemDeps() {
+      const center = centerIndex();
+      const atOnce = !!options.centerAtOnce?.();
+      const option = targetIndex();
+      const total = copies() * count();
+      return (item) => [
+        itemText(item),
+        item === center,
+        item === center && atOnce,
+        item === option,
+        total,
+      ];
+    },
     size,
     showsInput: () => props().editing,
     showsHiddenInput: () => props().name !== undefined,

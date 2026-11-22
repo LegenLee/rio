@@ -62,7 +62,7 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 - [x] 로딩 표시 (Shape morph)
 - [x] 스크롤 필드
 
-### v0.6.1
+### v0.6.3
 
 - [ ] 아이콘
 - [ ] 언어별 줄 높이와 가변 글꼴 축

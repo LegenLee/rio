@@ -37,8 +37,9 @@ const editing = useModel(props, 'editing');
 const invalid = useModel(props, 'invalid');
 
 const locale = useLocale(() => props.locale);
-// The item in the middle, as attachScrollField reports it
+// What attachScrollField reports: the item in the middle, and whether a scroll at once put it there
 const center = ref<number>();
+const centerAtOnce = ref(false);
 const id = useId();
 const field = createScrollField({
   // `satisfies` fails the build if a prop added to ScrollFieldProps is missing here.
@@ -62,15 +63,12 @@ const field = createScrollField({
     }) satisfies Record<keyof ScrollFieldProps, unknown>,
   ids: { options: `${id}-option` },
   center: () => center.value,
+  centerAtOnce: () => centerAtOnce.value,
   onChange: (next) => (model.value = next),
   onEditingChange: (next) => (editing.value = next),
 });
-
-const centerItem = computed(() => field.centerIndex());
-// The value's option, which carries `aria-selected`
-const valueItem = computed(() => field.targetIndex());
-// With the copies, which items are the options
-const itemCount = computed(() => field.items().length);
+// What each item is made from, once for a render
+const depsOf = computed(() => field.itemDeps());
 
 const root = useTemplateRef<HTMLDivElement>('root');
 const viewport = useTemplateRef<HTMLDivElement>('viewport');
@@ -84,8 +82,9 @@ onMounted(() => {
     targetIndex: field.targetIndex,
     readText: field.readText,
     completeText: field.completeText,
-    onCenterChange(index, byPerson) {
+    onCenterChange(index, byPerson, atOnce) {
       center.value = index;
+      centerAtOnce.value = atOnce;
       if (byPerson) field.selectItem(index);
     },
     onChange: (next) => (model.value = next),
@@ -103,12 +102,11 @@ onBeforeUnmount(() => handle?.detach());
 <template>
   <div ref="root" v-bind="field.parts.root()" @keydown="field.handleKeydown">
     <div ref="viewport" v-bind="field.parts.viewport()">
-      <!-- An item renders again only when its text changes, whether it is in the middle, whether it
-           is the value's option, or the number of items. -->
+      <!-- An item renders again only when what it is made from changes. -->
       <div
         v-for="item in field.items()"
         :key="item"
-        v-memo="[field.itemText(item), item === centerItem, item === valueItem, itemCount]"
+        v-memo="depsOf(item)"
         v-bind="field.parts.item(item)"
         @click="field.selectItem(item)"
       >
