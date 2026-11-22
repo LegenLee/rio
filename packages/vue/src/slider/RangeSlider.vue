@@ -6,6 +6,7 @@ import {
   type SliderDomHandle,
   type SliderMessages,
 } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/slider.css';
 import { nextTick, onBeforeUnmount, onMounted, onUpdated, useModel, useTemplateRef } from 'vue';

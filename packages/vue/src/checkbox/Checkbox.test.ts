@@ -5,6 +5,7 @@ import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive } from 'vue';
 import Checkbox from './Checkbox.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -194,5 +195,18 @@ describe('RioCheckbox', () => {
     const state = getComputedStyle(root.querySelector('.rio-checkbox__state')!);
     expect(state.outlineStyle).toBe('solid');
     expect(state.outlineWidth).toBe('3px');
+  });
+});
+
+describe('RioCheckbox, the focus ring', () => {
+  test('goes round the circle while the input has keyboard focus', async () => {
+    const screen = await render(() =>
+      h('div', { style: { ...theme, padding: '40px' } }, [h(Checkbox)]),
+    );
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('input')!,
+      container.querySelector('.rio-checkbox__state')!,
+    );
   });
 });

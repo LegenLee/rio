@@ -5,6 +5,7 @@ import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive, type VNode } from 'vue';
 import Slider from './Slider.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 /** 212px wide, so the handle travels 200px between the 6px insets: 2px for each of 100 values. */
 const WIDTH = 212;
@@ -571,5 +572,19 @@ describe('RioSlider', () => {
       const { root } = await setup({ slots: icon });
       expect(root.querySelector('.rio-slider__icon')).toBeNull();
     });
+  });
+});
+
+describe('RioSlider, the focus ring', () => {
+  test('goes round the handle while the input has keyboard focus', async () => {
+    withTheme();
+    const screen = await render(() =>
+      h('div', { style: { padding: '40px' } }, [h(Slider, { label: 'Volume' })]),
+    );
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('input')!,
+      container.querySelector('.rio-slider__handle')!,
+    );
   });
 });

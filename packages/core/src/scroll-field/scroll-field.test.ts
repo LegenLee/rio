@@ -139,7 +139,7 @@ describe('the parts', () => {
   test('a list box named by its label, its active option the value’s', () => {
     const { field } = setup({ min: 0, max: 59, value: 7, label: 'Minutes' });
     expect(field.parts.root()).toMatchObject({
-      class: 'rio-scroll-field rio-focus-ring',
+      class: 'rio-scroll-field rio-focus-ring rio-focus-ring-target',
       role: 'listbox',
       tabindex: '0',
       'aria-label': 'Minutes',

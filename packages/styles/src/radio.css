@@ -109,9 +109,7 @@
 }
 
 .rio-radio__input:focus-visible ~ .rio-radio__state {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 .rio-radio__input:is(:focus-visible, [data-pressed]) ~ .rio-radio__icon {

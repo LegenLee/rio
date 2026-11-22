@@ -4,6 +4,7 @@ import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive } from 'vue';
 import Switch from './Switch.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 const touch = (el: Element, type: string, clientX: number, pointerType = 'touch') =>
   el.dispatchEvent(
@@ -287,5 +288,21 @@ describe('RioSwitch', () => {
     // Within half a pixel: engines round layout differently (WebKit to 1/64px).
     expect(target.left + target.width / 2).toBeCloseTo(box.left + box.width / 2, 0);
     expect(target.top + target.height / 2).toBeCloseTo(box.top + box.height / 2, 0);
+  });
+});
+
+describe('RioSwitch, the focus ring', () => {
+  test('goes round the track while the input has keyboard focus', async () => {
+    const theme = attachTheme(document.documentElement, {
+      sourceColor: '#6750a4',
+      colorScheme: false,
+    });
+    onTestFinished(() => theme.detach());
+    const screen = await render(() => h('div', { style: { padding: '40px' } }, [h(Switch)]));
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('input')!,
+      container.querySelector('.rio-switch')!,
+    );
   });
 });

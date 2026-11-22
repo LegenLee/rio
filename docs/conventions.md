@@ -168,7 +168,7 @@ packages/
     base/                   CSS shared across components
       anchored-position.css pairs with core's primitives/anchored-position
       corner-morph.css      pairs with core's primitives/corner-morph
-      focus-ring.css
+      focus-ring.css        the keyboard focus ring: on the focused element, or with `rio-focus-ring-target` on another that rings for it
       reduced-motion.css    imported by every component that uses motion tokens; pairs with core's primitives/reduced-motion
       ripple.css            pairs with core's primitives/ripple
       state-layer.css

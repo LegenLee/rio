@@ -24,7 +24,7 @@ describe('parts', () => {
   test('the root is the track, off; the input is a native checkbox with the switch role', () => {
     const { parts } = setup().sw;
     expect(parts.root()).toEqual({
-      class: 'rio-switch',
+      class: 'rio-switch rio-focus-ring-target',
       'data-selected': 'false',
       'data-icon': undefined,
       'data-disabled': undefined,

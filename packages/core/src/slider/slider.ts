@@ -271,7 +271,7 @@ export function createSlider(options: SliderOptions): SliderApi {
         const r = range();
         return inputAttrs(props(), r.min, r.max, r.step, value());
       },
-      handle: () => ({ class: 'rio-slider__handle', 'aria-hidden': 'true' }),
+      handle: () => ({ class: 'rio-slider__handle rio-focus-ring-target', 'aria-hidden': 'true' }),
       valueIndicator: () => ({ class: 'rio-slider__value-indicator' }),
     },
     showsLowerTrack: () => !!props().centered,
@@ -423,12 +423,12 @@ export function createRangeSlider(options: RangeSliderOptions): RangeSliderApi {
       startInput: () => input(0, 'start'),
       endInput: () => input(1, 'end'),
       startHandle: () => ({
-        class: 'rio-slider__handle',
+        class: 'rio-slider__handle rio-focus-ring-target',
         'aria-hidden': 'true',
         'data-thumb': 'start',
       }),
       endHandle: () => ({
-        class: 'rio-slider__handle',
+        class: 'rio-slider__handle rio-focus-ring-target',
         'aria-hidden': 'true',
         'data-thumb': 'end',
       }),

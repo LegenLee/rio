@@ -5,6 +5,7 @@ import { cdp, server, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive, type VNode } from 'vue';
 import ScrollField from './ScrollField.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 beforeEach(() => {
   const theme = attachTheme(document.documentElement, {
@@ -504,5 +505,20 @@ describe('RioScrollField, in a browser without scrollend', () => {
     expect(middle()?.textContent?.trim()).toBe('10');
     viewport.dispatchEvent(new Event('touchend'));
     await settledOn('07');
+  });
+});
+
+describe('RioScrollField, the focus ring', () => {
+  test('goes round the field while typing has keyboard focus', async () => {
+    const screen = await render(() =>
+      h('div', { style: { padding: '40px' } }, [
+        h(ScrollField, { editing: true, label: 'Minutes' }),
+      ]),
+    );
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('input:not([type="hidden"])')!,
+      container.querySelector('.rio-scroll-field')!,
+    );
   });
 });

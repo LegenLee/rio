@@ -125,7 +125,10 @@ describe('createSlider', () => {
     expect(parts.trackActive()).toEqual({ class: 'rio-slider__track-active' });
     expect(parts.trackUpper()).toEqual({ class: 'rio-slider__track-upper' });
     expect(parts.icon()).toEqual({ class: 'rio-slider__icon', 'aria-hidden': 'true' });
-    expect(parts.handle()).toEqual({ class: 'rio-slider__handle', 'aria-hidden': 'true' });
+    expect(parts.handle()).toEqual({
+      class: 'rio-slider__handle rio-focus-ring-target',
+      'aria-hidden': 'true',
+    });
     expect(parts.valueIndicator()).toEqual({ class: 'rio-slider__value-indicator' });
   });
 
@@ -276,7 +279,7 @@ describe('createRangeSlider', () => {
   test('the handles carry which they are, and stay out of the accessibility tree', () => {
     const { parts } = setupRange().slider;
     expect(parts.startHandle()).toEqual({
-      class: 'rio-slider__handle',
+      class: 'rio-slider__handle rio-focus-ring-target',
       'aria-hidden': 'true',
       'data-thumb': 'start',
     });

@@ -9,6 +9,7 @@ import AssistChip from './AssistChip.vue';
 import FilterChip from './FilterChip.vue';
 import InputChip from './InputChip.vue';
 import SuggestionChip from './SuggestionChip.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 const svg = () => h('svg', { viewBox: '0 0 24 24' });
 
@@ -401,5 +402,19 @@ describe('RioInputChip', () => {
     expect(root.style.margin).toBe('3px');
     expect(root.querySelector('.rio-chip__action')!.getAttribute('aria-describedby')).toBe('hint');
     expect(root.hasAttribute('aria-describedby')).toBe(false);
+  });
+});
+
+describe('RioInputChip, the focus ring', () => {
+  test('goes round the chip while its action has keyboard focus', async () => {
+    withTheme();
+    const screen = await render(() =>
+      h('div', { style: { padding: '40px' } }, [h(InputChip, null, () => 'Chip')]),
+    );
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('.rio-chip__action')!,
+      container.querySelector('.rio-chip')!,
+    );
   });
 });

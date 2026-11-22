@@ -20,7 +20,10 @@ describe('createCheckbox', () => {
       'aria-disabled': undefined,
       'aria-invalid': undefined,
     });
-    expect(checkbox.parts.state()).toEqual({ class: 'rio-checkbox__state', 'aria-hidden': 'true' });
+    expect(checkbox.parts.state()).toEqual({
+      class: 'rio-checkbox__state rio-focus-ring-target',
+      'aria-hidden': 'true',
+    });
     expect(checkbox.parts.container()).toEqual({
       class: 'rio-checkbox__container',
       'aria-hidden': 'true',

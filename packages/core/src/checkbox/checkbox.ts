@@ -98,7 +98,7 @@ export function createCheckbox(options: CheckboxOptions): CheckboxApi {
           'aria-invalid': p.error ? 'true' : undefined,
         };
       },
-      state: () => ({ class: 'rio-checkbox__state', 'aria-hidden': 'true' }),
+      state: () => ({ class: 'rio-checkbox__state rio-focus-ring-target', 'aria-hidden': 'true' }),
       container: () => ({ class: 'rio-checkbox__container', 'aria-hidden': 'true' }),
       icon: () => ({ class: 'rio-checkbox__icon' }),
     },

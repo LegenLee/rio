@@ -266,7 +266,8 @@ export function createListItem(options: ListItemOptions): ListItemApi {
         const k = kind();
         const disabled = !!props().disabled;
         return {
-          class: 'rio-list-item',
+          class: 'rio-list-item rio-focus-ring-target',
+          'data-focus-ring': 'inner',
           ...(k === 'option'
             ? {
                 role: 'option',

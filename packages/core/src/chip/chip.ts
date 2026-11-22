@@ -498,7 +498,7 @@ export function createInputChip<E extends CancelableEvent = MouseEvent>(
       root() {
         const p = props();
         return {
-          class: 'rio-chip',
+          class: 'rio-chip rio-focus-ring-target',
           'data-type': 'input',
           'data-icon': showsIcon() ? '' : undefined,
           'data-avatar': showsAvatar() ? '' : undefined,

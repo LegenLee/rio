@@ -1,10 +1,14 @@
+import { createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive, type VNode } from 'vue';
 import RangeSlider from './RangeSlider.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 /** 212px wide, so the handles travel 200px between the 6px insets: 2px for each of 100 values. */
+const theme = createThemeVariables({ sourceColor: '#6750a4' });
+
 const WIDTH = 212;
 
 interface Setup {
@@ -207,5 +211,18 @@ describe('RioRangeSlider', () => {
     pointer(soft.root, 'pointerup', at(soft.root, 0.9));
     expect(soft.state.changes).toEqual([]);
     expect(soft.end.value).toBe('60');
+  });
+});
+
+describe('RioRangeSlider, the focus ring', () => {
+  test('goes round the handle whose input has keyboard focus, and only that one', async () => {
+    const screen = await render(() =>
+      h('div', { style: { ...theme, padding: '40px' } }, [h(RangeSlider, { label: 'Price' })]),
+    );
+    const container = screen.container as HTMLElement;
+    const [, end] = container.querySelectorAll<HTMLElement>('input');
+    const [startHandle, endHandle] = container.querySelectorAll<HTMLElement>('.rio-slider__handle');
+    await expectRingOnFocus(end!, endHandle!);
+    expect(getComputedStyle(startHandle!).outlineStyle).toBe('none');
   });
 });

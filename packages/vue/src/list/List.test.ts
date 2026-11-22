@@ -8,6 +8,7 @@ import Checkbox from '../checkbox/Checkbox.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import List from './List.vue';
 import ListItem from './ListItem.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -336,5 +337,24 @@ describe('RioListItem', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Alone' }))
       .toHaveAttribute('tabindex', '0');
+  });
+});
+
+describe('RioListItem, the focus ring', () => {
+  test('goes round the item, inside it, while its action has keyboard focus', async () => {
+    const { container } = await setup({}, () => [h(ListItem, { onClick: vi.fn() }, () => 'Inbox')]);
+    await expectRingOnFocus(
+      container.querySelector('.rio-list-item__action')!,
+      container.querySelector('.rio-list-item')!,
+      '-3px',
+    );
+  });
+
+  test('goes round an option, inside it, while it has keyboard focus', async () => {
+    const { container } = await setup({ selection: 'single' }, () => [
+      h(ListItem, { value: 'a' }, () => 'A'),
+    ]);
+    const option = container.querySelector<HTMLElement>('.rio-list-item')!;
+    await expectRingOnFocus(option, option, '-3px');
   });
 });

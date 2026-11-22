@@ -122,7 +122,7 @@ export function createRadio(options: RadioOptions): RadioApi {
           ...disabledAttrs(p),
         };
       },
-      state: () => ({ class: 'rio-radio__state', 'aria-hidden': 'true' }),
+      state: () => ({ class: 'rio-radio__state rio-focus-ring-target', 'aria-hidden': 'true' }),
       icon: () => ({ class: 'rio-radio__icon', 'aria-hidden': 'true' }),
     },
     blocked: unavailable,

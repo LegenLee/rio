@@ -136,13 +136,11 @@
   opacity: var(--rio-state-pressed-state-layer-opacity);
 }
 
-/* The focus ring goes round the chip when its action has the focus, as `base/focus-ring.css`
-   draws rings; and so when a remove-only chip's remove button has it. */
+/* The focus ring goes round the chip when its action has the focus (`base/focus-ring.css`), and
+   when a remove-only chip's remove button has it. */
 .rio-chip:has(> .rio-chip__action:focus-visible),
 .rio-chip[data-remove-only]:has(> .rio-chip__remove:focus-visible) {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 .rio-chip[data-remove-only] > .rio-chip__remove:focus-visible {

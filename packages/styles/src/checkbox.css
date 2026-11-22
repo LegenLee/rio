@@ -116,9 +116,7 @@
 }
 
 .rio-checkbox__input:focus-visible ~ .rio-checkbox__state {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 .rio-checkbox__input:is(:focus-visible, [data-pressed]) ~ .rio-checkbox__container {

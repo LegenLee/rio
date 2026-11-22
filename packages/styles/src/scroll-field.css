@@ -60,12 +60,10 @@
   opacity: var(--rio-state-focus-state-layer-opacity);
 }
 
-/* While editing, the focus ring goes round the field when its input has the focus, as
-   `base/focus-ring.css` draws it. */
+/* While editing, the focus ring goes round the field when its input has the focus
+   (`base/focus-ring.css`). */
 .rio-scroll-field:has(> .rio-scroll-field__input:focus-visible) {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 /* The column. The space before the first item and after the last lets either reach the middle. */

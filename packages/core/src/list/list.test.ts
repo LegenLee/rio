@@ -134,7 +134,8 @@ describe('createListItem', () => {
   test('a static item: a plain list item, its content as given', () => {
     const { item } = itemSetup({}, {}, { leading: true, trailing: true });
     expect(item.parts.root()).toEqual({
-      class: 'rio-list-item',
+      class: 'rio-list-item rio-focus-ring-target',
+      'data-focus-ring': 'inner',
       'data-kind': 'static',
       'data-lines': '1',
       'data-selected': undefined,

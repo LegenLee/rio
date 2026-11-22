@@ -7,6 +7,7 @@ import {
   type RadioProps,
   type RadioValue,
 } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/ripple.css';
 import '@rio-m3e/styles/radio.css';

@@ -361,7 +361,7 @@ export function createScrollField(options: ScrollFieldOptions): ScrollFieldApi {
         const p = props();
         const editing = p.editing;
         return {
-          class: 'rio-scroll-field rio-focus-ring',
+          class: 'rio-scroll-field rio-focus-ring rio-focus-ring-target',
           role: editing ? undefined : 'listbox',
           tabindex: editing || p.disabled ? undefined : '0',
           'aria-label': editing ? undefined : p.label,

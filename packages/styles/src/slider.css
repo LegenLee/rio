@@ -335,14 +335,12 @@
   margin-block-end: calc(var(--_width) / -2);
 }
 
-/* The focus ring goes round the handle, as `base/focus-ring.css` draws it. */
+/* The focus ring goes round the handle (`base/focus-ring.css`). */
 .rio-slider:has(> .rio-slider__input:not([data-thumb='end']):focus-visible)
   .rio-slider__handle:not([data-thumb='end']),
 .rio-slider:has(> .rio-slider__input[data-thumb='end']:focus-visible)
   .rio-slider__handle[data-thumb='end'] {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 /* The value indicator: 4px over the handle, or beside it on a vertical slider */

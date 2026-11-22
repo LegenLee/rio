@@ -123,11 +123,9 @@
   opacity: var(--rio-state-focus-state-layer-opacity);
 }
 
-/* The focus ring goes round the track, as `base/focus-ring.css` draws it. */
+/* The focus ring goes round the track (`base/focus-ring.css`). */
 .rio-switch:has(> .rio-switch__input:focus-visible) {
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+  outline-style: solid;
 }
 
 /* Disabled, native or soft: the track at 12%, the unselected handle and the icons at 38% */

@@ -6,6 +6,7 @@ import { render } from 'vitest-browser-vue';
 import { defineComponent, h, reactive } from 'vue';
 import Radio from './Radio.vue';
 import RadioGroup from './RadioGroup.vue';
+import { expectRingOnFocus } from '../test/focus-ring';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
 
@@ -250,5 +251,20 @@ describe('RioRadioGroup and RioRadio', () => {
     expect(input.checked).toBe(false);
     await userEvent.click(input);
     await vi.waitFor(() => expect(input.checked).toBe(false));
+  });
+});
+
+describe('RioRadio, the focus ring', () => {
+  test('goes round the circle while the input has keyboard focus', async () => {
+    const screen = await render(() =>
+      h('div', { style: { ...theme, padding: '40px' } }, [
+        h(RadioGroup, { label: 'Size' }, () => h(Radio, { value: 'a' })),
+      ]),
+    );
+    const container = screen.container as HTMLElement;
+    await expectRingOnFocus(
+      container.querySelector('input')!,
+      container.querySelector('.rio-radio__state')!,
+    );
   });
 });

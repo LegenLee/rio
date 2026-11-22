@@ -110,7 +110,6 @@
 
 .rio-list-item[data-kind='option'] {
   cursor: pointer;
-  outline: none;
 }
 
 /* The trailing element sits over the action's press area; only what takes the focus in it takes
@@ -205,9 +204,7 @@
 ) {
   --_radius: var(--rio-shape-corner-large);
 
-  outline: var(--rio-state-focus-indicator-thickness) solid
-    var(--rio-focus-ring-color, var(--rio-color-secondary));
-  outline-offset: var(--rio-state-focus-indicator-inner-offset);
+  outline-style: solid;
 }
 
 .rio-list-item:is(

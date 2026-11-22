@@ -113,7 +113,7 @@ export function createSwitch(options: SwitchOptions): SwitchApi {
       root() {
         const p = props();
         return {
-          class: 'rio-switch',
+          class: 'rio-switch rio-focus-ring-target',
           'data-selected': String(p.selected),
           'data-icon': showsIcon() ? '' : undefined,
           'data-disabled': blocked() ? '' : undefined,
