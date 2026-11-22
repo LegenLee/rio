@@ -4,7 +4,7 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
-## [Unreleased]
+## [0.6.0] - 2026-11-22
 
 Core's DOM behaviors no longer keep state on the elements an adapter renders, apart from a primitive's own marks: they report what they find, the adapter keeps it, and the parts render it. They still write values no render could keep up with, as a spring's or a drag's. Adapters other than Rio's own need the new callbacks below.
 
@@ -201,3 +201,5 @@ The first release: the M3E foundations and three components, the button, the ico
 [0.2.0]: https://github.com/LegenLee/rio/releases/tag/v0.2.0
 [0.3.0]: https://github.com/LegenLee/rio/releases/tag/v0.3.0
 [0.4.0]: https://github.com/LegenLee/rio/releases/tag/v0.4.0
+[0.5.0]: https://github.com/LegenLee/rio/releases/tag/v0.5.0
+[0.6.0]: https://github.com/LegenLee/rio/releases/tag/v0.6.0
