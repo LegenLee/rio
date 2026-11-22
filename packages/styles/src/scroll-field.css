@@ -1,0 +1,214 @@
+/*
+ * Scroll fields (M3 Expressive): a column of values that scrolls to the one in the middle, or a
+ * text input while editing. Values: the spec's tokens and measurement drawings (see
+ * docs/components/scroll-field.md).
+ *
+ * The root carries `data-size`, `data-editing`, `data-invalid`, and `data-disabled`, which core
+ * writes. The viewport scrolls the items and snaps one to its middle; that one, as core's
+ * `attachScrollField` reports it, carries `data-selected`.
+ */
+
+.rio-scroll-field {
+  /* Each item's slot, and the distance between the items: display-medium's line height */
+  --_item-height: 3.25rem;
+  --_padding: 16px;
+
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  grid-template: minmax(0, 1fr) / auto;
+  box-sizing: border-box;
+  min-inline-size: 100px;
+  block-size: 120px;
+  padding-inline: var(--_padding);
+  vertical-align: middle;
+  border-radius: var(--rio-shape-corner-large);
+  background-color: var(--rio-color-surface-container-lowest);
+  color: var(--rio-color-on-surface);
+  user-select: none;
+}
+
+.rio-scroll-field[data-size='medium'] {
+  min-inline-size: 120px;
+}
+
+.rio-scroll-field[data-size='large'] {
+  --_padding: 24px;
+  min-inline-size: 186px;
+}
+
+/* The state layer, under the values: hover and keyboard focus */
+.rio-scroll-field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--rio-color-on-surface);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rio-motion-fast-effects);
+}
+
+@media (hover: hover) {
+  .rio-scroll-field:not([data-disabled]):hover::before {
+    opacity: var(--rio-state-hover-state-layer-opacity);
+  }
+}
+
+.rio-scroll-field:not([data-disabled]):focus-visible::before {
+  opacity: var(--rio-state-focus-state-layer-opacity);
+}
+
+/* While editing, the focus ring goes round the field when its input has the focus, as
+   `base/focus-ring.css` draws it. */
+.rio-scroll-field:has(> .rio-scroll-field__input:focus-visible) {
+  outline: var(--rio-state-focus-indicator-thickness) solid
+    var(--rio-focus-ring-color, var(--rio-color-secondary));
+  outline-offset: var(--rio-state-focus-indicator-outer-offset);
+}
+
+/* The column. The space before the first item and after the last lets either reach the middle. */
+.rio-scroll-field__viewport {
+  grid-area: 1 / 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+.rio-scroll-field__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.rio-scroll-field__viewport::before,
+.rio-scroll-field__viewport::after {
+  content: '';
+  display: block;
+  block-size: calc(50% - var(--_item-height) / 2);
+}
+
+.rio-scroll-field__item {
+  display: grid;
+  place-items: center;
+  block-size: var(--_item-height);
+  scroll-snap-align: center;
+  white-space: nowrap;
+  font: var(--rio-typescale-display-medium);
+  letter-spacing: var(--rio-typescale-display-medium-tracking);
+  font-variant-numeric: tabular-nums;
+  color: var(--rio-color-outline);
+  cursor: pointer;
+  transition:
+    font var(--rio-motion-fast-spatial),
+    letter-spacing var(--rio-motion-fast-spatial),
+    color var(--rio-motion-fast-effects);
+}
+
+.rio-scroll-field__item[data-selected] {
+  font: var(--rio-typescale-emphasized-display-large);
+  letter-spacing: var(--rio-typescale-emphasized-display-large-tracking);
+  color: var(--rio-color-on-surface);
+  cursor: default;
+}
+
+/* Each item keeps the width of its text written as the value in the middle is, so the field keeps
+   its width as values scroll through the middle. */
+.rio-scroll-field__item::after {
+  content: attr(data-text);
+  grid-area: 1 / 1;
+  block-size: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font: var(--rio-typescale-emphasized-display-large);
+  letter-spacing: var(--rio-typescale-emphasized-display-large-tracking);
+}
+
+/* Editing: the value in the middle, alone, as a text input, inside the active outline */
+.rio-scroll-field[data-editing] {
+  box-shadow: inset 0 0 0 2px var(--rio-color-primary);
+}
+
+.rio-scroll-field[data-editing] .rio-scroll-field__viewport {
+  visibility: hidden;
+}
+
+/* The input fills the field between its paddings, and adds no width of its own. */
+.rio-scroll-field__input {
+  position: absolute;
+  inset-inline: var(--_padding);
+  top: 50%;
+  translate: 0 -50%;
+  box-sizing: border-box;
+  inline-size: auto;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font: var(--rio-typescale-emphasized-display-large);
+  letter-spacing: var(--rio-typescale-emphasized-display-large-tracking);
+  font-variant-numeric: tabular-nums;
+  color: var(--rio-color-primary);
+  caret-color: var(--rio-color-primary);
+  user-select: text;
+}
+
+.rio-scroll-field[data-invalid] {
+  box-shadow: inset 0 0 0 2px var(--rio-color-error);
+}
+
+.rio-scroll-field[data-invalid] .rio-scroll-field__item[data-selected] {
+  color: var(--rio-color-error);
+}
+
+.rio-scroll-field[data-invalid] .rio-scroll-field__input {
+  color: var(--rio-color-error);
+  caret-color: var(--rio-color-error);
+}
+
+/* Disabled, native or soft: nothing scrolls, and the field fades */
+.rio-scroll-field[data-disabled] {
+  background-color: color-mix(
+    in srgb,
+    var(--rio-color-surface-container-lowest)
+      calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+    transparent
+  );
+}
+
+.rio-scroll-field[data-disabled] .rio-scroll-field__viewport {
+  overflow-y: hidden;
+}
+
+.rio-scroll-field[data-disabled] :is(.rio-scroll-field__item, .rio-scroll-field__input) {
+  opacity: var(--rio-state-disabled-state-layer-opacity);
+  cursor: default;
+}
+
+.rio-scroll-field[data-disabled][data-editing] {
+  box-shadow: inset 0 0 0 2px
+    color-mix(
+      in srgb,
+      var(--rio-color-on-surface) calc(var(--rio-state-disabled-state-layer-opacity) * 100%),
+      transparent
+    );
+}
+
+.rio-scroll-field[data-disabled] .rio-scroll-field__input {
+  color: var(--rio-color-on-surface);
+}
+
+@media (forced-colors: active) {
+  .rio-scroll-field {
+    border: 1px solid CanvasText;
+    padding-inline: calc(var(--_padding) - 1px);
+  }
+
+  .rio-scroll-field[data-editing] {
+    border: 2px solid Highlight;
+    padding-inline: calc(var(--_padding) - 2px);
+  }
+}

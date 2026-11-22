@@ -113,6 +113,10 @@ packages/
       radio.ts              the group and its radio buttons: props and parts
       interaction.ts        Shift+Tab into a group with nothing selected (DOM, tested through the Vue components)
       radio.test.ts
+    scroll-field/
+      scroll-field.ts       props, parts, keys, the values it takes, and the text typed for them
+      interaction.ts        the native scroll and its snapping, and typing (DOM, tested through the Vue component)
+      scroll-field.test.ts
     slider/
       slider.ts             the slider and the range slider: props, parts, and the values they take
       interaction.ts        the pointer, the inputs' values, and the inset icon's room (DOM, tested through the Vue components)
@@ -147,7 +151,7 @@ packages/
       intl.ts               dateTimeFormat and numberFormat: one Intl format for each language and options
       keyboard.ts           hasModifier: Alt, Ctrl, or Meta held, for the keys components leave to shortcuts
       link.ts               linkAttrs: an `<a>`'s attributes as a link, disabled or not, for buttons and chips
-      number.ts             parseFloatStrict: a number as Kotlin reads it, for the shapes' SVG and text parsers
+      number.ts             parseFloatStrict, a number as Kotlin reads it, for the shapes' parsers; addSteps, for slider and scroll field
       object.ts             resolveProps, which every component with defaults reads its props through
       progress.ts           a value's share of its range and the progressbar ARIA, for progress and loading indicators
       typeahead.ts          moving by typing the start of a label, for menu and select
@@ -171,6 +175,7 @@ packages/
     menu.css
     progress.css            the linear and circular indicators, flat, and their indeterminate motion
     radio.css               the radio buttons and their group
+    scroll-field.css
     slider.css              the slider and the range slider
     split-button.css        layered on top of button.css
     switch.css
@@ -213,6 +218,9 @@ packages/
       context.ts            what the group provides to its radio buttons
     ripple/
       ripple.ts             the v-ripple directive, and useRipple for presses that ripple on a part
+    scroll-field/
+      ScrollField.vue
+      ScrollField.vrt.test.ts  screenshot test (see Visual regression)
     slider/
       Slider.vue            a native range input; class and style on the root, other attributes on the input
       RangeSlider.vue       two native range inputs in a group, which takes the app's attributes

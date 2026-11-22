@@ -15,3 +15,20 @@ export function parseFloatStrict(text: string): number {
   if (DECIMAL.test(s)) return Number(s);
   throw new Error(`For input string: "${text}"`);
 }
+
+const decimals = (value: number) => {
+  const text = String(value);
+  const exponent = text.indexOf('e-');
+  if (exponent >= 0) return Number(text.slice(exponent + 2));
+  const point = text.indexOf('.');
+  return point < 0 ? 0 : text.length - point - 1;
+};
+
+/**
+ * `start` plus `steps` steps of `step`, rounded to the decimals of `start` and `step`, so that steps
+ * such as 0.1 don't add up to 0.30000000000000004.
+ */
+export function addSteps(start: number, step: number, steps: number): number {
+  const places = Math.min(100, Math.max(decimals(start), decimals(step)));
+  return Number((start + steps * step).toFixed(places));
+}

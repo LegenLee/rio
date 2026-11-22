@@ -82,6 +82,7 @@ import {
   RioRadio,
   RioRadioGroup,
   RioRangeSlider,
+  RioScrollField,
   RioSelect,
   RioSelectOption,
   RioSlider,
@@ -108,6 +109,13 @@ const chips = reactive({
   last: '',
 });
 const sizeChip = useTemplateRef('sizeChip');
+const scrollFields = reactive({
+  minutes: 15,
+  year: 2026,
+  unit: 'kg',
+  editing: false,
+  invalid: false,
+});
 const sliders = reactive({
   plain: 40,
   stops: 60,
@@ -1315,6 +1323,30 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <code>sliders={{ sliders }}</code>
     </section>
 
+    <section class="scroll-fields">
+      <RioScrollField v-model="scrollFields.minutes" :min="0" :max="59" label="Minutes" />
+      <RioScrollField v-model="scrollFields.year" :min="1900" :max="2100" label="Year" />
+      <RioScrollField
+        v-model="scrollFields.unit"
+        :options="['g', 'kg', 'lb', 'oz']"
+        loop
+        label="Unit"
+      />
+      <RioScrollField
+        v-model="scrollFields.minutes"
+        v-model:editing="scrollFields.editing"
+        v-model:invalid="scrollFields.invalid"
+        :min="0"
+        :max="59"
+        label="Minutes, typed"
+      />
+      <RioButton variant="tonal" @click="scrollFields.editing = !scrollFields.editing">
+        Type
+      </RioButton>
+      <RioScrollField :model-value="7" disabled label="Disabled" />
+      <code>scrollFields={{ scrollFields }}</code>
+    </section>
+
     <section class="type-scale">
       <div v-for="style in TYPE_STYLES" :key="style" class="type-row">
         <code>{{ style }}</code>
@@ -1485,6 +1517,13 @@ main {
   display: grid;
   justify-items: start;
   gap: 12px;
+}
+
+.scroll-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
 }
 
 .sliders {

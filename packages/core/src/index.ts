@@ -102,6 +102,8 @@ export * from './progress/interaction';
 export * from './progress/progress';
 export * from './radio/interaction';
 export * from './radio/radio';
+export * from './scroll-field/interaction';
+export * from './scroll-field/scroll-field';
 export * from './select/interaction';
 export * from './select/select';
 export * from './slider/interaction';

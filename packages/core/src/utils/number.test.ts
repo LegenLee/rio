@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { parseFloatStrict } from './number';
+import { addSteps, parseFloatStrict } from './number';
 
 describe('parseFloatStrict', () => {
   test.each([
@@ -19,4 +19,13 @@ describe('parseFloatStrict', () => {
       expect(() => parseFloatStrict(text)).toThrow();
     },
   );
+});
+
+describe('addSteps', () => {
+  test('steps from a start, rounded to their decimals', () => {
+    expect(addSteps(0, 0.1, 3)).toBe(0.3);
+    expect(addSteps(1.25, 0.5, 2)).toBe(2.25);
+    expect(addSteps(10, 5, 4)).toBe(30);
+    expect(addSteps(0, 1e-7, 3)).toBe(3e-7);
+  });
 });

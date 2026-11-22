@@ -4,6 +4,7 @@ import type { SliderMessages } from '../locale/messages';
 import type { PartAttrs, PartNode } from '../parts';
 import { disabledAttrs, isBlocked } from '../utils/disabled';
 import { numberFormat } from '../utils/intl';
+import { addSteps } from '../utils/number';
 import { resolveProps } from '../utils/object';
 
 /** M3E slider sizes, by the track's thickness. `xsmall` is the default. */
@@ -87,14 +88,6 @@ export function sliderRange(props: SliderCommonProps): SliderRange {
   return { min, max, step };
 }
 
-const decimals = (value: number) => {
-  const text = String(value);
-  const exponent = text.indexOf('e-');
-  if (exponent >= 0) return Number(text.slice(exponent + 2));
-  const point = text.indexOf('.');
-  return point < 0 ? 0 : text.length - point - 1;
-};
-
 /**
  * The value nearest `value` that the slider takes: within the range, on a step. Where `max` isn't
  * on a step, the last step below it is the highest value, as in a native range input.
@@ -104,9 +97,7 @@ export function snapSliderValue(value: number, range: SliderRange): number {
   if (!Number.isFinite(value)) return min;
   const last = Math.floor((max - min) / step + 1e-9);
   const steps = Math.min(last, Math.max(0, Math.round((value - min) / step)));
-  // Without the rounding, steps such as 0.1 would add up to 0.30000000000000004.
-  const places = Math.min(100, Math.max(decimals(min), decimals(step)));
-  return Number((min + steps * step).toFixed(places));
+  return addSteps(min, step, steps);
 }
 
 /** Where a value sits along the track, from 0 at `min` to 1 at `max`. */

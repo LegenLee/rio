@@ -24,6 +24,7 @@ export { default as RioLinearProgress } from './progress/LinearProgress.vue';
 export { default as RioRadio } from './radio/Radio.vue';
 export { default as RioRadioGroup } from './radio/RadioGroup.vue';
 export { vRipple } from './ripple/ripple';
+export { default as RioScrollField } from './scroll-field/ScrollField.vue';
 export { default as RioSelect } from './select/Select.vue';
 export { default as RioSelectOption } from './select/SelectOption.vue';
 export { default as RioRangeSlider } from './slider/RangeSlider.vue';

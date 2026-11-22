@@ -65,11 +65,15 @@ import {
   type InputChipContent,
   type InputChipProps,
   createRangeSlider,
+  createScrollField,
   createSlider,
   rangeSliderSkeleton,
+  scrollFieldSkeleton,
   sliderSkeleton,
   type RangeSliderProps,
   type SliderContent,
+  type ScrollFieldProps,
+  type ScrollFieldValue,
   type SliderProps,
   createTextField,
   createTooltip,
@@ -128,6 +132,7 @@ import DatePickerDialog from './date-picker/DatePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
 import Menu from './menu/Menu.vue';
+import ScrollField from './scroll-field/ScrollField.vue';
 import MenuDivider from './menu/MenuDivider.vue';
 import MenuGroup from './menu/MenuGroup.vue';
 import MenuItem from './menu/MenuItem.vue';
@@ -516,6 +521,51 @@ describe('RioCircularProgress', () => {
     const screen = await render(CircularProgress, { props });
     const api = createCircularProgress({ props: () => props });
     expectSkeleton(rootOf(screen), circularProgressSkeleton, api);
+  });
+});
+
+describe('RioScrollField', () => {
+  test.each<[string, Omit<ScrollFieldProps, 'value'> & { modelValue?: ScrollFieldValue }]>([
+    ['by default', {}],
+    ['looping, with options', { options: ['g', 'kg', 'lb'], modelValue: 'kg', loop: true }],
+    ['editing, invalid', { editing: true, invalid: true, modelValue: 7, min: 0, max: 59 }],
+    ['disabled', { disabled: true }],
+    ['soft-disabled, submitting with a form', { softDisabled: true, name: 'minutes' }],
+    // Every non-boolean prop away from its default
+    [
+      'with its own range, size, label, language, and format',
+      {
+        min: 10,
+        max: 90,
+        step: 5,
+        size: 'large',
+        label: 'Weight',
+        locale: 'ar-EG',
+        modelValue: 40,
+        format: (value: ScrollFieldValue) => `${value} kg`,
+      },
+    ],
+  ])('%s', async (_, { modelValue, ...props }) => {
+    const screen = await render(ScrollField, { props: { modelValue, ...props } });
+    const root = rootOf(screen);
+    // The ids come from Vue's `useId`; the API is built with the ones rendered.
+    const options = root.querySelector('[role="option"]')!.id.replace(/-\d+$/, '');
+    const api = createScrollField({
+      props: () => ({ ...props, value: modelValue }),
+      ids: { options },
+      onChange: noop,
+      onEditingChange: noop,
+    });
+    expectSkeleton(root, scrollFieldSkeleton, api);
+    // The items carry the attributes core gives each, and their text.
+    const items = root.querySelectorAll('.rio-scroll-field__item');
+    expect(items).toHaveLength(api.items().length);
+    for (const index of [0, api.targetIndex(), api.items().length - 1]) {
+      for (const [name, value] of Object.entries(api.parts.item(index))) {
+        expect(items[index]!.getAttribute(name), `${index} ${name}`).toBe(value ?? null);
+      }
+      expect(items[index]!.textContent?.trim()).toBe(api.itemText(index));
+    }
   });
 });
 

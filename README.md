@@ -56,7 +56,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Icons
 - [x] Loading progress bars
 - [x] Loading indicator with shape morphs
-- [ ] Scroll fields
+- [x] Scroll fields
 
 ### v0.7 (Layouts)
 

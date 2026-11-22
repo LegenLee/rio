@@ -47,6 +47,7 @@ export default defineConfig({
           { text: 'Menu', link: '/components/menu' },
           { text: 'Progress indicators', link: '/components/progress-indicator' },
           { text: 'Radio button', link: '/components/radio-button' },
+          { text: 'Scroll fields', link: '/components/scroll-field' },
           { text: 'Select', link: '/components/select' },
           { text: 'Slider', link: '/components/slider' },
           { text: 'Split button', link: '/components/split-button' },
