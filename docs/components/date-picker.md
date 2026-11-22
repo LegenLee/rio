@@ -144,7 +144,7 @@ Type a date, or press the field or its calendar button.
 `RioDatePickerDialog` takes `v-model`, `v-model:open`, `min`, `max`, `isDateDisabled`, `locale`, `firstDayOfWeek`, `messages`, `initialMode`, and `clearable`.
 
 - **Values are ISO dates**, `YYYY-MM-DD`, as `<input type="date">` takes them, with no time and no time zone (Rio's choice). `Temporal.PlainDate.from(date)` reads one.
-- **Slots are icons, which the app brings**: Rio ships no icons. `calendar-icon` is the field's button, and the dialog's switch back to the calendar; `edit-icon`, the dialog's switch to the text input; `previous-icon` and `next-icon`, the arrows; and `dropdown-icon`, the month and year buttons' arrow, which turns over while its list shows. A slot left empty leaves its button without an icon; its name for assistive technology stays.
+- **Slots are icons, which the app brings**: Rio ships no icons. `calendar-icon` is the field's button, and the dialog's switch back to the calendar; `edit-icon`, the dialog's switch to the text input; `previous-icon` and `next-icon`, the arrows; and `dropdown-icon`, the month and year buttons' arrow, which turns over while its list shows. A slot left empty takes the icon the app registered for it with `createRio`, by its alias (`calendar`, `edit`, `previous`, `next`, `dropdown`; see [Icons](../guide/icons.md)); without that, its button shows no icon, and its name for assistive technology stays.
 - `class` and `style` go to the root; every other attribute and listener goes to the field's input.
 
 ### The field

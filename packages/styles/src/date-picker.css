@@ -92,7 +92,7 @@
   block-size: 18px;
 }
 
-.rio-date-picker__dropdown-icon > :is(svg, img) {
+.rio-date-picker__dropdown-icon > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
 }

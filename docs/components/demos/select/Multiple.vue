@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { mdiCheck, mdiMenuDown } from '@mdi/js';
 import type { SelectSelected } from '@rio-m3e/core';
-import { RioSelect, RioSelectOption } from '@rio-m3e/vue';
+import { RioIcon, RioSelect, RioSelectOption } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const toppings = ref<SelectSelected>(['cheese', 'basil']);
@@ -15,13 +15,13 @@ const TOPPINGS = { cheese: 'Cheese', mushroom: 'Mushroom', olive: 'Olive', basil
   -->
   <RioSelect v-model="toppings" label="Toppings" multiple style="inline-size: 280px">
     <template #dropdown-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiMenuDown }" />
     </template>
     <RioSelectOption v-for="(name, value) in TOPPINGS" :key="value" :value="value">
       {{ name }}
       <!-- A check mark next to the color and shape, as the spec recommends -->
       <template #icon="{ selected }">
-        <svg v-if="selected" viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+        <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
       </template>
     </RioSelectOption>
   </RioSelect>

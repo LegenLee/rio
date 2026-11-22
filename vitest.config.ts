@@ -62,7 +62,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          include: ['packages/{tokens,core}/src/**/*.test.ts'],
+          include: ['packages/{tokens,core,styles}/src/**/*.test.ts'],
           exclude: [primitives, ...defaultExclude],
           environment: 'node',
           // MCU breaks under Node ESM (upstream #195), so let Vite process it

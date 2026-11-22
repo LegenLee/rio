@@ -34,6 +34,16 @@ describe('createThemeVariables', () => {
     expect(custom['--rio-typeface-plain']).toBe('Inter, sans-serif');
   });
 
+  test('passes the language height through', () => {
+    const tall = createThemeVariables({ ...options, languageHeight: 'medium' });
+    expect(tall).toMatchObject(createTypographyVariables({}, { languageHeight: 'medium' }));
+  });
+
+  test('passes the type scale through', () => {
+    const variable = createThemeVariables({ ...options, typescale: 'variable' });
+    expect(variable).toMatchObject(createTypographyVariables({}, { typescale: 'variable' }));
+  });
+
   test('wraps colors in light-dark()', () => {
     expect(vars['--rio-color-primary']).toMatch(/^light-dark\(#[0-9a-f]{6}, #[0-9a-f]{6}\)$/);
   });

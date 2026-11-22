@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiChevronLeft, mdiChevronRight, mdiMenuDown, mdiPencil } from '@mdi/js';
-import { RioButton, RioDatePickerDialog } from '@rio-m3e/vue';
+import { RioButton, RioDatePickerDialog, RioIcon } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const open = ref(false);
@@ -14,16 +14,16 @@ const due = ref<string>();
   }}</RioButton>
   <RioDatePickerDialog v-model="due" v-model:open="open">
     <template #edit-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiPencil" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiPencil }" />
     </template>
     <template #previous-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronLeft" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronLeft }" />
     </template>
     <template #next-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronRight" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronRight }" />
     </template>
     <template #dropdown-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiMenuDown }" />
     </template>
   </RioDatePickerDialog>
 </template>

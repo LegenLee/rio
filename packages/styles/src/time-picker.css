@@ -62,9 +62,14 @@
   align-items: flex-start;
 }
 
-/* A time reads hours, then minutes, left to right in right-to-left languages too. */
-.rio-time-picker__fields:dir(rtl) {
-  flex-direction: row-reverse;
+/* A time reads hours, then minutes, left to right in right-to-left languages too: the hour, the
+   fields' first child, goes last there (`base/direction.css`). */
+.rio-time-picker__fields > :first-child {
+  order: calc(-1 * var(--rio-dir-sign, 1));
+}
+
+.rio-time-picker__fields > :last-child {
+  order: var(--rio-dir-sign, 1);
 }
 
 /* The hour and minute: toggles in the dial mode, inputs in the text input */

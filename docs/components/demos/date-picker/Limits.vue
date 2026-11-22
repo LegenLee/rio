@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiCalendar, mdiChevronLeft, mdiChevronRight, mdiMenuDown } from '@mdi/js';
-import { RioDatePicker } from '@rio-m3e/vue';
+import { RioDatePicker, RioIcon } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const delivery = ref<string>();
@@ -21,16 +21,16 @@ const weekend = (date: string) => {
     supporting-text="Weekdays, until February"
   >
     <template #calendar-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiCalendar }" />
     </template>
     <template #previous-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronLeft" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronLeft }" />
     </template>
     <template #next-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronRight" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronRight }" />
     </template>
     <template #dropdown-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiMenuDown }" />
     </template>
   </RioDatePicker>
 </template>

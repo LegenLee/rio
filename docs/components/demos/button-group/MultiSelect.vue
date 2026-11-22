@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiFormatBold, mdiFormatItalic, mdiFormatUnderline } from '@mdi/js';
-import { RioButtonGroup, RioIconButton } from '@rio-m3e/vue';
+import { RioButtonGroup, RioIcon, RioIconButton } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const styles = ref(['bold']);
@@ -9,13 +9,13 @@ const styles = ref(['bold']);
 <template>
   <RioButtonGroup v-model="styles" selection="multiple">
     <RioIconButton label="Bold" value="bold" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiFormatBold" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiFormatBold }" />
     </RioIconButton>
     <RioIconButton label="Italic" value="italic" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiFormatItalic" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiFormatItalic }" />
     </RioIconButton>
     <RioIconButton label="Underline" value="underline" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiFormatUnderline" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiFormatUnderline }" />
     </RioIconButton>
   </RioButtonGroup>
   <code>{{ styles }}</code>

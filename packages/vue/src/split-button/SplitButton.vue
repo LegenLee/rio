@@ -5,6 +5,7 @@ import {
   type SplitButtonMenuIconHandle,
   type SplitButtonProps,
 } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
@@ -14,6 +15,7 @@ import '@rio-m3e/styles/split-button.css';
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
 import { vRipple } from '../ripple/ripple';
 import { vCornerMorph } from '../corner-morph/corner-morph';
+import RioIcon from '../icon/Icon.vue';
 
 // No defaults here: core fills them in.
 const { menuLabel, label, variant, size, open, popup, disabled, softDisabled, type } =
@@ -30,7 +32,8 @@ const slots = defineSlots<{
   icon?: () => unknown;
   /**
    * The trailing button's icon: an expand icon pointing down, which turns when the menu opens.
-   * Rio ships no icons. Hidden from assistive technology; `menuLabel` names the button.
+   * Hidden from assistive technology; `menuLabel` names the button. Without one, the `menu` icon
+   * registered with `createRio`.
    */
   'menu-icon'?: () => unknown;
 }>();
@@ -87,7 +90,9 @@ onBeforeUnmount(() => handle?.detach());
       @click="sb.handleTrailingClick"
     >
       <span v-bind="sb.parts.touch()" />
-      <span v-bind="sb.parts.menuIcon()"><slot name="menu-icon" /></span>
+      <span v-bind="sb.parts.menuIcon()"
+        ><slot name="menu-icon"><RioIcon alias="menu" /></slot
+      ></span>
     </button>
   </div>
 </template>

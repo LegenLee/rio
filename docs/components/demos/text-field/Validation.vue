@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiAlertCircle } from '@mdi/js';
-import { RioTextField } from '@rio-m3e/vue';
+import { RioIcon, RioTextField } from '@rio-m3e/vue';
 import { computed, ref } from 'vue';
 
 const code = ref('');
@@ -18,9 +18,7 @@ const wrong = computed(() => code.value.length > 0 && code.value.length < 6);
   >
     <!-- The error icon is the app's: Rio ships no icons. -->
     <template v-if="wrong" #trailing-icon>
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path :d="mdiAlertCircle" fill="currentColor" />
-      </svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiAlertCircle }" />
     </template>
   </RioTextField>
   <RioTextField variant="outlined" label="Account" model-value="ada@example.com" readonly />

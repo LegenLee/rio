@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiCheck, mdiMenuDown } from '@mdi/js';
-import { RioChipSet, RioFilterChip, RioMenu, RioMenuItem } from '@rio-m3e/vue';
+import { RioChipSet, RioFilterChip, RioIcon, RioMenu, RioMenuItem } from '@rio-m3e/vue';
 import { ref, useTemplateRef } from 'vue';
 
 const open = ref(false);
@@ -14,12 +14,12 @@ const inStock = ref(false);
     <RioFilterChip ref="chip" v-model:open="open" menu :selected="size !== undefined">
       {{ size ?? 'Size' }}
       <template #dropdown-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiMenuDown }" />
       </template>
     </RioFilterChip>
     <RioFilterChip v-model:selected="inStock">
       <template #selected-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiCheck }" />
       </template>
       In stock
     </RioFilterChip>

@@ -8,6 +8,8 @@ import '@rio-m3e/styles/chip.css';
 import { useTemplateRef } from 'vue';
 import { useRipple } from '../ripple/ripple';
 import { useChipSetItem } from './context';
+import RioIcon from '../icon/Icon.vue';
+import { useIconOfAlias } from '../icon/icons';
 
 const { selected, elevated, value, menu, open, disabled, softDisabled } =
   defineProps<FilterChipProps>();
@@ -21,15 +23,24 @@ const slots = defineSlots<{
   default?: () => unknown;
   /** A leading icon, shown while the chip isn't selected. Hidden from assistive technology. */
   icon?: () => unknown;
-  /** The icon while the chip is selected, such as a checkmark. Hidden from assistive technology. */
+  /**
+   * The icon while the chip is selected, such as a checkmark. Hidden from assistive technology.
+   * Without one, the `check` icon registered with `createRio`.
+   */
   'selected-icon'?: () => unknown;
-  /** A `menu` chip's trailing icon, such as a dropdown arrow, which turns over while open. */
+  /**
+   * A `menu` chip's trailing icon, such as a dropdown arrow, which turns over while open. Without
+   * one, the `dropdown` icon registered with `createRio`.
+   */
   'dropdown-icon'?: () => unknown;
 }>();
 
 const item = useChipSetItem();
 // In a chip set that keeps a selection, a chip with a `value` is selected as the set says.
 const grouped = () => !!item.set && item.set.selection() !== 'none' && value !== undefined && !menu;
+// The app's registered icons, where its slots give none
+const checkIcon = useIconOfAlias('check');
+const dropdownIcon = useIconOfAlias('dropdown');
 const chip = createFilterChip({
   // `satisfies` fails the build if a prop added to FilterChipProps is missing here.
   props: () =>
@@ -44,8 +55,8 @@ const chip = createFilterChip({
     }) satisfies Record<keyof FilterChipProps, unknown>,
   content: () => ({
     icon: !!slots.icon,
-    selectedIcon: !!slots['selected-icon'],
-    dropdownIcon: !!slots['dropdown-icon'],
+    selectedIcon: !!slots['selected-icon'] || !!checkIcon.value,
+    dropdownIcon: !!slots['dropdown-icon'] || !!dropdownIcon.value,
   }),
   key: item.key,
   tabStop: item.tabStop,
@@ -65,12 +76,12 @@ useRipple(useTemplateRef<HTMLElement>('root'), useTemplateRef<HTMLElement>('stat
     <span v-bind="chip.parts.touch()" />
     <span ref="state" v-bind="chip.parts.state()" />
     <span v-if="chip.showsIcon()" v-bind="chip.parts.icon()">
-      <slot v-if="chip.showsSelectedIcon()" name="selected-icon" />
+      <slot v-if="chip.showsSelectedIcon()" name="selected-icon"><RioIcon alias="check" /></slot>
       <slot v-else name="icon" />
     </span>
     <span v-bind="chip.parts.label()"><slot /></span>
     <span v-if="chip.showsTrailing()" v-bind="chip.parts.trailing()">
-      <slot name="dropdown-icon" />
+      <slot name="dropdown-icon"><RioIcon alias="dropdown" /></slot>
     </span>
   </button>
 </template>

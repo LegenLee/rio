@@ -58,8 +58,8 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 ### v0.6.3
 
-- [ ] Icons
-- [ ] Language-specific line heights and variable font axes
+- [x] Icons
+- [x] Language-specific line heights and variable font axes
 
 ### v0.7 (Layouts)
 
@@ -93,12 +93,12 @@ const rio = createRio({
 createApp(App).use(rio).mount('#app');
 ```
 
-Each component brings its own styles. Rio ships no icons, so bring your own.
+Each component brings its own styles. Rio ships no icons, so bring your own: this example draws [Material Design Icons](https://pictogrammers.com/library/mdi/) from `@mdi/js` with [`RioIcon`](https://legenlee.github.io/rio/components/icon).
 
 ```vue
 <script setup lang="ts">
 import { mdiHeart, mdiHeartOutline } from '@mdi/js';
-import { RioButton, RioIconButton, RioSwitch } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioIconButton, RioSwitch } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const favorite = ref(false);
@@ -109,9 +109,9 @@ const wifi = ref(true);
   <RioButton variant="tonal">Save</RioButton>
 
   <RioIconButton v-model:selected="favorite" label="Add to favorites" toggle variant="standard">
-    <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+    <RioIcon :icon="{ type: 'svg', path: mdiHeartOutline }" />
     <template #selected-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiHeart }" />
     </template>
   </RioIconButton>
 

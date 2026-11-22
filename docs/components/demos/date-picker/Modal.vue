@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiCalendar, mdiChevronLeft, mdiChevronRight, mdiMenuDown, mdiPencil } from '@mdi/js';
-import { RioDatePicker } from '@rio-m3e/vue';
+import { RioDatePicker, RioIcon } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const date = ref('2026-11-27');
@@ -10,19 +10,19 @@ const birthday = ref<string>();
 <template>
   <RioDatePicker v-model="date" variant="modal" label="Event date">
     <template #calendar-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiCalendar }" />
     </template>
     <template #edit-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiPencil" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiPencil }" />
     </template>
     <template #previous-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronLeft" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronLeft }" />
     </template>
     <template #next-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronRight" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronRight }" />
     </template>
     <template #dropdown-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiMenuDown }" />
     </template>
   </RioDatePicker>
   <!-- A date far away: the dialog starts in the text input, as the spec suggests. -->
@@ -34,10 +34,10 @@ const birthday = ref<string>();
     max="2026-12-31"
   >
     <template #calendar-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiCalendar }" />
     </template>
     <template #edit-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiPencil" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiPencil }" />
     </template>
   </RioDatePicker>
 </template>

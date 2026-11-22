@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiKeyboardOutline } from '@mdi/js';
-import { RioIconButton, RioScrollField } from '@rio-m3e/vue';
+import { RioIcon, RioIconButton, RioScrollField } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const weight = ref(70);
@@ -20,7 +20,7 @@ const invalid = ref(false);
         label="Weight in kilograms"
       />
       <RioIconButton v-model:selected="editing" toggle label="Type the weight">
-        <svg viewBox="0 0 24 24"><path :d="mdiKeyboardOutline" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiKeyboardOutline }" />
       </RioIconButton>
     </div>
     <p v-if="invalid" class="error" role="alert">Enter a weight from 30 to 200 kg</p>

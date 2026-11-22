@@ -4,6 +4,23 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [0.6.3] - 2026-11-23
+
+### Added
+
+- **Icons for the whole app**: `createRio({ icons })` takes the icons the components draw on their own, once, by what they do: `dropdown`, `previous`, `next`, `edit`, `calendar`, `keyboard`, `clock`, `swipe`, `remove`, `menu`, `check`, and `submenu`. Where the app's slot gives none, a component draws the registered one, and without that, none, as before. An icon is SVG path data, as from `@mdi/js`; an icon font's ligature, as Material Symbols'; an icon font's class; or a Vue component; or a name, which the registry's `resolve` turns into one. `RioIcon` draws one anywhere, by its value, its name, or its alias: 24px unless the place it sits in sizes it, in the text's color, hidden from assistive technology, with a ligature's name drawn by the stylesheet rather than in the page's text. Right to left, the icons for `previous`, `next`, and `submenu` are drawn mirrored, as the spec mirrors directional icons. Rio still ships no icons; the docs give the registry for Material Design Icons and for Material Symbols. In `@rio-m3e/vue`: `RioIcon`, `icons` in `RioOptions`, `useIconOfAlias`, `iconsKey`, `RioIcons`, and `RioIconValue`; in `@rio-m3e/core`: `ICON_ALIASES`, `MIRRORED_ICON_ALIASES`, `IconSource`, `IconRegistry`, `isIconSource`, `iconOf`, `iconOfAlias`, `iconOfName`, and `createIcon` with `iconSvgSkeleton` and `iconFontSkeleton`; in `@rio-m3e/styles`: `icon.css`, and `.rio-icon` in the icon places of the components' stylesheets.
+- **Line heights for taller scripts**, the M3 type scale's language heights: the theme's `languageHeight` (`small`, `medium`, `large`, or `extra-large`) writes the spec's line heights for that category into the type scale's variables and `font` shorthands, baseline and emphasized. `createRio` picks it from the app's language unless the theme gives one, so Korean, Chinese, Japanese, Arabic, Thai, Vietnamese, and most scripts other than Latin, Greek, Cyrillic, and Hebrew get taller lines, Burmese and Telugu taller still, and Nastaliq (`ur-Aran`) the tallest; without a language, or on a server without one, the type scale's own. In `@rio-m3e/tokens`: `LANGUAGE_HEIGHTS`, `languageHeightOf(locale)`, `languageHeight` in `ThemeOptions` and `TypeStyleOptions`, and the options `createTypographyVariables` takes after the typefaces, with `languageHeight` and `typescale`.
+- **Variable fonts**: the theme's `typescale: 'variable'` sets the spec's variable type scale, for a variable font such as Roboto Flex: no letter spacing, 600 for the emphasized title-medium, title-small, and labels, and the typefaces defaulting to `"Roboto Flex", Roboto, "Noto Sans", system-ui, sans-serif`. The browser sets the optical size to the font size, and the other axes keep the font's defaults. In `@rio-m3e/tokens`: `TYPESCALES`, and `typescale` in `ThemeOptions` and `TypeStyleOptions`.
+
+### Changed
+
+- `createRio` sets the theme's line heights for the script of the app's language, as above. An app in Korean, Chinese, Japanese, Arabic, Thai, Vietnamese, or another script than Latin, Greek, Cyrillic, and Hebrew gets taller lines, and the components that pad their text, such as text fields, list items, and dialog headers, grow with them. Give the theme `languageHeight: 'small'` to keep the line heights from before.
+
+### Fixed
+
+- **Right to left in built apps**: Rio's stylesheets read the direction with `:dir()`, which a build for older browsers, as with Vite's default CSS target, turns into `:lang()`, so a page's `dir="rtl"` didn't reach them. There the time pickers read minutes before hours, a menu grew from the wrong corner, a split button's arrow turned the wrong way, and a slider's and a linear progress indicator's stop dots and wave sat at the wrong end. They follow the nearest `dir` attribute now, whatever the build, through `--rio-dir-sign` from `@rio-m3e/styles/base/direction.css`. For adapters: import it with `icon.css`, `menu.css`, `progress.css`, `slider.css`, `split-button.css`, and `time-picker.css`, which read it.
+- `RioScrollField`'s value in the middle, and the time pickers' scroll fields', sat 6px under the middle of its slot, whose 52px its taller line outgrew. It is in the middle now, as a line taller still, for a taller script, is too.
+
 ## [0.6.2] - 2026-11-22
 
 ### Added
@@ -221,3 +238,4 @@ The first release: the M3E foundations and three components, the button, the ico
 [0.6.0]: https://github.com/LegenLee/rio/releases/tag/v0.6.0
 [0.6.1]: https://github.com/LegenLee/rio/releases/tag/v0.6.1
 [0.6.2]: https://github.com/LegenLee/rio/releases/tag/v0.6.2
+[0.6.3]: https://github.com/LegenLee/rio/releases/tag/v0.6.3

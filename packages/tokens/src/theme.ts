@@ -11,6 +11,8 @@ import { createShapeVariables, type ShapeOverrides, type ShapeVar } from './shap
 import { createStateVariables, type StateVar } from './state/state';
 import {
   createTypographyVariables,
+  type LanguageHeight,
+  type Typescale,
   type TypefaceOverrides,
   type TypographyVar,
 } from './typography/typography';
@@ -26,8 +28,23 @@ export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
   motion?: MotionScheme;
   /** Resizes steps of the corner radius scale, in px: `{ medium: 16 }`. */
   shapes?: ShapeOverrides;
-  /** Font-family values: `{ brand: '"Roboto Flex", sans-serif' }`. Both default to Roboto. */
+  /**
+   * Font-family values: `{ brand: '"Roboto Flex", sans-serif' }`. Both default to Roboto, or to
+   * Roboto Flex with `typescale: 'variable'`.
+   */
   typefaces?: TypefaceOverrides;
+  /**
+   * The line heights for how tall the text's script is: `languageHeightOf` gives it for a
+   * language tag. Defaults to `'small'`, the type scale's own, for Latin, Greek, Cyrillic, and
+   * Hebrew.
+   */
+  languageHeight?: LanguageHeight;
+  /**
+   * The type scale: `'variable'` sets the spec's variable type scale, for a variable font as
+   * Roboto Flex, with no letter spacing and its weights, and makes Roboto Flex the typefaces'
+   * default. Defaults to `'static'`, for a static font as Roboto.
+   */
+  typescale?: Typescale;
   /**
    * The `color-scheme` `attachTheme` and `createThemeCss` write with the variables. Defaults to
    * `'light dark'`. The variables alone (`createThemeVariables`) leave it out.
@@ -51,7 +68,15 @@ const DEFAULT_COLOR_SCHEME: ThemeColorScheme = 'light dark';
  * - State: state-layer opacities and focus indicator dimensions. Fixed values.
  */
 export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, string> {
-  const { motion = 'expressive', shapes, typefaces, colorScheme: _, ...color } = options;
+  const {
+    motion = 'expressive',
+    shapes,
+    typefaces,
+    languageHeight,
+    typescale,
+    colorScheme: _,
+    ...color
+  } = options;
   const light = createColorScheme({ ...color, dark: false });
   const dark = createColorScheme({ ...color, dark: true });
   const vars = {} as Record<ThemeVar, string>;
@@ -63,7 +88,7 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
     createElevationVariables(),
     createMotionVariables(motion),
     createShapeVariables(shapes),
-    createTypographyVariables(typefaces),
+    createTypographyVariables(typefaces, { languageHeight, typescale }),
     createStateVariables(),
   );
 }

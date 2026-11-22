@@ -68,6 +68,23 @@ describe('createRio, the theme', () => {
     expect(createRio({ locale: 'ko' }).css).toBe('');
   });
 
+  test('the line heights follow the language’s script, unless the theme gives its own', async () => {
+    const lineHeight = () => root.style.getPropertyValue('--rio-typescale-body-large-line-height');
+    const locale = ref('en');
+    const theme = ref<RioThemeOptions>({ sourceColor: '#6750a4' });
+    mount({ theme, locale });
+    expect(lineHeight()).toBe('1.5rem');
+    locale.value = 'ko';
+    await vi.waitFor(() => expect(lineHeight()).toBe('1.6875rem'));
+    locale.value = 'my';
+    await vi.waitFor(() => expect(lineHeight()).toBe('1.9375rem'));
+    theme.value = { sourceColor: '#6750a4', languageHeight: 'small' };
+    await vi.waitFor(() => expect(lineHeight()).toBe('1.5rem'));
+    // The server's stylesheet as well
+    const css = createRio({ theme: { sourceColor: '#6750a4' }, locale: 'ja' }).css;
+    expect(css).toContain('--rio-typescale-body-large-line-height: 1.6875rem;');
+  });
+
   test('without a theme, the root is left alone', () => {
     mount({ locale: 'ko' });
     expect(root.style.getPropertyValue('--rio-color-primary')).toBe('');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiContentCopy, mdiContentCut, mdiContentPaste, mdiShareVariant } from '@mdi/js';
-import { RioIconButton, RioTooltip } from '@rio-m3e/vue';
+import { RioIcon, RioIconButton, RioTooltip } from '@rio-m3e/vue';
 
 const actions = [
   { label: 'Cut', icon: mdiContentCut },
@@ -14,7 +14,7 @@ const actions = [
   <!-- The tooltip names an icon-only button. Once one shows, the next shows at once. -->
   <RioTooltip v-for="action in actions" :key="action.label" :text="action.label">
     <RioIconButton :label="action.label">
-      <svg viewBox="0 0 24 24"><path :d="action.icon" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: action.icon }" />
     </RioIconButton>
   </RioTooltip>
 </template>

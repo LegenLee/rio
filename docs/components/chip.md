@@ -188,12 +188,12 @@ The soft-disabled chip stays focusable.
 | `RioChipSet`        | `selection` (`'none' \| 'single' \| 'multiple'`), `required`, `modelValue` (`v-model`), `scroll`                  | `update:modelValue`                       | default (the chips)                                       |
 
 - Every boolean defaults to `false`, and `selection` to `'none'`: the spec's defaults, flat and unselected.
-- **Rio ships no icons**: the filter chip's checkmark (`selected-icon`), the input chip's X (`remove-icon`), and a menu chip's dropdown arrow (`dropdown-icon`) are the app's, as the select's arrow is. Without them the chip still works, but shows no checkmark, and its remove button no X; give them, as the examples do.
+- **Rio ships no icons**: the filter chip's checkmark (`selected-icon`), the input chip's X (`remove-icon`), and a menu chip's dropdown arrow (`dropdown-icon`) are the app's, as the select's arrow is: in the slots, or registered once for the app as `check`, `remove`, and `dropdown` (see [Icons](../guide/icons.md)). Without either, the chip still works, but shows no checkmark, and its remove button no X; give them, as the examples do.
 
 ### The chips
 
 - **Assist and suggestion chips** are buttons, or links with `href`, as `RioButton` is: disabled, a link keeps no `href`. `type` is always `button`, so a chip in a form doesn't submit it.
-- **Filter chips** are toggle buttons (`aria-pressed`). While selected, the `selected-icon` slot takes the leading icon's place, as the spec appends a checkmark; without it, a selected chip shows no icon. A selected chip has no outline.
+- **Filter chips** are toggle buttons (`aria-pressed`). While selected, the `selected-icon` slot takes the leading icon's place, as the spec appends a checkmark, or the app's registered `check`; without either, a selected chip shows no icon. A selected chip has no outline.
 - **A menu filter chip** (`menu`) is a menu button (`aria-haspopup="menu"`, `aria-expanded`): a press asks to open or close the menu (`v-model:open`) instead of selecting the chip, and the dropdown icon turns over while open. The app anchors a `RioMenu` to the chip and sets `selected` when a filter applies (Rio's choice).
 - **Input chips** hold the chip's action, a button for whatever a press on the chip does (`click`), and a remove button. The remove button is named after the label: "Remove Ada" in English, "Ada 삭제" in Korean (`messages` replaces it). Its X is 18px, with its own state layer in a 24px circle around it (Rio's choice) and a 48px target. `remove` asks the app to remove the chip: the chip is the app's, and the app takes it out of its list.
   - **Backspace or Delete** on either button asks to remove it too, unless the event was already handled.

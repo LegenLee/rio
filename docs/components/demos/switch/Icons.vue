@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiCheck, mdiClose } from '@mdi/js';
-import { RioSwitch } from '@rio-m3e/vue';
+import { RioIcon, RioSwitch } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const sync = ref(true);
@@ -11,7 +11,7 @@ const location = ref(false);
   <label>
     <RioSwitch v-model:selected="sync">
       <template #selected-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiCheck }" />
       </template>
     </RioSwitch>
     Sync
@@ -19,10 +19,10 @@ const location = ref(false);
   <label>
     <RioSwitch v-model:selected="location">
       <template #selected-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiCheck }" />
       </template>
       <template #unselected-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiClose }" />
       </template>
     </RioSwitch>
     Location

@@ -5,6 +5,7 @@ import {
   type LinearProgressProps,
   type ProgressDomHandle,
 } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/progress.css';
 import { onBeforeUnmount, onMounted, onUpdated, useTemplateRef } from 'vue';
 

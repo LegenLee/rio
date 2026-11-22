@@ -1,5 +1,5 @@
-import type { PartialMessages } from '@rio-m3e/core';
-import { attachTheme, createThemeCss, type ThemeOptions } from '@rio-m3e/tokens';
+import { resolveLocale, type PartialMessages } from '@rio-m3e/core';
+import { attachTheme, createThemeCss, languageHeightOf, type ThemeOptions } from '@rio-m3e/tokens';
 import {
   computed,
   effectScope,
@@ -9,6 +9,7 @@ import {
   type App,
   type MaybeRefOrGetter,
 } from 'vue';
+import { iconsKey, type RioIcons } from '../icon/icons';
 import { localeKey, messagesKey } from '../locale/locale';
 
 /** The theme: `@rio-m3e/tokens`' options, with the `color-scheme` written with it */
@@ -17,7 +18,8 @@ export type RioThemeOptions = ThemeOptions;
 export interface RioOptions {
   /**
    * The theme, written as `--rio-*` variables on the document's root as the app installs Rio,
-   * before it mounts. A ref or a getter writes it again when it changes.
+   * before it mounts. A ref or a getter writes it again when it changes. Without its own
+   * `languageHeight`, the line heights follow the script of the app's language (`locale`).
    */
   theme?: MaybeRefOrGetter<RioThemeOptions | undefined>;
   /**
@@ -29,6 +31,12 @@ export interface RioOptions {
   fallbackLocale?: MaybeRefOrGetter<string | undefined>;
   /** Message tables by language tag: languages Rio has no table for, or messages that replace Rio's. */
   messages?: MaybeRefOrGetter<Record<string, PartialMessages> | undefined>;
+  /**
+   * The app's icons: the ones the components draw on their own, by what they do (`aliases`),
+   * where the app's slot gives none, and `resolve`, which turns a name into an icon, as for
+   * `RioIcon`'s `icon`. Rio ships no icons.
+   */
+  icons?: MaybeRefOrGetter<RioIcons | undefined>;
 }
 
 /** A Vue plugin, for `app.use` */
@@ -38,6 +46,13 @@ export interface RioPlugin {
   readonly css: string;
 }
 
+/** The theme, with the line heights for the language's script unless it gives its own */
+const withLanguageHeight = (theme: RioThemeOptions | undefined, locale: string | undefined) =>
+  theme && {
+    ...theme,
+    languageHeight: theme.languageHeight ?? languageHeightOf(resolveLocale(locale)),
+  };
+
 /**
  * Rio for a whole app: `app.use(createRio({ theme: { sourceColor: '#6750a4' }, locale: 'ko' }))`.
  * A `RioLocaleProvider` inside, or a component's own `locale`, takes over the language from it.
@@ -45,11 +60,15 @@ export interface RioPlugin {
 export function createRio(options: RioOptions = {}): RioPlugin {
   return {
     get css() {
-      const theme = toValue(options.theme);
+      const theme = withLanguageHeight(toValue(options.theme), toValue(options.locale));
       return theme ? createThemeCss(theme) : '';
     },
     install(app) {
       app.provide(localeKey, toRef(options.locale));
+      app.provide(
+        iconsKey,
+        computed(() => toValue(options.icons)),
+      );
       app.provide(
         messagesKey,
         computed(() => ({
@@ -62,7 +81,11 @@ export function createRio(options: RioOptions = {}): RioPlugin {
       // Written at once, before the app mounts, and again as the theme changes
       const theme = attachTheme(document.documentElement);
       const scope = effectScope(true);
-      scope.run(() => watchEffect(() => theme.update(toValue(options.theme))));
+      scope.run(() =>
+        watchEffect(() =>
+          theme.update(withLanguageHeight(toValue(options.theme), toValue(options.locale))),
+        ),
+      );
       app.onUnmount(() => {
         scope.stop();
         theme.detach();

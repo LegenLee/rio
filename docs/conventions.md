@@ -92,6 +92,9 @@ packages/
       dialog.ts             props, parts, and the role
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)
       dialog.test.ts
+    icon/
+      icon.ts               the app's icons by alias and by name, and an icon's parts: SVG paths or a font's glyph (see docs/guide/icons.md, docs/components/icon.md)
+      icon.test.ts
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
@@ -168,6 +171,7 @@ packages/
     base/                   CSS shared across components
       anchored-position.css pairs with core's primitives/anchored-position
       corner-morph.css      pairs with core's primitives/corner-morph
+      direction.css         the line's direction from `dir`, as `--rio-dir-sign`, for the stylesheets that lay out or draw differently right to left
       focus-ring.css        the keyboard focus ring: on the focused element, or with `rio-focus-ring-target` on another that rings for it
       reduced-motion.css    imported by every component that uses motion tokens; pairs with core's primitives/reduced-motion
       ripple.css            pairs with core's primitives/ripple
@@ -178,6 +182,7 @@ packages/
     checkbox.css
     chip.css                the four chips and the chip set
     dialog.css
+    icon.css                RioIcon, and an icon font's glyph sized to its box; components size `.rio-icon` in their icon places
     icon-button.css         layered on top of button.css
     list.css                the list and its items, standard and segmented
     loading-indicator.css
@@ -210,6 +215,10 @@ packages/
       corner-morph.ts       v-corner-morph, used inside components (not exported yet)
     dialog/
       Dialog.vue            a <dialog> shown modally (see dialog.md)
+    icon/
+      Icon.vue              RioIcon: an icon by its value, its name, or its alias
+      icons.ts              the icons createRio provides, and useIconOfAlias for the components' icon slots
+      aliases.test.ts       the docs' icon registries in the components they are for
     icon-button/
       IconButton.vue
     list/
@@ -364,6 +373,7 @@ Menus, tooltips, and dialogs float above the page. Two primitives carry them: `a
 
 - **The adapter may apply `open` late, or not at all.** React, for one, renders state set outside its own events a task or more later. So `attachTooltip` and `attachSubMenu` go by the state they last asked for, or were synced to, rather than by what the DOM shows: a press between asking a tooltip to open and its opening still closes it, and moving on from an item closes the submenu it asked to open. An app may also turn a request down by leaving `open` as it is; the next event asks again. `attachDialog` asks at every Escape and click on the scrim, so a request turned down that way never blocks the next.
 
+- **Right to left, stylesheets read `--rio-dir-sign`, not `:dir()`.** `base/direction.css` sets it to 1 or -1 from the `dir` attribute of the nearest element with one, as `:dir()` reads it, and the rules work it into `calc()`: a scale, a turn, an origin, a position from one end, an `order`. A build for older browsers turns `:dir()` into `:lang()`, which a page's `dir` doesn't reach, as Vite's default CSS target does; `styles/src/styles.test.ts` keeps `:dir()` out. A component whose stylesheet reads the variable imports `base/direction.css` with it, as `vue/src/stylesheets.test.ts` checks; without it the variable falls back to 1, left to right.
 - **Placing is done in JavaScript, not with CSS anchor positioning.** Anchor positioning reached every engine only in January 2026 (Chrome 125, Safari 26, Firefox 147), so older browsers would get no placement at all. JavaScript also tells the stylesheet which side the element ended up on (`data-side`), which the opening motion needs, and can anchor to a point, as context menus do. Revisit once anchor positioning is Baseline widely available (mid-2028).
 
 ## Shared helpers
@@ -441,8 +451,10 @@ Publishing needs a one-time setup on GitHub:
   :::
   ```
 
+  A guide page's examples go in `docs/guide/demos/<page>/` the same way.
+
 - **One adapter draws the examples.** Every adapter renders the same markup (see Core output and Markup contract), so the live examples use the Vue adapter only. When another adapter exists, its code goes next to the Vue code in a code group, and the live example stays Vue.
-- **The site wears Rio's theme.** `docs/.vitepress/theme/` writes the theme variables during server rendering and points VitePress's colors and font at them. Examples sit in `.vp-raw`, which keeps VitePress's styles out (`docs/postcss.config.mjs`), so they look the way they do in an app.
+- **The site wears Rio's theme.** `docs/.vitepress/theme/` writes the theme variables during server rendering and points VitePress's colors and font at them. It registers the Material Design Icons of `docs/guide/icons/mdi.ts` with `createRio`, so a component draws its own icons where an example gives no slot. Examples sit in `.vp-raw`, which keeps VitePress's styles out (`docs/postcss.config.mjs`), so they look the way they do in an app.
 - **Imports come from `src`** through the `@rio-m3e/source` condition, as in the playground, so the site always shows the current code without a build.
 - The build also writes `llms.txt` and `llms-full.txt`, Markdown copies of the docs for AI tools, with each example's code in place of the live example (vitepress-plugin-llms).
 - On GitHub, the Markdown shows `<Demo>` and `:::` blocks as plain text. Read the docs on the site.

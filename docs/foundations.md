@@ -313,22 +313,42 @@ Each style becomes six CSS variables, and the emphasized set uses the spec's `em
 - Rio doesn't load any font itself. Load Roboto in the app; otherwise the system font is used.
 - Override with `createRio({ theme: { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } } })`.
 
-### 5.3 Language height (not implemented yet)
+### 5.3 Language height
 
 #### Spec
 
 The type scale adapts line heights to the height of the script being set, in four categories:
 
-| Category     | Line height vs. small | Scripts                                                                                                                                                                                  |
-| ------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Small (base) | —                     | Cyrillic, Greek, Hebrew, Latin-based languages (except Vietnamese)                                                                                                                       |
-| Medium       | ~7% taller            | Amharic, Arabic, Armenian, Bangla, Chinese, Gujarati, Hindi, Japanese, Kannada, Khmer, Korean, Lao, Malayalam, Odia, Punjabi, Sinhala, Tamil, Thai, Vietnamese, and most other languages |
-| Large        | ~30% taller           | Burmese, Telugu                                                                                                                                                                          |
-| Extra large  | ~100% taller          | Nastaliq                                                                                                                                                                                 |
+| Category     | Scripts                                                                                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Small (base) | Cyrillic, Greek, Hebrew, Latin-based languages (except Vietnamese)                                                                                                                       |
+| Medium       | Amharic, Arabic, Armenian, Bangla, Chinese, Gujarati, Hindi, Japanese, Kannada, Khmer, Korean, Lao, Malayalam, Odia, Punjabi, Sinhala, Tamil, Thai, Vietnamese, and most other languages |
+| Large        | Burmese, Telugu                                                                                                                                                                          |
+| Extra large  | Nastaliq                                                                                                                                                                                 |
 
-- The base token values (the ones in section 5.1) are the small category.
-- Material components with vertical padding adapt automatically, because their height follows the line height. Components with fixed heights are built for the small values and may not adapt by default.
-- The percentages are approximate. The exact line-height tokens per category sit behind a "language height context" switch at the top of the token module on the spec page. Material Web's generated tokens don't include them either; they are built for one context, with no language-height tag.
+The page calls medium "~7% taller", large "~30%", and extra large "~100%". The tokens behind them, `md.ref.typeface.<style>.line-height` under the `language.height` context, are rounded per style and don't keep to those ratios: medium is 14% taller for display-large and 8% for display-medium. In px:
+
+| Style           | Small | Medium | Large | Extra large |
+| --------------- | ----- | ------ | ----- | ----------- |
+| display-large   | 64    | 73     | 89    | 120         |
+| display-medium  | 52    | 56     | 71    | 99          |
+| display-small   | 44    | 47     | 57    | 80          |
+| headline-large  | 40    | 42     | 50    | 75          |
+| headline-medium | 36    | 38     | 45    | 66          |
+| headline-small  | 32    | 35     | 41    | 59          |
+| title-large     | 28    | 31     | 36    | 53          |
+| title-medium    | 24    | 27     | 31    | 42          |
+| title-small     | 20    | 23     | 26    | 36          |
+| body-large      | 24    | 27     | 31    | 41          |
+| body-medium     | 20    | 23     | 26    | 35          |
+| body-small      | 16    | 18     | 21    | 30          |
+| label-large     | 20    | 23     | 26    | 36          |
+| label-medium    | 16    | 18     | 21    | 30          |
+| label-small     | 16    | 18     | 21    | 29          |
+
+- The small values are the type scale's own (section 5.1). The `md.sys.typescale` tokens, baseline and emphasized, carry no language height context.
+- "Material components that use vertical padding should adapt to language height automatically. Components with fixed heights are built for small values and may not adapt by default."
+- The values come from the typography token data that the spec page loads (`TYPOGRAPHY.<id>.json`, revision of 2026-11-19); the page's own context switch didn't change the module in a headless browser. Material Web's generated tokens are built for one context, with no language height.
 
 #### Recommendations
 
@@ -338,27 +358,34 @@ The type scale adapts line heights to the height of the script being set, in fou
 
 #### In Rio
 
-- Rio emits only the base (small) values today. Text in Korean, Chinese, Japanese, and most other non-Latin scripts is therefore set tighter than the spec intends.
-- Planned approach:
-  1. Read the exact values by switching the context on the spec page in a headless browser. Don't derive them by multiplying by 1.07; the spec's tokens are rounded per style.
-  2. Emit the line heights per category and select them with `:lang()`, for example `:lang(ko, ja, zh) { --rio-typescale-body-large-line-height: …; }`. This follows the recommendation to switch by language, and pages set `lang` anyway.
-  3. Audit fixed-height components (buttons, chips, text fields) against the medium and large categories once they exist.
-- **Open decision**: the default for text without a `lang` match. Following the spec gives small; the recommendation says medium. By Rio's rule the default would be small, with medium offered as a theme option.
+- **The theme takes a category**, `languageHeight` (`'small'`, `'medium'`, `'large'`, or `'extra-large'`), and writes its line heights into the `-line-height` variables and the `font` shorthands alike, baseline and emphasized. Without one, the small values (Rio's choice: the spec's tokens, where the recommendation says medium).
+- **`createRio` picks it from the app's language** unless the theme gives one: `createRio`'s `locale`, or else the document's `lang`, or else the browser's language, as for the components' text. `languageHeightOf(locale)` in `@rio-m3e/tokens` does it, by the script `Intl.Locale` gives the language: Latin (except Vietnamese), Greek, Cyrillic, and Hebrew are small; Burmese (`Mymr`) and Telugu (`Telu`) large; Nastaliq (`Aran`) extra large; any other script medium. A language whose script `Intl` doesn't know is small, as on a server without the app's language (Rio's choice: the spec's tokens, where the recommendation defaults to medium).
+- **Nastaliq by its script code only** (Rio's choice): `ur` is Urdu in Arabic script, medium, as `Intl` gives it; `ur-Aran`, or `languageHeight: 'extra-large'`, sets it in Nastaliq.
+- **The emphasized styles take the same line heights** (Rio's choice: their tokens equal the baseline ones in the small category, and the spec gives no others).
+- **Part of a page in another script**: the theme is the page's, and a `RioLocaleProvider` doesn't change it. Write one on that part, with `attachTheme(element, { ...theme, languageHeight: languageHeightOf('my') })`.
+- **Components** were checked in every category against the visual tests' galleries:
+  - Those with vertical padding grow, as the spec says: text fields, list items, menus, dialogs, the date pickers' headers.
+  - Those with fixed heights keep them, with the text in the middle: buttons, chips, the date pickers' days, the time picker's fields. In the extra large category, a 32px button's or a chip's label line is taller than the button, which only the line box shows.
+  - A scroll field's slots keep their 52px (Rio's choice: the spec's measurement, and a taller slot would show less of the values around), and its values stay in the middle of them, a taller line spilling out evenly.
 
-### 5.4 Variable font axes (not implemented yet)
+### 5.4 Variable fonts
 
 #### Spec
 
 > "Static fonts like Roboto are currently applied by default to all Material 3 components. Variable fonts like Roboto Flex have many more axes for expression, but aren't yet part of the M3 typescale."
 
-The token tables still list axis values for every style. The pattern across all 30 styles:
+The typography token data the spec page loads (section 5.3) has a variable type scale beside the static one: `md.sys.typescale.variable.<style>` and `md.sys.typescale.variable.emphasized.<style>`. Its typefaces are `md.ref.typeface.variable.brand` and `.plain`, which are Roboto Flex for third parties (Google's own products use Google Sans Flex). Its sizes and line heights are the static scale's, its letter spacing is 0 for every style, and each of its 30 styles has a weight and seven axes:
 
-| Axis                                           | Value                                                                                                                           | Meaning                                                                    |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `wght`                                         | Same as the static weight, **except 600 where the static weight is 700** (emphasized title-medium, title-small, and all labels) | Weight                                                                     |
-| `wdth`                                         | 100                                                                                                                             | Width (normal)                                                             |
-| `opsz`                                         | The font size in px (57 for display-large, 11 for label-small)                                                                  | Optical size                                                               |
-| `GRAD`, `ROND`, `CRSV`, `slnt`, `FILL`, `HEXP` | 0                                                                                                                               | Grade, roundness, cursive, slant, fill, and hexp (unexplained in the spec) |
+| Weight and axis        | Value                                                                                                                                            | Meaning                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| weight, `wght`         | The static weight, **except 600 where the static weight is 700** (emphasized title-medium, title-small, and all labels)                          | Weight                    |
+| `wdth`                 | 100                                                                                                                                              | Width (normal)            |
+| `opsz`                 | The font size (57 for display-large, 11 for label-small); undefined on the web and on iOS                                                        | Optical size              |
+| `ROND`                 | 0; 100 on the emphasized styles for Google's own fonts (`md.ref.typeface.emphasized.rond`), 0 for third parties (Roboto Flex has no `ROND` axis) | Roundness                 |
+| `GRAD`, `CRSV`, `slnt` | 0                                                                                                                                                | Grade, cursive, and slant |
+
+- The static scale's tokens carry the same axes, and `FILL` and `HEXP` at 0, with `opsz` defined on the web too. Their `wght` is the one above, while their weight stays 700 where the variable scale's is 600.
+- The data's `Font` context, which switched the static scale to a variable font, is deprecated: "DEPRECATED. Use variable font tokens instead! - Applies variable font (like Google Sans Flex, Roboto Flex)." Under it, for third parties (`3P/Variable`), the typefaces are Roboto Flex and the letter spacing is 0, with the static weights.
 
 #### Recommendations
 
@@ -367,11 +394,13 @@ The token tables still list axis values for every style. The pattern across all 
 
 #### In Rio
 
-- Rio uses static font weights today, as the spec does by default.
-- Planned approach, once Rio supports variable fonts:
-  1. Treat it as a separate mode, not a tweak of the static one. The `wght` 600 vs. weight 700 difference means a variable-font theme needs its own weights.
-  2. Emit a `--rio-typescale-<style>-axes` variable per style for `font-variation-settings`, and use `font-optical-sizing: auto` where the font supports `opsz`.
-  3. Keep the default typeface stack, which follows the spec. A variable-font theme can follow the fallback recommendation by passing its own stack through `typefaces`.
+- **The theme's `typescale: 'variable'`** sets the spec's variable type scale (`md.sys.typescale.variable.*`) in the type scale's variables (Rio's choice for the API: one theme option switches the scale, named after the spec's variable type scale, and no second set of variables is written). The default is `'static'`, as the spec applies Roboto.
+  - The typefaces default to `"Roboto Flex", Roboto, "Noto Sans", system-ui, sans-serif`, the recommendation's order. `typefaces` replaces them as before.
+  - The letter spacing is 0 for every style.
+  - The emphasized title-medium, title-small, and labels are 600, the variable type scale's weight and `wght` alike; the deprecated `Font` context keeps the static weight token's 700 beside a `wght` of 600.
+  - Sizes and line heights are the static scale's, with the language heights of section 5.3.
+- **No `font-variation-settings`** (Rio's choice): on the web, `font-weight` sets `wght`, and `font-optical-sizing: auto`, CSS's default, sets `opsz` to the font size, the value the static scale's tokens give and the one the variable type scale leaves to the platform on the web. `font-stretch: normal` is a `wdth` of 100; `GRAD`, `CRSV`, and `slnt` are the fonts' defaults; and `ROND` is only for Google's own fonts. A theme or a component can still set `font-variation-settings` itself.
+- **Rio doesn't load the font.** Load Roboto Flex with its optical size axis: Google Fonts names it `Roboto Flex`; Fontsource's `@fontsource-variable/roboto-flex/opsz.css` names it `Roboto Flex Variable`, so pass that name through `typefaces`.
 
 ## 6. Show interaction with states
 
@@ -449,8 +478,8 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
 | Shape: shape library and morphing                  | `core`                  | Done: `materialShape`, the polygon functions, `createMorph`, `featuresFromSvgPath`, and `cubicsPath`, ported from androidx graphics-shapes. See section 4.              |
 | Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
-| Typography: language height                        | `tokens`                | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
-| Typography: variable font axes                     | `tokens`                | Not yet. See section 5.4.                                                                                                                                               |
+| Typography: language height                        | `tokens`                | Done: `languageHeight` in the theme, `languageHeightOf`, `LANGUAGE_HEIGHTS`. `createRio` picks it from the app's language. See section 5.3.                             |
+| Typography: variable fonts                         | `tokens`                | Done: `typescale: 'variable'` in the theme, `TYPESCALES`, `typescale` in `TypeStyleOptions`. See section 5.4.                                                           |
 | State layer opacities and focus indicator          | `tokens`                | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
 | State layer and focus ring CSS                     | `styles`                | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
 | Ripple (pressed)                                   | `core`, `styles`, `vue` | Done: `attachRipple`, `base/ripple.css`, `v-ripple`.                                                                                                                    |
@@ -467,7 +496,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - [Color roles](https://m3.material.io/styles/color/roles)
 - [Shape – Corner radius scale](https://m3.material.io/styles/shape/corner-radius-scale)
 - [Shape – Shape morph](https://m3.material.io/styles/shape/shape-morph)
-- [Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens) (token tables read in expanded form)
+- [Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens) (token tables read in expanded form), and the typography token data it loads (`/_dsm/data/dsdb-m3/2026-11-19_06-20-01/TYPOGRAPHY.20543ce18892f7d9.json`): the language heights (section 5.3) and the font contexts and axes (section 5.4)
 - [Typography – Fonts](https://m3.material.io/styles/typography/fonts)
 - [States – State layers](https://m3.material.io/foundations/interaction/states/state-layers)
 - [States – Applying states](https://m3.material.io/foundations/interaction/states/applying-states)

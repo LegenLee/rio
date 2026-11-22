@@ -8,6 +8,7 @@ import {
   type MenuSelected,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/anchored-position.css';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/menu.css';
 import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue';

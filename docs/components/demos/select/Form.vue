@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { mdiMenuDown } from '@mdi/js';
 import type { SelectSelected } from '@rio-m3e/core';
-import { RioButton, RioSelect, RioSelectOption } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioSelect, RioSelectOption } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const shipping = ref<SelectSelected>();
@@ -17,7 +17,7 @@ const submit = (event: SubmitEvent) => {
   <form class="form" @submit.prevent="submit">
     <RioSelect v-model="shipping" label="Shipping" name="shipping" required>
       <template #dropdown-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiMenuDown }" />
       </template>
       <RioSelectOption value="standard">Standard</RioSelectOption>
       <RioSelectOption value="express">Express</RioSelectOption>

@@ -146,8 +146,8 @@
   color: var(--_lead);
 }
 
-.rio-list-item__leading > :is(svg, img.rio-list-item__icon),
-.rio-list-item__trailing > svg {
+.rio-list-item__leading > :is(svg, img.rio-list-item__icon, :where(.rio-icon)),
+.rio-list-item__trailing > :is(svg, :where(.rio-icon)) {
   inline-size: 20px;
   block-size: 20px;
 }

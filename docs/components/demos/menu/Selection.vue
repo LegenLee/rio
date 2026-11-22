@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { mdiCheck } from '@mdi/js';
 import type { MenuSelected } from '@rio-m3e/core';
-import { RioButton, RioMenu, RioMenuItem } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioMenu, RioMenuItem } from '@rio-m3e/vue';
 import { ref, useTemplateRef } from 'vue';
 
 const sortOpen = ref(false);
@@ -34,7 +34,7 @@ const filtersButton = useTemplateRef('filtersButton');
     <RioMenuItem v-for="by in ['name', 'date', 'size']" :key="by" :value="by">
       <!-- A check mark next to the color and shape, as the spec recommends -->
       <template #icon="{ selected }">
-        <svg v-if="selected" viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+        <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
       </template>
       {{ by }}
     </RioMenuItem>
@@ -59,7 +59,7 @@ const filtersButton = useTemplateRef('filtersButton');
   >
     <RioMenuItem v-for="kind in ['photos', 'videos', 'documents']" :key="kind" :value="kind">
       <template #icon="{ selected }">
-        <svg v-if="selected" viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+        <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
       </template>
       {{ kind }}
     </RioMenuItem>

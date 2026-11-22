@@ -318,8 +318,8 @@
   color: var(--_trailing);
 }
 
-.rio-text-field__leading-icon > :is(svg, img),
-.rio-text-field__trailing-icon > :is(svg, img) {
+.rio-text-field__leading-icon > :is(svg, img, :where(.rio-icon)),
+.rio-text-field__trailing-icon > :is(svg, img, :where(.rio-icon)) {
   inline-size: 24px;
   block-size: 24px;
 }

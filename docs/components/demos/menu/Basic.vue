@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { mdiContentCopy, mdiContentCut, mdiContentPaste } from '@mdi/js';
-import { RioButton, RioMenu, RioMenuDivider, RioMenuGroup, RioMenuItem } from '@rio-m3e/vue';
+import {
+  RioButton,
+  RioIcon,
+  RioMenu,
+  RioMenuDivider,
+  RioMenuGroup,
+  RioMenuItem,
+} from '@rio-m3e/vue';
 import { ref, useTemplateRef } from 'vue';
 
 const open = ref(false);
@@ -21,14 +28,14 @@ const last = ref('');
   <RioMenu v-model:open="open" :anchor="button" label="Edit">
     <RioMenuItem @click="last = 'Cut'">
       <template #icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiContentCut" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiContentCut }" />
       </template>
       Cut
       <template #trailing-text>Ctrl+X</template>
     </RioMenuItem>
     <RioMenuItem @click="last = 'Copy'">
       <template #icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiContentCopy" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiContentCopy }" />
       </template>
       Copy
       <template #trailing-text>Ctrl+C</template>
@@ -36,7 +43,7 @@ const last = ref('');
     <!-- Disabled items stay in the menu, and keep the focus order -->
     <RioMenuItem disabled>
       <template #icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiContentPaste" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiContentPaste }" />
       </template>
       Paste
       <template #trailing-text>Ctrl+V</template>

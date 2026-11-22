@@ -41,17 +41,21 @@ The language options are in [Languages](./languages.md).
 
 The theme is written as `--rio-*` CSS variables on the page's root as the app installs Rio. Components spring their shapes toward targets that the theme sets, so a theme in place before they mount keeps them from springing at load. Given as a ref or a getter, the theme is written again whenever it changes, and the shapes spring once into the new targets. Unmounting the app takes it off.
 
-| Option        | Type                                                     | Default          |
-| ------------- | -------------------------------------------------------- | ---------------- |
-| `sourceColor` | `string`, as `#rgb` or `#rrggbb`. Required.              | —                |
-| `variant`     | `'tonal-spot' \| 'neutral' \| 'vibrant' \| 'expressive'` | `'tonal-spot'`   |
-| `contrast`    | `number`, from -1 (reduced) through 0 to 1 (high)        | `0`              |
-| `colorScheme` | `'light dark' \| 'light' \| 'dark' \| false`             | `'light dark'`   |
-| `motion`      | `'expressive' \| 'standard'`                             | `'expressive'`   |
-| `shapes`      | Corner radius steps to resize, in px: `{ medium: 16 }`   | The spec's scale |
-| `typefaces`   | Font families: `{ brand: '"Roboto Flex", sans-serif' }`  | Roboto           |
+| Option           | Type                                                                                     | Default                                             |
+| ---------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `sourceColor`    | `string`, as `#rgb` or `#rrggbb`. Required.                                              | —                                                   |
+| `variant`        | `'tonal-spot' \| 'neutral' \| 'vibrant' \| 'expressive'`                                 | `'tonal-spot'`                                      |
+| `contrast`       | `number`, from -1 (reduced) through 0 to 1 (high)                                        | `0`                                                 |
+| `colorScheme`    | `'light dark' \| 'light' \| 'dark' \| false`                                             | `'light dark'`                                      |
+| `motion`         | `'expressive' \| 'standard'`                                                             | `'expressive'`                                      |
+| `shapes`         | Corner radius steps to resize, in px: `{ medium: 16 }`                                   | The spec's scale                                    |
+| `typefaces`      | Font families: `{ brand: '"Roboto Flex", sans-serif' }`                                  | Roboto, or Roboto Flex with `typescale: 'variable'` |
+| `languageHeight` | Line heights for the script's height: `'small' \| 'medium' \| 'large' \| 'extra-large'`  | By the app's language                               |
+| `typescale`      | `'static'`, for Roboto, or `'variable'`, the spec's variable type scale, for Roboto Flex | `'static'`                                          |
 
 Each color variable holds a light and a dark value in `light-dark()`, so the `color-scheme` of the element that uses it picks one. `colorScheme` sets the root's: `'light dark'` follows the system, `'light'` or `'dark'` picks one, and `false` leaves it to the app, as for an app whose own dark mode sets `color-scheme`. An app that then sets none leaves it at `normal`, where every color takes its light value.
+
+Taller scripts, such as Korean, Japanese, Chinese, Arabic, or Thai, need taller lines than Latin. Without `languageHeight`, the theme takes the line heights for the script of the app's language, as [Languages](./languages.md) finds it; see [Foundations](../foundations.md#_5-3-language-height).
 
 Give a theme to one app per page: the theme is the page's root's, so a second app's would replace it, and unmounting either app takes it off.
 
@@ -79,14 +83,31 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 ```
 
+For a variable font, give the theme `typescale: 'variable'`, the spec's variable type scale: the typefaces then default to `"Roboto Flex", Roboto, "Noto Sans", system-ui, sans-serif`, and the letter spacing is 0. Load Roboto Flex with its optical size axis, which the browser sets to the font size. Fontsource names it `Roboto Flex Variable`, so pass that name:
+
+```ts
+import '@fontsource-variable/roboto-flex/opsz.css';
+
+const stack = '"Roboto Flex Variable", Roboto, "Noto Sans", system-ui, sans-serif';
+app.use(
+  createRio({
+    theme: {
+      sourceColor: '#6750a4',
+      typescale: 'variable',
+      typefaces: { brand: stack, plain: stack },
+    },
+  }),
+);
+```
+
 ## Use the components
 
-Each component imports its own styles. Rio ships no icons, so bring your own. This example uses [Material Design Icons](https://pictogrammers.com/library/mdi/) from `@mdi/js`:
+Each component imports its own styles. Rio ships no icons, so bring your own: in a component's slot, as here, or once for the whole app, for the icons the components draw on their own (see [Icons](./icons.md)). This example draws [Material Design Icons](https://pictogrammers.com/library/mdi/) from `@mdi/js` with [`RioIcon`](../components/icon.md):
 
 ```vue
 <script setup lang="ts">
 import { mdiHeart, mdiHeartOutline } from '@mdi/js';
-import { RioButton, RioIconButton, RioSwitch } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioIconButton, RioSwitch } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const favorite = ref(false);
@@ -97,9 +118,9 @@ const wifi = ref(true);
   <RioButton variant="tonal">Save</RioButton>
 
   <RioIconButton v-model:selected="favorite" label="Add to favorites" toggle variant="standard">
-    <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+    <RioIcon :icon="{ type: 'svg', path: mdiHeartOutline }" />
     <template #selected-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiHeart }" />
     </template>
   </RioIconButton>
 

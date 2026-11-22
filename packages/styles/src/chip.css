@@ -242,7 +242,7 @@
 }
 
 :is(.rio-chip__icon, .rio-chip__trailing, .rio-chip__remove-icon, .rio-chip__avatar)
-  > :is(svg, img) {
+  > :is(svg, img, :where(.rio-icon)) {
   inline-size: 100%;
   block-size: 100%;
   object-fit: cover;

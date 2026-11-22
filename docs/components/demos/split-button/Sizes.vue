@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiChevronDown } from '@mdi/js';
-import { RioSplitButton } from '@rio-m3e/vue';
+import { RioIcon, RioSplitButton } from '@rio-m3e/vue';
 import { reactive } from 'vue';
 
 const open = reactive({ xsmall: false, small: false, medium: false, large: false, xlarge: false });
@@ -15,13 +15,13 @@ const open = reactive({ xsmall: false, small: false, medium: false, large: false
   >
     Extra small
     <template #menu-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronDown }" />
     </template>
   </RioSplitButton>
   <RioSplitButton v-model:open="open.small" size="small" variant="tonal" menu-label="More options">
     Small
     <template #menu-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronDown }" />
     </template>
   </RioSplitButton>
   <RioSplitButton
@@ -32,13 +32,13 @@ const open = reactive({ xsmall: false, small: false, medium: false, large: false
   >
     Medium
     <template #menu-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronDown }" />
     </template>
   </RioSplitButton>
   <RioSplitButton v-model:open="open.large" size="large" variant="tonal" menu-label="More options">
     Large
     <template #menu-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronDown }" />
     </template>
   </RioSplitButton>
   <RioSplitButton
@@ -49,7 +49,7 @@ const open = reactive({ xsmall: false, small: false, medium: false, large: false
   >
     Extra large
     <template #menu-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronDown }" />
     </template>
   </RioSplitButton>
 </template>

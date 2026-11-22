@@ -1,0 +1,15 @@
+/*
+ * The direction of the line, for the stylesheets that lay out or draw differently right to left:
+ * `--rio-dir-sign` is 1 left to right and -1 right to left, as the `dir` attribute of the nearest
+ * element with one says, the way `:dir()` reads it. `:dir()` itself isn't used: a build for older
+ * browsers turns it into `:lang()`, which a page's `dir` doesn't reach. `dir="auto"` keeps the
+ * direction around it.
+ */
+:root,
+[dir='ltr' i] {
+  --rio-dir-sign: 1;
+}
+
+[dir='rtl' i] {
+  --rio-dir-sign: -1;
+}

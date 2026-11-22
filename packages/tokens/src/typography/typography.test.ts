@@ -1,9 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import {
+  LANGUAGE_HEIGHTS,
   TYPE_STYLES,
   createTypographyVariables,
+  getTypeStyle,
+  languageHeightOf,
   typefaceVar,
   typescaleVar,
+  type LanguageHeight,
   type TypeStyle,
 } from './typography';
 
@@ -84,6 +88,150 @@ describe('createTypographyVariables', () => {
     const custom = createTypographyVariables({ brand: '"Roboto Flex", sans-serif' });
     expect(custom['--rio-typeface-brand']).toBe('"Roboto Flex", sans-serif');
     expect(custom['--rio-typeface-plain']).toBe('Roboto, system-ui, sans-serif');
+  });
+});
+
+// The line heights by language height, small to extra large, in pt: transcribed from
+// m3.material.io's typography token data (`md.ref.typeface.<style>.line-height` under the
+// `language.height` context), independently of the source.
+const LANGUAGE: Record<TypeStyle, [number, number, number, number]> = {
+  'display-large': [64, 73, 89, 120],
+  'display-medium': [52, 56, 71, 99],
+  'display-small': [44, 47, 57, 80],
+  'headline-large': [40, 42, 50, 75],
+  'headline-medium': [36, 38, 45, 66],
+  'headline-small': [32, 35, 41, 59],
+  'title-large': [28, 31, 36, 53],
+  'title-medium': [24, 27, 31, 42],
+  'title-small': [20, 23, 26, 36],
+  'body-large': [24, 27, 31, 41],
+  'body-medium': [20, 23, 26, 35],
+  'body-small': [16, 18, 21, 30],
+  'label-large': [20, 23, 26, 36],
+  'label-medium': [16, 18, 21, 30],
+  'label-small': [16, 18, 21, 29],
+};
+
+describe('language height', () => {
+  test('sets the line heights for the script’s height, in both sets, the shorthand too', () => {
+    for (const [i, height] of LANGUAGE_HEIGHTS.entries()) {
+      const vars = createTypographyVariables({}, { languageHeight: height });
+      for (const style of TYPE_STYLES) {
+        const lineHeight = `${LANGUAGE[style][i]! / 16}rem`;
+        for (const emphasized of [false, true]) {
+          expect(vars[typescaleVar(style, { emphasized, part: 'line-height' })]).toBe(lineHeight);
+          expect(vars[typescaleVar(style, { emphasized })]).toContain(`/${lineHeight} `);
+        }
+      }
+    }
+  });
+
+  test('small is the type scale’s own, and the default', () => {
+    expect(createTypographyVariables({}, { languageHeight: 'small' })).toEqual(
+      createTypographyVariables(),
+    );
+    for (const style of TYPE_STYLES) {
+      expect(getTypeStyle(style, { languageHeight: 'small' })).toEqual(getTypeStyle(style));
+    }
+  });
+
+  test('a language tag’s script picks it', () => {
+    const cases: [string | undefined, LanguageHeight][] = [
+      ['en', 'small'],
+      ['de-CH', 'small'],
+      ['ru', 'small'],
+      ['el', 'small'],
+      ['he', 'small'],
+      ['sr-Latn', 'small'],
+      ['vi', 'medium'],
+      ['ko', 'medium'],
+      ['ja', 'medium'],
+      ['zh-Hant', 'medium'],
+      ['ar', 'medium'],
+      ['hi', 'medium'],
+      ['th', 'medium'],
+      ['hy', 'medium'],
+      ['ur', 'medium'],
+      ['my', 'large'],
+      ['te', 'large'],
+      ['ur-Aran', 'extra-large'],
+      ['xx', 'small'],
+      ['not a tag!', 'small'],
+      ['', 'small'],
+      [undefined, 'small'],
+    ];
+    for (const [locale, height] of cases)
+      expect([locale, languageHeightOf(locale)]).toEqual([locale, height]);
+  });
+});
+
+// The weights of the variable type scale, [baseline, emphasized]: transcribed from m3.material.io's
+// typography token data (`md.sys.typescale.variable[.emphasized].<style>`, its `.weight` and
+// `.wght` alike), independently of the source. Its letter spacing is 0 throughout.
+const VARIABLE_WEIGHTS: Record<TypeStyle, [string, string]> = {
+  'display-large': ['400', '500'],
+  'display-medium': ['400', '500'],
+  'display-small': ['400', '500'],
+  'headline-large': ['400', '500'],
+  'headline-medium': ['400', '500'],
+  'headline-small': ['400', '500'],
+  'title-large': ['400', '500'],
+  'title-medium': ['500', '600'],
+  'title-small': ['500', '600'],
+  'body-large': ['400', '500'],
+  'body-medium': ['400', '500'],
+  'body-small': ['400', '500'],
+  'label-large': ['500', '600'],
+  'label-medium': ['500', '600'],
+  'label-small': ['500', '600'],
+};
+
+describe('the variable type scale', () => {
+  const vars = createTypographyVariables({}, { typescale: 'variable' });
+
+  test.each(MWC)(
+    '%s: its weights, no letter spacing, the same sizes',
+    (style, font, size, lineHeight) => {
+      for (const emphasized of [false, true]) {
+        const v = (part?: 'font' | 'size' | 'line-height' | 'tracking' | 'weight') =>
+          vars[typescaleVar(style, { emphasized, part })];
+        const weight = VARIABLE_WEIGHTS[style][emphasized ? 1 : 0];
+        expect([v('font'), v('size'), v('line-height')]).toEqual([
+          `var(--rio-typeface-${font})`,
+          size,
+          lineHeight,
+        ]);
+        expect(v('tracking')).toBe('0rem');
+        expect(v('weight')).toBe(weight);
+        expect(v()).toBe(`${weight} ${size}/${lineHeight} var(--rio-typeface-${font})`);
+      }
+    },
+  );
+
+  test('defaults both typefaces to Roboto Flex, then Roboto and Noto Sans', () => {
+    const stack = '"Roboto Flex", Roboto, "Noto Sans", system-ui, sans-serif';
+    expect([vars['--rio-typeface-brand'], vars['--rio-typeface-plain']]).toEqual([stack, stack]);
+    const custom = createTypographyVariables(
+      { plain: 'Inter, sans-serif' },
+      { typescale: 'variable' },
+    );
+    expect([custom['--rio-typeface-brand'], custom['--rio-typeface-plain']]).toEqual([
+      stack,
+      'Inter, sans-serif',
+    ]);
+  });
+
+  test('takes the language heights too', () => {
+    const tall = createTypographyVariables({}, { typescale: 'variable', languageHeight: 'medium' });
+    expect(tall['--rio-typescale-emphasized-label-large']).toBe(
+      '600 0.875rem/1.4375rem var(--rio-typeface-plain)',
+    );
+  });
+
+  test('static is the default', () => {
+    expect(createTypographyVariables({}, { typescale: 'static' })).toEqual(
+      createTypographyVariables(),
+    );
   });
 });
 

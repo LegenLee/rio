@@ -16,8 +16,6 @@ import {
   mdiBookmarkOutline,
   mdiCalendar,
   mdiCheck,
-  mdiChevronDown,
-  mdiChevronLeft,
   mdiChevronRight,
   mdiClockOutline,
   mdiClose,
@@ -31,16 +29,11 @@ import {
   mdiFormatBold,
   mdiFormatItalic,
   mdiFormatUnderline,
-  mdiGestureSwipeVertical,
   mdiHeart,
   mdiHeartOutline,
-  mdiKeyboardOutline,
   mdiMagnify,
-  mdiMenuDown,
-  mdiMenuRight,
   mdiOpenInNew,
   mdiPause,
-  mdiPencil,
   mdiRestore,
   mdiShareVariant,
   mdiSkipNext,
@@ -73,6 +66,7 @@ import {
   RioDateRangePickerDialog,
   RioDialog,
   RioFilterChip,
+  RioIcon,
   RioIconButton,
   RioInputChip,
   RioLinearProgress,
@@ -104,6 +98,8 @@ import {
 import { computed, reactive, ref, useTemplateRef } from 'vue';
 import { theme } from './theme';
 
+// Right to left, the components lay out the other way, and their arrows point the other way.
+const direction = ref<'ltr' | 'rtl'>('ltr');
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
 const progress = ref(0.4);
 const chips = reactive({
@@ -275,7 +271,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 </script>
 
 <template>
-  <main>
+  <main :dir="direction">
     <h1>Rio Playground</h1>
 
     <section class="controls">
@@ -300,6 +296,13 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           <option value="light dark">System</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
+        </select>
+      </label>
+      <label>
+        Direction
+        <select v-model="direction">
+          <option value="ltr">Left to right</option>
+          <option value="rtl">Right to left</option>
         </select>
       </label>
       <label>
@@ -366,7 +369,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <div class="controls">
         <RioButton :href="M3_URL" target="_blank" rel="noopener">
           <template #icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiOpenInNew }" />
           </template>
           Link (new tab)
         </RioButton>
@@ -381,7 +384,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           rel="noopener"
           variant="tonal"
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiOpenInNew }" />
         </RioIconButton>
       </div>
     </section>
@@ -406,7 +409,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :size="size"
           :shape="iconShape"
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
         </RioIconButton>
       </div>
       <div v-for="size in ['small', 'medium'] as const" :key="size" class="controls">
@@ -419,7 +422,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :width="width"
           :shape="iconShape"
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
         </RioIconButton>
       </div>
       <div class="controls">
@@ -433,9 +436,9 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :variant="variant"
           :shape="iconShape"
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiHeartOutline }" />
           <template #selected-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiHeart }" />
           </template>
         </RioIconButton>
         <RioIconButton
@@ -447,9 +450,9 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           width="wide"
           :shape="iconShape"
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiBookmarkOutline" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiBookmarkOutline }" />
           <template #selected-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiBookmark" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiBookmark }" />
           </template>
         </RioIconButton>
       </div>
@@ -462,10 +465,10 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :variant="variant"
           disabled
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
         </RioIconButton>
         <RioIconButton label="Search (soft-disabled)" soft-disabled>
-          <svg viewBox="0 0 24 24"><path :d="mdiMagnify" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
         </RioIconButton>
       </div>
     </section>
@@ -490,13 +493,13 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         <code class="row-label">standard</code>
         <RioButtonGroup :size="groupSize" :shape="groupShape">
           <RioIconButton label="Previous" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiSkipPrevious" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiSkipPrevious }" />
           </RioIconButton>
           <RioIconButton label="Pause" width="wide">
-            <svg viewBox="0 0 24 24"><path :d="mdiPause" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiPause }" />
           </RioIconButton>
           <RioIconButton label="Next" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiSkipNext" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiSkipNext }" />
           </RioIconButton>
         </RioButtonGroup>
       </div>
@@ -517,13 +520,13 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           selection="multiple"
         >
           <RioIconButton label="Bold" value="bold" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiFormatBold" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatBold }" />
           </RioIconButton>
           <RioIconButton label="Italic" value="italic" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiFormatItalic" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatItalic }" />
           </RioIconButton>
           <RioIconButton label="Underline" value="underline" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiFormatUnderline" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatUnderline }" />
           </RioIconButton>
         </RioButtonGroup>
         <code>{{ textStyles }}</code>
@@ -554,13 +557,13 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           selection="single"
         >
           <RioIconButton label="Align left" value="left" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignLeft" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignLeft }" />
           </RioIconButton>
           <RioIconButton label="Align center" value="center" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignCenter" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignCenter }" />
           </RioIconButton>
           <RioIconButton label="Align right" value="right" variant="tonal">
-            <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignRight" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignRight }" />
           </RioIconButton>
         </RioButtonGroup>
       </div>
@@ -586,12 +589,9 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           menu-label="More watch options"
         >
           <template #icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiClockOutline" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiClockOutline }" />
           </template>
           Watch later
-          <template #menu-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
-          </template>
         </RioSplitButton>
       </div>
       <div class="controls">
@@ -605,19 +605,11 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           menu-label="More options"
         >
           Label
-          <template #menu-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
-          </template>
         </RioSplitButton>
       </div>
       <div class="controls">
         <code class="row-label">split, disabled</code>
-        <RioSplitButton menu-label="More options" disabled>
-          Disabled
-          <template #menu-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
-          </template>
-        </RioSplitButton>
+        <RioSplitButton menu-label="More options" disabled> Disabled </RioSplitButton>
         <code>{{ splitOpen }}</code>
       </div>
     </section>
@@ -636,23 +628,17 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         </RioButton>
         <RioMenu v-model:open="menus.edit" :anchor="editButton" label="Edit">
           <RioMenuItem @click="lastAction = 'cut'">
-            <template #icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiContentCut" fill="currentColor" /></svg
-            ></template>
+            <template #icon><RioIcon :icon="{ type: 'svg', path: mdiContentCut }" /></template>
             Cut
             <template #trailing-text>Ctrl+X</template>
           </RioMenuItem>
           <RioMenuItem @click="lastAction = 'copy'">
-            <template #icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiContentCopy" fill="currentColor" /></svg
-            ></template>
+            <template #icon><RioIcon :icon="{ type: 'svg', path: mdiContentCopy }" /></template>
             Copy
             <template #trailing-text>Ctrl+C</template>
           </RioMenuItem>
           <RioMenuItem disabled>
-            <template #icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiContentPaste" fill="currentColor" /></svg
-            ></template>
+            <template #icon><RioIcon :icon="{ type: 'svg', path: mdiContentPaste }" /></template>
             Paste
             <template #trailing-text>Ctrl+V</template>
           </RioMenuItem>
@@ -673,7 +659,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :aria-expanded="menus.more"
           @click="menus.more = !menus.more"
         >
-          <svg viewBox="0 0 24 24"><path :d="mdiDotsVertical" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiDotsVertical }" />
         </RioIconButton>
         <RioMenu
           v-model:open="menus.more"
@@ -705,9 +691,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         >
           <RioMenuItem v-for="by in ['name', 'date', 'size']" :key="by" :value="by">
             <template #icon="{ selected }">
-              <svg v-if="selected" viewBox="0 0 24 24">
-                <path :d="mdiCheck" fill="currentColor" />
-              </svg>
+              <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
             </template>
             {{ by }}
           </RioMenuItem>
@@ -731,9 +715,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         >
           <RioMenuItem v-for="kind in ['photos', 'videos', 'documents']" :key="kind" :value="kind">
             <template #icon="{ selected }">
-              <svg v-if="selected" viewBox="0 0 24 24">
-                <path :d="mdiCheck" fill="currentColor" />
-              </svg>
+              <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
             </template>
             {{ kind }}
           </RioMenuItem>
@@ -741,9 +723,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
         <RioSplitButton ref="saveSplit" v-model:open="menus.split" menu-label="More save options">
           Save
-          <template #menu-icon
-            ><svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg
-          ></template>
         </RioSplitButton>
         <RioMenu
           v-model:open="menus.split"
@@ -781,39 +760,23 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         <RioMenu v-model:open="menus.view" :anchor="viewButton" label="View">
           <RioMenuItem @click="lastAction = 'refresh'">Refresh</RioMenuItem>
           <RioSubMenu v-model="layout" label="Layout" selection="single">
-            <template #trailing-icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
-            ></template>
             <RioMenuItem v-for="kind in ['grid', 'list', 'columns']" :key="kind" :value="kind">
               <template #icon="{ selected }">
-                <svg v-if="selected" viewBox="0 0 24 24">
-                  <path :d="mdiCheck" fill="currentColor" />
-                </svg>
+                <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
               </template>
               {{ kind }}
             </RioMenuItem>
           </RioSubMenu>
           <RioSubMenu label="Share">
-            <template #icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiShareVariant" fill="currentColor" /></svg
-            ></template>
-            <template #trailing-icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
-            ></template>
+            <template #icon><RioIcon :icon="{ type: 'svg', path: mdiShareVariant }" /></template>
             <RioMenuItem @click="lastAction = 'email'">Email</RioMenuItem>
             <RioMenuItem @click="lastAction = 'link'">Copy link</RioMenuItem>
             <RioSubMenu label="More apps">
-              <template #trailing-icon
-                ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
-              ></template>
               <RioMenuItem @click="lastAction = 'chat'">Chat</RioMenuItem>
               <RioMenuItem @click="lastAction = 'notes'">Notes</RioMenuItem>
             </RioSubMenu>
           </RioSubMenu>
           <RioSubMenu label="Export" disabled>
-            <template #trailing-icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
-            ></template>
             <RioMenuItem>PDF</RioMenuItem>
           </RioSubMenu>
           <RioMenuDivider />
@@ -826,9 +789,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           <RioMenuItem @click="lastAction = 'open'">Open</RioMenuItem>
           <RioMenuItem @click="lastAction = 'download'">Download</RioMenuItem>
           <RioSubMenu label="Open with">
-            <template #trailing-icon
-              ><svg viewBox="0 0 24 24"><path :d="mdiMenuRight" fill="currentColor" /></svg
-            ></template>
             <RioMenuItem @click="lastAction = 'viewer'">Viewer</RioMenuItem>
             <RioMenuItem @click="lastAction = 'editor'">Editor</RioMenuItem>
           </RioSubMenu>
@@ -844,7 +804,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         <code class="row-label">plain</code>
         <RioTooltip v-for="{ action, icon } in toolbar" :key="action" :text="action">
           <RioIconButton :label="action" @click="lastAction = action.toLowerCase()">
-            <svg viewBox="0 0 24 24"><path :d="icon" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: icon }" />
           </RioIconButton>
         </RioTooltip>
         <span
@@ -906,7 +866,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       </RioDialog>
       <RioDialog v-model:open="dialogs.reset" headline="Reset settings?">
         <template #icon>
-          <svg viewBox="0 0 24 24"><path :d="mdiRestore" fill="currentColor" /></svg>
+          <RioIcon :icon="{ type: 'svg', path: mdiRestore }" />
         </template>
         This will reset your app preferences back to their default settings. The following accounts
         will also be signed out:
@@ -966,13 +926,11 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         />
         <RioTextField v-model="fields.search" label="Search" placeholder="Songs, albums">
           <template #leading-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMagnify" fill="currentColor" />
-            </svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
           </template>
           <template v-if="fields.search" #trailing-icon>
             <RioIconButton label="Clear" variant="standard" @click="fields.search = ''">
-              <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+              <RioIcon :icon="{ type: 'svg', path: mdiClose }" />
             </RioIconButton>
           </template>
         </RioTextField>
@@ -1011,22 +969,12 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
     <section class="text-fields">
       <form class="controls" @submit.prevent="submitSelects">
         <RioSelect v-model="selects.size" label="Size" name="size" required>
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMenuDown" fill="currentColor" />
-            </svg>
-          </template>
           <RioSelectOption value="s">Small</RioSelectOption>
           <RioSelectOption value="m">Medium</RioSelectOption>
           <RioSelectOption value="l" disabled>Large</RioSelectOption>
           <RioSelectOption value="xl">Extra large</RioSelectOption>
         </RioSelect>
         <RioSelect v-model="selects.font" variant="outlined" label="Font" name="font">
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMenuDown" fill="currentColor" />
-            </svg>
-          </template>
           <RioSelectOption value="roboto">Roboto</RioSelectOption>
           <RioSelectOption value="roboto-flex">Roboto Flex</RioSelectOption>
           <RioSelectOption value="roboto-serif">
@@ -1041,26 +989,14 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           multiple
           menu-variant="vibrant"
         >
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMenuDown" fill="currentColor" />
-            </svg>
-          </template>
           <RioSelectOption v-for="(name, value) in PIZZA_TOPPINGS" :key="value" :value="value">
             {{ name }}
             <template #icon="{ selected }">
-              <svg v-if="selected" viewBox="0 0 24 24" aria-hidden="true">
-                <path :d="mdiCheck" fill="currentColor" />
-              </svg>
+              <RioIcon v-if="selected" :icon="{ type: 'svg', path: mdiCheck }" />
             </template>
           </RioSelectOption>
         </RioSelect>
         <RioSelect label="Disabled" model-value="a" disabled>
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMenuDown" fill="currentColor" />
-            </svg>
-          </template>
           <RioSelectOption value="a">Fixed</RioSelectOption>
         </RioSelect>
         <RioButton type="submit">Submit</RioButton>
@@ -1072,61 +1008,9 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
     <section class="text-fields">
       <div class="controls">
         <RioDatePicker v-model="dates.docked" label="Departure" clearable min="2026-01-01">
-          <template #calendar-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiCalendar" fill="currentColor" />
-            </svg>
-          </template>
-          <template #previous-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiChevronLeft" fill="currentColor" />
-            </svg>
-          </template>
-          <template #next-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiChevronRight" fill="currentColor" />
-            </svg>
-          </template>
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMenuDown" fill="currentColor" />
-            </svg>
-          </template>
         </RioDatePicker>
-        <RioDatePicker v-model="dates.modal" variant="modal" label="Event date">
-          <template #calendar-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiCalendar" fill="currentColor" />
-            </svg>
-          </template>
-          <template #edit-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiPencil" fill="currentColor" />
-            </svg>
-          </template>
-          <template #previous-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiChevronLeft" fill="currentColor" />
-            </svg>
-          </template>
-          <template #next-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiChevronRight" fill="currentColor" />
-            </svg>
-          </template>
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMenuDown" fill="currentColor" />
-            </svg>
-          </template>
-        </RioDatePicker>
-        <RioDatePicker v-model="dates.korean" label="출발일" locale="ko-KR">
-          <template #calendar-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiCalendar" fill="currentColor" />
-            </svg>
-          </template>
-        </RioDatePicker>
+        <RioDatePicker v-model="dates.modal" variant="modal" label="Event date"> </RioDatePicker>
+        <RioDatePicker v-model="dates.korean" label="출발일" locale="ko-KR"> </RioDatePicker>
         <RioButton variant="tonal" @click="dateDialogOpen = true">Due date</RioButton>
         <RioDatePickerDialog v-model="dates.dialog" v-model:open="dateDialogOpen" />
         <RioButton variant="tonal" @click="dateRangeOpen = true">Trip dates</RioButton>
@@ -1137,16 +1021,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           clearable
           :messages="{ rangeTitle: 'Depart – Return dates' }"
         >
-          <template #edit-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiPencil" fill="currentColor" />
-            </svg>
-          </template>
-          <template #calendar-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiCalendar" fill="currentColor" />
-            </svg>
-          </template>
         </RioDateRangePickerDialog>
       </div>
       <code>{{ dates }}</code>
@@ -1158,16 +1032,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         <RioTimeInput v-model="times.german" locale="de-DE" />
         <RioButton variant="tonal" @click="timeDialogOpen = true">Alarm</RioButton>
         <RioTimePickerDialog v-model="times.dialog" v-model:open="timeDialogOpen">
-          <template #keyboard-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiKeyboardOutline" fill="currentColor" />
-            </svg>
-          </template>
-          <template #clock-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiClockOutline" fill="currentColor" />
-            </svg>
-          </template>
         </RioTimePickerDialog>
         <RioButton variant="tonal" @click="timeHorizontalOpen = true">Start, 24 hours</RioButton>
         <RioTimePickerDialog
@@ -1176,16 +1040,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :hour-cycle="24"
           layout="horizontal"
         >
-          <template #keyboard-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiKeyboardOutline" fill="currentColor" />
-            </svg>
-          </template>
-          <template #clock-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiClockOutline" fill="currentColor" />
-            </svg>
-          </template>
         </RioTimePickerDialog>
         <RioButton variant="tonal" @click="timeScrollOpen = true">Reminder, scroll</RioButton>
         <RioTimePickerDialog
@@ -1193,16 +1047,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           v-model:open="timeScrollOpen"
           picker="scroll"
         >
-          <template #keyboard-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiKeyboardOutline" fill="currentColor" />
-            </svg>
-          </template>
-          <template #swipe-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiGestureSwipeVertical" fill="currentColor" />
-            </svg>
-          </template>
         </RioTimePickerDialog>
       </div>
       <div class="controls">
@@ -1212,16 +1056,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           v-model="times[key]"
           :locale="i ? 'de-DE' : undefined"
         >
-          <template #keyboard-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiKeyboardOutline" fill="currentColor" />
-            </svg>
-          </template>
-          <template #swipe-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiGestureSwipeVertical" fill="currentColor" />
-            </svg>
-          </template>
         </RioTimeScroll>
       </div>
       <code>{{ times }}</code>
@@ -1231,31 +1065,23 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <RioList variant="segmented" style="inline-size: 320px">
         <RioListItem @click="listOpened = 'Search'">
           <template #leading>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiMagnify" fill="currentColor" />
-            </svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
           </template>
           Search
           <template #supporting>Across every note</template>
           <template #trailing>
             <RioIconButton variant="standard" label="More">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path :d="mdiDotsVertical" fill="currentColor" />
-              </svg>
+              <RioIcon :icon="{ type: 'svg', path: mdiDotsVertical }" />
             </RioIconButton>
           </template>
         </RioListItem>
         <RioListItem href="#lists" @click="listOpened = 'Share'">
           <template #leading>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiShareVariant" fill="currentColor" />
-            </svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiShareVariant }" />
           </template>
           Share
           <template #trailing>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path :d="mdiChevronRight" fill="currentColor" />
-            </svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiChevronRight }" />
           </template>
         </RioListItem>
         <RioListItem disabled @click="listOpened = 'Restore'">Restore</RioListItem>
@@ -1331,7 +1157,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <RioChipSet aria-label="Assist and suggestion chips">
         <RioAssistChip @click="chips.last = 'Add to calendar'">
           <template #icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiCalendar }" />
           </template>
           Add to calendar
         </RioAssistChip>
@@ -1342,9 +1168,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       </RioChipSet>
       <RioChipSet v-model="chips.filters" selection="multiple" aria-label="Filter chips">
         <RioFilterChip v-for="name in ['wifi', 'bluetooth', 'nfc']" :key="name" :value="name">
-          <template #selected-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
-          </template>
           {{ name }}
         </RioFilterChip>
         <RioFilterChip
@@ -1354,9 +1177,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :selected="chips.size !== undefined"
         >
           {{ chips.size ?? 'Size' }}
-          <template #dropdown-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiMenuDown" fill="currentColor" /></svg>
-          </template>
         </RioFilterChip>
       </RioChipSet>
       <RioMenu
@@ -1378,9 +1198,6 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           @remove="chips.people = chips.people.filter((p) => p !== person)"
         >
           {{ person }}
-          <template #remove-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
-          </template>
         </RioInputChip>
       </RioChipSet>
       <code>chips={{ chips }}</code>
@@ -1394,7 +1211,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.selectedIcon">
           <template #selected-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiCheck }" />
           </template>
         </RioSwitch>
         Icon when on
@@ -1402,10 +1219,10 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <label class="switch-row">
         <RioSwitch v-model:selected="switches.bothIcons">
           <template #selected-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiCheck" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiCheck }" />
           </template>
           <template #unselected-icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiClose }" />
           </template>
         </RioSwitch>
         Icons on and off
@@ -1435,15 +1252,15 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
       <RioRangeSlider v-model="sliders.range" value-indicator aria-label="Range" />
       <RioSlider v-model="sliders.volume" size="large" aria-label="Volume">
         <template #icon>
-          <svg viewBox="0 0 24 24">
-            <path :d="sliders.volume === 0 ? mdiVolumeOff : mdiVolumeHigh" fill="currentColor" />
-          </svg>
+          <RioIcon
+            :icon="{ type: 'svg', path: sliders.volume === 0 ? mdiVolumeOff : mdiVolumeHigh }"
+          />
         </template>
       </RioSlider>
       <div class="slider-row">
         <RioSlider v-model="sliders.vertical" vertical size="medium" aria-label="Vertical">
           <template #icon>
-            <svg viewBox="0 0 24 24"><path :d="mdiVolumeHigh" fill="currentColor" /></svg>
+            <RioIcon :icon="{ type: 'svg', path: mdiVolumeHigh }" />
           </template>
         </RioSlider>
         <RioSlider :model-value="50" disabled vertical aria-label="Disabled" />

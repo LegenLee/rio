@@ -9,6 +9,7 @@ import {
   type SelectValue,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/anchored-position.css';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/menu.css';
 import '@rio-m3e/styles/select.css';
@@ -26,6 +27,7 @@ import {
 } from 'vue';
 import { keepPresses } from '../overlay/presses';
 import { selectKey, type SelectOptionEntry } from './context';
+import RioIcon from '../icon/Icon.vue';
 
 // `class` and `style` dress the whole select; every other attribute, such as `id` or
 // `aria-label`, and every listener belongs to the field, the `combobox`.
@@ -57,7 +59,10 @@ const slots = defineSlots<{
   default?: () => unknown;
   /** An icon before the selection */
   'leading-icon'?: () => unknown;
-  /** The dropdown arrow, such as arrow_drop_down. It turns over while the list is open. */
+  /**
+   * The dropdown arrow, such as arrow_drop_down. It turns over while the list is open. Without one,
+   * the `dropdown` icon registered with `createRio`.
+   */
   'dropdown-icon'?: () => unknown;
   /**
    * The selection as the field shows it, in place of the selected options' labels separated by
@@ -204,7 +209,9 @@ onBeforeUnmount(() => handle?.detach());
             </span>
           </div>
         </div>
-        <span v-bind="select.parts.arrow()"><slot name="dropdown-icon" /></span>
+        <span v-bind="select.parts.arrow()"
+          ><slot name="dropdown-icon"><RioIcon alias="dropdown" /></slot
+        ></span>
         <select ref="native" v-bind="select.parts.native()">
           <option v-if="!select.multiple()" value="" />
           <option

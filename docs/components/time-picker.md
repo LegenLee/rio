@@ -147,7 +147,7 @@ import ScrollDialog from './demos/time-picker/ScrollDialog.vue';
 
 - **Values are `HH:MM` on a 24-hour clock**, as `<input type="time">` takes them, whatever clock the picker shows (Rio's choice). `Temporal.PlainTime.from(time)` reads one.
 - **The dialog opens from the app's own button** (Rio's choice): there is no field that opens it. The app shows the time chosen wherever it likes.
-- **Slots are icons, which the app brings**: `keyboard-icon` on the mode button of the dial or the scroll fields, and `clock-icon` or `swipe-icon` on the text input's, back to either. A slot left empty leaves the button without an icon; its name for assistive technology stays.
+- **Slots are icons, which the app brings**: `keyboard-icon` on the mode button of the dial or the scroll fields, and `clock-icon` or `swipe-icon` on the text input's, back to either. A slot left empty takes the icon the app registered with `createRio` for `keyboard`, `clock`, or `swipe` (see [Icons](../guide/icons.md)); without that, the button shows no icon, and its name for assistive technology stays.
 - Attributes and listeners go to the root: the `<div>` on the page, or the `<dialog>`.
 
 ### The clock
