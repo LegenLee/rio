@@ -46,6 +46,12 @@ Other adapters provide the language their framework's way, as a React adapter wo
 - **Line heights**: `createRio`'s theme takes the line heights for the script of the app's language, taller for Korean, Chinese, Japanese, Arabic, Thai, and most scripts other than Latin, Greek, Cyrillic, and Hebrew, unless the theme gives its own `languageHeight`. They follow `createRio`'s `locale`, the document's `lang`, or the browser's language; a `RioLocaleProvider` or a component's `locale` leaves them as they are. For part of a page in a script of another height, write the theme on it again with its own: `attachTheme(element, { ...theme, languageHeight: languageHeightOf('my') })`, from `@rio-m3e/tokens`.
 - Where a browser lacks `Intl.Locale.prototype.getWeekInfo`, the first day of the week comes from the older `weekInfo` getter, or else from CLDR's table for the language's likely region.
 
+## Right to left
+
+The language doesn't set the direction; the `dir` attribute does, on `<html>` or on an element around the components: `<html lang="ar" dir="rtl">`. Right to left, the components lay out from the right, the left and right arrow keys swap, and the icons that point along the line are mirrored (see [Icons](./icons.md)).
+
+Rio's stylesheets follow the nearest `dir` attribute. Under `dir="auto"` they keep the direction around it, whatever the text inside, and a stylesheet's `direction: rtl` alone doesn't reach them, so set `dir` to `ltr` or `rtl`.
+
 ## The app's messages
 
 `createRio`'s `messages` adds tables, by language tag, for languages Rio has none for, or replaces any of Rio's text for the whole app. A table can leave messages out. A tag with a region, such as `en-GB`, goes over its language's table.

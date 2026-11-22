@@ -124,15 +124,11 @@
   --_start: var(--_inner-now);
   --_end: var(--_round);
   --rio-split-button-menu-shift-target: var(--_menu-offset);
-  /* Toward the start: left, or right in right-to-left layouts */
-  --_start-sign: -1;
+  /* Toward the start: left, or right in right-to-left layouts (`base/direction.css`) */
+  --_start-sign: calc(-1 * var(--rio-dir-sign, 1));
 
   inline-size: calc(var(--_menu-size) + 2 * var(--_menu-padding));
   padding: 0;
-}
-
-.rio-split-button > .rio-split-button__trailing:dir(rtl) {
-  --_start-sign: 1;
 }
 
 /*
@@ -142,12 +138,8 @@
  */
 .rio-split-button > .rio-split-button__trailing[data-open] {
   --_inner-now: var(--_round);
-  --rio-split-button-menu-turn-target: 180deg;
+  --rio-split-button-menu-turn-target: calc(180deg * var(--rio-dir-sign, 1));
   --rio-split-button-menu-shift-target: 0px;
-}
-
-.rio-split-button > .rio-split-button__trailing[data-open]:dir(rtl) {
-  --rio-split-button-menu-turn-target: -180deg;
 }
 
 .rio-split-button

@@ -33,9 +33,10 @@ span.rio-icon > * {
   line-height: 1;
 }
 
-/* Right to left, an icon that points along the line, drawn for one of Rio's aliases, mirrored */
-.rio-icon[data-mirrored]:dir(rtl) {
-  scale: -1 1;
+/* An icon that points along the line, drawn for one of Rio's aliases, mirrored right to left
+   (`base/direction.css`) */
+.rio-icon[data-mirrored] {
+  scale: var(--rio-dir-sign, 1) 1;
 }
 
 /* The ligature's name, drawn but not in the page's text */

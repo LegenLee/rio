@@ -18,6 +18,7 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 
 ### Fixed
 
+- **Right to left in built apps**: Rio's stylesheets read the direction with `:dir()`, which a build for older browsers, as with Vite's default CSS target, turns into `:lang()`, so a page's `dir="rtl"` didn't reach them. There the time pickers read minutes before hours, a menu grew from the wrong corner, a split button's arrow turned the wrong way, and a slider's and a linear progress indicator's stop dots and wave sat at the wrong end. They follow the nearest `dir` attribute now, whatever the build, through `--rio-dir-sign` from `@rio-m3e/styles/base/direction.css`. For adapters: import it with `icon.css`, `menu.css`, `progress.css`, `slider.css`, `split-button.css`, and `time-picker.css`, which read it.
 - `RioScrollField`'s value in the middle, and the time pickers' scroll fields', sat 6px under the middle of its slot, whose 52px its taller line outgrew. It is in the middle now, as a line taller still, for a taller script, is too.
 
 ## [0.6.2] - 2026-11-22

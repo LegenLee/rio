@@ -180,13 +180,13 @@
 /* The stop indicator ends a determinate track: 4px, in the middle of the track's round end. */
 .rio-linear-progress:not([data-indeterminate]) .rio-linear-progress__track-upper {
   background-image: radial-gradient(circle 2px at center, var(--_indicator) 1.5px, transparent 2px);
-  background-position: right calc(var(--_t) / 2 - 2px) center;
+  /* At the end: the right, or the left in right-to-left layouts (`base/direction.css`) */
+  background-position: calc(
+      (1 + var(--rio-dir-sign, 1)) * 50% - var(--rio-dir-sign, 1) * (var(--_t) / 2 - 2px)
+    )
+    center;
   background-size: 4px 100%;
   background-repeat: no-repeat;
-}
-
-.rio-linear-progress:dir(rtl):not([data-indeterminate]) .rio-linear-progress__track-upper {
-  background-position: left calc(var(--_t) / 2 - 2px) center;
 }
 
 /* Indeterminate: two indicators cross the track in turn, each growing and then shrinking. Their
@@ -253,10 +253,8 @@
   inline-size: 100%;
   block-size: 100%;
   overflow: visible;
-}
-
-.rio-linear-progress:dir(rtl) .rio-linear-progress__wave {
-  scale: -1 1;
+  /* Mirrored right to left (`base/direction.css`) */
+  scale: var(--rio-dir-sign, 1) 1;
 }
 
 /* Circular: the indicator from the top, clockwise, and the track the rest of the way round */

@@ -96,12 +96,13 @@ describe('RioIcon', () => {
         { global: { plugins: [createRio({ icons })] } },
       );
       const drawn = (screen.container as HTMLElement).querySelectorAll('.rio-icon');
-      const out = [...drawn].map((icon) => getComputedStyle(icon).scale);
+      // Mirrored: scaled by -1 along the line
+      const out = [...drawn].map((icon) => getComputedStyle(icon).scale.startsWith('-1'));
       screen.unmount();
       return out;
     };
-    expect(await scales('rtl')).toEqual(['-1 1', '-1 1', 'none', 'none']);
-    expect(await scales('ltr')).toEqual(['none', 'none', 'none', 'none']);
+    expect(await scales('rtl')).toEqual([true, true, false, false]);
+    expect(await scales('ltr')).toEqual([false, false, false, false]);
   });
 
   test('without an icon for it, nothing', async () => {

@@ -199,15 +199,14 @@
   border-start-end-radius: var(--_upper-corner);
   border-end-end-radius: var(--_upper-corner);
   background-color: var(--_inactive);
-  background-position: var(--_dot-at) center;
+  /* From the start: the left, or the right in right-to-left layouts (`base/direction.css`) */
+  background-position: calc(
+      (1 - var(--rio-dir-sign, 1)) * 50% + var(--rio-dir-sign, 1) * var(--_dot-at)
+    )
+    center;
   background-size: var(--_dot-size) 100%;
   background-repeat: no-repeat;
   pointer-events: none;
-}
-
-.rio-slider:dir(rtl)
-  :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
-  background-position: right var(--_dot-at) center;
 }
 
 .rio-slider__track-active {

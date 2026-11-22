@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { createMenuItem, type MenuItemProps } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/state-layer.css';
 import '@rio-m3e/styles/menu.css';

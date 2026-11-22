@@ -49,7 +49,8 @@
  */
 .rio-menu {
   --_origin-block: top;
-  --_origin-inline: left;
+  /* The start side: left, or right in right-to-left layouts (`base/direction.css`) */
+  --_origin-inline: calc(50% - 50% * var(--rio-dir-sign, 1));
 
   transform-origin: var(--_origin-inline) var(--_origin-block);
   transition:
@@ -93,9 +94,8 @@
   --_origin-block: top;
 }
 
-.rio-menu:is([data-align='end'], [data-side='start']):dir(ltr),
-.rio-menu:not([data-align='end'], [data-side='start']):dir(rtl) {
-  --_origin-inline: right;
+.rio-menu:is([data-align='end'], [data-side='start']) {
+  --_origin-inline: calc(50% + 50% * var(--rio-dir-sign, 1));
 }
 
 .rio-menu[data-instant] {

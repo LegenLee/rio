@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { createMenuDivider } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/menu.css';
 
 const divider = createMenuDivider();

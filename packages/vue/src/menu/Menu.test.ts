@@ -26,19 +26,25 @@ interface Setup {
   props?: Omit<MenuProps, 'open' | 'selected'> & { anchor?: AnchorPoint };
   selected?: MenuSelected;
   items?: () => VNode[];
+  dir?: 'ltr' | 'rtl';
 }
 
 /**
  * A trigger button, a button after it, and a menu the trigger opens, as an app would write them.
  * `state` holds what the app keeps: whether the menu is open, and the selection.
  */
-const setup = async ({ props = {}, selected, items = () => plainItems() }: Setup = {}) => {
+const setup = async ({
+  props = {},
+  selected,
+  items = () => plainItems(),
+  dir = 'ltr',
+}: Setup = {}) => {
   const state = reactive({ open: false, selected });
   const trigger = ref<HTMLElement>();
   const screen = await render(
     defineComponent(
       () => () =>
-        h('div', { style: { padding: '40px', ...theme } }, [
+        h('div', { dir, style: { padding: '40px', ...theme } }, [
           h(
             'button',
             {
@@ -713,6 +719,19 @@ describe('RioMenu', () => {
       expect(rect(menu()).left).toBeCloseTo(rect(trigger()).right + 4, 0);
       expect(rect(menu()).top).toBeCloseTo(rect(trigger()).top, 0);
       expect([menu().dataset.side, menu().dataset.align]).toEqual(['end', 'start']);
+    });
+
+    test.each([
+      ['ltr', 'start'],
+      ['ltr', 'end'],
+      ['rtl', 'start'],
+      ['rtl', 'end'],
+    ] as const)('%s, aligned to its %s, it expands from that side', async (dir, align) => {
+      const { opened, menu } = await setup({ dir, props: { align } });
+      await opened();
+      const x = parseFloat(getComputedStyle(menu()).transformOrigin);
+      const fromLeft = (align === 'start') === (dir === 'ltr');
+      expect(x).toBeCloseTo(fromLeft ? 0 : rect(menu()).width, 0);
     });
 
     test("a component anchor stands for its root element, such as a RioButton's", async () => {

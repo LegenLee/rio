@@ -8,6 +8,7 @@ import {
   type SubMenuProps,
 } from '@rio-m3e/core';
 import '@rio-m3e/styles/base/anchored-position.css';
+import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
