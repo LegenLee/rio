@@ -52,11 +52,14 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Date range picker
 - [x] Chips
 - [ ] List, List Items (maybe?)
-- [ ] Language-specific line heights and variable font axes
-- [ ] Icons
 - [x] Loading progress bars
 - [x] Loading indicator with shape morphs
 - [x] Scroll fields
+
+### v0.6.1
+
+- [ ] Icons
+- [ ] Language-specific line heights and variable font axes
 
 ### v0.7 (Layouts)
 
