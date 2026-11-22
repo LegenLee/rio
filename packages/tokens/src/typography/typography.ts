@@ -37,9 +37,19 @@ export interface TypeStyleSpec {
   weight: number;
 }
 
+/**
+ * How tall the script is, for its line heights: `small` for Latin (but Vietnamese), Greek,
+ * Cyrillic, and Hebrew; `medium` for most others, such as Chinese, Japanese, Korean, Arabic, and
+ * Thai; `large` for Burmese and Telugu; `extra-large` for Nastaliq.
+ */
+export const LANGUAGE_HEIGHTS = ['small', 'medium', 'large', 'extra-large'] as const;
+export type LanguageHeight = (typeof LANGUAGE_HEIGHTS)[number];
+
 export interface TypeStyleOptions {
   /** The M3E emphasized set: heavier, for selection, actions, and editorial emphasis. */
   emphasized?: boolean;
+  /** The line heights for a script's height. Defaults to `'small'`, the type scale's own. */
+  languageHeight?: LanguageHeight;
 }
 
 export type TypescalePart = 'font' | 'size' | 'line-height' | 'weight' | 'tracking';
@@ -94,6 +104,55 @@ const EMPHASIZED: Record<TypeStyle, Row> = {
   'label-small': ['plain', 11, 16, 0.5, 700],
 };
 
+/**
+ * Line heights by language height, small to extra large, in px: m3.material.io's typography token
+ * data, `md.ref.typeface.<style>.line-height` under the `language.height` context. The small ones
+ * are the type scale's own. The emphasized styles take them too.
+ */
+const LANGUAGE_LINE_HEIGHTS: Record<TypeStyle, readonly [number, number, number, number]> = {
+  'display-large': [64, 73, 89, 120],
+  'display-medium': [52, 56, 71, 99],
+  'display-small': [44, 47, 57, 80],
+  'headline-large': [40, 42, 50, 75],
+  'headline-medium': [36, 38, 45, 66],
+  'headline-small': [32, 35, 41, 59],
+  'title-large': [28, 31, 36, 53],
+  'title-medium': [24, 27, 31, 42],
+  'title-small': [20, 23, 26, 36],
+  'body-large': [24, 27, 31, 41],
+  'body-medium': [20, 23, 26, 35],
+  'body-small': [16, 18, 21, 30],
+  'label-large': [20, 23, 26, 36],
+  'label-medium': [16, 18, 21, 30],
+  'label-small': [16, 18, 21, 29],
+};
+
+/** Scripts at the small line heights, by their ISO 15924 codes */
+const SMALL_SCRIPTS = new Set(['Latn', 'Grek', 'Cyrl', 'Hebr']);
+/** Burmese and Telugu */
+const LARGE_SCRIPTS = new Set(['Mymr', 'Telu']);
+
+/**
+ * The language height for a language tag, by its script: the one it names, as in `ur-Aran` for
+ * Urdu in Nastaliq, or its language's usual one. `small` without a tag, or for a language whose
+ * script `Intl` doesn't know.
+ */
+export function languageHeightOf(locale?: string): LanguageHeight {
+  if (!locale) return 'small';
+  let tag: Intl.Locale;
+  try {
+    tag = new Intl.Locale(locale).maximize();
+  } catch {
+    return 'small';
+  }
+  const { script, language } = tag;
+  if (!script) return 'small';
+  if (script === 'Aran') return 'extra-large';
+  if (LARGE_SCRIPTS.has(script)) return 'large';
+  if (SMALL_SCRIPTS.has(script)) return language === 'vi' ? 'medium' : 'small';
+  return 'medium';
+}
+
 const DEFAULT_TYPEFACE = 'Roboto, system-ui, sans-serif';
 
 export type TypefaceVar = `${typeof TOKEN_PREFIX}-typeface-${Typeface}`;
@@ -106,9 +165,9 @@ export type TypographyVar = TypefaceVar | TypescaleVar;
 
 /** The values behind a style, in px. */
 export function getTypeStyle(style: TypeStyle, options: TypeStyleOptions = {}): TypeStyleSpec {
-  const [typeface, size, lineHeight, tracking, weight] = (
-    options.emphasized ? EMPHASIZED : BASELINE
-  )[style];
+  const [typeface, size, , tracking, weight] = (options.emphasized ? EMPHASIZED : BASELINE)[style];
+  const lineHeight =
+    LANGUAGE_LINE_HEIGHTS[style][LANGUAGE_HEIGHTS.indexOf(options.languageHeight ?? 'small')]!;
   return { typeface, size, lineHeight, tracking, weight };
 }
 
@@ -137,6 +196,7 @@ const rem = (px: number) => `${Number((px / 16).toFixed(6))}rem`;
 /** Typeface and type scale variables for both the baseline and emphasized sets. */
 export function createTypographyVariables(
   typefaces: TypefaceOverrides = {},
+  languageHeight: LanguageHeight = 'small',
 ): Record<TypographyVar, string> {
   const vars = {
     [typefaceVar('brand')]: typefaces.brand ?? DEFAULT_TYPEFACE,
@@ -145,7 +205,10 @@ export function createTypographyVariables(
 
   for (const emphasized of [false, true]) {
     for (const style of TYPE_STYLES) {
-      const { typeface, size, lineHeight, tracking, weight } = getTypeStyle(style, { emphasized });
+      const { typeface, size, lineHeight, tracking, weight } = getTypeStyle(style, {
+        emphasized,
+        languageHeight,
+      });
       const v = (part?: TypescalePart) => typescaleVar(style, { emphasized, part });
       const font = `var(${typefaceVar(typeface)})`;
       vars[v()] = `${weight} ${rem(size)}/${rem(lineHeight)} ${font}`;

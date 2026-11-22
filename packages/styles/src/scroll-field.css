@@ -89,6 +89,9 @@
 
 .rio-scroll-field__item {
   display: grid;
+  /* The text in the middle of the slot: a line taller than the slot, as for a taller script,
+     spills out evenly */
+  align-content: center;
   place-items: center;
   block-size: var(--_item-height);
   scroll-snap-align: center;

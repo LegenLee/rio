@@ -4,6 +4,20 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [Unreleased]
+
+### Added
+
+- **Line heights for taller scripts**, the M3 type scale's language heights: the theme's `languageHeight` (`small`, `medium`, `large`, or `extra-large`) writes the spec's line heights for that category into the type scale's variables and `font` shorthands, baseline and emphasized. `createRio` picks it from the app's language unless the theme gives one, so Korean, Chinese, Japanese, Arabic, Thai, Vietnamese, and most scripts other than Latin, Greek, Cyrillic, and Hebrew get taller lines, Burmese and Telugu taller still, and Nastaliq (`ur-Aran`) the tallest; without a language, or on a server without one, the type scale's own. In `@rio-m3e/tokens`: `LANGUAGE_HEIGHTS`, `languageHeightOf(locale)`, `languageHeight` in `ThemeOptions` and `TypeStyleOptions`, and `createTypographyVariables`' second argument.
+
+### Changed
+
+- `createRio` sets the theme's line heights for the script of the app's language, as above. An app in Korean, Chinese, Japanese, Arabic, Thai, Vietnamese, or another script than Latin, Greek, Cyrillic, and Hebrew gets taller lines, and the components that pad their text, such as text fields, list items, and dialog headers, grow with them. Give the theme `languageHeight: 'small'` to keep the line heights from before.
+
+### Fixed
+
+- `RioScrollField`'s value in the middle, and the time pickers' scroll fields', sat 6px under the middle of its slot, whose 52px its taller line outgrew. It is in the middle now, as a line taller still, for a taller script, is too.
+
 ## [0.6.2] - 2026-11-22
 
 ### Added

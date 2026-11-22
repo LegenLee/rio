@@ -43,6 +43,7 @@ Other adapters provide the language their framework's way, as a React adapter wo
   ```
 
 - **Dates**: through `Intl`, how dates are written (11/27/2026, 27.11.2026, 2026. 11. 27.), the names of months and days, and the first day of the week, which a component's `firstDayOfWeek` can override. Dates are always Gregorian, and fields read and write Latin digits.
+- **Line heights**: `createRio`'s theme takes the line heights for the script of the app's language, taller for Korean, Chinese, Japanese, Arabic, Thai, and most scripts other than Latin, Greek, Cyrillic, and Hebrew, unless the theme gives its own `languageHeight`. They follow `createRio`'s `locale`, the document's `lang`, or the browser's language; a `RioLocaleProvider` or a component's `locale` leaves them as they are. For part of a page in a script of another height, write the theme on it again with its own: `attachTheme(element, { ...theme, languageHeight: languageHeightOf('my') })`, from `@rio-m3e/tokens`.
 - Where a browser lacks `Intl.Locale.prototype.getWeekInfo`, the first day of the week comes from the older `weekInfo` getter, or else from CLDR's table for the language's likely region.
 
 ## The app's messages

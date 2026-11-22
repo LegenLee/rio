@@ -1,5 +1,5 @@
 /// <reference types="@vitest/browser-playwright" />
-import { attachTheme } from '@rio-m3e/tokens';
+import { LANGUAGE_HEIGHTS, attachTheme } from '@rio-m3e/tokens';
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -472,6 +472,25 @@ describe('RioScrollField', () => {
     expect(await width({ options: ['ii'], size: 'large' }, 'ii')).toBe(186);
     // Wider text widens the field.
     expect(await width({ options: ['WWWWWW'] }, 'WWWWWW')).toBeGreaterThan(186);
+  });
+
+  test('the value in the middle sits in its middle, whatever the script’s height', async () => {
+    const theme = attachTheme(document.documentElement, {
+      sourceColor: '#6750a4',
+      colorScheme: false,
+    });
+    onTestFinished(() => theme.detach());
+    for (const languageHeight of LANGUAGE_HEIGHTS) {
+      theme.update({ sourceColor: '#6750a4', colorScheme: false, languageHeight });
+      const { root, screen, settledOn } = await setup({ props: { min: 0, max: 59 } });
+      await settledOn('07');
+      const range = document.createRange();
+      range.selectNodeContents(root.querySelector('[data-selected]')!);
+      const [text, field] = [range.getBoundingClientRect(), root.getBoundingClientRect()];
+      const off = (text.top + text.bottom - field.top - field.bottom) / 2;
+      expect([languageHeight, Math.abs(off) < 1]).toEqual([languageHeight, true]);
+      screen.unmount();
+    }
   });
 
   test('its width stays as values scroll through the middle', async () => {

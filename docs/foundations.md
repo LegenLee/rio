@@ -313,22 +313,42 @@ Each style becomes six CSS variables, and the emphasized set uses the spec's `em
 - Rio doesn't load any font itself. Load Roboto in the app; otherwise the system font is used.
 - Override with `createRio({ theme: { sourceColor, typefaces: { brand: '"Roboto Flex", sans-serif' } } })`.
 
-### 5.3 Language height (not implemented yet)
+### 5.3 Language height
 
 #### Spec
 
 The type scale adapts line heights to the height of the script being set, in four categories:
 
-| Category     | Line height vs. small | Scripts                                                                                                                                                                                  |
-| ------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Small (base) | —                     | Cyrillic, Greek, Hebrew, Latin-based languages (except Vietnamese)                                                                                                                       |
-| Medium       | ~7% taller            | Amharic, Arabic, Armenian, Bangla, Chinese, Gujarati, Hindi, Japanese, Kannada, Khmer, Korean, Lao, Malayalam, Odia, Punjabi, Sinhala, Tamil, Thai, Vietnamese, and most other languages |
-| Large        | ~30% taller           | Burmese, Telugu                                                                                                                                                                          |
-| Extra large  | ~100% taller          | Nastaliq                                                                                                                                                                                 |
+| Category     | Scripts                                                                                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Small (base) | Cyrillic, Greek, Hebrew, Latin-based languages (except Vietnamese)                                                                                                                       |
+| Medium       | Amharic, Arabic, Armenian, Bangla, Chinese, Gujarati, Hindi, Japanese, Kannada, Khmer, Korean, Lao, Malayalam, Odia, Punjabi, Sinhala, Tamil, Thai, Vietnamese, and most other languages |
+| Large        | Burmese, Telugu                                                                                                                                                                          |
+| Extra large  | Nastaliq                                                                                                                                                                                 |
 
-- The base token values (the ones in section 5.1) are the small category.
-- Material components with vertical padding adapt automatically, because their height follows the line height. Components with fixed heights are built for the small values and may not adapt by default.
-- The percentages are approximate. The exact line-height tokens per category sit behind a "language height context" switch at the top of the token module on the spec page. Material Web's generated tokens don't include them either; they are built for one context, with no language-height tag.
+The page calls medium "~7% taller", large "~30%", and extra large "~100%". The tokens behind them, `md.ref.typeface.<style>.line-height` under the `language.height` context, are rounded per style and don't keep to those ratios: medium is 14% taller for display-large and 8% for display-medium. In px:
+
+| Style           | Small | Medium | Large | Extra large |
+| --------------- | ----- | ------ | ----- | ----------- |
+| display-large   | 64    | 73     | 89    | 120         |
+| display-medium  | 52    | 56     | 71    | 99          |
+| display-small   | 44    | 47     | 57    | 80          |
+| headline-large  | 40    | 42     | 50    | 75          |
+| headline-medium | 36    | 38     | 45    | 66          |
+| headline-small  | 32    | 35     | 41    | 59          |
+| title-large     | 28    | 31     | 36    | 53          |
+| title-medium    | 24    | 27     | 31    | 42          |
+| title-small     | 20    | 23     | 26    | 36          |
+| body-large      | 24    | 27     | 31    | 41          |
+| body-medium     | 20    | 23     | 26    | 35          |
+| body-small      | 16    | 18     | 21    | 30          |
+| label-large     | 20    | 23     | 26    | 36          |
+| label-medium    | 16    | 18     | 21    | 30          |
+| label-small     | 16    | 18     | 21    | 29          |
+
+- The small values are the type scale's own (section 5.1). The `md.sys.typescale` tokens, baseline and emphasized, carry no language height context.
+- "Material components that use vertical padding should adapt to language height automatically. Components with fixed heights are built for small values and may not adapt by default."
+- The values come from the typography token data that the spec page loads (`TYPOGRAPHY.<id>.json`, revision of 2026-11-19); the page's own context switch didn't change the module in a headless browser. Material Web's generated tokens are built for one context, with no language height.
 
 #### Recommendations
 
@@ -338,12 +358,15 @@ The type scale adapts line heights to the height of the script being set, in fou
 
 #### In Rio
 
-- Rio emits only the base (small) values today. Text in Korean, Chinese, Japanese, and most other non-Latin scripts is therefore set tighter than the spec intends.
-- Planned approach:
-  1. Read the exact values by switching the context on the spec page in a headless browser. Don't derive them by multiplying by 1.07; the spec's tokens are rounded per style.
-  2. Emit the line heights per category and select them with `:lang()`, for example `:lang(ko, ja, zh) { --rio-typescale-body-large-line-height: …; }`. This follows the recommendation to switch by language, and pages set `lang` anyway.
-  3. Audit fixed-height components (buttons, chips, text fields) against the medium and large categories once they exist.
-- **Open decision**: the default for text without a `lang` match. Following the spec gives small; the recommendation says medium. By Rio's rule the default would be small, with medium offered as a theme option.
+- **The theme takes a category**, `languageHeight` (`'small'`, `'medium'`, `'large'`, or `'extra-large'`), and writes its line heights into the `-line-height` variables and the `font` shorthands alike, baseline and emphasized. Without one, the small values (Rio's choice: the spec's tokens, where the recommendation says medium).
+- **`createRio` picks it from the app's language** unless the theme gives one: `createRio`'s `locale`, or else the document's `lang`, or else the browser's language, as for the components' text. `languageHeightOf(locale)` in `@rio-m3e/tokens` does it, by the script `Intl.Locale` gives the language: Latin (except Vietnamese), Greek, Cyrillic, and Hebrew are small; Burmese (`Mymr`) and Telugu (`Telu`) large; Nastaliq (`Aran`) extra large; any other script medium. A language whose script `Intl` doesn't know is small, as on a server without the app's language (Rio's choice: the spec's tokens, where the recommendation defaults to medium).
+- **Nastaliq by its script code only** (Rio's choice): `ur` is Urdu in Arabic script, medium, as `Intl` gives it; `ur-Aran`, or `languageHeight: 'extra-large'`, sets it in Nastaliq.
+- **The emphasized styles take the same line heights** (Rio's choice: their tokens equal the baseline ones in the small category, and the spec gives no others).
+- **Part of a page in another script**: the theme is the page's, and a `RioLocaleProvider` doesn't change it. Write one on that part, with `attachTheme(element, { ...theme, languageHeight: languageHeightOf('my') })`.
+- **Components** were checked in every category against the visual tests' galleries:
+  - Those with vertical padding grow, as the spec says: text fields, list items, menus, dialogs, the date pickers' headers.
+  - Those with fixed heights keep them, with the text in the middle: buttons, chips, the date pickers' days, the time picker's fields. In the extra large category, a 32px button's or a chip's label line is taller than the button, which only the line box shows.
+  - A scroll field's slots keep their 52px (Rio's choice: the spec's measurement, and a taller slot would show less of the values around), and its values stay in the middle of them, a taller line spilling out evenly.
 
 ### 5.4 Variable font axes (not implemented yet)
 
@@ -449,7 +472,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | Shape: corner radius scale                         | `tokens`                | Done: `shapeVar`, `createShapeVariables`. Also included in the theme variables, with step sizes overridable through `shapes`.                                           |
 | Shape: shape library and morphing                  | `core`                  | Done: `materialShape`, the polygon functions, `createMorph`, `featuresFromSvgPath`, and `cubicsPath`, ported from androidx graphics-shapes. See section 4.              |
 | Typography: baseline and emphasized type scales    | `tokens`                | Done: `typescaleVar`, `typefaceVar`, `createTypographyVariables`, `getTypeStyle`. Also included in the theme variables, with typefaces overridable through `typefaces`. |
-| Typography: language height                        | `tokens`                | Not yet. See section 5.3, including the open decision on the default.                                                                                                   |
+| Typography: language height                        | `tokens`                | Done: `languageHeight` in the theme, `languageHeightOf`, `LANGUAGE_HEIGHTS`. `createRio` picks it from the app's language. See section 5.3.                             |
 | Typography: variable font axes                     | `tokens`                | Not yet. See section 5.4.                                                                                                                                               |
 | State layer opacities and focus indicator          | `tokens`                | Done: `stateLayerOpacityVar`, `focusIndicatorVar`, `createStateVariables`. Also included in the theme variables.                                                        |
 | State layer and focus ring CSS                     | `styles`                | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
