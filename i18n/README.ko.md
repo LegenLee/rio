@@ -101,12 +101,12 @@ createApp(App).use(rio).mount('#app');
 ```
 
 컴포넌트 스타일은 컴포넌트를 import하면 따라옵니다.
-아이콘은 직접 추가해서 사용해야 합니다. 아래의 코드는 *Material Design Icons*를 사용하여 컴포넌트를 배치한 예시입니다.
+아이콘은 직접 추가해서 사용해야 합니다. 아래의 코드는 *Material Design Icons*를 [`RioIcon`](https://legenlee.github.io/rio/components/icon)으로 그려 컴포넌트를 배치한 예시입니다.
 
 ```vue
 <script setup lang="ts">
 import { mdiHeart, mdiHeartOutline } from '@mdi/js';
-import { RioButton, RioIconButton, RioSwitch } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioIconButton, RioSwitch } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const favorite = ref(false);
@@ -117,9 +117,9 @@ const wifi = ref(true);
   <RioButton variant="tonal">저장</RioButton>
 
   <RioIconButton v-model:selected="favorite" label="즐겨찾기에 추가" toggle variant="standard">
-    <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+    <RioIcon :icon="{ type: 'svg', path: mdiHeartOutline }" />
     <template #selected-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiHeart }" />
     </template>
   </RioIconButton>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiDotsVertical } from '@mdi/js';
-import { RioIconButton, RioMenu, RioMenuItem } from '@rio-m3e/vue';
+import { RioIcon, RioIconButton, RioMenu, RioMenuItem } from '@rio-m3e/vue';
 import { ref, useTemplateRef } from 'vue';
 
 const open = ref(false);
@@ -15,7 +15,7 @@ const button = useTemplateRef('button');
     :aria-expanded="open"
     @click="open = !open"
   >
-    <svg viewBox="0 0 24 24"><path :d="mdiDotsVertical" fill="currentColor" /></svg>
+    <RioIcon :icon="{ type: 'svg', path: mdiDotsVertical }" />
   </RioIconButton>
   <!-- Lined up with the button's end edge -->
   <RioMenu v-model:open="open" :anchor="button" variant="vibrant" align="end" label="More options">

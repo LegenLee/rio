@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiFormatAlignCenter, mdiFormatAlignLeft, mdiFormatAlignRight } from '@mdi/js';
-import { RioButton, RioButtonGroup, RioIconButton } from '@rio-m3e/vue';
+import { RioButton, RioButtonGroup, RioIcon, RioIconButton } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const view = ref('week');
@@ -17,13 +17,13 @@ const align = ref('left');
 
   <RioButtonGroup v-model="align" variant="connected" selection="single">
     <RioIconButton label="Align left" value="left" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignLeft" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignLeft }" />
     </RioIconButton>
     <RioIconButton label="Align center" value="center" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignCenter" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignCenter }" />
     </RioIconButton>
     <RioIconButton label="Align right" value="right" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiFormatAlignRight" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignRight }" />
     </RioIconButton>
   </RioButtonGroup>
 </template>

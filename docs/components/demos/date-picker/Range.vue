@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiCalendar, mdiPencil } from '@mdi/js';
-import { RioButton, RioDateRangePickerDialog } from '@rio-m3e/vue';
+import { RioButton, RioDateRangePickerDialog, RioIcon } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const open = ref(false);
@@ -20,10 +20,10 @@ const back = ref<string>();
     :messages="{ rangeTitle: 'Depart – Return dates' }"
   >
     <template #edit-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiPencil" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiPencil }" />
     </template>
     <template #calendar-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiCalendar" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiCalendar }" />
     </template>
   </RioDateRangePickerDialog>
 </template>

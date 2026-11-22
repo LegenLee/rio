@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
-import { RioAssistChip, RioChipSet, RioFilterChip, RioInputChip } from '@rio-m3e/vue';
+import { RioAssistChip, RioChipSet, RioFilterChip, RioIcon, RioInputChip } from '@rio-m3e/vue';
 </script>
 
 <template>
@@ -10,7 +10,7 @@ import { RioAssistChip, RioChipSet, RioFilterChip, RioInputChip } from '@rio-m3e
     <RioInputChip disabled>
       Disabled
       <template #remove-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiClose }" />
       </template>
     </RioInputChip>
   </RioChipSet>

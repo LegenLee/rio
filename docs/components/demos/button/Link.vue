@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiOpenInNew } from '@mdi/js';
-import { RioButton } from '@rio-m3e/vue';
+import { RioButton, RioIcon } from '@rio-m3e/vue';
 
 const spec = 'https://m3.material.io/components/buttons/overview';
 </script>
@@ -8,7 +8,7 @@ const spec = 'https://m3.material.io/components/buttons/overview';
 <template>
   <RioButton :href="spec" target="_blank" rel="noopener">
     <template #icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiOpenInNew" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiOpenInNew }" />
     </template>
     M3 buttons
   </RioButton>

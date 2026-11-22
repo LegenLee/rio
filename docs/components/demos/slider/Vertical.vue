@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiBrightness6 } from '@mdi/js';
-import { RioSlider } from '@rio-m3e/vue';
+import { RioIcon, RioSlider } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const brightness = ref(70);
@@ -12,7 +12,7 @@ const treble = ref(60);
   <div class="row">
     <RioSlider v-model="brightness" vertical size="medium" aria-label="Brightness">
       <template #icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiBrightness6" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiBrightness6 }" />
       </template>
     </RioSlider>
     <RioSlider v-model="bass" vertical :step="10" stops value-indicator aria-label="Bass" />

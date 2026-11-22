@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { mdiPause, mdiSkipNext, mdiSkipPrevious } from '@mdi/js';
-import { RioButton, RioButtonGroup, RioIconButton } from '@rio-m3e/vue';
+import { RioButton, RioButtonGroup, RioIcon, RioIconButton } from '@rio-m3e/vue';
 </script>
 
 <template>
   <RioButtonGroup>
     <RioIconButton label="Previous" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiSkipPrevious" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiSkipPrevious }" />
     </RioIconButton>
     <RioIconButton label="Pause" width="wide">
-      <svg viewBox="0 0 24 24"><path :d="mdiPause" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiPause }" />
     </RioIconButton>
     <RioIconButton label="Next" variant="tonal">
-      <svg viewBox="0 0 24 24"><path :d="mdiSkipNext" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiSkipNext }" />
     </RioIconButton>
   </RioButtonGroup>
 

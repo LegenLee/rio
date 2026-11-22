@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiRestore } from '@mdi/js';
-import { RioButton, RioDialog } from '@rio-m3e/vue';
+import { RioButton, RioDialog, RioIcon } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const open = ref(false);
@@ -10,7 +10,7 @@ const open = ref(false);
   <RioButton variant="tonal" @click="open = true">Reset settings</RioButton>
   <RioDialog v-model:open="open" headline="Reset settings?">
     <template #icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiRestore" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiRestore }" />
     </template>
     This will reset your app preferences back to their default settings. The following accounts will
     also be signed out.

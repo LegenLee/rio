@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiClose } from '@mdi/js';
-import { RioChipSet, RioInputChip } from '@rio-m3e/vue';
+import { RioChipSet, RioIcon, RioInputChip } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const people = ref([
@@ -25,7 +25,7 @@ const remove = (name: string) => (people.value = people.value.filter((p) => p.na
       </template>
       {{ person.name }}
       <template #remove-icon>
-        <svg viewBox="0 0 24 24"><path :d="mdiClose" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiClose }" />
       </template>
     </RioInputChip>
   </RioChipSet>

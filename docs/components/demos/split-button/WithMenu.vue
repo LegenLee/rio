@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiChevronDown } from '@mdi/js';
-import { RioMenu, RioMenuItem, RioSplitButton } from '@rio-m3e/vue';
+import { RioIcon, RioMenu, RioMenuItem, RioSplitButton } from '@rio-m3e/vue';
 import { ref, useTemplateRef } from 'vue';
 
 const open = ref(false);
@@ -11,7 +11,7 @@ const split = useTemplateRef('split');
   <RioSplitButton ref="split" v-model:open="open" menu-label="More save options">
     Save
     <template #menu-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiChevronDown" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiChevronDown }" />
     </template>
   </RioSplitButton>
   <!-- 4px from the split button, lined up with the trailing button -->

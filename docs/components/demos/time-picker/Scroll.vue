@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiGestureSwipeVertical, mdiKeyboardOutline } from '@mdi/js';
-import { RioTimeScroll } from '@rio-m3e/vue';
+import { RioIcon, RioTimeScroll } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const time = ref('07:00');
@@ -10,10 +10,10 @@ const time = ref('07:00');
   <!-- Scroll the hours and the minutes; the keyboard button switches to typing them. -->
   <RioTimeScroll v-model="time">
     <template #keyboard-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiKeyboardOutline" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiKeyboardOutline }" />
     </template>
     <template #swipe-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiGestureSwipeVertical" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiGestureSwipeVertical }" />
     </template>
   </RioTimeScroll>
   <p>{{ time ?? 'No time' }}</p>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiGestureSwipeVertical, mdiKeyboardOutline } from '@mdi/js';
-import { RioButton, RioTimePickerDialog } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioTimePickerDialog } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const open = ref(false);
@@ -14,10 +14,10 @@ const reminder = ref<string>();
   <!-- Scroll fields in place of the dial -->
   <RioTimePickerDialog v-model="reminder" v-model:open="open" picker="scroll">
     <template #keyboard-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiKeyboardOutline" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiKeyboardOutline }" />
     </template>
     <template #swipe-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiGestureSwipeVertical" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiGestureSwipeVertical }" />
     </template>
   </RioTimePickerDialog>
 </template>

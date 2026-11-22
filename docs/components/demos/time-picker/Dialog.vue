@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiClockOutline, mdiKeyboardOutline } from '@mdi/js';
-import { RioButton, RioTimePickerDialog } from '@rio-m3e/vue';
+import { RioButton, RioIcon, RioTimePickerDialog } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const open = ref(false);
@@ -14,10 +14,10 @@ const alarm = ref<string>();
   }}</RioButton>
   <RioTimePickerDialog v-model="alarm" v-model:open="open">
     <template #keyboard-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiKeyboardOutline" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiKeyboardOutline }" />
     </template>
     <template #clock-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiClockOutline" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiClockOutline }" />
     </template>
   </RioTimePickerDialog>
 </template>

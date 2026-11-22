@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiFolderOutline, mdiImageOutline } from '@mdi/js';
-import { RioList, RioListItem } from '@rio-m3e/vue';
+import { RioIcon, RioList, RioListItem } from '@rio-m3e/vue';
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import { RioList, RioListItem } from '@rio-m3e/vue';
   <RioList style="inline-size: 360px">
     <RioListItem>
       <template #leading>
-        <svg viewBox="0 0 24 24"><path :d="mdiFolderOutline" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiFolderOutline }" />
       </template>
       Documents
       <template #supporting>12 files</template>
@@ -16,7 +16,7 @@ import { RioList, RioListItem } from '@rio-m3e/vue';
     </RioListItem>
     <RioListItem>
       <template #leading>
-        <svg viewBox="0 0 24 24"><path :d="mdiImageOutline" fill="currentColor" /></svg>
+        <RioIcon :icon="{ type: 'svg', path: mdiImageOutline }" />
       </template>
       Photos
       <template #overline>Shared</template>

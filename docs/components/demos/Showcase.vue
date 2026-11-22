@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mdiHeart, mdiHeartOutline } from '@mdi/js';
-import { RioButton, RioButtonGroup, RioIconButton, RioSwitch } from '@rio-m3e/vue';
+import { RioButton, RioButtonGroup, RioIcon, RioIconButton, RioSwitch } from '@rio-m3e/vue';
 import { ref } from 'vue';
 
 const favorite = ref(true);
@@ -13,9 +13,9 @@ const view = ref('week');
   <RioButton variant="tonal">Tonal</RioButton>
   <RioButton variant="outlined">Outlined</RioButton>
   <RioIconButton v-model:selected="favorite" label="Add to favorites" toggle variant="standard">
-    <svg viewBox="0 0 24 24"><path :d="mdiHeartOutline" fill="currentColor" /></svg>
+    <RioIcon :icon="{ type: 'svg', path: mdiHeartOutline }" />
     <template #selected-icon>
-      <svg viewBox="0 0 24 24"><path :d="mdiHeart" fill="currentColor" /></svg>
+      <RioIcon :icon="{ type: 'svg', path: mdiHeart }" />
     </template>
   </RioIconButton>
   <label class="switch"><RioSwitch v-model:selected="wifi" /> Wi-Fi</label>
