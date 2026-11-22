@@ -36,7 +36,12 @@ describe('createThemeVariables', () => {
 
   test('passes the language height through', () => {
     const tall = createThemeVariables({ ...options, languageHeight: 'medium' });
-    expect(tall).toMatchObject(createTypographyVariables({}, 'medium'));
+    expect(tall).toMatchObject(createTypographyVariables({}, { languageHeight: 'medium' }));
+  });
+
+  test('passes the type scale through', () => {
+    const variable = createThemeVariables({ ...options, typescale: 'variable' });
+    expect(variable).toMatchObject(createTypographyVariables({}, { typescale: 'variable' }));
   });
 
   test('wraps colors in light-dark()', () => {

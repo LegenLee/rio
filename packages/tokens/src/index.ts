@@ -55,6 +55,7 @@ export {
 } from './state/state';
 export {
   LANGUAGE_HEIGHTS,
+  TYPESCALES,
   TYPE_STYLES,
   createTypographyVariables,
   getTypeStyle,
@@ -63,6 +64,7 @@ export {
   typescaleVar,
   type LanguageHeight,
   type TypeStyle,
+  type Typescale,
   type TypeStyleOptions,
   type TypeStyleSpec,
   type Typeface,

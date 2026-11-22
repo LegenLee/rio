@@ -45,11 +45,21 @@ export interface TypeStyleSpec {
 export const LANGUAGE_HEIGHTS = ['small', 'medium', 'large', 'extra-large'] as const;
 export type LanguageHeight = (typeof LANGUAGE_HEIGHTS)[number];
 
+/**
+ * The type scale: `static`, for a static font as Roboto, or `variable`, the spec's variable type
+ * scale (`md.sys.typescale.variable`) for a variable font as Roboto Flex, which sets no letter
+ * spacing and its own weights for some emphasized styles.
+ */
+export const TYPESCALES = ['static', 'variable'] as const;
+export type Typescale = (typeof TYPESCALES)[number];
+
 export interface TypeStyleOptions {
   /** The M3E emphasized set: heavier, for selection, actions, and editorial emphasis. */
   emphasized?: boolean;
   /** The line heights for a script's height. Defaults to `'small'`, the type scale's own. */
   languageHeight?: LanguageHeight;
+  /** The type scale. Defaults to `'static'`. */
+  typescale?: Typescale;
 }
 
 export type TypescalePart = 'font' | 'size' | 'line-height' | 'weight' | 'tracking';
@@ -153,7 +163,23 @@ export function languageHeightOf(locale?: string): LanguageHeight {
   return 'medium';
 }
 
-const DEFAULT_TYPEFACE = 'Roboto, system-ui, sans-serif';
+/**
+ * The emphasized styles a variable font sets lighter, from the static set's 700: the spec's
+ * variable type scale (`md.sys.typescale.variable.emphasized.<style>`, its `.weight` and `.wght`).
+ */
+const VARIABLE_EMPHASIZED_WEIGHTS: Partial<Record<TypeStyle, number>> = {
+  'title-medium': 600,
+  'title-small': 600,
+  'label-large': 600,
+  'label-medium': 600,
+  'label-small': 600,
+};
+
+/** The typeface stacks for each type scale, both typefaces alike */
+const DEFAULT_TYPEFACES: Record<Typescale, string> = {
+  static: 'Roboto, system-ui, sans-serif',
+  variable: '"Roboto Flex", Roboto, "Noto Sans", system-ui, sans-serif',
+};
 
 export type TypefaceVar = `${typeof TOKEN_PREFIX}-typeface-${Typeface}`;
 
@@ -168,7 +194,14 @@ export function getTypeStyle(style: TypeStyle, options: TypeStyleOptions = {}): 
   const [typeface, size, , tracking, weight] = (options.emphasized ? EMPHASIZED : BASELINE)[style];
   const lineHeight =
     LANGUAGE_LINE_HEIGHTS[style][LANGUAGE_HEIGHTS.indexOf(options.languageHeight ?? 'small')]!;
-  return { typeface, size, lineHeight, tracking, weight };
+  if (options.typescale !== 'variable') return { typeface, size, lineHeight, tracking, weight };
+  return {
+    typeface,
+    size,
+    lineHeight,
+    tracking: 0,
+    weight: (options.emphasized && VARIABLE_EMPHASIZED_WEIGHTS[style]) || weight,
+  };
 }
 
 /** CSS variable name for a typeface. `brand` → `--rio-typeface-brand` */
@@ -193,14 +226,18 @@ export function typescaleVar(
 /** px → rem, so text follows the user's font size setting like Android's sp. */
 const rem = (px: number) => `${Number((px / 16).toFixed(6))}rem`;
 
-/** Typeface and type scale variables for both the baseline and emphasized sets. */
+/**
+ * Typeface and type scale variables for both the baseline and emphasized sets. The typefaces
+ * default to Roboto for the static type scale, and to Roboto Flex for the variable one.
+ */
 export function createTypographyVariables(
   typefaces: TypefaceOverrides = {},
-  languageHeight: LanguageHeight = 'small',
+  options: Pick<TypeStyleOptions, 'languageHeight' | 'typescale'> = {},
 ): Record<TypographyVar, string> {
+  const { languageHeight = 'small', typescale = 'static' } = options;
   const vars = {
-    [typefaceVar('brand')]: typefaces.brand ?? DEFAULT_TYPEFACE,
-    [typefaceVar('plain')]: typefaces.plain ?? DEFAULT_TYPEFACE,
+    [typefaceVar('brand')]: typefaces.brand ?? DEFAULT_TYPEFACES[typescale],
+    [typefaceVar('plain')]: typefaces.plain ?? DEFAULT_TYPEFACES[typescale],
   } as Record<TypographyVar, string>;
 
   for (const emphasized of [false, true]) {
@@ -208,11 +245,12 @@ export function createTypographyVariables(
       const { typeface, size, lineHeight, tracking, weight } = getTypeStyle(style, {
         emphasized,
         languageHeight,
+        typescale,
       });
       const v = (part?: TypescalePart) => typescaleVar(style, { emphasized, part });
-      const font = `var(${typefaceVar(typeface)})`;
-      vars[v()] = `${weight} ${rem(size)}/${rem(lineHeight)} ${font}`;
-      vars[v('font')] = font;
+      const family = `var(${typefaceVar(typeface)})`;
+      vars[v()] = `${weight} ${rem(size)}/${rem(lineHeight)} ${family}`;
+      vars[v('font')] = family;
       vars[v('size')] = rem(size);
       vars[v('line-height')] = rem(lineHeight);
       vars[v('weight')] = String(weight);

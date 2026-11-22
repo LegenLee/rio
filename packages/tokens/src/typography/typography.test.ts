@@ -115,7 +115,7 @@ const LANGUAGE: Record<TypeStyle, [number, number, number, number]> = {
 describe('language height', () => {
   test('sets the line heights for the script’s height, in both sets, the shorthand too', () => {
     for (const [i, height] of LANGUAGE_HEIGHTS.entries()) {
-      const vars = createTypographyVariables({}, height);
+      const vars = createTypographyVariables({}, { languageHeight: height });
       for (const style of TYPE_STYLES) {
         const lineHeight = `${LANGUAGE[style][i]! / 16}rem`;
         for (const emphasized of [false, true]) {
@@ -127,7 +127,9 @@ describe('language height', () => {
   });
 
   test('small is the type scale’s own, and the default', () => {
-    expect(createTypographyVariables({}, 'small')).toEqual(createTypographyVariables());
+    expect(createTypographyVariables({}, { languageHeight: 'small' })).toEqual(
+      createTypographyVariables(),
+    );
     for (const style of TYPE_STYLES) {
       expect(getTypeStyle(style, { languageHeight: 'small' })).toEqual(getTypeStyle(style));
     }
@@ -160,6 +162,76 @@ describe('language height', () => {
     ];
     for (const [locale, height] of cases)
       expect([locale, languageHeightOf(locale)]).toEqual([locale, height]);
+  });
+});
+
+// The weights of the variable type scale, [baseline, emphasized]: transcribed from m3.material.io's
+// typography token data (`md.sys.typescale.variable[.emphasized].<style>`, its `.weight` and
+// `.wght` alike), independently of the source. Its letter spacing is 0 throughout.
+const VARIABLE_WEIGHTS: Record<TypeStyle, [string, string]> = {
+  'display-large': ['400', '500'],
+  'display-medium': ['400', '500'],
+  'display-small': ['400', '500'],
+  'headline-large': ['400', '500'],
+  'headline-medium': ['400', '500'],
+  'headline-small': ['400', '500'],
+  'title-large': ['400', '500'],
+  'title-medium': ['500', '600'],
+  'title-small': ['500', '600'],
+  'body-large': ['400', '500'],
+  'body-medium': ['400', '500'],
+  'body-small': ['400', '500'],
+  'label-large': ['500', '600'],
+  'label-medium': ['500', '600'],
+  'label-small': ['500', '600'],
+};
+
+describe('the variable type scale', () => {
+  const vars = createTypographyVariables({}, { typescale: 'variable' });
+
+  test.each(MWC)(
+    '%s: its weights, no letter spacing, the same sizes',
+    (style, font, size, lineHeight) => {
+      for (const emphasized of [false, true]) {
+        const v = (part?: 'font' | 'size' | 'line-height' | 'tracking' | 'weight') =>
+          vars[typescaleVar(style, { emphasized, part })];
+        const weight = VARIABLE_WEIGHTS[style][emphasized ? 1 : 0];
+        expect([v('font'), v('size'), v('line-height')]).toEqual([
+          `var(--rio-typeface-${font})`,
+          size,
+          lineHeight,
+        ]);
+        expect(v('tracking')).toBe('0rem');
+        expect(v('weight')).toBe(weight);
+        expect(v()).toBe(`${weight} ${size}/${lineHeight} var(--rio-typeface-${font})`);
+      }
+    },
+  );
+
+  test('defaults both typefaces to Roboto Flex, then Roboto and Noto Sans', () => {
+    const stack = '"Roboto Flex", Roboto, "Noto Sans", system-ui, sans-serif';
+    expect([vars['--rio-typeface-brand'], vars['--rio-typeface-plain']]).toEqual([stack, stack]);
+    const custom = createTypographyVariables(
+      { plain: 'Inter, sans-serif' },
+      { typescale: 'variable' },
+    );
+    expect([custom['--rio-typeface-brand'], custom['--rio-typeface-plain']]).toEqual([
+      stack,
+      'Inter, sans-serif',
+    ]);
+  });
+
+  test('takes the language heights too', () => {
+    const tall = createTypographyVariables({}, { typescale: 'variable', languageHeight: 'medium' });
+    expect(tall['--rio-typescale-emphasized-label-large']).toBe(
+      '600 0.875rem/1.4375rem var(--rio-typeface-plain)',
+    );
+  });
+
+  test('static is the default', () => {
+    expect(createTypographyVariables({}, { typescale: 'static' })).toEqual(
+      createTypographyVariables(),
+    );
   });
 });
 

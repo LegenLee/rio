@@ -12,6 +12,7 @@ import { createStateVariables, type StateVar } from './state/state';
 import {
   createTypographyVariables,
   type LanguageHeight,
+  type Typescale,
   type TypefaceOverrides,
   type TypographyVar,
 } from './typography/typography';
@@ -27,7 +28,10 @@ export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
   motion?: MotionScheme;
   /** Resizes steps of the corner radius scale, in px: `{ medium: 16 }`. */
   shapes?: ShapeOverrides;
-  /** Font-family values: `{ brand: '"Roboto Flex", sans-serif' }`. Both default to Roboto. */
+  /**
+   * Font-family values: `{ brand: '"Roboto Flex", sans-serif' }`. Both default to Roboto, or to
+   * Roboto Flex with `typescale: 'variable'`.
+   */
   typefaces?: TypefaceOverrides;
   /**
    * The line heights for how tall the text's script is: `languageHeightOf` gives it for a
@@ -35,6 +39,12 @@ export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
    * Hebrew.
    */
   languageHeight?: LanguageHeight;
+  /**
+   * The type scale: `'variable'` sets the spec's variable type scale, for a variable font as
+   * Roboto Flex, with no letter spacing and its weights, and makes Roboto Flex the typefaces'
+   * default. Defaults to `'static'`, for a static font as Roboto.
+   */
+  typescale?: Typescale;
   /**
    * The `color-scheme` `attachTheme` and `createThemeCss` write with the variables. Defaults to
    * `'light dark'`. The variables alone (`createThemeVariables`) leave it out.
@@ -63,6 +73,7 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
     shapes,
     typefaces,
     languageHeight,
+    typescale,
     colorScheme: _,
     ...color
   } = options;
@@ -77,7 +88,7 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
     createElevationVariables(),
     createMotionVariables(motion),
     createShapeVariables(shapes),
-    createTypographyVariables(typefaces, languageHeight),
+    createTypographyVariables(typefaces, { languageHeight, typescale }),
     createStateVariables(),
   );
 }
