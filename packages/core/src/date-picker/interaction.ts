@@ -10,6 +10,15 @@
 //   the element with it went away, to the date or option that takes the focus there.
 // - A list scrolls to the month or year shown as it appears.
 //
+// The range calendar (`attachRangeCalendar`):
+// - The keys in its grids work as in the month calendar's, from month to month. Enter chooses the
+//   day, and confirms the range when that ends it.
+// - As the months first get their size, they scroll to the month of the date that takes the focus.
+// - As the months scroll near the first or the last month rendered, it reports that end, for more
+//   months. Months added above leave the ones in view where they were.
+// - After the adapter renders, the focus goes to the date the keys moved it to, or comes back to
+//   the date that takes it when the element with it went away.
+//
 // The docked picker's calendar (`attachDatePickerMenu`):
 // - It shows below the field, or above it without room there, in the top layer. It is a manual
 //   popover, so a press on the field while it is open, to type, leaves it open.
@@ -22,6 +31,7 @@ import { isRtl } from '../primitives/direction/direction';
 import { attachOverlay } from '../primitives/overlay/overlay';
 import { hasModifier } from '../utils/keyboard';
 import type { CalendarApi } from './date-picker';
+import type { RangeCalendarApi } from './date-range-picker';
 
 export interface CalendarDomOptions {
   calendar: () => Pick<CalendarApi, 'keyTarget' | 'focusDate' | 'isDisabled'>;
@@ -128,6 +138,119 @@ export function attachCalendar(root: HTMLElement, options: CalendarDomOptions): 
       root.removeEventListener('keydown', onKeydown);
       root.removeEventListener('focusin', onFocusIn);
       root.removeEventListener('focusout', onFocusOut);
+    },
+  };
+}
+
+export interface RangeCalendarDomOptions {
+  calendar: () => Pick<RangeCalendarApi, 'keyTarget' | 'focusDate' | 'isDisabled'>;
+  /** The date that takes the focus */
+  focused: () => string;
+  /** Enter on a day: it is chosen, and confirms the range it ends. */
+  onConfirm: (date: string) => void;
+  /** The months scrolled near the first or the last month rendered (`RangeCalendarApi.extend`). */
+  onEdge: (edge: 'start' | 'end') => void;
+}
+
+export function attachRangeCalendar(
+  root: HTMLElement,
+  options: RangeCalendarDomOptions,
+): CalendarDomHandle {
+  const document = root.ownerDocument;
+  const viewport = () => root.querySelector<HTMLElement>('.rio-date-picker__months');
+  /** The keys moved the focus, and the element to take it may render only now. */
+  let moving = false;
+  /** The focus was in the calendar, so it comes back when its element goes away. */
+  let inside = false;
+  /** Whether the months have scrolled to the one they open on */
+  let placed = false;
+  /** The first month as more were asked for above it, and where it was then */
+  let anchor: { element: HTMLElement; top: number } | undefined;
+  /** The last end asked for, with the months rendered then, so each is asked for once */
+  let asked = '';
+
+  const target = () => root.querySelector<HTMLElement>(`[data-date="${options.focused()}"]`);
+  const focus = () => target()?.focus();
+
+  const place = () => {
+    const months = viewport();
+    if (placed || !months?.clientHeight) return;
+    placed = true;
+    const month = target()?.closest<HTMLElement>('[data-month]');
+    if (month) months.scrollTop = month.offsetTop;
+  };
+  const check = () => {
+    const months = viewport();
+    if (!placed || !months) return;
+    const all = months.querySelectorAll<HTMLElement>('[data-month]');
+    const first = all[0];
+    const rendered = `${first?.dataset.month} ${all[all.length - 1]?.dataset.month}`;
+    const near = months.clientHeight;
+    const edge =
+      months.scrollTop < near
+        ? 'start'
+        : months.scrollHeight - months.scrollTop - months.clientHeight < near
+          ? 'end'
+          : undefined;
+    if (!edge || asked === `${edge} ${rendered}`) return;
+    asked = `${edge} ${rendered}`;
+    if (edge === 'start' && first) anchor = { element: first, top: first.offsetTop };
+    options.onEdge(edge);
+  };
+
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || hasModifier(event)) return;
+    const date = (event.target as HTMLElement).dataset.date;
+    if (!date) return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (!options.calendar().isDisabled(date)) options.onConfirm(date);
+      return;
+    }
+    const next = options.calendar().keyTarget(event.key, event.shiftKey, date, isRtl(root));
+    if (!next) return;
+    event.preventDefault();
+    moving = true;
+    options.calendar().focusDate(next);
+  };
+  const onFocusIn = () => (inside = true);
+  const onFocusOut = (event: FocusEvent) => {
+    if (!root.contains(event.relatedTarget as Node | null)) inside = false;
+  };
+  // `scroll` doesn't bubble; the months' scroll reaches the root while capturing.
+  const onScroll = () => check();
+  const resize = new ResizeObserver(() => {
+    place();
+    check();
+  });
+
+  root.addEventListener('keydown', onKeydown);
+  root.addEventListener('focusin', onFocusIn);
+  root.addEventListener('focusout', onFocusOut);
+  root.addEventListener('scroll', onScroll, { capture: true, passive: true });
+  resize.observe(root);
+
+  return {
+    sync() {
+      const months = viewport();
+      if (anchor && months && anchor.element.isConnected) {
+        months.scrollTop += anchor.element.offsetTop - anchor.top;
+      }
+      anchor = undefined;
+      place();
+      const active = document.activeElement;
+      const lost = !active || active === document.body || !active.isConnected;
+      if (moving || (inside && lost)) focus();
+      moving = false;
+      check();
+    },
+    focus,
+    detach() {
+      root.removeEventListener('keydown', onKeydown);
+      root.removeEventListener('focusin', onFocusIn);
+      root.removeEventListener('focusout', onFocusOut);
+      root.removeEventListener('scroll', onScroll, { capture: true });
+      resize.disconnect();
     },
   };
 }

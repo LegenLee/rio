@@ -2,6 +2,15 @@ import { firstDayOfWeek } from '../locale/locale';
 import { formatMessage, type DatePickerMessages } from '../locale/messages';
 import type { PartAttrs, PartNode } from '../parts';
 import {
+  calendarKeyTarget,
+  dayName,
+  monthYearName,
+  monthBounds,
+  outOfRange,
+  weekdayName,
+  weekdaysFrom,
+} from './calendar-shared';
+import {
   addDays,
   addMonths,
   clampDate,
@@ -24,9 +33,6 @@ export type DatePickerVariant = (typeof DATE_PICKER_VARIANTS)[number];
 
 /** What a calendar shows: the days of a month, the list of months (docked), or the years */
 export type CalendarView = 'days' | 'months' | 'years';
-
-/** The years a calendar offers without `min` and `max` */
-const YEAR_RANGE = [1900, 2100] as const;
 
 // The calendar, which the docked picker and the modal one share
 
@@ -139,7 +145,7 @@ export interface CalendarApi extends Record<CalendarWhen, () => boolean> {
   /** The months offered in the docked list, 1 to 12 */
   months: () => number[];
   monthName: (month: number) => string;
-  /** The years offered, from `min` and `max`, or 1900 to 2100 */
+  /** The years offered: from `min` and `max`, or 1900 to 2100 and the years of the dates shown */
   years: () => number[];
   isDisabled: (date: string) => boolean;
   /** Arrow buttons: move by months, or with `toggle`, between the days and a list. */
@@ -168,18 +174,13 @@ export function createCalendar(options: CalendarOptions): CalendarApi {
   const today = () => options.today?.() ?? personsToday();
   const locale = () => props().locale;
 
-  const outOfRange = (date: string) => {
-    const { min, max } = props();
-    return (!!min && date < min) || (!!max && date > max);
-  };
-  const isDisabled = (date: string) => outOfRange(date) || !!options.isDateDisabled?.(date);
+  const isDisabled = (date: string) =>
+    outOfRange(date, props().min, props().max) || !!options.isDateDisabled?.(date);
   const inMonth = (date: string) => monthOf(date) === props().month;
   const yearRange = (): [number, number] => {
-    const { min, max } = props();
-    return [
-      min ? Number(min.slice(0, 4)) : YEAR_RANGE[0],
-      max ? Number(max.slice(0, 4)) : YEAR_RANGE[1],
-    ];
+    const { min, max, selected, focused, month } = props();
+    const [first, last] = monthBounds(min, max, [selected, focused, firstOfMonth(month)]);
+    return [Number(first.slice(0, 4)), Number(last.slice(0, 4))];
   };
   /** Whether any day of a month can be reached: its last day isn't before `min`, nor its first after `max` */
   const monthReachable = (month: string) => {
@@ -257,7 +258,7 @@ export function createCalendar(options: CalendarOptions): CalendarApi {
       weekday: (day) => ({
         class: 'rio-date-picker__weekday',
         scope: 'col',
-        abbr: weekdayName(day, 'long'),
+        abbr: weekdayName(day, 'long', locale()),
       }),
       cell: (date) => ({
         class: 'rio-date-picker__cell',
@@ -271,12 +272,7 @@ export function createCalendar(options: CalendarOptions): CalendarApi {
           type: 'button',
           // One date at a time takes the focus; the arrow keys move it.
           tabindex: date === p.focused && shown ? '0' : '-1',
-          'aria-label': formatDate(date, locale(), {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
+          'aria-label': dayName(date, locale()),
           'aria-current': date === today() ? 'date' : undefined,
           'aria-disabled': isDisabled(date) ? 'true' : undefined,
           'data-date': date,
@@ -316,11 +312,8 @@ export function createCalendar(options: CalendarOptions): CalendarApi {
     view,
     showsDays: () => view() === 'days',
     showsList: () => view() !== 'days',
-    weekdays: () => {
-      const first = props().firstDayOfWeek ?? firstDayOfWeek(locale());
-      return Array.from({ length: 7 }, (_, index) => ((first - 1 + index) % 7) + 1);
-    },
-    weekdayText: (day) => weekdayName(day, 'narrow'),
+    weekdays: () => weekdaysFrom(props().firstDayOfWeek ?? firstDayOfWeek(locale())),
+    weekdayText: (day) => weekdayName(day, 'narrow', locale()),
     weeks: () => monthGrid(props().month, props().firstDayOfWeek ?? firstDayOfWeek(locale())),
     showsDay: (date) => variant() === 'docked' || inMonth(date),
     dayText: (date) => formatNumber(Number(date.slice(8)), locale()),
@@ -361,41 +354,13 @@ export function createCalendar(options: CalendarOptions): CalendarApi {
       focusDate(date);
       options.onSelect(date, false);
     },
-    keyTarget(key, shift, from, rtl) {
-      const step = (days: number) => addDays(from, days);
-      const target = (() => {
-        switch (key) {
-          case 'ArrowLeft':
-            return step(rtl ? 1 : -1);
-          case 'ArrowRight':
-            return step(rtl ? -1 : 1);
-          case 'ArrowUp':
-            return step(-7);
-          case 'ArrowDown':
-            return step(7);
-          case 'Home':
-            return firstOfMonth(monthOf(from));
-          case 'End':
-            return addDays(addMonths(firstOfMonth(monthOf(from)), 1), -1);
-          case 'PageUp':
-            return addMonths(from, shift ? -12 : -1);
-          case 'PageDown':
-            return addMonths(from, shift ? 12 : 1);
-          default:
-            return undefined;
-        }
-      })();
-      return target && clampDate(target, props().min, props().max);
-    },
+    keyTarget: (key, shift, from, rtl) =>
+      calendarKeyTarget(key, shift, from, rtl, props().min, props().max),
     focusDate,
   };
 
-  function weekdayName(day: number, width: 'narrow' | 'long') {
-    // 2026-11-16 is a Monday.
-    return formatDate(addDays('2026-11-16', day - 1), locale(), { weekday: width });
-  }
   function formatMonthYear() {
-    return formatDate(firstOfMonth(props().month), locale(), { month: 'long', year: 'numeric' });
+    return monthYearName(props().month, locale());
   }
   function formatMonthLong() {
     return formatDate(firstOfMonth(props().month), locale(), { month: 'long' });

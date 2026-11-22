@@ -49,7 +49,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [x] Form value for the switch
 - [x] Slider
 - [x] Scroll time picker
-- [ ] Date range picker
+- [x] Date range picker
 - [x] Chips
 - [ ] List, List Items (maybe?)
 - [ ] Language-specific line heights and variable font axes
@@ -66,6 +66,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Cards
 - [ ] Sheets
 - [ ] Toolbars
+- [ ] Full-screen dialogs (date-pickers, time-pickers, etc)
 
 ## Usage
 

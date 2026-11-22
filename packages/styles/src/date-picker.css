@@ -12,6 +12,12 @@
  * from the start, and the buttons 12px from the sides, 4px below the calendar, and 8px (modal) or
  * 4px (docked) from the bottom. The kit measures icon buttons by their 48px target, and an icon
  * button's 40px box sits 4px inside it, so those spaces grow by 4px here.
+ *
+ * The range picker lays the months one under another, each under its name, in title small
+ * `on-surface-variant`, 20px below the month before and 8px above its days. Its header is 128px
+ * tall, its headline title large. The days between the range's ends sit on a 40px band of
+ * `secondary-container`, which reaches the container's edges where a row ends, and the ends are
+ * selected days.
  */
 
 .rio-date-picker {
@@ -322,4 +328,118 @@
 
 .rio-date-picker-dialog__input > .rio-text-field {
   inline-size: 100%;
+}
+
+/* The range picker: a basic dialog 568px tall */
+
+.rio-dialog.rio-date-range-picker {
+  block-size: 568px;
+}
+
+/* A modal dialog is placed between the window's edges: `fit-content` keeps it as tall as its
+   content, where `auto` would stretch it. */
+.rio-dialog.rio-date-range-picker[data-mode='input'] {
+  block-size: fit-content;
+}
+
+.rio-date-range-picker .rio-date-picker-dialog__header {
+  min-block-size: 128px;
+}
+
+.rio-date-range-picker .rio-date-picker-dialog__headline {
+  font: var(--rio-typescale-title-large);
+  letter-spacing: var(--rio-typescale-title-large-tracking);
+}
+
+/* The weekdays stay above the months, which scroll; the rows reach the container's edges. */
+.rio-date-picker__calendar[data-variant='range'] {
+  flex: 1;
+  min-block-size: 0;
+  padding-inline: 0;
+}
+
+.rio-date-picker__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding-inline: 12px;
+}
+
+.rio-date-picker__weekdays > .rio-date-picker__weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: var(--_cell);
+}
+
+/* Positioned, so the months' offsets count from it. The browser's own scroll anchoring is off:
+   attachRangeCalendar keeps the months in view where they were as more are added above. */
+.rio-date-picker__months {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  padding-inline: 12px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+}
+
+.rio-date-picker__subhead {
+  padding: 20px 24px 8px;
+  color: var(--rio-color-on-surface-variant);
+  font: var(--rio-typescale-title-small);
+  letter-spacing: var(--rio-typescale-title-small-tracking);
+}
+
+.rio-date-picker__calendar[data-variant='range'] .rio-date-picker__grid {
+  inline-size: 100%;
+}
+
+.rio-date-picker__calendar[data-variant='range'] .rio-date-picker__cell {
+  position: relative;
+  inline-size: auto;
+}
+
+/* The band under the range: from the middle of the start to the middle of the end */
+.rio-date-picker__cell:is([data-in-range], [data-range-start], [data-range-end])::before {
+  content: '';
+  position: absolute;
+  inset-block: 4px;
+  inset-inline: 0;
+  background-color: var(--rio-color-secondary-container);
+}
+
+.rio-date-picker__cell[data-range-start]::before {
+  inset-inline-start: 50%;
+}
+
+.rio-date-picker__cell[data-range-end]::before {
+  inset-inline-end: 50%;
+}
+
+.rio-date-picker__cell:first-child:is([data-in-range], [data-range-end])::before {
+  inset-inline-start: -12px;
+}
+
+.rio-date-picker__cell:last-child:is([data-in-range], [data-range-start])::before {
+  inset-inline-end: -12px;
+}
+
+.rio-date-picker__cell[data-in-range] > .rio-date-picker__day {
+  --_day: var(--rio-color-on-secondary-container);
+}
+
+/* The months scroll under the buttons, with a divider between them. */
+.rio-date-range-picker[data-mode='calendar'] .rio-date-picker__actions {
+  border-block-start: 1px solid var(--rio-color-outline-variant);
+}
+
+/* The two text fields, side by side */
+.rio-date-range-picker .rio-date-picker-dialog__input {
+  flex-direction: row;
+  gap: 16px;
+}
+
+.rio-date-range-picker .rio-date-picker-dialog__input > .rio-text-field {
+  flex: 1;
+  min-inline-size: 0;
 }

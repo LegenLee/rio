@@ -28,6 +28,12 @@ export const en: RioMessages = {
     beforeMin: 'Choose {min} or later',
     afterMax: 'Choose {max} or earlier',
     unavailable: 'This date isn’t available',
+    rangeTitle: 'Select dates',
+    rangeHeadline: '{start} – {end}',
+    startDate: 'Start date',
+    endDate: 'End date',
+    invalidRange: 'Choose an end date after the start date',
+    startRequired: 'Enter a start date',
   },
   slider: {
     rangeStart: 'Minimum',

@@ -28,6 +28,12 @@ export const ko: RioMessages = {
     beforeMin: '{min} 이후 날짜를 선택하세요',
     afterMax: '{max} 이전 날짜를 선택하세요',
     unavailable: '선택할 수 없는 날짜입니다',
+    rangeTitle: '기간 선택',
+    rangeHeadline: '{start} ~ {end}',
+    startDate: '시작일',
+    endDate: '종료일',
+    invalidRange: '시작일 이후의 종료일을 선택하세요',
+    startRequired: '시작일을 입력하세요',
   },
   slider: {
     rangeStart: '최솟값',

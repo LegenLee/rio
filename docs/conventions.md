@@ -81,10 +81,13 @@ packages/
       chip.test.ts
     date-picker/
       date.ts               ISO dates and months, and writing and reading them as a language does
+      calendar-shared.ts    what the month calendar and the range calendar share: limits, names, keys (internal)
       date-picker.ts        the calendar, the field's reading, and the docked and modal pickers' parts
-      interaction.ts        the calendar's keys and focus; the docked calendar's popover (DOM, tested through the Vue components)
+      date-range-picker.ts  the range calendar, its window of months, and the range dialog's parts
+      interaction.ts        the calendars' keys and focus; the range calendar's months as they scroll; the docked calendar's popover (DOM, tested through the Vue components)
       date.test.ts
       date-picker.test.ts
+      date-range-picker.test.ts
     dialog/
       dialog.ts             props, parts, and the role
       interaction.ts        opening, closing requests, focus, and scrolling (DOM, tested through the Vue component)

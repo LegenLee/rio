@@ -8,6 +8,7 @@ export { default as RioInputChip } from './chip/InputChip.vue';
 export { default as RioSuggestionChip } from './chip/SuggestionChip.vue';
 export { default as RioDatePicker } from './date-picker/DatePicker.vue';
 export { default as RioDatePickerDialog } from './date-picker/DatePickerDialog.vue';
+export { default as RioDateRangePickerDialog } from './date-picker/DateRangePickerDialog.vue';
 export { default as RioDialog } from './dialog/Dialog.vue';
 export { default as RioIconButton } from './icon-button/IconButton.vue';
 export { localeKey, messagesKey, useLocale, useMessages } from './locale/locale';

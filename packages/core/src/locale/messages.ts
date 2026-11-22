@@ -44,6 +44,17 @@ export interface DatePickerMessages {
   afterMax: string;
   /** A date the app made unavailable */
   unavailable: string;
+  /** Above the range picker's headline */
+  rangeTitle: string;
+  /** The range picker's headline, `{start}` and `{end}` the dates or the words below */
+  rangeHeadline: string;
+  /** The range's ends: the headline's words while there is none, and the text fields' labels */
+  startDate: string;
+  endDate: string;
+  /** A typed end date before the start date */
+  invalidRange: string;
+  /** A typed end date without a start date */
+  startRequired: string;
 }
 
 /** The time picker's text */

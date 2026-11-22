@@ -6,6 +6,11 @@ import {
   buttonLinkSkeleton,
   buttonSkeleton,
   calendarSkeleton,
+  createDateRangePickerDialog,
+  createRangeCalendar,
+  dateRangePickerDialogSkeleton,
+  initialDateRangePickerState,
+  rangeCalendarSkeleton,
   checkboxSkeleton,
   createCalendar,
   createDatePicker,
@@ -129,6 +134,8 @@ import Checkbox from './checkbox/Checkbox.vue';
 import DatePicker from './date-picker/DatePicker.vue';
 import DatePickerCalendar from './date-picker/DatePickerCalendar.vue';
 import DatePickerDialog from './date-picker/DatePickerDialog.vue';
+import DateRangeCalendar from './date-picker/DateRangeCalendar.vue';
+import DateRangePickerDialog from './date-picker/DateRangePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
 import IconButton from './icon-button/IconButton.vue';
 import Menu from './menu/Menu.vue';
@@ -1193,6 +1200,125 @@ describe('RioDatePickerDialog', () => {
       onStateChange: noop,
     });
     expectSkeleton(root, datePickerDialogSkeleton, api);
+  });
+});
+
+describe('the range picker’s calendar', () => {
+  test('the weekdays, and the months with their days', async () => {
+    const props = {
+      start: '2026-08-17',
+      end: '2026-09-02',
+      focused: '2026-08-17',
+      firstMonth: '2026-07',
+      lastMonth: '2026-09',
+      locale: 'en-US',
+      min: '2026-07-10',
+    };
+    const screen = await render(DateRangeCalendar, { props });
+    const api = createRangeCalendar({
+      props: () => props,
+      onSelect: noop,
+      onFocusChange: noop,
+      onMonthsChange: noop,
+    });
+    const root = rootOf(screen);
+    expectSkeleton(root, rangeCalendarSkeleton, api);
+    const weekdays = root.querySelector('.rio-date-picker__weekdays')!.children;
+    expect(weekdays).toHaveLength(7);
+    api.weekdays().forEach((day, i) => {
+      expectPart(weekdays[i], 'span', api.parts.weekday(day));
+      expect(weekdays[i]!.textContent?.trim()).toBe(api.weekdayText(day));
+    });
+    const months = root.querySelector('.rio-date-picker__months')!.children;
+    expect(months).toHaveLength(api.months().length);
+    api.months().forEach((month, i) => {
+      const element = months[i]!;
+      expectPart(element, 'div', api.parts.month(month));
+      const [subhead, grid] = element.children;
+      expectPart(subhead, 'div', api.parts.subhead(month));
+      expect(subhead!.textContent?.trim()).toBe(api.monthText(month));
+      expectPart(grid, 'table', api.parts.grid(month));
+      const rows = grid!.querySelectorAll(':scope > tbody > tr');
+      expect(rows).toHaveLength(api.weeks(month).length);
+      api.weeks(month).forEach((week, w) =>
+        week.forEach((date, d) => {
+          const cell = rows[w]!.children[d]!;
+          expectPart(cell, 'td', api.parts.cell(date, month));
+          const day = cell.querySelector('button');
+          if (!api.showsDay(date, month)) {
+            expect(day, date).toBeNull();
+            return;
+          }
+          expectPart(day, 'button', api.parts.day(date));
+          expect(day!.textContent?.trim()).toBe(api.dayText(date));
+        }),
+      );
+    });
+  });
+});
+
+describe('RioDateRangePickerDialog', () => {
+  const dialogApi = (
+    state: Parameters<typeof createDateRangePickerDialog>[0]['state'],
+    ids = { title: 'x', headline: 'y' },
+    rendered = true,
+  ) =>
+    createDateRangePickerDialog({
+      props: () => ({ locale: 'en-US', rendered }),
+      messages: () => messagesFor('en').datePicker,
+      state,
+      ids,
+      onChange: noop,
+      onOpenChange: noop,
+      onStateChange: noop,
+    });
+
+  test('closed, it renders nothing inside', async () => {
+    const screen = await render(DateRangePickerDialog, { props: { locale: 'en-US' } });
+    const api = dialogApi(
+      () => initialDateRangePickerState(undefined, undefined, 'en-US'),
+      undefined,
+      false,
+    );
+    expectSkeleton(rootOf(screen), dateRangePickerDialogSkeleton, {
+      ...api,
+      parts: { ...api.parts, root: () => ({ class: api.parts.root().class }) },
+    });
+  });
+
+  // Mounted with `createApp`, as the date picker's dialog is
+  test.each(['calendar', 'input'] as const)('open, in the %s', async (mode) => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const app = createApp(() =>
+      h(DateRangePickerDialog, {
+        locale: 'en-US',
+        open: true,
+        start: '2026-08-17',
+        end: '2026-08-23',
+        initialMode: mode,
+      }),
+    );
+    app.mount(host);
+    onTestFinished(() => {
+      app.unmount();
+      host.remove();
+    });
+    const root = host.querySelector('dialog')!;
+    await vi.waitFor(() => expect(root.open).toBe(true));
+    const title = root.querySelector('.rio-date-picker-dialog__title')!.id;
+    const api = dialogApi(
+      () => ({ ...initialDateRangePickerState('2026-08-17', '2026-08-23', 'en-US'), mode }),
+      { title, headline: title.replace(/-title$/, '-headline') },
+    );
+    expectSkeleton(root, dateRangePickerDialogSkeleton, api);
+    // The header: the title, the headline, and the mode button
+    const header = root.querySelector('.rio-date-picker-dialog__header')!.children;
+    expect(header).toHaveLength(3);
+    const [titleElement, headline, modeButton] = header;
+    expectPart(titleElement, 'span', api.parts.title());
+    expectPart(headline, 'span', api.parts.headline());
+    expect(headline!.textContent?.trim()).toBe(api.headline());
+    expect(modeButton!.getAttribute('aria-label')).toBe(api.modeButtonLabel());
   });
 });
 

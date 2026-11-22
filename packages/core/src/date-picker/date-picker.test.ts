@@ -152,6 +152,15 @@ describe('createCalendar', () => {
     expect(setup().calendar.years()).toHaveLength(201);
   });
 
+  test('without min and max, the years reach past 1900 to 2100 to take in the dates shown', () => {
+    const old = setup({ selected: '1850-06-01', month: '1850-06', focused: '1850-06-01' });
+    expect([old.calendar.years()[0], old.calendar.years().at(-1)]).toEqual([1850, 2100]);
+    const later = setup({ month: '2150-01', focused: '2150-01-10' });
+    expect(later.calendar.years().at(-1)).toBe(2150);
+    const limited = setup({ min: '1950-01-01', selected: '1850-06-01' });
+    expect(limited.calendar.years()[0]).toBe(1950);
+  });
+
   test('a month that can’t be reached is unavailable in the list', () => {
     const { calendar, onMonthChange } = setup({ min: '2026-05-10' });
     expect(calendar.parts.monthOption(4)['aria-disabled']).toBe('true');

@@ -6,6 +6,7 @@ export * from './chip/chip';
 export * from './chip/interaction';
 export * from './date-picker/date';
 export * from './date-picker/date-picker';
+export * from './date-picker/date-range-picker';
 export * from './date-picker/interaction';
 export * from './dialog/dialog';
 export * from './dialog/interaction';

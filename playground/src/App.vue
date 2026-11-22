@@ -70,6 +70,7 @@ import {
   RioCircularProgress,
   RioDatePicker,
   RioDatePickerDialog,
+  RioDateRangePickerDialog,
   RioDialog,
   RioFilterChip,
   RioIconButton,
@@ -207,10 +208,18 @@ const selects = reactive<{ size?: SelectSelected; font: SelectSelected; toppings
 );
 const PIZZA_TOPPINGS = { cheese: 'Cheese', mushroom: 'Mushroom', olive: 'Olive', basil: 'Basil' };
 const selectSent = ref('');
-const dates = reactive<{ docked?: string; modal?: string; korean?: string; dialog?: string }>({
+const dates = reactive<{
+  docked?: string;
+  modal?: string;
+  korean?: string;
+  dialog?: string;
+  depart?: string;
+  return?: string;
+}>({
   korean: '2026-11-27',
 });
 const dateDialogOpen = ref(false);
+const dateRangeOpen = ref(false);
 const times = reactive<{
   inline?: string;
   german?: string;
@@ -1116,6 +1125,25 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         </RioDatePicker>
         <RioButton variant="tonal" @click="dateDialogOpen = true">Due date</RioButton>
         <RioDatePickerDialog v-model="dates.dialog" v-model:open="dateDialogOpen" />
+        <RioButton variant="tonal" @click="dateRangeOpen = true">Trip dates</RioButton>
+        <RioDateRangePickerDialog
+          v-model:start="dates.depart"
+          v-model:end="dates.return"
+          v-model:open="dateRangeOpen"
+          clearable
+          :messages="{ rangeTitle: 'Depart – Return dates' }"
+        >
+          <template #edit-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiPencil" fill="currentColor" />
+            </svg>
+          </template>
+          <template #calendar-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="mdiCalendar" fill="currentColor" />
+            </svg>
+          </template>
+        </RioDateRangePickerDialog>
       </div>
       <code>{{ dates }}</code>
     </section>
