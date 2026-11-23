@@ -459,3 +459,135 @@ exports[`createColorScheme > vibrant output is stable 1`] = `
   },
 }
 `;
+
+exports[`createStaticColors > expressive output is stable 1`] = `
+{
+  "dark": {
+    "success": {
+      "color": "#dcffe5",
+      "colorContainer": "#98fdc1",
+      "onColor": "#006b42",
+      "onColorContainer": "#00623c",
+    },
+    "warning": {
+      "color": "#ffaf6f",
+      "colorContainer": "#f99e50",
+      "onColor": "#5f3000",
+      "onColorContainer": "#512800",
+    },
+  },
+  "light": {
+    "success": {
+      "color": "#006d43",
+      "colorContainer": "#92f7bc",
+      "onColor": "#e7ffec",
+      "onColorContainer": "#005e39",
+    },
+    "warning": {
+      "color": "#924d00",
+      "colorContainer": "#ffaf6f",
+      "onColor": "#fff7f4",
+      "onColorContainer": "#5f3000",
+    },
+  },
+}
+`;
+
+exports[`createStaticColors > neutral output is stable 1`] = `
+{
+  "dark": {
+    "success": {
+      "color": "#76daa1",
+      "colorContainer": "#005231",
+      "onColor": "#004a2c",
+      "onColorContainer": "#80e4ab",
+    },
+    "warning": {
+      "color": "#ffb77f",
+      "colorContainer": "#6e3900",
+      "onColor": "#653300",
+      "onColorContainer": "#ffc498",
+    },
+  },
+  "light": {
+    "success": {
+      "color": "#006d43",
+      "colorContainer": "#92f7bc",
+      "onColor": "#e2ffe9",
+      "onColorContainer": "#005e39",
+    },
+    "warning": {
+      "color": "#914c00",
+      "colorContainer": "#ffdcc3",
+      "onColor": "#fff6f2",
+      "onColorContainer": "#7f4200",
+    },
+  },
+}
+`;
+
+exports[`createStaticColors > tonal-spot output is stable 1`] = `
+{
+  "dark": {
+    "success": {
+      "color": "#76daa1",
+      "colorContainer": "#0d8352",
+      "onColor": "#004a2c",
+      "onColorContainer": "#ffffff",
+    },
+    "warning": {
+      "color": "#ffb77f",
+      "colorContainer": "#9e5507",
+      "onColor": "#653300",
+      "onColorContainer": "#ffffff",
+    },
+  },
+  "light": {
+    "success": {
+      "color": "#006d43",
+      "colorContainer": "#92f7bc",
+      "onColor": "#e7ffec",
+      "onColorContainer": "#005e39",
+    },
+    "warning": {
+      "color": "#924d00",
+      "colorContainer": "#f99e50",
+      "onColor": "#fff7f4",
+      "onColorContainer": "#512800",
+    },
+  },
+}
+`;
+
+exports[`createStaticColors > vibrant output is stable 1`] = `
+{
+  "dark": {
+    "success": {
+      "color": "#98fdc1",
+      "colorContainer": "#4eb37e",
+      "onColor": "#00623c",
+      "onColorContainer": "#002916",
+    },
+    "warning": {
+      "color": "#f99e50",
+      "colorContainer": "#e38c40",
+      "onColor": "#512800",
+      "onColorContainer": "#3a1b00",
+    },
+  },
+  "light": {
+    "success": {
+      "color": "#006940",
+      "colorContainer": "#98fdc1",
+      "onColor": "#caffdb",
+      "onColorContainer": "#00623c",
+    },
+    "warning": {
+      "color": "#8d4a00",
+      "colorContainer": "#f99e50",
+      "onColor": "#fff0e7",
+      "onColorContainer": "#512800",
+    },
+  },
+}
+`;

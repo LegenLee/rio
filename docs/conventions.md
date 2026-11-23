@@ -26,7 +26,7 @@ Every component has one kebab-case id (`switch`, `button`, `icon-button`, `fab-m
 ```
 packages/
   tokens/src/
-    color/color.ts          color roles, MCU integration
+    color/color.ts          color roles, key and static colors, MCU integration
     elevation/elevation.ts
     motion/motion.ts
     shape/shape.ts

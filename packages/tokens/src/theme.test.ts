@@ -48,6 +48,25 @@ describe('createThemeVariables', () => {
     expect(vars['--rio-color-primary']).toMatch(/^light-dark\(#[0-9a-f]{6}, #[0-9a-f]{6}\)$/);
   });
 
+  test('writes four variables for each static color, in light-dark()', () => {
+    const themed = createThemeVariables({ ...options, staticColors: { success: '#2e7d32' } });
+    expect(Object.keys(themed)).toHaveLength(Object.keys(vars).length + 4);
+    for (const name of ['success', 'on-success', 'success-container', 'on-success-container'])
+      expect(themed[`--rio-color-${name}`]).toMatch(/^light-dark\(#[0-9a-f]{6}, #[0-9a-f]{6}\)$/);
+  });
+
+  test('a static color can’t write a variable the theme already has', () => {
+    expect(() =>
+      createThemeVariables({ ...options, staticColors: { primary: '#2e7d32' } }),
+    ).toThrow(/--rio-color-primary/);
+    expect(() =>
+      createThemeVariables({
+        ...options,
+        staticColors: { success: '#2e7d32', onSuccess: '#2e7d32' },
+      }),
+    ).toThrow(/--rio-color-on-success/);
+  });
+
   test('uses the expressive motion scheme by default', () => {
     expect(vars).toMatchObject(createMotionVariables('expressive'));
   });

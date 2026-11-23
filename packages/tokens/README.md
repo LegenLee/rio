@@ -14,7 +14,7 @@ theme.detach(); // takes it off
 ```
 
 - `createThemeCss(theme)` returns the same variables as a stylesheet, for server rendering or a static file, and `createThemeVariables(theme)` as an object of CSS variables.
-- A theme takes `sourceColor`, `variant`, `contrast`, `colorScheme`, `motion`, `shapes`, `typefaces`, `languageHeight`, and `typescale` ([the theme's options](https://legenlee.github.io/rio/guide/getting-started#the-theme)).
+- A theme takes `sourceColor`, `variant`, `contrast`, `keyColors`, `staticColors`, `colorScheme`, `motion`, `shapes`, `typefaces`, `languageHeight`, and `typescale` ([the theme's options](https://legenlee.github.io/rio/guide/getting-started#the-theme)).
 - `languageHeightOf(locale)` gives the line heights for the script of a language, taller for Korean, Chinese, Japanese, Arabic, or Thai than for Latin.
 
 What each token means, and where its value comes from, is in [Foundations](https://legenlee.github.io/rio/foundations).

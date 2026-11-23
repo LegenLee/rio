@@ -2,8 +2,12 @@ import {
   COLOR_ROLES,
   colorVar,
   createColorScheme,
+  createStaticColors,
+  staticColorVars,
   type ColorSchemeOptions,
   type ColorVar,
+  type StaticColor,
+  type StaticColorRoles,
 } from './color/color';
 import { createElevationVariables, type ElevationVar } from './elevation/elevation';
 import { createMotionVariables, type MotionScheme, type MotionVar } from './motion/motion';
@@ -24,6 +28,12 @@ import {
 export type ThemeColorScheme = 'light dark' | 'light' | 'dark' | false;
 
 export interface ThemeOptions extends Omit<ColorSchemeOptions, 'dark'> {
+  /**
+   * Colors that stay the same whatever the source color, by name, as `{ success: '#2e7d32' }`.
+   * Each writes four roles' variables, as `--rio-color-success`, `--rio-color-on-success`,
+   * `--rio-color-success-container`, and `--rio-color-on-success-container`.
+   */
+  staticColors?: Record<string, StaticColor>;
   /** Defaults to `'expressive'`. */
   motion?: MotionScheme;
   /** Resizes steps of the corner radius scale, in px: `{ medium: 16 }`. */
@@ -75,6 +85,7 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
     languageHeight,
     typescale,
     colorScheme: _,
+    staticColors = {},
     ...color
   } = options;
   const light = createColorScheme({ ...color, dark: false });
@@ -82,6 +93,17 @@ export function createThemeVariables(options: ThemeOptions): Record<ThemeVar, st
   const vars = {} as Record<ThemeVar, string>;
   for (const role of COLOR_ROLES) {
     vars[colorVar(role)] = `light-dark(${light[role]}, ${dark[role]})`;
+  }
+  const lightStatic = createStaticColors({ ...color, dark: false }, staticColors);
+  const darkStatic = createStaticColors({ ...color, dark: true }, staticColors);
+  for (const name of Object.keys(staticColors)) {
+    const names = staticColorVars(name);
+    for (const role of Object.keys(names) as (keyof StaticColorRoles)[]) {
+      // A name that writes a role the theme already has, as `primary` or `on-success`
+      if (names[role] in vars)
+        throw new Error(`[rio] static color "${name}" would write ${names[role]}, which is taken`);
+      vars[names[role]] = `light-dark(${lightStatic[name]![role]}, ${darkStatic[name]![role]})`;
+    }
   }
   return Object.assign(
     vars,

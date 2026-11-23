@@ -464,11 +464,42 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - **Reduced motion**: see section 3. The ripple skips its growing wave and only fades.
 - **Disabled and focus**: pressable components get two props. `disabled` is native and not focusable, as the spec says. `softDisabled` uses `aria-disabled` and stays focusable, which deviates from the spec on purpose so keyboard and screen-reader users can find the control. See [components/button.md](components/button.md).
 
+## 7. Add colors to the scheme
+
+### Spec
+
+- **Static colors**, formerly custom colors: "You can define additional colors in your scheme that stay static even when other colors dynamically change. When you input a desired reference color, Material will return four derived color roles that align with the design of existing roles in the color scheme." "The main color, on-main color, container color, and on-container color all follow the conventions of the accent colors in the main scheme", and they "support features like dynamic color and user-controlled contrast". The spec's example is a green Success.
+- **Harmonization** "adjusts the hue of static colors, making them closer to the hue of the scheme's primary color", and "limits the amount that a color's hue can change", so a red stays a red.
+- **Your own baseline scheme**: "By providing your own custom input colors for the primary, secondary, tertiary, and neutral colors in the scheme, Material will provide back the scheme's regular color roles with values derived from your reference colors."
+- **Color fidelity** "adjusts tones in color roles to produce the closest match to your input color". The Material Theme Builder turns it on by default for a custom baseline scheme and for static colors.
+
+### Recommendations
+
+- Error is already a static color: "you do not need to define your own static color for a semantic red color."
+- Harmonize static colors in a dynamic scheme, but "Don't harmonize colors whose appearance should stay absolutely consistent, such as brand colors."
+- Give each key color its role: tertiary complements primary, and secondary, neutral variant, and neutral "match primary in hue but are progressively less chromatic in that order".
+- Define custom color roles "only if you cannot achieve your desired colors with other Material color solutions."
+
+### In Rio
+
+- **`staticColors`** in the theme, by name: `{ success: '#2e7d32' }` writes `--rio-color-success`, `--rio-color-on-success`, `--rio-color-success-container`, and `--rio-color-on-success-container`, in `light-dark()` as the other colors. A name is camelCase or kebab-case. One that would write a variable the theme already has, as `primary`, throws.
+- **Made the way the primary color's roles are** (Rio's choice): the static color's palette, of its own hue and chroma, takes the primary palette's place in the scheme, and its four roles are that scheme's primary, on-primary, primary container, and on-primary container. The variant and `contrast` apply to them as to every other role, as the spec's "user-controlled contrast" asks. MCU's `customColor` takes fixed tones instead (40, 100, 90, and 10 in light), which no contrast changes.
+- **Harmonized by default** (Rio's choice: the spec leaves it to the app), toward the source color, whose hue the primary palette keeps in every variant, with MCU's `Blend.harmonize`. `{ color: '#ff5722', harmonize: false }` keeps a brand color as it is.
+- **`keyColors`** in the theme: `secondary`, `tertiary`, `neutral`, `neutralVariant`, and `error`, each a palette of its own hue and chroma in place of the one the variant makes from the source color, which stays the primary color. `error` is Rio's addition, as MCU takes an error palette too.
+- **No baseline scheme** (Rio's choice). `sourceColor: '#6750a4'` makes a scheme from that color, which matches the baseline's fixed values in few roles.
+- `createStaticColors` and `staticColorVars` in `@rio-m3e/tokens` give the same colors and names outside a theme.
+
+#### Not yet
+
+- **Color fidelity**: MCU's 2025 color spec has no fidelity variant, so the tones follow the variant's rules, not the input colors' own.
+- **Custom color roles**, from a palette's tones and contrast rules of the app's own.
+
 ## Implementation status
 
 | Item                                               | Package                 | Status                                                                                                                                                                  |
 | -------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `attachTheme`, `createThemeCss`                                                                                                              |
+| Static colors and key colors                       | `tokens`                | Done: `staticColors` and `keyColors` in the theme, `createStaticColors`, `staticColorVars`. See section 7.                                                              |
 | Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`attachTheme`, `createThemeCss`).                                               |
 | Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
@@ -494,6 +525,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - [Motion physics – How it works](https://m3.material.io/styles/motion/overview/how-it-works)
 - [Motion physics – Specs](https://m3.material.io/styles/motion/overview/specs) (includes the web conversion table)
 - [Color roles](https://m3.material.io/styles/color/roles)
+- [Color – Advanced customizations](https://m3.material.io/styles/color/advanced/overview), [Define new colors](https://m3.material.io/styles/color/advanced/define-new-colors), and [Adjust existing colors](https://m3.material.io/styles/color/advanced/adjust-existing-colors) (section 7)
 - [Shape – Corner radius scale](https://m3.material.io/styles/shape/corner-radius-scale)
 - [Shape – Shape morph](https://m3.material.io/styles/shape/shape-morph)
 - [Typography – Type scale & tokens](https://m3.material.io/styles/typography/type-scale-tokens) (token tables read in expanded form), and the typography token data it loads (`/_dsm/data/dsdb-m3/2026-11-19_06-20-01/TYPOGRAPHY.20543ce18892f7d9.json`): the language heights (section 5.3) and the font contexts and axes (section 5.4)

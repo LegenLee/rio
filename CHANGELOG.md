@@ -6,6 +6,10 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 
 ## [Unreleased]
 
+### Added
+
+- **Static colors and key colors**: the theme's `staticColors` add colors that stay the same whatever the source color, as success or a warning, by name. Each writes the four roles an accent color has, as `--rio-color-success`, `--rio-color-on-success`, `--rio-color-success-container`, and `--rio-color-on-success-container`, made the way the primary color's are, so the variant and `contrast` apply to them, and harmonized toward the source color unless given as `{ color, harmonize: false }`. The theme's `keyColors` give the secondary, tertiary, neutral, neutral variant, and error colors, in place of the ones made from the source color. In `@rio-m3e/tokens`: `staticColors` in `ThemeOptions`, `keyColors` in `ColorSchemeOptions`, `createStaticColors`, `staticColorVars`, `KeyColors`, `StaticColor`, and `StaticColorRoles`.
+
 ### Fixed
 
 - `@rio-m3e/styles` no longer ships its test file, `src/styles.test.ts`, which 0.6.3's package carried.

@@ -3,11 +3,16 @@ export {
   COLOR_ROLES,
   colorVar,
   createColorScheme,
+  createStaticColors,
+  staticColorVars,
   type ColorRole,
   type ColorScheme,
   type ColorSchemeOptions,
   type ColorVar,
+  type KeyColors,
   type SchemeVariant,
+  type StaticColor,
+  type StaticColorRoles,
 } from './color/color';
 export {
   ELEVATION_LEVELS,
