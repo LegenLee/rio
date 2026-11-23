@@ -65,11 +65,19 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 - [ ] App bar
 - [ ] FABs
-- [ ] Navigation drawer + rails
+- [ ] Navigation drawer + Bottom Navigation bar
+- [ ] Navigation Button (rail)
 - [ ] Cards
 - [ ] Sheets
 - [ ] Toolbars
 - [ ] Full-screen dialogs (date-pickers, time-pickers, etc)
+- [ ] Tabs
+- [ ] Snackbar
+
+### v0.8 (Maybe?)
+
+- [ ] Fix & Refactor something I messed up
+- [ ] Listup unimplemented M3E components I missing
 
 ## Usage
 
