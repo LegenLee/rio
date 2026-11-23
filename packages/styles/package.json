@@ -11,6 +11,7 @@
   },
   "files": [
     "src",
+    "!src/**/*.test.ts",
     "css.d.ts",
     "NOTICE"
   ],
