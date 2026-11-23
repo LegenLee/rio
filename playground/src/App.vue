@@ -12,6 +12,7 @@ import {
   type MotionToken,
 } from '@rio-m3e/tokens';
 import {
+  mdiArrowLeft,
   mdiBookmark,
   mdiBookmarkOutline,
   mdiCalendar,
@@ -32,6 +33,7 @@ import {
   mdiHeart,
   mdiHeartOutline,
   mdiMagnify,
+  mdiMenu,
   mdiOpenInNew,
   mdiPause,
   mdiRestore,
@@ -55,6 +57,7 @@ import {
   type SelectSelected,
 } from '@rio-m3e/core';
 import {
+  RioAppBar,
   RioButton,
   RioButtonGroup,
   RioAssistChip,
@@ -273,7 +276,19 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
 <template>
   <main :dir="direction">
-    <h1>Rio Playground</h1>
+    <!-- Fills as the window scrolls -->
+    <RioAppBar headline="Rio Playground" class="playground-bar">
+      <template #leading>
+        <RioIconButton label="Menu" variant="standard">
+          <RioIcon :icon="{ type: 'svg', path: mdiMenu }" />
+        </RioIconButton>
+      </template>
+      <template #trailing>
+        <RioIconButton label="Search" variant="standard">
+          <RioIcon :icon="{ type: 'svg', path: mdiMagnify }" />
+        </RioIconButton>
+      </template>
+    </RioAppBar>
 
     <section class="controls">
       <label>Source color <input v-model="theme.sourceColor" type="color" /></label>
@@ -798,6 +813,24 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           >sort={{ sortBy }} filters={{ filters }} layout={{ layout }} action={{ lastAction }}</code
         >
       </div>
+    </section>
+
+    <section class="app-bars">
+      <RioAppBar
+        v-for="variant in ['medium-flexible', 'large-flexible'] as const"
+        :key="variant"
+        :variant="variant"
+        headline="Trip to the coast"
+        subtitle="4 photos"
+        :heading-level="2"
+        :scrolled="false"
+      >
+        <template #leading>
+          <RioIconButton label="Back" variant="standard">
+            <RioIcon :icon="{ type: 'svg', path: mdiArrowLeft }" />
+          </RioIconButton>
+        </template>
+      </RioAppBar>
     </section>
 
     <section class="buttons toolbars">
@@ -1401,6 +1434,13 @@ main {
   display: grid;
   gap: 24px;
   padding: 24px;
+}
+
+.playground-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  margin: -24px -24px 0;
 }
 
 .controls {
