@@ -24,6 +24,10 @@ const TEXT_ENTRY =
 
 const ARROWS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 
+/** Whether two elements are radio buttons of one group */
+const sameGroup = (a: Element, b: Element) =>
+  isRadio(a) && isRadio(b) && !!a.name && a.name === b.name && a.form === b.form;
+
 export function attachToolbar(root: HTMLElement): ToolbarHandle {
   /** What Tab reaches, but not inside a menu, dialog, or other overlay open within the toolbar */
   const items = () =>
@@ -44,7 +48,10 @@ export function attachToolbar(root: HTMLElement): ToolbarHandle {
     const forth = vertical ? 'ArrowDown' : 'ArrowRight';
     if (![back, forth, 'Home', 'End'].includes(event.key)) return;
     const list = items();
-    const index = list.findIndex((el) => el === target || el.contains(target));
+    // A radio button stands for its group, whichever one has the focus.
+    const index = list.findIndex(
+      (el) => el === target || el.contains(target) || sameGroup(el, target),
+    );
     if (index < 0) return;
     let next: number;
     if (event.key === 'Home') next = 0;

@@ -151,6 +151,24 @@ describe('RioToolbar', () => {
     expect(focused()).toBe('Underline');
   });
 
+  test('Home and End work from any radio button of a group with none checked', async () => {
+    const radio = (value: string) =>
+      h('input', { type: 'radio', name: 'size', value, 'aria-label': value });
+    await setup({}, () => [
+      h(IconButton, { label: 'Bold' }, () => icon(mdiFormatBold)),
+      radio('Small'),
+      radio('Large'),
+      h(IconButton, { label: 'Underline' }, () => icon(mdiFormatUnderline)),
+    ]);
+    // The group's last radio button, as Shift+Tab can bring the focus to it
+    document.querySelector<HTMLInputElement>('input[value="Large"]')!.focus();
+    await userEvent.keyboard('{Home}');
+    expect(focused()).toBe('Bold');
+    document.querySelector<HTMLInputElement>('input[value="Large"]')!.focus();
+    await userEvent.keyboard('{End}');
+    expect(focused()).toBe('Underline');
+  });
+
   describe('measurements', () => {
     test('docked: 64px high, 16px at the ends, no shadow, its items gathered 32px apart', async () => {
       const { toolbar } = await setup();
