@@ -63,13 +63,13 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 ### v0.7 (Layouts)
 
-- [ ] App bar
+- [x] App bar
 - [ ] FABs
 - [ ] Navigation drawer + Bottom Navigation bar
 - [ ] Navigation Button (rail)
 - [ ] Cards
 - [ ] Sheets
-- [ ] Toolbars
+- [x] Toolbars
 - [ ] Full-screen dialogs (date-pickers, time-pickers, etc)
 - [ ] Tabs
 - [ ] Snackbar
