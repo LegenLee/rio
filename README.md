@@ -74,12 +74,12 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Tabs
 - [ ] Snackbar
 - [ ] Badge
+- [ ] Search (Is it really necessary?)
 
 ### v0.8 (Maybe?)
 
 - [ ] Fix & Refactor something I messed up
 - [ ] Listup unimplemented M3E components I missing
-  - [ ] Search (Is it really necessary?)
 
 ## Usage
 
