@@ -92,6 +92,7 @@ import {
   RioTimeInput,
   RioTimePickerDialog,
   RioTimeScroll,
+  RioToolbar,
   RioTooltip,
   vRipple,
 } from '@rio-m3e/vue';
@@ -797,6 +798,50 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           >sort={{ sortBy }} filters={{ filters }} layout={{ layout }} action={{ lastAction }}</code
         >
       </div>
+    </section>
+
+    <section class="buttons toolbars">
+      <div v-for="color in ['standard', 'vibrant'] as const" :key="color" class="controls">
+        <code class="row-label">{{ color }}</code>
+        <RioToolbar :aria-label="`Formatting, ${color}`" variant="floating" :color="color">
+          <RioIconButton label="Bold" variant="tonal" toggle :selected="true">
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatBold }" />
+          </RioIconButton>
+          <RioIconButton label="Italic" variant="tonal" toggle>
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatItalic }" />
+          </RioIconButton>
+          <RioIconButton label="Underline" variant="standard">
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatUnderline }" />
+          </RioIconButton>
+        </RioToolbar>
+        <RioToolbar
+          :aria-label="`Alignment, ${color}`"
+          variant="floating"
+          orientation="vertical"
+          :color="color"
+        >
+          <RioIconButton label="Left" variant="standard">
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignLeft }" />
+          </RioIconButton>
+          <RioIconButton label="Center" variant="standard">
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignCenter }" />
+          </RioIconButton>
+          <RioIconButton label="Right" variant="standard">
+            <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignRight }" />
+          </RioIconButton>
+        </RioToolbar>
+      </div>
+      <RioToolbar aria-label="Docked" style="inline-size: 100%">
+        <RioIconButton label="Bold" variant="standard">
+          <RioIcon :icon="{ type: 'svg', path: mdiFormatBold }" />
+        </RioIconButton>
+        <RioIconButton label="Italic" variant="standard">
+          <RioIcon :icon="{ type: 'svg', path: mdiFormatItalic }" />
+        </RioIconButton>
+        <RioIconButton label="Underline">
+          <RioIcon :icon="{ type: 'svg', path: mdiFormatUnderline }" />
+        </RioIconButton>
+      </RioToolbar>
     </section>
 
     <section class="buttons tooltips">
