@@ -68,9 +68,20 @@ describe('keyColors', () => {
     expect(keyed.surfaceContainer).not.toBe(plain.surfaceContainer);
   });
 
+  test('primary makes the primary palette, as the others make theirs', () => {
+    const keyed = createColorScheme({ sourceColor: BASELINE, keyColors: { primary: '#006a6a' } });
+    expect(hueGap(keyed.primary, '#006a6a')).toBeLessThan(3);
+    expect(keyed.secondary).toBe(plain.secondary);
+  });
+
   test('without any, the scheme is the source color’s', () => {
     expect(createColorScheme({ sourceColor: BASELINE, keyColors: {} })).toEqual(plain);
   });
+});
+
+test('the source color is a seed, not the primary color: white makes a colored primary', () => {
+  const scheme = createColorScheme({ sourceColor: '#ffffff' });
+  expect(hct(scheme.primary).chroma).toBeGreaterThan(10);
 });
 
 describe('createStaticColors', () => {
@@ -89,13 +100,22 @@ describe('createStaticColors', () => {
     expect(dark.success!.color).not.toBe(light.success!.color);
   });
 
-  test('harmonized toward the source color, unless harmonize is false', () => {
+  test('harmonized toward the scheme’s primary color, unless harmonize is false', () => {
     const { harmonized, own } = createStaticColors(
       { sourceColor: BASELINE },
       { harmonized: success, own: { color: success, harmonize: false } },
     );
     expect(hueGap(own!.color, success)).toBeLessThan(3);
     expect(hueGap(harmonized!.color, BASELINE)).toBeLessThan(hueGap(success, BASELINE) - 5);
+  });
+
+  test('toward the primary key color when the app gives one', () => {
+    const orange = '#e65100';
+    const { success: toOrange } = createStaticColors(
+      { sourceColor: BASELINE, keyColors: { primary: orange } },
+      { success },
+    );
+    expect(hueGap(toOrange!.color, orange)).toBeLessThan(hueGap(success, orange) - 5);
   });
 
   test('the pairs keep the scheme’s contrast, and more at a higher contrast', () => {

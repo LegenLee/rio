@@ -95,11 +95,11 @@ const VARIANTS: Record<SchemeVariant, Variant> = {
 };
 
 /**
- * Colors for the scheme's palettes other than the primary one, as `#rgb` or `#rrggbb`. Each
- * becomes a palette of its own hue and chroma, in place of the one the variant makes from the
- * source color, which stays the primary color.
+ * The key colors of the scheme's palettes, as `#rgb` or `#rrggbb`. Each becomes a palette of its
+ * own hue and chroma, in place of the one the variant derives from the source color.
  */
 export interface KeyColors {
+  primary?: string;
   secondary?: string;
   tertiary?: string;
   neutral?: string;
@@ -108,7 +108,10 @@ export interface KeyColors {
 }
 
 export interface ColorSchemeOptions {
-  /** Source color, as `#rgb` or `#rrggbb`. */
+  /**
+   * The seed every palette is derived from, as `#rgb` or `#rrggbb`. It isn't the primary color:
+   * the variant takes its hue and sets the chroma, so even white makes a colored primary.
+   */
   sourceColor: string;
   /** Defaults to `'tonal-spot'`. */
   variant?: SchemeVariant;
@@ -116,7 +119,7 @@ export interface ColorSchemeOptions {
   contrast?: number;
   /** Defaults to `false`. */
   dark?: boolean;
-  /** Palettes from colors of the app's own, in place of the ones made from the source color. */
+  /** Palettes from colors of the app's own, in place of the ones derived from the source color. */
   keyColors?: KeyColors;
 }
 
@@ -132,7 +135,7 @@ function dynamicScheme(options: ColorSchemeOptions, primaryPalette?: TonalPalett
     contrastLevel: Math.min(1, Math.max(-1, options.contrast ?? 0)),
     isDark: options.dark ?? false,
     specVersion: '2025',
-    primaryPalette,
+    primaryPalette: primaryPalette ?? paletteOf(keys.primary),
     secondaryPalette: paletteOf(keys.secondary),
     tertiaryPalette: paletteOf(keys.tertiary),
     neutralPalette: paletteOf(keys.neutral),
@@ -159,8 +162,8 @@ export function createColorScheme(options: ColorSchemeOptions): ColorScheme {
 
 /**
  * A static color, as `#rgb` or `#rrggbb`: a color that stays the same whatever the source color,
- * as for success or a warning. It is harmonized toward the source color, its hue turned a little
- * closer to it, unless `harmonize` is `false`, as for a brand color.
+ * as for success or a warning. It is harmonized toward the scheme's primary color, its hue turned
+ * a little closer to it, unless `harmonize` is `false`, as for a brand color.
  */
 export type StaticColor = string | { color: string; harmonize?: boolean };
 
@@ -180,12 +183,12 @@ export function createStaticColors(
   options: ColorSchemeOptions,
   staticColors: Record<string, StaticColor>,
 ): Record<string, StaticColorRoles> {
-  const source = argbFromHex(options.sourceColor);
+  const primary = dynamicScheme(options).primaryPalette.keyColor.toInt();
   const result: Record<string, StaticColorRoles> = {};
   for (const [name, value] of Object.entries(staticColors)) {
     const { color, harmonize = true } = typeof value === 'string' ? { color: value } : value;
     const argb = argbFromHex(color);
-    const palette = TonalPalette.fromInt(harmonize ? Blend.harmonize(argb, source) : argb);
+    const palette = TonalPalette.fromInt(harmonize ? Blend.harmonize(argb, primary) : argb);
     const scheme = dynamicScheme(options, palette);
     result[name] = {
       color: hexOf(scheme, 'primary'),
