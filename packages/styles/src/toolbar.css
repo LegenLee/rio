@@ -1,0 +1,84 @@
+/*
+ * M3E toolbar: a container of buttons, icon buttons, text fields, or other items. It carries
+ * `data-variant` (docked or floating), `data-color` (standard or vibrant), `data-orientation`, and
+ * a floating toolbar's `data-flat`, which `createToolbar` from `@rio-m3e/core` sets. The arrow keys
+ * are JavaScript (`attachToolbar`).
+ *
+ * Values come from the spec's toolbar tokens (`md.comp.toolbar.*`). Variant and color rules sit
+ * inside `:where()`, so an app's single class overrides them.
+ */
+
+.rio-toolbar {
+  --_container: var(--rio-color-surface-container);
+  --_content: var(--rio-color-on-surface-variant);
+
+  /* The buttons inside follow the toolbar's colors (`button.css`): a tonal toggle button is the
+     toolbar's own color until it is selected. */
+  --rio-button-tonal-toggle-container-color: var(--_container);
+  --rio-button-tonal-toggle-content-color: var(--_content);
+  --rio-button-tonal-selected-container-color: var(--rio-color-secondary-container);
+  --rio-button-tonal-selected-content-color: var(--rio-color-on-secondary-container);
+
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  background-color: var(--_container);
+  color: var(--_content);
+}
+
+.rio-toolbar:where([data-color='vibrant']) {
+  --_container: var(--rio-color-primary-container);
+  --_content: var(--rio-color-on-primary-container);
+  --rio-button-standard-content-color: var(--_content);
+  --rio-button-tonal-selected-container-color: var(--rio-color-surface-container);
+  --rio-button-tonal-selected-content-color: var(--rio-color-on-surface);
+}
+
+/* Menus, dialogs, and tooltips opened inside a toolbar keep the buttons' own colors. */
+:where(.rio-toolbar) :where([popover], dialog) {
+  --rio-button-standard-content-color: initial;
+  --rio-button-tonal-toggle-container-color: initial;
+  --rio-button-tonal-toggle-content-color: initial;
+  --rio-button-tonal-selected-container-color: initial;
+  --rio-button-tonal-selected-content-color: initial;
+}
+
+/*
+ * Docked: the width it is given, square corners, no shadow. In a compact window, narrower than
+ * 600px, its items spread across it, at least 4px apart; in a wider one they gather in the middle,
+ * 32px apart.
+ */
+.rio-toolbar:where([data-variant='docked']) {
+  justify-content: space-between;
+  gap: 4px;
+  block-size: 64px;
+  padding-inline: 16px;
+  border-radius: var(--rio-shape-corner-none);
+}
+
+@media (min-width: 600px) {
+  .rio-toolbar:where([data-variant='docked']) {
+    justify-content: center;
+    gap: 32px;
+  }
+}
+
+/* Floating: only as large as its items, fully rounded, with a shadow */
+.rio-toolbar:where([data-variant='floating']) {
+  display: inline-flex;
+  gap: 4px;
+  block-size: 64px;
+  padding: 8px;
+  border-radius: var(--rio-shape-corner-full);
+  box-shadow: var(--rio-elevation-level3);
+}
+
+.rio-toolbar:where([data-variant='floating'][data-orientation='vertical']) {
+  flex-direction: column;
+  inline-size: 64px;
+  block-size: auto;
+}
+
+.rio-toolbar:where([data-flat]) {
+  box-shadow: none;
+}

@@ -40,4 +40,5 @@ export { default as RioTextField } from './text-field/TextField.vue';
 export { default as RioTimeInput } from './time-picker/TimeInput.vue';
 export { default as RioTimePickerDialog } from './time-picker/TimePickerDialog.vue';
 export { default as RioTimeScroll } from './time-picker/TimeScroll.vue';
+export { default as RioToolbar } from './toolbar/Toolbar.vue';
 export { default as RioTooltip } from './tooltip/Tooltip.vue';

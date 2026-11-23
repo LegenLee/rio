@@ -90,6 +90,7 @@ import {
   type ScrollFieldValue,
   type SliderProps,
   createTextField,
+  createToolbar,
   createTooltip,
   createSplitButton,
   iconButtonLinkSkeleton,
@@ -105,6 +106,7 @@ import {
   splitButtonSkeleton,
   switchSkeleton,
   textFieldSkeleton,
+  toolbarSkeleton,
   tooltipSkeleton,
   tooltipTriggerSkeleton,
   type ButtonGroupProps,
@@ -130,6 +132,7 @@ import {
   type TextFieldContent,
   type TextFieldProps,
   type TooltipContent,
+  type ToolbarProps,
   type TooltipProps,
 } from '@rio-m3e/core';
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
@@ -177,6 +180,7 @@ import TextField from './text-field/TextField.vue';
 import TimeInput from './time-picker/TimeInput.vue';
 import TimePickerDialog from './time-picker/TimePickerDialog.vue';
 import TimeScroll from './time-picker/TimeScroll.vue';
+import Toolbar from './toolbar/Toolbar.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -638,6 +642,23 @@ describe('RioButtonGroup', () => {
     });
     const api = createButtonGroup({ props: () => ({ ...props, selected }), onChange: noop });
     expectSkeleton(rootOf(screen), buttonGroupSkeleton, api);
+  });
+});
+
+describe('RioToolbar', () => {
+  test.each<[string, ToolbarProps]>([
+    ['a docked toolbar', {}],
+    ['a vibrant floating toolbar', { variant: 'floating', color: 'vibrant' }],
+    [
+      'a vertical, flat floating toolbar',
+      { variant: 'floating', orientation: 'vertical', flat: true },
+    ],
+  ])('%s', async (_, props) => {
+    const screen = await render(Toolbar, {
+      props,
+      slots: { default: () => [h(Button, () => 'A'), h(Button, () => 'B')] },
+    });
+    expectSkeleton(rootOf(screen), toolbarSkeleton, createToolbar({ props: () => props }));
   });
 });
 

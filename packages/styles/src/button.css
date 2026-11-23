@@ -169,10 +169,22 @@
 /* Icon buttons only (see icon-button.css): no container, like text, but it can toggle */
 .rio-button:where([data-variant='standard']) {
   --_container: transparent;
-  --_content: var(--rio-color-on-surface-variant);
+  --_content: var(--rio-button-standard-content-color, var(--rio-color-on-surface-variant));
 }
 
-/* Toggle buttons: unselected and selected colors, where they differ from the defaults above */
+/*
+ * Toggle buttons: unselected and selected colors, where they differ from the defaults above.
+ * A container whose color the buttons should follow, as a toolbar, sets the `--rio-button-*-color`
+ * variables, which its buttons inherit.
+ */
+
+.rio-button:where([data-variant='tonal'][data-selected='false']) {
+  --_container: var(
+    --rio-button-tonal-toggle-container-color,
+    var(--rio-color-secondary-container)
+  );
+  --_content: var(--rio-button-tonal-toggle-content-color, var(--rio-color-on-secondary-container));
+}
 
 .rio-button:where([data-variant='filled'][data-selected='false']) {
   --_container: var(--rio-color-surface-container);
@@ -180,8 +192,8 @@
 }
 
 .rio-button:where([data-variant='tonal'][data-selected='true']) {
-  --_container: var(--rio-color-secondary);
-  --_content: var(--rio-color-on-secondary);
+  --_container: var(--rio-button-tonal-selected-container-color, var(--rio-color-secondary));
+  --_content: var(--rio-button-tonal-selected-content-color, var(--rio-color-on-secondary));
 }
 
 .rio-button:where([data-variant='outlined'][data-selected='true']) {

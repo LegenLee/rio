@@ -149,6 +149,10 @@ packages/
       interaction.ts        the dial's pointer and keys, AM and PM's arrow keys, and the focus from a scroll field to its text input (DOM, tested through the Vue components)
       time.test.ts
       time-picker.test.ts
+    toolbar/
+      toolbar.ts            docked and floating toolbars: props, the root part
+      interaction.ts        the arrow keys, Home, and End between the items (DOM, tested through the Vue component)
+      toolbar.test.ts
     tooltip/
       tooltip.ts            plain and rich tooltips: props, parts, roles, placement
       interaction.ts        showing, hiding, and ARIA on the element (DOM, tested through the Vue component)
@@ -157,7 +161,7 @@ packages/
     utils/                  level 2 helpers (see Shared helpers)
       css.ts                parsePx: a computed px length as a number, for the DOM behaviors
       disabled.ts           isBlocked and disabledAttrs: disabled and soft-disabled, for every component with both
-      focus.ts              FOCUSABLE_SELECTOR: the elements that take the focus themselves, for text field and select
+      focus.ts              FOCUSABLE_SELECTOR, for text field and select; tabbablesIn: what Tab stops at, for dialog and toolbar
       intl.ts               dateTimeFormat and numberFormat: one Intl format for each language and options
       keyboard.ts           hasModifier: Alt, Ctrl, or Meta held, for the keys components leave to shortcuts
       link.ts               linkAttrs: an `<a>`'s attributes as a link, disabled or not, for buttons and chips
@@ -194,6 +198,7 @@ packages/
     split-button.css        layered on top of button.css
     switch.css
     text-field.css
+    toolbar.css             sets the --rio-button-*-color variables button.css reads
     tooltip.css
   vue/src/
     button/
@@ -254,6 +259,8 @@ packages/
       TextField.vue         class and style on the root, other attributes on the input
     rio/
       rio.ts                createRio: the theme and the language for the whole app
+    toolbar/
+      Toolbar.vue
     tooltip/
       Tooltip.vue           wraps the element it is for (see tooltip.md)
     test/

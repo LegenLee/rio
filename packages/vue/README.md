@@ -81,6 +81,7 @@ Each page has live examples, the API, and how the component follows the spec.
 - [Switch](https://legenlee.github.io/rio/components/switch): `RioSwitch`
 - [Text field](https://legenlee.github.io/rio/components/text-field): `RioTextField`
 - [Time picker](https://legenlee.github.io/rio/components/time-picker): `RioTimePickerDialog`, `RioTimeInput`, `RioTimeScroll`
+- [Toolbar](https://legenlee.github.io/rio/components/toolbar): `RioToolbar`
 - [Tooltip](https://legenlee.github.io/rio/components/tooltip): `RioTooltip`
 
 `RioLocaleProvider` sets the language for part of a page ([Languages](https://legenlee.github.io/rio/guide/languages)), and the `v-ripple` directive draws the press ripple on an element of your own.

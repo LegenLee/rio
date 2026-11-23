@@ -21,6 +21,7 @@
 
 import type { CancelableEvent } from '../parts';
 import { attachOverlay } from '../primitives/overlay/overlay';
+import { tabbablesIn } from '../utils/focus';
 import { hasModifier } from '../utils/keyboard';
 import type { DialogOverflow } from './dialog';
 
@@ -58,49 +59,6 @@ export interface DialogDomHandle {
   update(): void;
   detach(): void;
 }
-
-const TABBABLE = [
-  'a[href]',
-  'area[href]',
-  'button',
-  'input:not([type="hidden"])',
-  'select',
-  'textarea',
-  'iframe',
-  'audio[controls]',
-  'video[controls]',
-  'summary',
-  '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]',
-].join(',');
-
-const isRadio = (element: Element): element is HTMLInputElement =>
-  element.localName === 'input' && (element as HTMLInputElement).type === 'radio';
-
-const visible = (element: HTMLElement) =>
-  typeof element.checkVisibility === 'function'
-    ? element.checkVisibility({ visibilityProperty: true })
-    : element.getClientRects().length > 0;
-
-/** The elements Tab stops at in `root`, in order. Elements inside shadow roots aren't found. */
-const tabbablesIn = (root: HTMLElement) => {
-  const all = [...root.querySelectorAll<HTMLElement>(TABBABLE)].filter(
-    (element) =>
-      element.tabIndex >= 0 &&
-      !element.matches(':disabled') &&
-      !element.closest('[inert]') &&
-      visible(element),
-  );
-  // Tab stops at one radio button of a group: the checked one, or else the first.
-  return all.filter((element) => {
-    if (!isRadio(element) || !element.name) return true;
-    const group = all.filter(
-      (other) => isRadio(other) && other.name === element.name && other.form === element.form,
-    ) as HTMLInputElement[];
-    const checked = group.find((radio) => radio.checked);
-    return element === (checked ?? group[0]);
-  });
-};
 
 /** How far, in px, the content may scroll and still count as at its end */
 const SCROLL_SLOP = 1;

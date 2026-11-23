@@ -57,6 +57,7 @@ export default defineConfig({
           { text: 'Switch', link: '/components/switch' },
           { text: 'Text field', link: '/components/text-field' },
           { text: 'Time picker', link: '/components/time-picker' },
+          { text: 'Toolbar', link: '/components/toolbar' },
           { text: 'Tooltip', link: '/components/tooltip' },
         ],
       },
