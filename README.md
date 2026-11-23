@@ -78,6 +78,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 
 - [ ] Fix & Refactor something I messed up
 - [ ] Listup unimplemented M3E components I missing
+  - [ ] Search (Is it really necessary?)
 
 ## Usage
 
