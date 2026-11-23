@@ -1,7 +1,7 @@
 import { mdiCheck, mdiChevronLeft, mdiClockOutline, mdiHome, mdiMenuRight } from '@mdi/js';
 import { describe, expect, test } from 'vitest';
 import { render } from 'vitest-browser-vue';
-import { defineComponent, h, type VNode } from 'vue';
+import { defineComponent, h, nextTick, ref, type VNode } from 'vue';
 import { createRio } from '../rio/rio';
 import Icon from './Icon.vue';
 import type { RioIcons } from './icons';
@@ -50,7 +50,7 @@ describe('RioIcon', () => {
     expect(span.firstElementChild!.hasAttribute('data-ligature')).toBe(false);
   });
 
-  test('a component, as from an icon library', async () => {
+  test('a component, as from an icon library, keeping its own view box at any size', async () => {
     const Home = defineComponent(
       () => () => h('svg', { viewBox: '0 0 24 24' }, [h('path', { d: mdiHome })]),
     );
@@ -58,6 +58,12 @@ describe('RioIcon', () => {
     expect(svg.getAttribute('aria-hidden')).toBe('true');
     expect(svg.querySelector('path')!.getAttribute('d')).toBe(mdiHome);
     expect(svg.getBoundingClientRect().width).toBe(24);
+    const large = (await show(() =>
+      h('span', { style: { '--rio-icon-size': '48px' } }, [h(Icon, { icon: Home })]),
+    ))!;
+    expect(large.getAttribute('viewBox')).toBe('0 0 24 24');
+    // mdiHome is 20 units wide in its 24: twice that at 48px
+    expect(large.querySelector('path')!.getBoundingClientRect().width).toBeCloseTo(40, 0);
   });
 
   test('a name through the app’s resolve, and an alias the app gave', async () => {
@@ -103,6 +109,25 @@ describe('RioIcon', () => {
     };
     expect(await scales('rtl')).toEqual([true, true, false, false]);
     expect(await scales('ltr')).toEqual([false, false, false, false]);
+  });
+
+  test('an alias that no longer points along the line loses the mark', async () => {
+    const icons: RioIcons = {
+      aliases: {
+        previous: { type: 'svg', path: mdiChevronLeft },
+        clock: { type: 'svg', path: mdiClockOutline },
+      },
+    };
+    const alias = ref<'previous' | 'clock'>('previous');
+    const screen = await render(
+      defineComponent(() => () => h(Icon, { alias: alias.value })),
+      { global: { plugins: [createRio({ icons })] } },
+    );
+    const drawn = () => (screen.container as HTMLElement).querySelector('.rio-icon')!;
+    expect(drawn().hasAttribute('data-mirrored')).toBe(true);
+    alias.value = 'clock';
+    await nextTick();
+    expect(drawn().hasAttribute('data-mirrored')).toBe(false);
   });
 
   test('without an icon for it, nothing', async () => {

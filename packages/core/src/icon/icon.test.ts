@@ -95,12 +95,17 @@ describe('createIcon', () => {
   test('an icon the adapter draws itself: no skeleton, the root part for its root', () => {
     const icon = createIcon({ source: () => undefined, alias: () => 'next' });
     expect(icon.skeleton()).toBeUndefined();
-    expect(icon.parts.root()).toEqual({
+    // No `viewBox` key at all, which would take off the component's own
+    expect(icon.parts.root()).toStrictEqual({
       class: 'rio-icon',
-      viewBox: undefined,
       'aria-hidden': 'true',
       'data-type': 'component',
       'data-mirrored': '',
+    });
+    expect(createIcon({ source: () => undefined }).parts.root()).toStrictEqual({
+      class: 'rio-icon',
+      'aria-hidden': 'true',
+      'data-type': 'component',
     });
     expect([icon.parts.path(), icon.parts.glyph()]).toEqual([{}, {}]);
   });

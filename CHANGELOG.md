@@ -12,6 +12,7 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 
 ### Fixed
 
+- `RioIcon` drawing a Vue component took the component's own `viewBox` off, so at any size but 24px its paths drew at their own scale, not the icon's. `createIcon`'s root part in `@rio-m3e/core` now leaves out the attributes that don't apply, rather than setting them to `undefined`, which an adapter passing them on to a component's root would write over the component's own.
 - `@rio-m3e/styles` no longer ships its test file, `src/styles.test.ts`, which 0.6.3's package carried.
 
 ## [0.6.3] - 2026-11-23

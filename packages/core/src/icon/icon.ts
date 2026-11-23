@@ -160,12 +160,15 @@ export function createIcon(options: IconOptions): IconApi {
     parts: {
       root() {
         const s = source();
+        // Only the attributes that apply, with no key left `undefined`: an adapter passes them on
+        // to an icon component's root too, where `undefined` would take off the component's own
+        // attribute, as its `viewBox`.
         return {
           class: 'rio-icon',
-          viewBox: s?.type === 'svg' ? (s.viewBox ?? '0 0 24 24') : undefined,
+          ...(s?.type === 'svg' ? { viewBox: s.viewBox ?? '0 0 24 24' } : {}),
           'aria-hidden': 'true',
           'data-type': s?.type ?? 'component',
-          'data-mirrored': mirrored() ? '' : undefined,
+          ...(mirrored() ? { 'data-mirrored': '' } : {}),
         };
       },
       path() {
