@@ -4,6 +4,12 @@ Notable changes to Rio, newest first. The format follows [Keep a Changelog](http
 
 Each version is published to npm and as a GitHub release, with the same tarballs attached.
 
+## [Unreleased]
+
+### Fixed
+
+- `@rio-m3e/styles` no longer ships its test file, `src/styles.test.ts`, which 0.6.3's package carried.
+
 ## [0.6.3] - 2026-11-23
 
 ### Added
