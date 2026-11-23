@@ -73,6 +73,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 - [ ] Full-screen dialogs (date-pickers, time-pickers, etc)
 - [ ] Tabs
 - [ ] Snackbar
+- [ ] Badge
 
 ### v0.8 (Maybe?)
 
