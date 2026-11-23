@@ -37,6 +37,7 @@ export default defineConfig({
       {
         text: 'Components',
         items: [
+          { text: 'App bar', link: '/components/app-bar' },
           { text: 'Button', link: '/components/button' },
           { text: 'Button group', link: '/components/button-group' },
           { text: 'Checkbox', link: '/components/checkbox' },

@@ -61,6 +61,7 @@ const wifi = ref(true);
 
 Each page has live examples, the API, and how the component follows the spec.
 
+- [App bar](https://legenlee.github.io/rio/components/app-bar): `RioAppBar`
 - [Button](https://legenlee.github.io/rio/components/button): `RioButton`
 - [Button group](https://legenlee.github.io/rio/components/button-group): `RioButtonGroup`
 - [Checkbox](https://legenlee.github.io/rio/components/checkbox): `RioCheckbox`

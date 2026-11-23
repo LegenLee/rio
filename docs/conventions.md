@@ -66,6 +66,10 @@ packages/
         spring.ts           spring math and driver, used by other primitives
       spring-property/
         spring-property.ts  springs a value toward a CSS target per state
+    app-bar/
+      app-bar.ts            small and flexible app bars: props, parts, the headline's heading level
+      interaction.ts        whether content is scrolled under it (DOM, tested through the Vue component)
+      app-bar.test.ts
     button/                 component logic
       button.ts
       button.test.ts
@@ -181,6 +185,7 @@ packages/
       ripple.css            pairs with core's primitives/ripple
       state-layer.css
       touch-target.css      the 48px press target of buttons, chips, and the time picker's period buttons
+    app-bar.css             sets --rio-button-standard-content-color for the leading button
     button.css
     button-group.css
     checkbox.css
@@ -201,6 +206,8 @@ packages/
     toolbar.css             sets the --rio-button-*-color variables button.css reads
     tooltip.css
   vue/src/
+    app-bar/
+      AppBar.vue
     button/
       Button.vue
     button-group/

@@ -2,6 +2,10 @@
 // configurations, has to match its skeleton and carry the attributes core gives each part. A new
 // adapter writes the same test against the same skeletons.
 import {
+  appBarSkeleton,
+  createAppBar,
+  type AppBarContent,
+  type AppBarProps,
   createIcon,
   type IconSource,
   buttonGroupSkeleton,
@@ -139,7 +143,7 @@ import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { userEvent } from 'vitest/browser';
-import { createApp, defineComponent, h } from 'vue';
+import { createApp, defineComponent, h, type VNode } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
 import Icon from './icon/Icon.vue';
@@ -181,6 +185,7 @@ import TimeInput from './time-picker/TimeInput.vue';
 import TimePickerDialog from './time-picker/TimePickerDialog.vue';
 import TimeScroll from './time-picker/TimeScroll.vue';
 import Toolbar from './toolbar/Toolbar.vue';
+import AppBar from './app-bar/AppBar.vue';
 import Tooltip from './tooltip/Tooltip.vue';
 
 const noop = () => {};
@@ -642,6 +647,37 @@ describe('RioButtonGroup', () => {
     });
     const api = createButtonGroup({ props: () => ({ ...props, selected }), onChange: noop });
     expectSkeleton(rootOf(screen), buttonGroupSkeleton, api);
+  });
+});
+
+describe('RioAppBar', () => {
+  const all: AppBarContent = { leading: true, headline: true, subtitle: true, trailing: true };
+  test.each<[string, AppBarProps, AppBarContent]>([
+    ['every part', {}, all],
+    [
+      'a medium flexible bar with a headline only',
+      { variant: 'medium-flexible' },
+      { ...all, leading: false, subtitle: false, trailing: false },
+    ],
+    [
+      'an h3, centered, without a headline',
+      { headingLevel: 3, align: 'center' },
+      { ...all, headline: false },
+    ],
+  ])('%s', async (_, props, content) => {
+    const slots: Record<string, () => VNode> = {};
+    if (content.leading) slots.leading = () => h(Button, () => 'Back');
+    if (content.trailing) slots.trailing = () => h(Button, () => 'Save');
+    const screen = await render(AppBar, {
+      props: {
+        ...props,
+        headline: content.headline ? 'Inbox' : undefined,
+        subtitle: content.subtitle ? '12 unread' : undefined,
+      },
+      slots,
+    });
+    const api = createAppBar({ props: () => props, content: () => content });
+    expectSkeleton(rootOf(screen), appBarSkeleton(props.headingLevel), api);
   });
 });
 

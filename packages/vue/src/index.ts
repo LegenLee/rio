@@ -1,3 +1,4 @@
+export { default as RioAppBar } from './app-bar/AppBar.vue';
 export { default as RioButton } from './button/Button.vue';
 export { default as RioButtonGroup } from './button-group/ButtonGroup.vue';
 export { default as RioCheckbox } from './checkbox/Checkbox.vue';

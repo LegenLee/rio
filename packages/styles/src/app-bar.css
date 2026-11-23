@@ -1,0 +1,151 @@
+/*
+ * M3E app bar: a leading button, a headline with an optional subtitle, and trailing buttons. The
+ * root carries `data-variant` (small, medium-flexible, large-flexible), `data-align` (start or
+ * center), and `data-scrolled`, which `createAppBar` from `@rio-m3e/core` sets; whether content is
+ * scrolled under it is JavaScript (`attachAppBar`).
+ *
+ * Values come from the spec's app bar tokens (`md.comp.app-bar.*`) and its measurement drawings:
+ * the buttons in 48px places, 4px from the ends; a small bar's text 4px from the buttons; a flexible
+ * bar's text 16px from the start edge and 12px above the bottom. Variant and alignment rules sit
+ * inside `:where()`, so an app's single class overrides them.
+ */
+
+.rio-app-bar {
+  --_container: var(--rio-color-surface);
+  --_headline-font: var(--rio-typescale-title-large);
+  --_headline-tracking: var(--rio-typescale-title-large-tracking);
+  --_subtitle-font: var(--rio-typescale-label-medium);
+  --_subtitle-tracking: var(--rio-typescale-label-medium-tracking);
+
+  display: grid;
+  grid-template-areas: 'leading text trailing';
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: 64px;
+  padding-inline: 4px;
+  background-color: var(--_container);
+  color: var(--rio-color-on-surface);
+  transition: background-color var(--rio-motion-default-effects);
+}
+
+/* Content scrolled under it fills the container. */
+.rio-app-bar[data-scrolled] {
+  --_container: var(--rio-color-surface-container);
+}
+
+.rio-app-bar__leading {
+  /* The leading button is on surface; trailing ones keep on surface variant (`button.css`). */
+  --rio-button-standard-content-color: var(--rio-color-on-surface);
+
+  display: flex;
+  grid-area: leading;
+  align-items: center;
+}
+
+.rio-app-bar__trailing {
+  display: flex;
+  grid-area: trailing;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* An icon button takes a 48px place, its 40px container in the middle, with a tooltip too. */
+:is(.rio-app-bar__leading, .rio-app-bar__trailing) > .rio-icon-button,
+:is(.rio-app-bar__leading, .rio-app-bar__trailing) > .rio-tooltip-trigger > .rio-icon-button {
+  margin-inline: 4px;
+}
+
+.rio-app-bar__text {
+  grid-area: text;
+  min-inline-size: 0;
+  padding-inline: 4px;
+}
+
+/* Without a leading button, the text starts 16px from the edge, as in the flexible bars. */
+.rio-app-bar__text:first-child {
+  padding-inline-start: 12px;
+}
+
+.rio-app-bar__headline,
+.rio-app-bar__subtitle {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rio-app-bar__headline {
+  font: var(--_headline-font);
+  letter-spacing: var(--_headline-tracking);
+}
+
+.rio-app-bar__subtitle {
+  color: var(--rio-color-on-surface-variant);
+  font: var(--_subtitle-font);
+  letter-spacing: var(--_subtitle-tracking);
+}
+
+/* Centered: the text in the middle of the whole bar, whatever the buttons beside it */
+.rio-app-bar:where([data-align='center']) {
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+}
+
+.rio-app-bar:where([data-align='center']) .rio-app-bar__text {
+  padding-inline: 4px;
+  text-align: center;
+}
+
+.rio-app-bar:where([data-align='center']) .rio-app-bar__trailing {
+  justify-content: flex-end;
+}
+
+/*
+ * Flexible: the buttons in a 64px row, and the text in a row of its own under them, wrapping to
+ * more lines as it needs, the bar growing with it. With one line, the bar is the spec's height.
+ */
+.rio-app-bar:where([data-variant='medium-flexible'], [data-variant='large-flexible']) {
+  grid-template-areas:
+    'leading . trailing'
+    'text text text';
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: 64px auto;
+  padding-block-end: 12px;
+}
+
+.rio-app-bar:where([data-variant='medium-flexible'], [data-variant='large-flexible'])
+  .rio-app-bar__text {
+  align-self: end;
+  padding-inline: 12px;
+}
+
+.rio-app-bar:where([data-variant='medium-flexible'], [data-variant='large-flexible'])
+  :is(.rio-app-bar__headline, .rio-app-bar__subtitle) {
+  white-space: normal;
+}
+
+.rio-app-bar:where([data-variant='medium-flexible']) {
+  --_headline-font: var(--rio-typescale-headline-medium);
+  --_headline-tracking: var(--rio-typescale-headline-medium-tracking);
+  --_subtitle-font: var(--rio-typescale-label-large);
+  --_subtitle-tracking: var(--rio-typescale-label-large-tracking);
+
+  min-block-size: 112px;
+}
+
+.rio-app-bar:where([data-variant='medium-flexible']):has(.rio-app-bar__subtitle) {
+  min-block-size: 136px;
+}
+
+.rio-app-bar:where([data-variant='large-flexible']) {
+  --_headline-font: var(--rio-typescale-display-small);
+  --_headline-tracking: var(--rio-typescale-display-small-tracking);
+  --_subtitle-font: var(--rio-typescale-title-medium);
+  --_subtitle-tracking: var(--rio-typescale-title-medium-tracking);
+
+  min-block-size: 120px;
+}
+
+.rio-app-bar:where([data-variant='large-flexible']):has(.rio-app-bar__subtitle) {
+  min-block-size: 152px;
+}
