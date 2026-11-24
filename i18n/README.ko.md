@@ -93,6 +93,8 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 pnpm add @rio-m3e/vue
 ```
 
+번들러 없이 CDN 등에서 쓰려면 브라우저용 빌드를 불러옵니다. [Without a bundler](https://legenlee.github.io/rio/guide/without-a-bundler)를 참고하세요.
+
 `createRio`로 테마(페이지의 CSS 변수)와 Rio 컴포넌트의 언어를 정합니다.
 앱을 **마운트하기 전**에 Vue 플러그인으로 등록합니다.
 

@@ -4,15 +4,15 @@ How the Rio repository is organized and how code in it is written. Read this bef
 
 ## Packages
 
-| Package            | Contents                                                                                                                                                 | Depends on                                           |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@rio-m3e/tokens`  | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                | Nothing at runtime (MCU is bundled)                  |
-| `@rio-m3e/core`    | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives). | Nothing                                              |
-| `@rio-m3e/styles`  | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                   | Nothing (reads the tokens' CSS variables at runtime) |
-| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`. `createRio` wires the theme of `tokens` (`attachTheme`) and the language into the app.                | `core`, `styles`, `tokens`                           |
-| `@rio-m3e/testing` | Test helpers the adapters share, such as `expectSkeleton` for the contract tests. Private: never published, no build.                                    | `core`                                               |
-| `playground`       | Vite app for trying things out. Not published.                                                                                                           | Everything                                           |
-| `docs`             | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                     | Everything                                           |
+| Package            | Contents                                                                                                                                                                                                         | Depends on                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@rio-m3e/tokens`  | Design tokens: color (via MCU), elevation, motion, shape, typography, and states. Produces CSS variables.                                                                                                        | Nothing at runtime (MCU is bundled)                  |
+| `@rio-m3e/core`    | Framework-agnostic logic: component prop types, defaults, state, and accessibility attributes, plus DOM behaviors shared across components (primitives).                                                         | Nothing                                              |
+| `@rio-m3e/styles`  | Plain CSS with no build step: component styles, plus shared base styles in `base/`. Uses only `--rio-*` CSS variables.                                                                                           | Nothing (reads the tokens' CSS variables at runtime) |
+| `@rio-m3e/vue`     | Thin Vue adapters over `core`, styled by `styles`. `createRio` wires the theme of `tokens` (`attachTheme`) and the language into the app. Also a browser build, for pages without a bundler (see Browser build). | `core`, `styles`, `tokens`                           |
+| `@rio-m3e/testing` | Test helpers the adapters share, such as `expectSkeleton` for the contract tests. Private: never published, no build.                                                                                            | `core`                                               |
+| `playground`       | Vite app for trying things out. Not published.                                                                                                                                                                   | Everything                                           |
+| `docs`             | The docs site (VitePress), with live examples. Published to GitHub Pages, not to npm. See Docs site.                                                                                                             | Everything                                           |
 
 Adapters own state. `core` only reports what should change, and the adapter decides how to store it (`v-model` in Vue, a callback prop in React). See `core/src/switch/switch.ts`.
 
@@ -282,6 +282,7 @@ packages/
       MenuDivider.vue
       context.ts            what a menu or submenu provides to what is inside it
     index.ts
+    browser.ts              the browser build's entry: index.ts, and RioComponents (see Browser build)
   testing/src/              private, shared by the adapters' tests
     contract.ts             expectSkeleton and findPart, for the contract tests
     index.ts
@@ -301,7 +302,18 @@ packages/
 
 - Each package's only entry point is `src/index.ts`. The `exports` field in `package.json` blocks deep imports.
 - Exception: `@rio-m3e/styles` exposes CSS files one by one, including those in `base/` (`@rio-m3e/styles/switch.css`, `@rio-m3e/styles/base/ripple.css`).
+- Exception: `@rio-m3e/vue`'s browser build, `dist/browser/`, which pages load as files rather than through `exports` (see Browser build).
 - Inside the workspace, the `@rio-m3e/source` export condition points TypeScript and Vite at `src/` instead of `dist/`, so changes show up without a rebuild.
+
+## Browser build
+
+A page without a bundler can't follow the imports the packages are built for: a browser imports no CSS from JavaScript, and resolves no package name without an import map. So `@rio-m3e/vue` also builds `dist/browser/`, for pages that load it as files, as from a CDN (`docs/guide/without-a-bundler.md`). `packages/vue/tsdown.config.ts` builds it beside the bundler build:
+
+- **One file with the whole library**, from `src/browser.ts`: `rio-vue.js`, an ES module for an import map, and `rio-vue.global.js`, a script that sets the `RioVue` global. `core` and `tokens` are bundled in; Vue isn't, so the page's own Vue runs Rio. The packages bundled in are listed by name (`deps.alwaysBundle`), and anything else left outside but Vue fails the build (`deps.onlyImport`): a package `@rio-m3e/vue` starts to depend on, as `packages/shared` would be, goes on the list. The package's `unpkg` and `jsdelivr` fields point at the global script, as Vue's do.
+- **One stylesheet**, `rio-vue.css`: the CSS the components import, which the browser build's JavaScript leaves out. The bundler build writes it as it finishes, following its own modules' imports in the order a browser evaluates them, so the stylesheets keep the order a bundler gives an app that imports the whole library. That order matters where one stylesheet styles another component's parts, as `select.css` does the menu's.
+- **`RioComponents`** registers every component and `v-ripple` by name, for templates written in the page's HTML. It lives only in `src/browser.ts`: in `index.ts` it would pull every component into every bundled app. It registers every value `index.ts` exports under a name of `Rio` and a capital, so only components take such names; helpers and constants don't (`createRio`, `iconsKey`).
+- A new component needs nothing more: `index.ts` exports it, and the browser build follows.
+- `pnpm test:browser-build`, after `pnpm build`, loads both forms the way such a page does and fails on any error, on a missing stylesheet or theme, or on a component that doesn't respond (`scripts/check-browser-build.mjs`). CI runs it after the build.
 
 ## Core output
 
@@ -547,7 +559,7 @@ Pixels differ across operating systems, fonts, and browser versions, so the comm
 - Before you commit, run:
 
   ```sh
-  pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build && pnpm docs:build
+  pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test --run && pnpm build && pnpm test:browser-build && pnpm docs:build
   ```
 
 - CI (`.github/workflows/ci.yml`) runs the same checks on every push to `dev` and every pull request against `dev` or `main`, on Node 24 with a frozen lockfile. Its `visual` job runs the `vrt` project in the Playwright container (see Visual regression).

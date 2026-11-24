@@ -40,6 +40,9 @@ jobs:
       - run: pnpm test --run
       - run: pnpm build
 
+      # The browser build, loaded without a bundler, as from a CDN
+      - run: pnpm test:browser-build
+
       # Fails on dead links, and on a demo that breaks server rendering
       - run: pnpm docs:build
 
