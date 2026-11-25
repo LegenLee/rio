@@ -92,6 +92,17 @@
   }
 }
 
+/*
+ * Without `overlay`, as in WebKit, a closing dialog leaves the top layer at once, while `display`
+ * would keep it showing as it fades: no longer modal, it would fade out wherever its own position
+ * puts it on the page, which moves with the scroll. So it closes at once there.
+ */
+@supports not (overlay: auto) {
+  .rio-dialog:not([open]) {
+    transition: none;
+  }
+}
+
 /* Without spatial motion the container doesn't collapse at once as it starts fading out. */
 @media (prefers-reduced-motion: reduce) {
   .rio-dialog:not([open]) {
