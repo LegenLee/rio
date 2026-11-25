@@ -179,7 +179,7 @@ Change the name, then press Escape or click outside the dialog.
 
 - **The container expands downward from the top and the content fades in once the container is under it; closing fades it all out as the container collapses** (Rio's choice, after Material Web's dialog). The container starts at 35% of its height, as Material Web's does, and expands on `default-spatial`; the content fades in on `fast-effects` after `fast-effects`; the scrim fades in on `default-effects`. Closing fades out on `fast-effects` while the container collapses on `fast-spatial`.
 - Under reduced motion the container doesn't expand or collapse; the fades stay.
-- Where the browser can't animate leaving the top layer (the `overlay` property, missing in WebKit and Firefox 160), closing is instant.
+- Where the browser can't keep a closing dialog in the top layer (the `overlay` property, missing in WebKit and Firefox 160), closing is instant. Fading out of the top layer, the dialog would no longer be modal, and would move off its place to wherever the page's scroll puts it.
 - Checked in Chromium, WebKit, and Firefox 160 with real input: the motion, Escape, the scrim, and Tab. Focus only in Chromium and WebKit: headless Firefox fires no focus events.
 
 ### Values and their sources

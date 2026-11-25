@@ -117,10 +117,16 @@ describe('RioDialog', () => {
     expect(dialog().children.length).toBeGreaterThan(0);
     state.open = false;
     await nextTick();
-    // Still there while it fades out, for `fast-effects` (150ms)
-    expect(dialog().getAnimations({ subtree: true }).length).toBeGreaterThan(0);
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(dialog().children.length).toBeGreaterThan(0);
+    if (CSS.supports('overlay: auto')) {
+      // Still there while it fades out, for `fast-effects` (150ms)
+      expect(dialog().getAnimations({ subtree: true }).length).toBeGreaterThan(0);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(dialog().children.length).toBeGreaterThan(0);
+    } else {
+      // Without `overlay`, as in WebKit, it closes at once: no longer shown, rather than fading
+      // out of the top layer
+      expect(dialog().checkVisibility()).toBe(false);
+    }
     await expect.poll(() => dialog().children.length).toBe(0);
   });
 

@@ -39,6 +39,13 @@
   }
 }
 
+/* Without `overlay`, closing is instant, as for a menu (`menu.css`). */
+@supports not (overlay: auto) {
+  .rio-tooltip:not(:popover-open) {
+    transition: none;
+  }
+}
+
 /* Plain: a brief label on the inverse surface, one 24px line high */
 
 .rio-tooltip[data-variant='plain'] {

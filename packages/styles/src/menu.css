@@ -45,7 +45,7 @@
 
 /*
  * Opening: the menu expands from the side facing its anchor and fades in; closing reverses it.
- * Without `transition-behavior: allow-discrete` support for `overlay`, closing is instant.
+ * Without `overlay`, closing is instant (below).
  */
 .rio-menu {
   --_origin-block: top;
@@ -83,6 +83,17 @@
   .rio-menu:popover-open {
     opacity: 0;
     scale: 1 0.8;
+  }
+}
+
+/*
+ * Without `overlay`, as in WebKit, a closing menu leaves the top layer at once, while `display`
+ * would keep it showing as it fades, below the top layer, where the page can cover it. So it
+ * closes at once there.
+ */
+@supports not (overlay: auto) {
+  .rio-menu:not(:popover-open) {
+    transition: none;
   }
 }
 
