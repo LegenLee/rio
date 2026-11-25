@@ -8,17 +8,28 @@ import { resolveProps } from '../utils/object';
 export const DIALOG_ROLES = ['alertdialog', 'dialog'] as const;
 export type DialogRole = (typeof DIALOG_ROLES)[number];
 
+/**
+ * Basic, a window over the page; full-screen, covering it with a header that holds a close button
+ * and the confirming button; or adaptive: full-screen in a compact window, narrower than 600px,
+ * and basic in a wider one, with a Cancel button for the close button.
+ */
+export const DIALOG_VARIANTS = ['basic', 'full-screen', 'adaptive'] as const;
+export type DialogVariant = (typeof DIALOG_VARIANTS)[number];
+
 export interface DialogProps {
   /** Whether the dialog is shown. */
   open?: boolean;
-  /** Defaults to `'alertdialog'`. */
+  /** Defaults to `'basic'`. */
+  variant?: DialogVariant;
+  /** Defaults to `'alertdialog'` for a basic dialog, and `'dialog'` for the others. */
   role?: DialogRole;
 }
 
+/** `role` is left out: its default depends on the variant (`DialogProps.role`). */
 export const dialogDefaults = {
   open: false,
-  role: 'alertdialog',
-} satisfies Required<DialogProps>;
+  variant: 'basic',
+} satisfies Omit<Required<DialogProps>, 'role'>;
 
 /** What the adapter has to put in the dialog, which only the adapter can see. */
 export interface DialogContent {
@@ -46,6 +57,8 @@ export interface DialogOptions {
   overflow?: () => DialogOverflow;
   /** Ids for the parts the dialog refers to, unique in the document. The adapter makes them. */
   ids: { headline: string; content: string };
+  /** Whether the window is compact, as `attachDialog` reports it, for an adaptive dialog */
+  compact?: () => boolean;
 }
 
 export interface DialogParts {
@@ -58,6 +71,10 @@ export interface DialogParts {
   content: () => PartAttrs;
   /** Holds the buttons. */
   actions: () => PartAttrs;
+  /** A full-screen dialog's header: the close button, the headline, and the confirming button */
+  header: () => PartAttrs;
+  /** Holds the close button the adapter renders, which asks to close (`attachDialog`'s `dismiss`) */
+  dismiss: () => PartAttrs;
 }
 
 type DialogPart = keyof DialogParts;
@@ -78,8 +95,38 @@ export const dialogSkeleton: PartNode<DialogPart, DialogWhen> = {
   ],
 };
 
+/**
+ * The markup of an open full-screen dialog: the header, with the close button, the headline, and
+ * the confirming button, over the content.
+ */
+export const fullScreenDialogSkeleton: PartNode<DialogPart, DialogWhen> = {
+  part: 'root',
+  tag: 'dialog',
+  children: [
+    {
+      part: 'header',
+      tag: 'div',
+      children: [
+        { part: 'dismiss', tag: 'div', content: true },
+        { part: 'headline', tag: 'h2', when: 'showsHeadline', content: true },
+        { part: 'actions', tag: 'div', when: 'showsActions', content: true },
+      ],
+    },
+    { part: 'content', tag: 'div', content: true },
+  ],
+};
+
 export interface DialogApi extends Record<DialogWhen, () => boolean> {
   parts: DialogParts;
+  /** Whether it shows full-screen: a full-screen dialog, or an adaptive one in a compact window */
+  fullScreen: () => boolean;
+  /**
+   * Whether the adapter renders a button that asks to close: a full-screen dialog's close button,
+   * or an adaptive dialog's Cancel button, first among the actions, in a wider window.
+   */
+  showsDismiss: () => boolean;
+  /** `fullScreenDialogSkeleton` or `dialogSkeleton`, as it shows */
+  skeleton: () => PartNode<DialogPart, DialogWhen>;
 }
 
 const NO_CONTENT: DialogContent = { icon: false, headline: false, actions: false };
@@ -87,15 +134,23 @@ const NO_CONTENT: DialogContent = { icon: false, headline: false, actions: false
 export function createDialog(options: DialogOptions): DialogApi {
   const props = () => resolveProps(dialogDefaults, options.props());
   const content = () => options.content?.() ?? NO_CONTENT;
-  const showsIcon = () => content().icon;
+  const fullScreen = () => {
+    const { variant } = props();
+    return variant === 'full-screen' || (variant === 'adaptive' && !!options.compact?.());
+  };
+  const showsDismiss = () => props().variant !== 'basic';
+  const role = (): DialogRole =>
+    props().role ?? (props().variant === 'basic' ? 'alertdialog' : 'dialog');
+  // A full-screen dialog has no icon; its header holds the headline and the confirming button.
+  const showsIcon = () => content().icon && !fullScreen();
   const showsHeadline = () => content().headline;
-  const showsActions = () => content().actions;
+  const showsActions = () => content().actions || (showsDismiss() && !fullScreen());
   const { ids } = options;
 
   return {
     parts: {
       root() {
-        const alert = props().role === 'alertdialog';
+        const alert = role() === 'alertdialog';
         return {
           class: 'rio-dialog',
           // A `<dialog>` is a dialog already.
@@ -105,8 +160,11 @@ export function createDialog(options: DialogOptions): DialogApi {
           'aria-describedby': alert ? ids.content : undefined,
           // With an icon, the icon and the headline are centered.
           'data-icon': showsIcon() ? '' : undefined,
+          'data-full-screen': fullScreen() ? '' : undefined,
         };
       },
+      header: () => ({ class: 'rio-dialog__header' }),
+      dismiss: () => ({ class: 'rio-dialog__dismiss' }),
       icon: () => ({ class: 'rio-dialog__icon', 'aria-hidden': 'true' }),
       headline: () => ({ class: 'rio-dialog__headline', id: ids.headline }),
       content: () => {
@@ -126,5 +184,8 @@ export function createDialog(options: DialogOptions): DialogApi {
     showsIcon,
     showsHeadline,
     showsActions,
+    fullScreen,
+    showsDismiss,
+    skeleton: () => (fullScreen() ? fullScreenDialogSkeleton : dialogSkeleton),
   };
 }

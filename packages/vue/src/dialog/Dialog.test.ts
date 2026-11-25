@@ -1,8 +1,14 @@
-import { mdiDeleteOutline } from '@mdi/js';
-import { attachDialog, type DialogCancelEvent, type DialogRole } from '@rio-m3e/core';
-import { createThemeVariables } from '@rio-m3e/tokens';
-import { describe, expect, test, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { mdiClose, mdiDeleteOutline } from '@mdi/js';
+import {
+  attachDialog,
+  type DialogCancelEvent,
+  type DialogMessages,
+  type DialogRole,
+  type DialogVariant,
+} from '@rio-m3e/core';
+import { createColorScheme, createThemeVariables } from '@rio-m3e/tokens';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { cdp, page, server, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, reactive, type VNode } from 'vue';
 import Button from '../button/Button.vue';
@@ -12,15 +18,23 @@ import { icon } from '../test/vrt';
 import Dialog from './Dialog.vue';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
+const scheme = createColorScheme({ sourceColor: '#6750a4' });
+const rgb = (hex: string) =>
+  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 
 interface Setup {
+  variant?: DialogVariant;
   role?: DialogRole;
+  locale?: string;
+  messages?: Partial<DialogMessages>;
   headline?: string;
   withIcon?: boolean;
   /** Cancels every request to close. */
   keepOpen?: boolean;
   content?: () => VNode | VNode[] | string;
-  actions?: () => VNode[];
+  /** `null` for no actions slot */
+  actions?: (() => VNode[]) | null;
+  closeIcon?: () => VNode;
 }
 
 /**
@@ -28,12 +42,16 @@ interface Setup {
  * close it. `state` holds what the app keeps, and what the dialog told it.
  */
 const setup = async ({
+  variant,
   role,
+  locale,
+  messages,
   headline = 'Discard draft?',
   withIcon = false,
   keepOpen = false,
   content = () => 'Your draft will be lost.',
   actions,
+  closeIcon,
 }: Setup = {}) => {
   const state = reactive({ open: false, cancels: [] as string[], clicks: [] as string[] });
   const close = (name: string) => () => {
@@ -51,8 +69,11 @@ const setup = async ({
             h(
               Dialog,
               {
+                variant,
                 headline,
                 role,
+                locale,
+                messages,
                 open: state.open,
                 'onUpdate:open': (next: boolean) => (state.open = next),
                 onCancel: (event: DialogCancelEvent) => {
@@ -63,12 +84,21 @@ const setup = async ({
               {
                 default: content,
                 ...(withIcon ? { icon: () => icon(mdiDeleteOutline) } : {}),
-                actions:
-                  actions ??
-                  (() => [
-                    h(Button, { variant: 'text', onClick: close('cancel') }, () => 'Cancel'),
-                    h(Button, { variant: 'text', onClick: close('discard') }, () => 'Discard'),
-                  ]),
+                ...(closeIcon ? { 'close-icon': closeIcon } : {}),
+                ...(actions === null
+                  ? {}
+                  : {
+                      actions:
+                        actions ??
+                        (() => [
+                          h(Button, { variant: 'text', onClick: close('cancel') }, () => 'Cancel'),
+                          h(
+                            Button,
+                            { variant: 'text', onClick: close('discard') },
+                            () => 'Discard',
+                          ),
+                        ]),
+                    }),
               },
             ),
           ],
@@ -641,6 +671,278 @@ describe('RioDialog', () => {
     await userEvent.keyboard('{Escape}');
     expect(state.requests).toBe(2);
     await expect.poll(() => root.open).toBe(false);
+  });
+});
+
+describe('RioDialog, full-screen', () => {
+  const save = () => [h(Button, { variant: 'text' }, () => 'Save')];
+  const box = (el: Element) => el.getBoundingClientRect();
+
+  test('covers the window under a header: the close button, the headline, and the confirming button', async () => {
+    const { dialog, button, open } = await setup({
+      variant: 'full-screen',
+      headline: 'New event',
+      actions: save,
+      closeIcon: () => icon(mdiClose),
+    });
+    await open();
+    const root = dialog();
+    const part = (name: string) => root.querySelector<HTMLElement>(`.rio-dialog__${name}`)!;
+    expect(root.hasAttribute('data-full-screen')).toBe(true);
+    expect([box(root).width, box(root).height]).toEqual([window.innerWidth, window.innerHeight]);
+    expect(getComputedStyle(root, '::before').borderRadius).toBe('0px');
+    expect(getComputedStyle(root, '::before').backgroundColor).toBe(rgb(scheme.surface));
+    expect(getComputedStyle(root, '::before').boxShadow).toBe('none');
+
+    const header = part('header');
+    expect([box(header).top, box(header).height]).toEqual([0, 56]);
+    expect(getComputedStyle(header).backgroundColor).toBe(rgb(scheme.surface));
+    const close = page.getByRole('button', { name: 'Close' }).element();
+    expect(part('dismiss').contains(close)).toBe(true);
+    // The spec's drawing: the close icon 16px from the start, and the headline 16px after it
+    const closeIcon = close.querySelector('svg')!;
+    expect([box(closeIcon).left, box(closeIcon).width]).toEqual([16, 24]);
+    expect(box(close).left + box(close).width / 2).toBe(28);
+    expect(box(part('headline')).left).toBe(56);
+    expect(getComputedStyle(close).color).toBe(rgb(scheme.onSurface));
+    expect(getComputedStyle(part('headline')).fontSize).toBe('22px');
+    expect(getComputedStyle(part('headline')).color).toBe(rgb(scheme.onSurface));
+    expect(box(header).right - box(button('Save')).right).toBe(12);
+    expect(box(button('Save')).top + box(button('Save')).height / 2).toBe(28);
+    expect(getComputedStyle(button('Save')).color).toBe(rgb(scheme.primary));
+
+    const content = part('content');
+    expect(box(content).top).toBe(56);
+    expect(getComputedStyle(content).padding).toBe('24px');
+    expect(box(content).bottom).toBe(window.innerHeight);
+  });
+
+  test('it slides up as it fades in, and back down as it fades out', async () => {
+    const { dialog, button, state } = await setup({ variant: 'full-screen', actions: save });
+    const moving = () =>
+      (dialog().getAnimations() as CSSTransition[]).map((each) => each.transitionProperty).sort();
+    await userEvent.click(button('Open'));
+    await expect.poll(() => dialog().matches(':modal')).toBe(true);
+    expect(moving()).toEqual(expect.arrayContaining(['opacity', 'translate']));
+    expect(moving()).not.toContain('--_dialog-reveal');
+    expect(getComputedStyle(dialog()).translate).not.toMatch(/^(none|0px)$/);
+    await expect.poll(() => dialog().getAnimations().length).toBe(0);
+    expect(getComputedStyle(dialog()).translate).toMatch(/^(none|0px)$/);
+    state.open = false;
+    await nextTick();
+    if (CSS.supports('overlay: auto')) {
+      await expect.poll(() => getComputedStyle(dialog()).translate).not.toMatch(/^(none|0px)$/);
+      expect(moving()).toEqual(expect.arrayContaining(['opacity', 'translate']));
+    } else {
+      // Without `overlay`, as in WebKit, it closes at once.
+      expect(dialog().checkVisibility()).toBe(false);
+    }
+  });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'under reduced motion it fades in and out without moving',
+    async () => {
+      await cdp().send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+      });
+      onTestFinished(async () => {
+        await cdp().send('Emulation.setEmulatedMedia', { features: [] });
+      });
+      const { dialog, button, state } = await setup({ variant: 'full-screen', actions: save });
+      await userEvent.click(button('Open'));
+      await expect.poll(() => dialog().matches(':modal')).toBe(true);
+      expect(getComputedStyle(dialog()).translate).toMatch(/^(none|0px)$/);
+      expect(Number(getComputedStyle(dialog()).opacity)).toBeLessThan(1);
+      await expect.poll(() => dialog().getAnimations().length).toBe(0);
+      state.open = false;
+      await nextTick();
+      expect(getComputedStyle(dialog()).translate).toMatch(/^(none|0px)$/);
+    },
+  );
+
+  test('a dialog, named by its headline; the focus goes to the close button first', async () => {
+    const { dialog, open } = await setup({ variant: 'full-screen', actions: save });
+    await open();
+    const root = dialog();
+    expect(root.getAttribute('role')).toBeNull();
+    expect(root.hasAttribute('aria-describedby')).toBe(false);
+    expect(document.getElementById(root.getAttribute('aria-labelledby')!)?.textContent).toBe(
+      'Discard draft?',
+    );
+    expect(document.activeElement).toBe(page.getByRole('button', { name: 'Close' }).element());
+  });
+
+  test('without a headline or actions, only the close button in the header; no icon', async () => {
+    const { dialog, open } = await setup({
+      variant: 'full-screen',
+      headline: '',
+      withIcon: true,
+      actions: null,
+    });
+    await open();
+    const root = dialog();
+    const header = root.querySelector('.rio-dialog__header')!;
+    expect([...header.children].map((el) => el.className)).toEqual(['rio-dialog__dismiss']);
+    expect(root.querySelector('.rio-dialog__icon')).toBeNull();
+    expect(root.hasAttribute('data-icon')).toBe(false);
+  });
+
+  test('the close button asks to close, with the dismiss reason, and closes it', async () => {
+    const { dialog, open, state } = await setup({ variant: 'full-screen', actions: save });
+    await open();
+    await userEvent.click(page.getByRole('button', { name: 'Close' }));
+    expect(state.cancels).toEqual(['dismiss']);
+    expect(state.open).toBe(false);
+    await expect.poll(() => dialog().open).toBe(false);
+  });
+
+  test('a canceled request from the close button keeps it open, as to confirm discarding', async () => {
+    const { dialog, open, state } = await setup({
+      variant: 'full-screen',
+      actions: save,
+      keepOpen: true,
+    });
+    await open();
+    await userEvent.click(page.getByRole('button', { name: 'Close' }));
+    expect(state.cancels).toEqual(['dismiss']);
+    expect([state.open, dialog().open]).toEqual([true, true]);
+  });
+
+  test("the close button's name follows the language, and messages replace it", async () => {
+    const ko = await setup({ variant: 'full-screen', actions: save, locale: 'ko' });
+    await ko.open();
+    await expect.element(page.getByRole('button', { name: '닫기' })).toBeInTheDocument();
+    ko.state.open = false;
+    await expect.poll(() => ko.dialog().open).toBe(false);
+    ko.dialog().closest('div')!.remove();
+    const back = await setup({
+      variant: 'full-screen',
+      actions: save,
+      messages: { close: 'Back to the calendar' },
+    });
+    await back.open();
+    await expect
+      .element(page.getByRole('button', { name: 'Back to the calendar' }))
+      .toBeInTheDocument();
+  });
+
+  test('the close-icon slot replaces the registered icon', async () => {
+    const { dialog, open } = await setup({
+      variant: 'full-screen',
+      actions: save,
+      closeIcon: () => icon(mdiDeleteOutline),
+    });
+    await open();
+    const path = dialog().querySelector('.rio-dialog__dismiss path')!;
+    expect(path.getAttribute('d')).toBe(mdiDeleteOutline);
+  });
+
+  test('the header fills with surface container while the content is scrolled under it', async () => {
+    const lines = Array.from({ length: 60 }, (_, index) => h('p', null, `Line ${index + 1}`));
+    const { dialog, open } = await setup({
+      variant: 'full-screen',
+      actions: save,
+      content: () => lines,
+    });
+    await open();
+    const root = dialog();
+    const header = root.querySelector<HTMLElement>('.rio-dialog__header')!;
+    const content = root.querySelector<HTMLElement>('.rio-dialog__content')!;
+    expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+    // No dividers: the header's fill marks the edge.
+    expect(getComputedStyle(content).boxShadow).toBe('none');
+    content.scrollTop = 40;
+    await expect.poll(() => content.hasAttribute('data-overflow-top')).toBe(true);
+    await vi.waitFor(() =>
+      expect(getComputedStyle(header).backgroundColor).toBe(rgb(scheme.surfaceContainer)),
+    );
+    expect(box(header).top).toBe(0);
+    content.scrollTop = 0;
+    await vi.waitFor(() =>
+      expect(getComputedStyle(header).backgroundColor).toBe(rgb(scheme.surface)),
+    );
+  });
+
+  test('adaptive: full-screen in a compact window, basic with a Cancel button in a wider one', async () => {
+    await page.viewport(412, 720);
+    onTestFinished(() => page.viewport(1280, 720));
+    const { dialog, button, open, state } = await setup({
+      variant: 'adaptive',
+      headline: 'New event',
+      actions: save,
+    });
+    await open();
+    const root = dialog();
+    expect(root.hasAttribute('data-full-screen')).toBe(true);
+    expect(box(root).width).toBe(412);
+    expect(root.getAttribute('role')).toBeNull();
+    const close = page.getByRole('button', { name: 'Close' });
+    await expect.element(close).toBeInTheDocument();
+
+    // Wider, it's a basic dialog: Cancel, then the confirming button, at the bottom.
+    await page.viewport(800, 720);
+    await expect.poll(() => root.hasAttribute('data-full-screen')).toBe(false);
+    await expect.element(close).not.toBeInTheDocument();
+    const actions = root.querySelector('.rio-dialog__actions')!;
+    expect([...actions.querySelectorAll('button')].map((el) => el.textContent?.trim())).toEqual([
+      'Cancel',
+      'Save',
+    ]);
+    expect(box(root).width).toBeLessThan(800);
+    expect(root.matches(':modal')).toBe(true);
+    await userEvent.click(button('Cancel'));
+    expect(state.cancels).toEqual(['dismiss']);
+    await expect.poll(() => root.open).toBe(false);
+
+    // And back
+    await page.viewport(412, 720);
+    await open();
+    expect(root.hasAttribute('data-full-screen')).toBe(true);
+  });
+
+  test('adaptive: the content stays, with the focus in it, as it switches', async () => {
+    const { dialog, open } = await setup({
+      variant: 'adaptive',
+      actions: save,
+      content: () => h('input', { 'aria-label': 'Title' }),
+    });
+    await open();
+    onTestFinished(() => page.viewport(1280, 720));
+    const input = dialog().querySelector('input')!;
+    input.focus();
+    input.value = 'Party';
+    await page.viewport(412, 720);
+    await expect.poll(() => dialog().hasAttribute('data-full-screen')).toBe(true);
+    expect(dialog().querySelector('input')).toBe(input);
+    expect(document.activeElement).toBe(input);
+    await page.viewport(1280, 720);
+    await expect.poll(() => dialog().hasAttribute('data-full-screen')).toBe(false);
+    expect(dialog().querySelector('input')).toBe(input);
+    expect([document.activeElement, input.value]).toEqual([input, 'Party']);
+  });
+
+  test('adaptive: the actions render anew as they move between the header and the bottom', async () => {
+    const { dialog, button, open } = await setup({ variant: 'adaptive', actions: save });
+    await open();
+    onTestFinished(() => page.viewport(1280, 720));
+    const before = button('Save');
+    await page.viewport(412, 720);
+    await expect.poll(() => dialog().hasAttribute('data-full-screen')).toBe(true);
+    expect(dialog().querySelector('.rio-dialog__header')!.contains(button('Save'))).toBe(true);
+    expect(button('Save')).not.toBe(before);
+  });
+
+  test("adaptive: Cancel's name follows the language", async () => {
+    const { open } = await setup({ variant: 'adaptive', actions: save, locale: 'ko' });
+    await open();
+    await expect.element(page.getByRole('button', { name: '취소' })).toBeInTheDocument();
+  });
+
+  test('a basic dialog draws no button of its own', async () => {
+    const { dialog, open } = await setup({ actions: save });
+    await open();
+    const buttons = [...dialog().querySelectorAll('button')].map((el) => el.textContent?.trim());
+    expect(buttons).toEqual(['Save']);
   });
 });
 

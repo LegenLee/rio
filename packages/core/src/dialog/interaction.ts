@@ -18,6 +18,9 @@
 //   so the page doesn't shift sideways.
 // - `onClosed` tells the adapter when the closing motion has ended, so it can stop rendering the
 //   content: a closed dialog leaves no headline or ids in the page.
+// - `onCompactChange` reports whether the window is compact, narrower than 600px, as it changes,
+//   for an adaptive dialog to show full-screen there.
+// - `dismiss` asks to close, as Escape does, for the close or Cancel button the adapter renders.
 
 import type { CancelableEvent } from '../parts';
 import { attachOverlay } from '../primitives/overlay/overlay';
@@ -25,8 +28,11 @@ import { tabbablesIn } from '../utils/focus';
 import { hasModifier } from '../utils/keyboard';
 import type { DialogOverflow } from './dialog';
 
-/** What asks the dialog to close: Escape (or the back gesture), or a click on the scrim */
-export type DialogCancelReason = 'escape' | 'scrim';
+/**
+ * What asks the dialog to close: Escape (or the back gesture), a click on the scrim, or the close
+ * or Cancel button of a full-screen or adaptive dialog (`dismiss`)
+ */
+export type DialogCancelReason = 'escape' | 'scrim' | 'dismiss';
 
 export interface DialogCancelEvent extends CancelableEvent {
   readonly reason: DialogCancelReason;
@@ -50,6 +56,8 @@ export interface DialogDomOptions {
   initialFocus?: () => HTMLElement | null | undefined;
   /** How the content overflows, as it changes, for `createDialog`'s `overflow` */
   onOverflowChange?: (overflow: DialogOverflow) => void;
+  /** Whether the window is compact, narrower than 600px, as it changes, for `createDialog` */
+  onCompactChange?: (compact: boolean) => void;
 }
 
 export interface DialogDomHandle {
@@ -57,8 +65,13 @@ export interface DialogDomHandle {
   sync(open: boolean): void;
   /** Call it after each render: the content may scroll now, or take the focus it was due. */
   update(): void;
+  /** Asks to close, as Escape does: `onCancel` gets an event with the `'dismiss'` reason. */
+  dismiss(): void;
   detach(): void;
 }
+
+/** A compact window: narrower than 600px */
+const COMPACT = '(width < 600px)';
 
 /** How far, in px, the content may scroll and still count as at its end */
 const SCROLL_SLOP = 1;
@@ -121,6 +134,12 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
     mode: 'modal',
     onClose: (reason) => (reason === 'escape' ? cancel('escape') : options.onOpenChange(false)),
   });
+
+  // Whether the window is compact or wider
+  const compact = root.ownerDocument.defaultView?.matchMedia(COMPACT);
+  const onCompactChange = () => options.onCompactChange?.(!!compact?.matches);
+  compact?.addEventListener('change', onCompactChange);
+  onCompactChange();
 
   // Tab
 
@@ -286,7 +305,11 @@ export function attachDialog(root: HTMLDialogElement, options: DialogDomOptions)
       updateOverflow();
       if (focusDue) focusFirst();
     },
+    dismiss() {
+      cancel('dismiss');
+    },
     detach() {
+      compact?.removeEventListener('change', onCompactChange);
       root.removeEventListener('keydown', onKeydown);
       root.removeEventListener('pointerdown', onPointerDown, { capture: true });
       root.removeEventListener('click', onClick);

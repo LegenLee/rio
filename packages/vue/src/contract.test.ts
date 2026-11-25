@@ -41,6 +41,7 @@ import {
   initialDatePickerState,
   messagesFor,
   dialogSkeleton,
+  fullScreenDialogSkeleton,
   createButton,
   createButtonGroup,
   createCheckbox,
@@ -142,7 +143,7 @@ import {
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { createApp, defineComponent, h, type VNode } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
@@ -919,7 +920,7 @@ describe('RioTooltip', () => {
 });
 
 describe('RioDialog', () => {
-  test.each<[string, DialogProps & { headline?: string }, DialogContent]>([
+  test.each<[string, DialogProps & { headline?: string }, DialogContent, compact?: boolean]>([
     ['with its content only', {}, { icon: false, headline: false, actions: false }],
     // Every prop away from its default, with every slot
     [
@@ -932,7 +933,32 @@ describe('RioDialog', () => {
       { headline: 'Discard draft?' },
       { icon: false, headline: true, actions: true },
     ],
-  ])('%s', async (_, props, content) => {
+    [
+      'a full-screen dialog with a headline and the confirming button',
+      { variant: 'full-screen', headline: 'New event' },
+      { icon: false, headline: true, actions: true },
+    ],
+    [
+      'a full-screen dialog with its content only',
+      { variant: 'full-screen' },
+      { icon: false, headline: false, actions: false },
+    ],
+    [
+      'an adaptive dialog in a wider window, with its Cancel button only',
+      { variant: 'adaptive', headline: 'New event' },
+      { icon: false, headline: true, actions: false },
+    ],
+    [
+      'an adaptive dialog in a compact window',
+      { variant: 'adaptive', headline: 'New event' },
+      { icon: true, headline: true, actions: true },
+      true,
+    ],
+  ])('%s', async (_, props, content, compact = false) => {
+    if (compact) {
+      await page.viewport(412, 720);
+      onTestFinished(() => page.viewport(1280, 720));
+    }
     const screen = await render(Dialog, {
       props,
       slots: {
@@ -953,10 +979,12 @@ describe('RioDialog', () => {
       props: () => props,
       content: () => content,
       ids: { headline: `${id}-headline`, content: `${id}-content` },
+      compact: () => compact,
     });
-    expectSkeleton(root, dialogSkeleton, api);
+    expect(api.skeleton()).toBe(api.fullScreen() ? fullScreenDialogSkeleton : dialogSkeleton);
+    expectSkeleton(root, api.skeleton(), api);
     if (content.headline) {
-      expect(findPart(root, dialogSkeleton, 'headline', api)?.textContent).toBe(props.headline);
+      expect(findPart(root, api.skeleton(), 'headline', api)?.textContent).toBe(props.headline);
     }
   });
 });

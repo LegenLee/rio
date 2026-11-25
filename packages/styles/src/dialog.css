@@ -1,6 +1,7 @@
 /*
- * M3 basic dialogs. `attachDialog` from `@rio-m3e/core` shows the `<dialog>` with `showModal()`,
- * in the top layer above its scrim, centered in the window.
+ * M3 basic and full-screen dialogs. `attachDialog` from `@rio-m3e/core` shows the `<dialog>` with
+ * `showModal()`, in the top layer above its scrim, centered in the window; a full-screen dialog,
+ * with `data-full-screen` from `createDialog`, covers it (below).
  *
  * Values come from Material Web's component tokens (`_md-comp-dialog.scss`, Material 3 v34.0.21)
  * and the spec page's measurements: 280px to 560px wide, 24px padding, 16px from the icon to the
@@ -203,6 +204,134 @@
   gap: 8px;
   margin-block-start: 24px;
   padding-inline: 24px;
+}
+
+/*
+ * Full-screen: it covers the window, its container on surface, under a 56px header that holds the
+ * close button, the headline, and the confirming button. The header fills with surface container
+ * while the content is scrolled under it. Values come from the spec's full-screen dialog tokens
+ * (`md.comp.full-screen-dialog.*`) and its measurement drawing: the close icon 16px from the start,
+ * the headline 16px after it, and 24px around the content. It slides up a little as it fades in,
+ * and back down as it fades out.
+ */
+.rio-dialog[data-full-screen] {
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--rio-shape-corner-none);
+  translate: 0 0;
+  /* Closing */
+  transition:
+    opacity var(--rio-motion-default-effects),
+    translate var(--rio-motion-default-spatial),
+    overlay var(--rio-motion-default-effects) allow-discrete,
+    display var(--rio-motion-default-effects) allow-discrete;
+}
+
+/* Opening, at the speed for full-screen transitions */
+.rio-dialog[data-full-screen][open] {
+  transition:
+    opacity var(--rio-motion-slow-effects),
+    translate var(--rio-motion-slow-spatial),
+    overlay var(--rio-motion-fast-effects) allow-discrete,
+    display var(--rio-motion-fast-effects) allow-discrete;
+}
+
+.rio-dialog[data-full-screen]:not([open]) {
+  translate: 0 48px;
+}
+
+@starting-style {
+  .rio-dialog[data-full-screen][open] {
+    opacity: 0;
+    translate: 0 48px;
+  }
+}
+
+/* The content shows with the container, rather than after it. */
+.rio-dialog[data-full-screen] > * {
+  transition: none;
+}
+
+/* The container reaches below the window, so the bottom stays covered as the slide overshoots. */
+.rio-dialog[data-full-screen]::before {
+  block-size: calc(100% + 48px);
+  background-color: var(--rio-color-surface);
+  box-shadow: none;
+}
+
+@supports not (overlay: auto) {
+  .rio-dialog[data-full-screen]:not([open]) {
+    transition: none;
+  }
+}
+
+/* Without spatial motion it fades in and out where it is. */
+@media (prefers-reduced-motion: reduce) {
+  .rio-dialog[data-full-screen]:not([open]) {
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .rio-dialog[data-full-screen][open] {
+      translate: 0 0;
+    }
+  }
+}
+
+.rio-dialog__header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  block-size: 56px;
+  padding-inline: 4px 12px;
+  background-color: var(--rio-color-surface);
+  transition: background-color var(--rio-motion-default-effects);
+}
+
+.rio-dialog__header:has(+ .rio-dialog__content[data-overflow-top]) {
+  background-color: var(--rio-color-surface-container);
+}
+
+/* The close button, on surface, in a 48px place: its icon 16px from the start and from the headline */
+.rio-dialog__dismiss {
+  --rio-button-standard-content-color: var(--rio-color-on-surface);
+
+  display: flex;
+}
+
+.rio-dialog__dismiss > .rio-icon-button {
+  margin-inline: 4px;
+}
+
+.rio-dialog[data-full-screen] .rio-dialog__headline {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font: var(--rio-typescale-title-large);
+  letter-spacing: var(--rio-typescale-title-large-tracking);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rio-dialog[data-full-screen] .rio-dialog__actions {
+  flex-wrap: nowrap;
+  margin: 0;
+  margin-inline-start: auto;
+  padding: 0;
+}
+
+.rio-dialog[data-full-screen] .rio-dialog__content {
+  padding: 24px;
+  box-shadow: none;
 }
 
 @media (forced-colors: active) {
