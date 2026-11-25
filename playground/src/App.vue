@@ -311,46 +311,44 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
     <section class="controls">
       <label>Source color <input v-model="theme.sourceColor" type="color" /></label>
-      <label>
-        Variant
-        <select v-model="theme.variant">
-          <option value="tonal-spot">Tonal Spot</option>
-          <option value="neutral">Neutral</option>
-          <option value="vibrant">Vibrant</option>
-          <option value="expressive">Expressive</option>
-        </select>
-      </label>
-      <label>
-        Contrast
-        <input v-model.number="theme.contrast" type="range" min="-1" max="1" step="0.5" />
-        {{ theme.contrast }}
-      </label>
-      <label>
-        Mode
-        <select v-model="theme.colorScheme">
-          <option value="light dark">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </label>
-      <label>
-        Direction
-        <select v-model="direction">
-          <option value="ltr">Left to right</option>
-          <option value="rtl">Right to left</option>
-        </select>
-      </label>
-      <label>
-        Motion
-        <select v-model="theme.motion">
-          <option value="expressive">Expressive</option>
-          <option value="standard">Standard</option>
-        </select>
-      </label>
+      <RioSelect v-model="theme.variant" label="Variant">
+        <RioSelectOption value="tonal-spot">Tonal Spot</RioSelectOption>
+        <RioSelectOption value="neutral">Neutral</RioSelectOption>
+        <RioSelectOption value="vibrant">Vibrant</RioSelectOption>
+        <RioSelectOption value="expressive">Expressive</RioSelectOption>
+      </RioSelect>
+      <div class="contrast">
+        <label for="contrast">Contrast</label>
+        <RioSlider
+          id="contrast"
+          v-model="theme.contrast"
+          class="contrast-slider"
+          :min="-1"
+          :max="1"
+          :step="0.5"
+          centered
+          stops
+          value-indicator
+        />
+        <code>{{ theme.contrast }}</code>
+      </div>
+      <RioSelect v-model="theme.colorScheme" label="Mode">
+        <RioSelectOption value="light dark">System</RioSelectOption>
+        <RioSelectOption value="light">Light</RioSelectOption>
+        <RioSelectOption value="dark">Dark</RioSelectOption>
+      </RioSelect>
+      <RioSelect v-model="direction" label="Direction">
+        <RioSelectOption value="ltr">Left to right</RioSelectOption>
+        <RioSelectOption value="rtl">Right to left</RioSelectOption>
+      </RioSelect>
+      <RioSelect v-model="theme.motion" label="Motion">
+        <RioSelectOption value="expressive">Expressive</RioSelectOption>
+        <RioSelectOption value="standard">Standard</RioSelectOption>
+      </RioSelect>
     </section>
 
     <section class="motion">
-      <button type="button" @click="moved = !moved">Move</button>
+      <RioButton variant="tonal" @click="moved = !moved">Move</RioButton>
       <div v-for="token in SPATIAL" :key="token" class="track">
         <span
           class="dot"
@@ -363,13 +361,10 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
     <section class="buttons">
       <div class="controls">
-        <label>
-          Shape
-          <select v-model="buttonShape">
-            <option value="round">Round</option>
-            <option value="square">Square</option>
-          </select>
-        </label>
+        <RioSelect v-model="buttonShape" label="Shape">
+          <RioSelectOption value="round">Round</RioSelectOption>
+          <RioSelectOption value="square">Square</RioSelectOption>
+        </RioSelect>
       </div>
       <div v-for="variant in BUTTON_VARIANTS" :key="variant" class="controls">
         <RioButton
@@ -426,13 +421,10 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
     <section class="buttons">
       <div class="controls">
-        <label>
-          Shape
-          <select v-model="iconShape">
-            <option value="round">Round</option>
-            <option value="square">Square</option>
-          </select>
-        </label>
+        <RioSelect v-model="iconShape" label="Shape">
+          <RioSelectOption value="round">Round</RioSelectOption>
+          <RioSelectOption value="square">Square</RioSelectOption>
+        </RioSelect>
       </div>
       <div v-for="variant in ICON_BUTTON_VARIANTS" :key="variant" class="controls">
         <code class="row-label">{{ variant }}</code>
@@ -510,19 +502,15 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
     <section class="buttons">
       <div class="controls">
-        <label>
-          Size
-          <select v-model="groupSize">
-            <option v-for="size in BUTTON_SIZES" :key="size" :value="size">{{ size }}</option>
-          </select>
-        </label>
-        <label>
-          Shape
-          <select v-model="groupShape">
-            <option value="round">Round</option>
-            <option value="square">Square</option>
-          </select>
-        </label>
+        <RioSelect v-model="groupSize" label="Size">
+          <RioSelectOption v-for="size in BUTTON_SIZES" :key="size" :value="size">{{
+            size
+          }}</RioSelectOption>
+        </RioSelect>
+        <RioSelect v-model="groupShape" label="Shape">
+          <RioSelectOption value="round">Round</RioSelectOption>
+          <RioSelectOption value="square">Square</RioSelectOption>
+        </RioSelect>
       </div>
       <div class="controls">
         <code class="row-label">standard</code>
@@ -606,12 +594,11 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
 
     <section class="buttons">
       <div class="controls">
-        <label>
-          Size
-          <select v-model="splitSize">
-            <option v-for="size in BUTTON_SIZES" :key="size" :value="size">{{ size }}</option>
-          </select>
-        </label>
+        <RioSelect v-model="splitSize" label="Size">
+          <RioSelectOption v-for="size in BUTTON_SIZES" :key="size" :value="size">{{
+            size
+          }}</RioSelectOption>
+        </RioSelect>
       </div>
       <div class="controls">
         <code class="row-label">split</code>
@@ -1001,7 +988,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         "
       >
         <p>Escape and the scrim keep the dialog open once the name changes.</p>
-        <input v-model="albumName" aria-label="Album name" />
+        <RioTextField v-model="albumName" label="Album name" />
         <template #actions>
           <RioButton variant="text" @click="((dialogs.rename = false), (albumName = 'Summer'))"
             >Cancel</RioButton
@@ -1534,6 +1521,16 @@ main {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
+}
+
+.contrast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contrast-slider {
+  inline-size: 160px;
 }
 
 .motion {
