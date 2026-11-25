@@ -220,7 +220,7 @@ Value indicator (optional), stop indicators (optional), active track, handle, in
 ### Layout and motion
 
 - The handle travels between insets of 6px from the slider's ends, the stop indicators' centers, so it sits on a stop at each step.
-- The tracks keep 6px from each side of the handle, and the centered slider's 2px from each side of the middle, as the drawing shows. The active track starts at the slider's start on a standard slider, at the middle of the range on a centered one, and at the start handle on a range slider. As the handle nears an end, the track beside it shortens, and its corners shrink with it.
+- The tracks keep 6px from each side of the handle, and the centered slider's 2px from each side of the middle, as the drawing shows. The active track starts at the slider's start on a standard slider, at the middle of the range on a centered one, and at the start handle on a range slider.
 - The inactive tracks show a stop indicator at the slider's ends; with `stops`, every track shows one at each step. Rio keeps the end stops on every slider.
 - The slider is as wide as its container, and its row as tall as its handle, at least 48px, the touch target. A vertical slider is 200px tall unless the app sets its height (Rio's choice).
 - **The value indicator** shows while a handle is pressed or dragged, and while its input has keyboard focus, as the states drawing does: over the handle, or beside it at the inline start on a vertical slider (Rio's choice). It fades on the `fast-effects` curve (Rio's choice). It overflows the slider, so leave room above it; an ancestor's `overflow: hidden` cuts it off.
