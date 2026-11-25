@@ -27,10 +27,11 @@ const page = useTemplateRef('page');
   overflow: auto;
 }
 
-/* The bar stays at the top as the content scrolls under it */
+/* The bar stays at the top as the content scrolls under it, positioned content included */
 .bar {
   position: sticky;
   inset-block-start: 0;
+  z-index: 1;
 }
 
 .note {

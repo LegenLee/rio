@@ -117,7 +117,7 @@ A container, a leading button, a headline, a subtitle, and trailing elements. It
 
 - **The container fills with surface container while content is scrolled under it**: `attachAppBar` watches the scroll target, the window unless `scrollTarget` gives an element, and the bar turns at the first pixel scrolled from the top and back. The color changes on the default effects curve (Rio's choice). `scrolled` sets it instead, as for an app that knows better, or for a bar that isn't at the top of the page, as in the first two examples here, which take `scrolled: false`.
 - **The color fill, without a shadow**, as the overview says, though the token gives level 2. Compose's public `TopAppBarDefaults.topAppBarColors()` likewise only changes the container's color on scroll (`scrolledContainerColor`).
-- **Where it sits is the app's** (Rio's choice): to keep it at the top as the content scrolls, give it `position: sticky; top: 0`, as in the example.
+- **Where it sits is the app's** (Rio's choice): to keep it at the top as the content scrolls, give it `position: sticky; top: 0`, and a `z-index` such as 1, as in the example. Without one, content the page positions itself, such as a card with `position: relative`, scrolls over the bar rather than under it. Rio's components keep their own layers to themselves, so they stay under a bar with a `z-index` of 1 or more.
 
 ### Layout
 

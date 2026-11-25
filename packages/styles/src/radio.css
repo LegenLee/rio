@@ -26,6 +26,9 @@
   --_state-layer-pressed: var(--rio-color-primary);
 
   position: relative;
+  /* Keeps the input's z-index inside, rather than over what the page stacks above the
+     radio button, such as a sticky app bar, where the input would take the presses. */
+  isolation: isolate;
   display: inline-flex;
   flex: none;
   align-items: center;

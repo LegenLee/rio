@@ -18,6 +18,7 @@ Each version is published to npm and as a GitHub release, with the same tarballs
 
 - Near an end of `RioSlider` and `RioRangeSlider`, the track beside the handle, once shorter than its corners, flattened its round end: CSS shrank all its corners at once. Its corners now keep their size. It shows most on the taller L and XL tracks.
 - In WebKit browsers, such as Safari and GNOME Web, a closing dialog moved off its place, to somewhere that depended on the page's scroll, and faded out there: the date, date range, and time picker dialogs too. Menus and tooltips faded out below the top layer, where the page could cover them. Where they can't stay in the top layer as they fade, they now close at once.
+- Text fields, and the select and the date and time fields built on them, drew their outline and label over an app's sticky app bar as they scrolled under it, and checkboxes, radio buttons, and switches put their native input over it, where a press on the bar went to the control: the parts' `z-index` reached the page. Each now keeps its parts' stacking to itself.
 - `RioIcon` drawing a Vue component took the component's own `viewBox` off, so at any size but 24px its paths drew at their own scale, not the icon's. `createIcon`'s root part in `@rio-m3e/core` now leaves out the attributes that don't apply, rather than setting them to `undefined`, which an adapter passing them on to a component's root would write over the component's own.
 - `@rio-m3e/styles` no longer ships its test file, `src/styles.test.ts`, which 0.6.3's package carried.
 
