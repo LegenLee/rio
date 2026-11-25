@@ -159,8 +159,27 @@ const menus = reactive({
 });
 const viewButton = useTemplateRef('viewButton');
 const persistentTip = ref(false);
-const dialogs = reactive({ discard: false, reset: false, ringtone: false, rename: false });
+const dialogs = reactive({
+  discard: false,
+  reset: false,
+  ringtone: false,
+  rename: false,
+  event: false,
+  discardEvent: false,
+  contact: false,
+});
 const lastDialog = ref('');
+const eventDraft = reactive({ title: '', place: '' });
+const contact = reactive({ name: 'Ann Lee', email: 'ann@example.com' });
+const contactDraft = reactive({ name: '', email: '' });
+const openEvent = () => {
+  Object.assign(eventDraft, { title: '', place: '' });
+  dialogs.event = true;
+};
+const openContact = () => {
+  Object.assign(contactDraft, contact);
+  dialogs.contact = true;
+};
 const RINGTONES = [
   'None',
   'Callisto',
@@ -927,6 +946,8 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         <RioButton variant="tonal" @click="dialogs.reset = true">Reset settings</RioButton>
         <RioButton variant="tonal" @click="dialogs.ringtone = true">Ringtone</RioButton>
         <RioButton variant="tonal" @click="dialogs.rename = true">Rename</RioButton>
+        <RioButton variant="tonal" @click="openEvent">New event (full-screen)</RioButton>
+        <RioButton variant="tonal" @click="openContact">Edit contact (adaptive)</RioButton>
         <code>dialog={{ lastDialog }} ringtone={{ ringtone }}</code>
       </div>
       <RioDialog
@@ -986,6 +1007,71 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
             >Cancel</RioButton
           >
           <RioButton variant="text" @click="((dialogs.rename = false), (lastDialog = albumName))"
+            >Save</RioButton
+          >
+        </template>
+      </RioDialog>
+      <RioDialog
+        v-model:open="dialogs.event"
+        variant="full-screen"
+        headline="New event"
+        @cancel="
+          (event) => {
+            lastDialog = `cancel: ${event.reason}`;
+            if (eventDraft.title || eventDraft.place) {
+              event.preventDefault();
+              dialogs.discardEvent = true;
+            }
+          }
+        "
+      >
+        <div class="dialog-fields">
+          <p>
+            The close button, Escape, and the scrim ask to close; with something typed, a basic
+            dialog asks first. Scroll down: the header fills.
+          </p>
+          <RioTextField v-model="eventDraft.title" label="Title" />
+          <RioTextField v-model="eventDraft.place" label="Location" />
+          <p v-for="guest in 20" :key="guest">Guest {{ guest }}</p>
+        </div>
+        <template #actions>
+          <RioButton
+            variant="text"
+            @click="((dialogs.event = false), (lastDialog = `saved: ${eventDraft.title}`))"
+            >Save</RioButton
+          >
+        </template>
+        <RioDialog v-model:open="dialogs.discardEvent" headline="Discard event?">
+          What you entered will be lost.
+          <template #actions>
+            <RioButton variant="text" @click="dialogs.discardEvent = false">Keep editing</RioButton>
+            <RioButton
+              variant="text"
+              @click="((dialogs.discardEvent = false), (dialogs.event = false))"
+              >Discard</RioButton
+            >
+          </template>
+        </RioDialog>
+      </RioDialog>
+      <RioDialog
+        v-model:open="dialogs.contact"
+        variant="adaptive"
+        headline="Edit contact"
+        @cancel="(event) => (lastDialog = `cancel: ${event.reason}`)"
+      >
+        <div class="dialog-fields">
+          <p>Full-screen below 600px, basic with Cancel from there up. Resize the window.</p>
+          <RioTextField v-model="contactDraft.name" label="Name" />
+          <RioTextField v-model="contactDraft.email" label="Email" type="email" />
+        </div>
+        <template #actions>
+          <RioButton
+            variant="text"
+            @click="
+              (Object.assign(contact, contactDraft),
+              (dialogs.contact = false),
+              (lastDialog = `saved: ${contact.name}`))
+            "
             >Save</RioButton
           >
         </template>
@@ -1454,6 +1540,15 @@ main {
   display: grid;
   justify-items: start;
   gap: 8px;
+}
+
+.dialog-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.dialog-fields > p {
+  margin: 0;
 }
 
 .dialog-option {
