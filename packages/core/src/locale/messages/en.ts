@@ -35,6 +35,10 @@ export const en: RioMessages = {
     invalidRange: 'Choose an end date after the start date',
     startRequired: 'Enter a start date',
   },
+  dialog: {
+    close: 'Close',
+    cancel: 'Cancel',
+  },
   slider: {
     rangeStart: 'Minimum',
     rangeEnd: 'Maximum',

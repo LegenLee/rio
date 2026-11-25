@@ -21,8 +21,8 @@ import type { PartAttrs, PartNode } from '../parts';
  * picker's previous and next month; its switches to the text input (`edit`) and back to the
  * calendar; the time picker's switches to the text input (`keyboard`), back to the dial (`clock`),
  * and back to the scroll fields (`swipe`); an input chip's remove button; a split button's menu
- * button (`menu`); a selected filter chip's checkmark (`check`); and an item's arrow to its
- * submenu (`submenu`).
+ * button (`menu`); a selected filter chip's checkmark (`check`); an item's arrow to its submenu
+ * (`submenu`); and a full-screen dialog's close button (`close`).
  */
 export const ICON_ALIASES = [
   'dropdown',
@@ -37,6 +37,7 @@ export const ICON_ALIASES = [
   'menu',
   'check',
   'submenu',
+  'close',
 ] as const;
 export type IconAlias = (typeof ICON_ALIASES)[number];
 

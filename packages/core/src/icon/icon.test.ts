@@ -54,6 +54,7 @@ describe('the app’s icons', () => {
       'menu',
       'check',
       'submenu',
+      'close',
     ]);
   });
 });
