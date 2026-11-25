@@ -14,6 +14,7 @@ export * from './dialog/dialog';
 export * from './dialog/interaction';
 export * from './icon/icon';
 export * from './icon-button/icon-button';
+export * from './layout/breakpoints';
 export * from './list/interaction';
 export * from './list/list';
 export * from './locale/locale';

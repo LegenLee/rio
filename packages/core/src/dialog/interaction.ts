@@ -23,6 +23,7 @@
 // - `dismiss` asks to close, as Escape does, for the close or Cancel button the adapter renders.
 
 import type { CancelableEvent } from '../parts';
+import { breakpointQuery } from '../layout/breakpoints';
 import { attachOverlay } from '../primitives/overlay/overlay';
 import { tabbablesIn } from '../utils/focus';
 import { hasModifier } from '../utils/keyboard';
@@ -71,7 +72,7 @@ export interface DialogDomHandle {
 }
 
 /** A compact window: narrower than 600px */
-const COMPACT = '(width < 600px)';
+const COMPACT = breakpointQuery('compact');
 
 /** How far, in px, the content may scroll and still count as at its end */
 const SCROLL_SLOP = 1;
