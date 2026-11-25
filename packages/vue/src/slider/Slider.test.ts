@@ -167,6 +167,45 @@ describe('RioSlider', () => {
       expect(span(root, part('track-upper'))).toEqual([114, WIDTH]);
     });
 
+    test('a track shorter than its corners keeps them whole, cut off straight beside the handle', async () => {
+      // XS: 8px at the slider's ends, 2px beside the handle. At 95 the upper track is 8px long,
+      // 2px short of its corners.
+      const { root, part, state } = await setup({ value: 95 });
+      const upper = part('track-upper');
+      const style = getComputedStyle(upper);
+      expect([style.borderTopLeftRadius, style.borderTopRightRadius]).toEqual(['2px', '8px']);
+      // Its box reaches 2px on toward the handle, and is cut back there to the track: 204 to 212.
+      // The cut stays 1px clear of the end it keeps.
+      expect(span(root, upper)).toEqual([202, WIDTH]);
+      expect(style.clipPath).toBe('inset(0px -1px 0px 2px round 2px)');
+      state.value = 90;
+      await vi.waitFor(() => expect(span(root, upper)).toEqual([194, WIDTH]));
+      // Long enough, it isn't cut: the cut stays 1px clear of every edge.
+      expect(style.clipPath).toBe('inset(-1px round 2px)');
+    });
+
+    test('right to left, a short track is cut off on the right, beside the handle', async () => {
+      const { part } = await setup({
+        value: 95,
+        wrap: (slider) => h('div', { dir: 'rtl' }, [slider]),
+      });
+      expect(getComputedStyle(part('track-upper')).clipPath).toBe(
+        'inset(0px 2px 0px -1px round 2px)',
+      );
+    });
+
+    test('vertical: a short track keeps its corners whole, cut off below, beside the handle', async () => {
+      const { part } = await setup({ props: { vertical: true, style: undefined }, value: 96 });
+      const upper = part('track-upper');
+      const style = getComputedStyle(upper);
+      expect([style.borderTopLeftRadius, style.borderBottomLeftRadius]).toEqual(['8px', '2px']);
+      // The box is as tall as its corners, 8px and 2px, and is cut back from below to the track,
+      // which runs 8px above the handle at 96% of 188px, 6px up, to the top: 5.52px.
+      expect(upper.getBoundingClientRect().height).toBeCloseTo(10, 1);
+      const cut = style.clipPath.match(/^inset\(-1px 0px ([\d.]+)px round 2px\)$/);
+      expect(10 - parseFloat(cut![1]!)).toBeCloseTo(200 - (6 + 0.96 * 188 + 8), 1);
+    });
+
     test('centered: the active track runs from the middle, 2px off it, to the handle', async () => {
       const { root, part, state } = await setup({
         props: { centered: true, min: -50, max: 50 },

@@ -173,15 +173,31 @@
 }
 
 /* Tracks: each runs from `--_from` to `--_to`, with `--_lower-corner` at its lower values' end
-   and `--_upper-corner` at the other. */
+   and `--_upper-corner` at the other.
+
+   A track shorter than its corners keeps their size: its box reaches on past the end beside the
+   handle (`--_reach-lower`, `--_reach-upper`) as far as the corners need, and is cut back there,
+   straight. Left to CSS, which shrinks every radius alike
+   once two of them overrun a side, its round end would flatten. */
 
 .rio-slider__track-lower,
 .rio-slider__track-active,
 .rio-slider__track-upper {
   --_from: 0px;
   --_to: var(--_length);
+  --_span: max(0px, var(--_to) - var(--_from));
   --_lower-corner: var(--_inner-corner);
   --_upper-corner: var(--_inner-corner);
+  --_reach-lower: 0px;
+  --_reach-upper: 0px;
+  /* What the corners lack, and where the box starts */
+  --_short: max(0px, var(--_lower-corner) + var(--_upper-corner) - var(--_span));
+  --_box-from: calc(var(--_from) - var(--_reach-lower));
+  /* Where the box is cut back to the track: at an end it reaches past, and across it then;
+     elsewhere 1px outside the box, so the cut never touches an edge the track keeps. */
+  --_cut-lower: calc(var(--_reach-lower) - max(0px, 1px - var(--_reach-lower) * 1000));
+  --_cut-upper: calc(var(--_reach-upper) - max(0px, 1px - var(--_reach-upper) * 1000));
+  --_cut-across: calc(-1 * max(0px, 1px - (var(--_reach-lower) + var(--_reach-upper)) * 1000));
   --_stop: var(--_stop-inactive);
   --_dot: radial-gradient(circle 2px at center, var(--_stop) 1.5px, transparent 2px);
   /* Where the first dot's box starts, from the track's start; and the box's length */
@@ -191,9 +207,23 @@
   position: absolute;
   box-sizing: border-box;
   inset-block-start: calc(50% - var(--_track) / 2);
-  inset-inline-start: var(--_from);
-  inline-size: max(0px, var(--_to) - var(--_from));
+  inset-inline-start: var(--_box-from);
+  inline-size: calc(var(--_span) + var(--_reach-lower) + var(--_reach-upper));
   block-size: var(--_track);
+  /* The lower end on the left, or on the right right to left */
+  clip-path: inset(
+    var(--_cut-across)
+      calc(
+        (1 + var(--rio-dir-sign, 1)) / 2 * var(--_cut-upper) + (1 - var(--rio-dir-sign, 1)) / 2 *
+          var(--_cut-lower)
+      )
+      var(--_cut-across)
+      calc(
+        (1 + var(--rio-dir-sign, 1)) / 2 * var(--_cut-lower) + (1 - var(--rio-dir-sign, 1)) / 2 *
+          var(--_cut-upper)
+      )
+      round var(--_inner-corner)
+  );
   border-start-start-radius: var(--_lower-corner);
   border-end-start-radius: var(--_lower-corner);
   border-start-end-radius: var(--_upper-corner);
@@ -207,6 +237,16 @@
   background-size: var(--_dot-size) 100%;
   background-repeat: no-repeat;
   pointer-events: none;
+}
+
+/* A short track reaches past its end beside a handle or the middle, away from the slider's end. */
+.rio-slider__track-lower,
+.rio-slider__track-active {
+  --_reach-upper: var(--_short);
+}
+
+.rio-slider__track-upper {
+  --_reach-lower: var(--_short);
 }
 
 .rio-slider__track-active {
@@ -259,7 +299,7 @@
    visible against the background; with `stops`, every track shows one at each step. */
 
 .rio-slider__track-upper {
-  --_dot-at: calc(var(--_length) - var(--rio-slider-inset) - 2px - var(--_from));
+  --_dot-at: calc(var(--_length) - var(--rio-slider-inset) - 2px - var(--_box-from));
   background-image: var(--_dot);
 }
 
@@ -271,7 +311,7 @@
 .rio-slider[data-stops]
   :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
   --_dot-size: calc(var(--_travel) / var(--rio-slider-stops, 1));
-  --_dot-at: calc(var(--rio-slider-inset) - var(--_dot-size) / 2 - var(--_from));
+  --_dot-at: calc(var(--rio-slider-inset) - var(--_dot-size) / 2 - var(--_box-from));
   background-image: var(--_dot);
   background-repeat: repeat-x;
 }
@@ -280,10 +320,15 @@
 .rio-slider[data-vertical]
   :is(.rio-slider__track-lower, .rio-slider__track-active, .rio-slider__track-upper) {
   inset-block-start: auto;
-  inset-block-end: var(--_from);
+  inset-block-end: var(--_box-from);
   inset-inline-start: calc(50% - var(--_track) / 2);
   inline-size: var(--_track);
-  block-size: max(0px, var(--_to) - var(--_from));
+  block-size: calc(var(--_span) + var(--_reach-lower) + var(--_reach-upper));
+  /* The lower end at the bottom */
+  clip-path: inset(
+    var(--_cut-upper) var(--_cut-across) var(--_cut-lower) var(--_cut-across) round
+      var(--_inner-corner)
+  );
   border-start-start-radius: var(--_upper-corner);
   border-start-end-radius: var(--_upper-corner);
   border-end-start-radius: var(--_lower-corner);
