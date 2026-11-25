@@ -1,10 +1,14 @@
 import { mdiArrowLeft, mdiCalendar, mdiDotsVertical } from '@mdi/js';
 import { createColorScheme, createThemeVariables } from '@rio-m3e/tokens';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
 import { defineComponent, h, nextTick, ref, type VNode } from 'vue';
+import Checkbox from '../checkbox/Checkbox.vue';
 import IconButton from '../icon-button/IconButton.vue';
 import RioIcon from '../icon/Icon.vue';
+import Radio from '../radio/Radio.vue';
+import Switch from '../switch/Switch.vue';
+import TextField from '../text-field/TextField.vue';
 import Tooltip from '../tooltip/Tooltip.vue';
 import AppBar from './AppBar.vue';
 
@@ -219,6 +223,53 @@ describe('RioAppBar', () => {
       await vi.waitFor(() => expect(bar.hasAttribute('data-scrolled')).toBe(true));
       window.scrollTo(0, 0);
       await vi.waitFor(() => expect(bar.hasAttribute('data-scrolled')).toBe(false));
+    });
+
+    test("Rio's controls scrolled under a sticky bar stay under it, their inner layers too", async () => {
+      // The app's sticky bar, with a z-index, as the docs say; the controls' parts stack at 1 too.
+      const screen = await render(
+        defineComponent(
+          () => () =>
+            h('div', { class: 'page', style: { ...theme, blockSize: '300px', overflow: 'auto' } }, [
+              h(AppBar, {
+                headline: 'Inbox',
+                scrolled: true,
+                style: 'position: sticky; top: 0; z-index: 1',
+              }),
+              h('div', { style: 'display: flex; align-items: center; gap: 16px; padding: 8px' }, [
+                h(TextField, { label: 'Name', variant: 'outlined', modelValue: '' }),
+                h(Checkbox, { 'aria-label': 'Agree' }),
+                h(Radio, { 'aria-label': 'One', value: 'one' }),
+                h(Switch, { 'aria-label': 'Wi-Fi' }),
+              ]),
+              h('div', { style: { blockSize: '1000px' } }),
+            ]),
+        ),
+      );
+      const root = screen.container as HTMLElement;
+      const bar = root.querySelector<HTMLElement>('.rio-app-bar')!;
+      // The label and the outline take no presses; let them, to find where they stack.
+      const probe = document.head.appendChild(document.createElement('style'));
+      probe.textContent =
+        '.rio-text-field__label, .rio-text-field__outline { pointer-events: auto }';
+      onTestFinished(() => probe.remove());
+      root.querySelector<HTMLElement>('.page')!.scrollTop = 40;
+      await nextTick();
+      const top = bar.getBoundingClientRect().top;
+      for (const part of [
+        '.rio-text-field__label',
+        '.rio-text-field__outline',
+        '.rio-checkbox__input',
+        '.rio-radio__input',
+        '.rio-switch__input',
+      ]) {
+        const box = root.querySelector(part)!.getBoundingClientRect();
+        // A spot of the part's, under the bar
+        const x = box.left + box.width / 2;
+        const y = Math.max(box.top, top) + 2;
+        expect(y, part).toBeLessThan(bar.getBoundingClientRect().bottom);
+        expect(bar.contains(document.elementFromPoint(x, y)), part).toBe(true);
+      }
     });
   });
 });

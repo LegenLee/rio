@@ -45,6 +45,9 @@
   --_line: var(--rio-color-on-surface-variant);
   --_line-width: 1px;
 
+  /* Keeps the outline's and the label's z-index inside, rather than over what the page stacks above
+     the field, such as a sticky app bar. */
+  isolation: isolate;
   display: inline-flex;
   flex-direction: column;
   vertical-align: top;
