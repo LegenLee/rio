@@ -45,8 +45,8 @@
   --_line: var(--rio-color-on-surface-variant);
   --_line-width: 1px;
 
-  /* Keeps the outline's and the label's z-index inside, rather than over what the page stacks above
-     the field, such as a sticky app bar. */
+  /* Keeps the label's z-index inside, rather than over what the page stacks above the field, such
+     as a sticky app bar. */
   isolation: isolate;
   display: inline-flex;
   flex-direction: column;
@@ -254,7 +254,6 @@
 .rio-text-field__outline {
   position: absolute;
   inset: 0;
-  z-index: 1;
   display: flex;
   border-radius: inherit;
   pointer-events: none;
