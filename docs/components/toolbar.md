@@ -132,7 +132,7 @@ The icon buttons the spec pairs with each: standard, "Filled button (Primary, On
 
 ### Not yet
 
-- **A FAB beside the floating toolbar**, 8dp away, in secondary container (standard) or tertiary container (vibrant), with the FABs.
+- **A [FAB](fab.md) beside the floating toolbar**, 8dp away, in secondary container (standard) or tertiary container (vibrant), as part of the toolbar. An app can place a `RioFab` beside it.
 - **Scrolling**: hiding the toolbar as the page scrolls, or collapsing a floating toolbar into a single action.
 - **Overflowing**: moving the trailing items into a menu as the window narrows. An app puts its own menu in the toolbar, as in the example above.
 - **The bottom app bar**, which the spec no longer recommends.

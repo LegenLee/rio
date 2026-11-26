@@ -35,6 +35,7 @@ import {
   mdiMagnify,
   mdiMenu,
   mdiOpenInNew,
+  mdiPencilOutline,
   mdiPause,
   mdiRestore,
   mdiShareVariant,
@@ -46,6 +47,8 @@ import {
 import {
   BUTTON_SIZES,
   BUTTON_VARIANTS,
+  FAB_COLORS,
+  FAB_SIZES,
   ICON_BUTTON_VARIANTS,
   ICON_BUTTON_WIDTHS,
   SPLIT_BUTTON_VARIANTS,
@@ -68,6 +71,7 @@ import {
   RioDatePickerDialog,
   RioDateRangePickerDialog,
   RioDialog,
+  RioFab,
   RioFilterChip,
   RioIcon,
   RioIconButton,
@@ -106,6 +110,7 @@ import { theme } from './theme';
 const direction = ref<'ltr' | 'rtl'>('ltr');
 const switches = reactive({ plain: false, selectedIcon: true, bothIcons: false });
 const progress = ref(0.4);
+const fabExtended = ref(true);
 const chips = reactive({
   filters: ['wifi'] as (string | number)[],
   people: ['Ada', 'Grace', 'Alan'],
@@ -837,6 +842,26 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           </RioIconButton>
         </template>
       </RioAppBar>
+    </section>
+
+    <section class="buttons fabs">
+      <div v-for="size in FAB_SIZES" :key="size" class="controls">
+        <code class="row-label">{{ size }}</code>
+        <RioFab label="Compose" :size="size">
+          <RioIcon :icon="{ type: 'svg', path: mdiPencilOutline }" />
+        </RioFab>
+        <RioFab label="Compose" :size="size" :extended="fabExtended">
+          <RioIcon :icon="{ type: 'svg', path: mdiPencilOutline }" />
+        </RioFab>
+      </div>
+      <div class="controls">
+        <RioFab v-for="color in FAB_COLORS" :key="color" :label="color" :color="color">
+          <RioIcon :icon="{ type: 'svg', path: mdiPencilOutline }" />
+        </RioFab>
+        <RioButton variant="tonal" @click="fabExtended = !fabExtended">
+          {{ fabExtended ? 'Shrink' : 'Extend' }}
+        </RioButton>
+      </div>
     </section>
 
     <section class="buttons toolbars">

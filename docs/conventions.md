@@ -99,6 +99,9 @@ packages/
     icon/
       icon.ts               the app's icons by alias and by name, and an icon's parts: SVG paths or a font's glyph (see docs/guide/icons.md, docs/components/icon.md)
       icon.test.ts
+    fab/
+      fab.ts                the FAB and the extended FAB: props, parts, and the click
+      fab.test.ts
     icon-button/
       icon-button.ts        wraps createButton
       icon-button.test.ts
@@ -192,6 +195,7 @@ packages/
     chip.css                the four chips and the chip set
     dialog.css
     icon.css                RioIcon, and an icon font's glyph sized to its box; components size `.rio-icon` in their icon places
+    fab.css                 the FAB and the extended FAB, and the label's growing and shrinking
     icon-button.css         layered on top of button.css
     list.css                the list and its items, standard and segmented
     loading-indicator.css
@@ -231,6 +235,9 @@ packages/
       Icon.vue              RioIcon: an icon by its value, its name, or its alias
       icons.ts              the icons createRio provides, and useIconOfAlias for the components' icon slots
       aliases.test.ts       the docs' icon registries in the components they are for
+    fab/
+      Fab.vue
+      Fab.vrt.test.ts       screenshot test (see Visual regression)
     icon-button/
       IconButton.vue
     list/

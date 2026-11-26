@@ -266,7 +266,7 @@ Anatomy: container, header, icon (close affordance), headline (optional), text b
 
 ### Not yet
 
-- **The container transform from a FAB** into a full-screen dialog, which waits for FABs.
+- **The container transform from a [FAB](fab.md)** into a full-screen dialog.
 - **The bottom action bar** and the optional divider of a full-screen dialog.
 - **Full-screen date and time pickers** for compact windows ([date-picker.md](date-picker.md)).
 

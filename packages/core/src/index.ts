@@ -12,6 +12,7 @@ export * from './date-picker/date-range-picker';
 export * from './date-picker/interaction';
 export * from './dialog/dialog';
 export * from './dialog/interaction';
+export * from './fab/fab';
 export * from './icon/icon';
 export * from './icon-button/icon-button';
 export * from './layout/breakpoints';

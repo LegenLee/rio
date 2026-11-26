@@ -70,7 +70,7 @@ Material Design과 Material 3는 Google LLC의 상표입니다. 이 프로젝트
 ### v0.7 (레이아웃)
 
 - [x] 앱 바
-- [ ] FAB
+- [x] FAB
 - [ ] 네비게이션 서랍 + 하단 네비게이션 바
 - [ ] 네비게이션 버튼 (레일)
 - [ ] 카드

@@ -46,6 +46,7 @@ import {
   createButtonGroup,
   createCheckbox,
   createDialog,
+  createFab,
   createIconButton,
   createMenu,
   createMenuDivider,
@@ -98,6 +99,8 @@ import {
   createToolbar,
   createTooltip,
   createSplitButton,
+  fabLinkSkeleton,
+  fabSkeleton,
   iconButtonLinkSkeleton,
   iconButtonSkeleton,
   menuDividerSkeleton,
@@ -119,6 +122,7 @@ import {
   type CheckboxProps,
   type DialogContent,
   type DialogProps,
+  type FabProps,
   type IconButtonProps,
   type MenuItemContent,
   type MenuItemProps,
@@ -156,6 +160,7 @@ import DatePickerDialog from './date-picker/DatePickerDialog.vue';
 import DateRangeCalendar from './date-picker/DateRangeCalendar.vue';
 import DateRangePickerDialog from './date-picker/DateRangePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
+import Fab from './fab/Fab.vue';
 import IconButton from './icon-button/IconButton.vue';
 import List from './list/List.vue';
 import ListItem from './list/ListItem.vue';
@@ -295,6 +300,28 @@ describe('RioIconButton', () => {
     // Which icon fills the icon part is core's call too.
     const icon = findPart(rootOf(screen), skeleton, 'icon', api);
     expect(icon?.textContent).toBe(api.showsSelectedIcon() ? '♥' : '♡');
+  });
+});
+
+describe('RioFab', () => {
+  test.each<[string, FabProps, boolean]>([
+    ['a FAB with its icon only', { label: 'Go' }, true],
+    ['extended, with an icon', { label: 'Go', extended: true }, true],
+    ['without an icon, its label showing', { label: 'Go' }, false],
+    // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
+    [
+      'large, tertiary, extended, and a reset button',
+      { label: 'Go', size: 'large', color: 'tertiary', extended: true, type: 'reset' },
+      true,
+    ],
+    ['a link', { label: 'Go', href: '/go' }, true],
+  ])('%s', async (_, props, icon) => {
+    const screen = await render(Fab, { props, slots: icon ? { default: () => '✎' } : {} });
+    const api = createFab({ props: () => props, content: () => ({ icon }), onClick: noop });
+    const skeleton = api.isLink() ? fabLinkSkeleton : fabSkeleton;
+    expectSkeleton(rootOf(screen), skeleton, api);
+    // The text part holds the label.
+    expect(findPart(rootOf(screen), skeleton, 'text', api)?.textContent).toBe('Go');
   });
 });
 
