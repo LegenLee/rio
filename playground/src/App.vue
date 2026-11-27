@@ -840,9 +840,9 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
     </section>
 
     <section class="buttons toolbars">
-      <div v-for="color in ['standard', 'vibrant'] as const" :key="color" class="controls">
-        <code class="row-label">{{ color }}</code>
-        <RioToolbar :aria-label="`Formatting, ${color}`" variant="floating" :color="color">
+      <div v-for="variant in ['standard', 'vibrant'] as const" :key="variant" class="controls">
+        <code class="row-label">{{ variant }}</code>
+        <RioToolbar :aria-label="`Formatting, ${variant}`" type="floating" :variant="variant">
           <RioIconButton label="Bold" variant="tonal" toggle :selected="true">
             <RioIcon :icon="{ type: 'svg', path: mdiFormatBold }" />
           </RioIconButton>
@@ -854,10 +854,10 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           </RioIconButton>
         </RioToolbar>
         <RioToolbar
-          :aria-label="`Alignment, ${color}`"
-          variant="floating"
+          :aria-label="`Alignment, ${variant}`"
+          type="floating"
           orientation="vertical"
-          :color="color"
+          :variant="variant"
         >
           <RioIconButton label="Left" variant="standard">
             <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignLeft }" />

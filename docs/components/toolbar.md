@@ -102,18 +102,19 @@ The icon buttons the spec pairs with each: standard, "Filled button (Primary, On
 
 ```vue
 <RioToolbar aria-label="Message">…</RioToolbar>
-<RioToolbar aria-label="Formatting" variant="floating" color="vibrant">…</RioToolbar>
-<RioToolbar aria-label="Tools" variant="floating" orientation="vertical" flat>…</RioToolbar>
+<RioToolbar aria-label="Formatting" type="floating" variant="vibrant">…</RioToolbar>
+<RioToolbar aria-label="Tools" type="floating" orientation="vertical" flat>…</RioToolbar>
 ```
 
 | Prop          | Type                         | Default        |
 | ------------- | ---------------------------- | -------------- |
-| `variant`     | `'docked' \| 'floating'`     | `'docked'`     |
-| `color`       | `'standard' \| 'vibrant'`    | `'standard'`   |
+| `type`        | `'docked' \| 'floating'`     | `'docked'`     |
+| `variant`     | `'standard' \| 'vibrant'`    | `'standard'`   |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` |
 | `flat`        | `boolean`                    | `false`        |
 
 - **Name it** with `aria-label` or `aria-labelledby`, which go to the root, a `role="toolbar"`, with `aria-orientation="vertical"` when vertical. The `default` slot holds the items: buttons, icon buttons, text fields, a menu, or anything else.
+- **`type`** is the spec's docked or floating toolbar, and **`variant`** its standard or vibrant colors, named as the menu's are (Rio's choice: `color` is kept for the color a component takes from the theme, as on the buttons).
 - **`orientation`** is the floating toolbar's; a docked toolbar is always horizontal. **`flat`** takes a floating toolbar's shadow off.
 
 ### Keyboard
