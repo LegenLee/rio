@@ -66,6 +66,15 @@ describe('parts', () => {
     expect(parts.icon()).toEqual({ class: 'rio-button__icon', 'aria-hidden': 'true' });
     expect(parts.label()).toEqual({ class: 'rio-button__label' });
   });
+
+  test("a color sets the accent variables on the root, as a link's too", () => {
+    for (const props of [{ color: 'error' }, { color: 'error', href: '/s' }]) {
+      expect(setup(props).button.parts.root().style).toContain(
+        '--rio-accent: var(--rio-color-error)',
+      );
+    }
+    expect(setup().button.parts.root().style).toBeUndefined();
+  });
 });
 
 describe('showsIcon', () => {

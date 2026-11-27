@@ -261,6 +261,51 @@ describe('RioToolbar', () => {
       ]);
     });
 
+    test("a button's own color comes before the toolbar's", async () => {
+      const { named } = await setup({ type: 'floating', variant: 'vibrant' }, () => [
+        h(IconButton, { label: 'Bold', variant: 'standard', color: 'error' }, () =>
+          icon(mdiFormatBold),
+        ),
+        h(IconButton, { label: 'Italic', variant: 'tonal', toggle: true, color: 'error' }, () =>
+          icon(mdiFormatItalic),
+        ),
+      ]);
+      expect(getComputedStyle(named('Bold')).color).toBe(rgb(scheme.error));
+      expect(colors(named('Italic'))).toEqual([
+        rgb(scheme.errorContainer),
+        rgb(scheme.onErrorContainer),
+      ]);
+    });
+
+    test('an accent from outside stops at the toolbar', async () => {
+      const accent = {
+        '--rio-accent': 'var(--rio-color-error)',
+        '--rio-on-accent': 'var(--rio-color-on-error)',
+        '--rio-accent-container': 'var(--rio-color-error-container)',
+        '--rio-on-accent-container': 'var(--rio-color-on-error-container)',
+      };
+      const screen = await render(
+        defineComponent(
+          () => () =>
+            h('div', { style: { ...theme, ...accent } }, [
+              h(
+                Toolbar,
+                { 'aria-label': 'Formatting', type: 'floating', variant: 'vibrant' },
+                () => [
+                  h(IconButton, { label: 'Bold', variant: 'standard' }, () => icon(mdiFormatBold)),
+                  h(IconButton, { label: 'Italic', variant: 'standard', color: 'error' }, () =>
+                    icon(mdiFormatItalic),
+                  ),
+                ],
+              ),
+            ]),
+        ),
+      );
+      const named = (name: string) => screen.getByRole('button', { name }).element();
+      expect(getComputedStyle(named('Bold')).color).toBe(rgb(scheme.onPrimaryContainer));
+      expect(getComputedStyle(named('Italic')).color).toBe(rgb(scheme.error));
+    });
+
     test('buttons in an overlay open inside it keep their own colors', async () => {
       const { named } = await setup({ variant: 'vibrant' }, () => [
         h('div', { popover: 'manual', 'data-testid': 'popover' }, [

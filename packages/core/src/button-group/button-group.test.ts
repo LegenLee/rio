@@ -18,6 +18,13 @@ describe('createButtonGroup', () => {
     });
   });
 
+  test('a color sets the accent variables on the root, which its buttons inherit', () => {
+    expect(setup({ color: 'error' }).group.parts.root().style).toContain(
+      '--rio-accent-container: var(--rio-color-error-container)',
+    );
+    expect(setup().group.parts.root().style).toBeUndefined();
+  });
+
   test('hands its buttons a size, a shape, and a selection mode, defaults filled in', () => {
     const { group } = setup();
     expect([group.size(), group.shape(), group.selection()]).toEqual(['small', 'round', 'none']);

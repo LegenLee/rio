@@ -19,6 +19,13 @@
   --rio-button-tonal-selected-container-color: var(--rio-color-secondary-container);
   --rio-button-tonal-selected-content-color: var(--rio-color-on-secondary-container);
 
+  /* An accent from outside stops here, so the toolbar's colors reach its buttons; a button or
+     group inside with its own `color` sets it again (`base/accent.css`). */
+  --rio-accent: initial;
+  --rio-on-accent: initial;
+  --rio-accent-container: initial;
+  --rio-on-accent-container: initial;
+
   display: flex;
   align-items: center;
   box-sizing: border-box;

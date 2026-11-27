@@ -43,6 +43,25 @@ describe('RioIconButton', () => {
     await expect.element(gallery).toMatchScreenshot(`states-${scheme}`);
   });
 
+  test.each(SCHEMES)('colors, %s', async (scheme) => {
+    const gallery = await renderGallery(scheme, () => [
+      ICON_BUTTON_VARIANTS.map((variant) =>
+        h(IconButton, { label: 'Search', variant, color: 'error' }, search),
+      ),
+      ICON_BUTTON_VARIANTS.map((variant) =>
+        h(IconButton, { label: 'Favorite', variant, color: 'error', toggle: true }, favorite),
+      ),
+      ICON_BUTTON_VARIANTS.map((variant) =>
+        h(
+          IconButton,
+          { label: 'Favorite', variant, color: 'error', toggle: true, selected: true },
+          favorite,
+        ),
+      ),
+    ]);
+    await expect.element(gallery).toMatchScreenshot(`colors-${scheme}`);
+  });
+
   test('keyboard focus and hover', async () => {
     // The standard variant has no container, so hovering shows the state layer on its own.
     const gallery = await renderGallery('light', () => [

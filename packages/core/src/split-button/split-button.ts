@@ -1,3 +1,4 @@
+import { accentStyle, type AccentColor } from '../accent/accent';
 import { createButton, type ButtonSize } from '../button/button';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { resolveProps } from '../utils/object';
@@ -24,6 +25,8 @@ export interface SplitButtonProps {
   variant?: SplitButtonVariant;
   /** Defaults to `'small'`. */
   size?: ButtonSize;
+  /** The theme color both buttons' accent takes, in place of the spec's, as on the button. */
+  color?: AccentColor;
   /** Whether what the trailing button opens is open. */
   open?: boolean;
   /** What the trailing button opens. Defaults to `'menu'`. */
@@ -44,7 +47,7 @@ export const splitButtonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Omit<Required<SplitButtonProps>, 'menuLabel' | 'label'>;
+} satisfies Omit<Required<SplitButtonProps>, 'menuLabel' | 'label' | 'color'>;
 
 /** What the adapter has to put in the leading button, which only the adapter can see. */
 export interface SplitButtonContent {
@@ -152,7 +155,8 @@ export function createSplitButton<E extends CancelableEvent = MouseEvent>(
 
   return {
     parts: {
-      root: () => ({ class: 'rio-split-button' }),
+      // On the root, which both buttons inherit it from.
+      root: () => ({ class: 'rio-split-button', style: accentStyle(props().color) }),
       leading() {
         const root = leading.parts.root();
         return {
