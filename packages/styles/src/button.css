@@ -9,8 +9,8 @@
  * Colors: the spec's primary and secondary roles go through the accent variables
  * (`base/accent.css`), which a `color` prop sets on the button or on a group around it. Without
  * them, the spec's roles are the fallbacks. With them, an outlined button's content and outline,
- * and a standard icon button's content, take the accent too, where the spec has neutral ones
- * (Rio's choice). A standard toggle keeps the neutral content until selected, as its only cue.
+ * and a standard icon button's content, take the accent too. A standard toggle keeps the neutral
+ * content until selected, as its only cue.
  *
  * Variant, size, shape, and toggle rules sit inside `:where()`, so they add no specificity. The
  * disabled and pressed rules always win, and apps can override any of them with a single class.
