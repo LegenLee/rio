@@ -26,6 +26,7 @@ export default defineConfig({
         text: 'Guide',
         items: [
           { text: 'Getting started', link: '/guide/getting-started' },
+          { text: 'Without a bundler', link: '/guide/without-a-bundler' },
           { text: 'Languages', link: '/guide/languages' },
           { text: 'Icons', link: '/guide/icons' },
         ],

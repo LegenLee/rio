@@ -87,6 +87,8 @@ Development status: early. Before 1.0, any minor version may break the API.
 pnpm add @rio-m3e/vue
 ```
 
+Without a bundler, as from a CDN, load the browser build instead: see [Without a bundler](https://legenlee.github.io/rio/guide/without-a-bundler).
+
 `createRio` sets the theme, as CSS variables on the page, and the language of Rio's components. Install it **BEFORE** mounting the app.
 
 ```ts

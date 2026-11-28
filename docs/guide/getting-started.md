@@ -10,6 +10,8 @@ pnpm add @rio-m3e/vue
 
 `@rio-m3e/vue` needs Vue 3.5 or later, and it installs `@rio-m3e/core`, `@rio-m3e/styles`, and `@rio-m3e/tokens` for you.
 
+This assumes a bundler, such as Vite. For a page without one, loading Rio from a CDN, see [Without a bundler](./without-a-bundler.md).
+
 ## Set up Rio
 
 `createRio` sets the theme and the language for the whole app. Install it **before** mounting the app:

@@ -16,6 +16,7 @@
     "release:notes": "node scripts/release-notes.mjs",
     "test": "vitest --project unit --project browser",
     "test:visual": "vitest --project vrt",
+    "test:browser-build": "node scripts/check-browser-build.mjs",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
