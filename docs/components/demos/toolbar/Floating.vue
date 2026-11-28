@@ -8,11 +8,11 @@ const format = reactive({ bold: true, italic: false, underline: false });
 
 <template>
   <RioToolbar
-    v-for="color in ['standard', 'vibrant'] as const"
-    :key="color"
-    :aria-label="`Formatting, ${color}`"
-    variant="floating"
-    :color="color"
+    v-for="variant in ['standard', 'vibrant'] as const"
+    :key="variant"
+    :aria-label="`Formatting, ${variant}`"
+    type="floating"
+    :variant="variant"
   >
     <RioIconButton label="Undo" variant="standard">
       <RioIcon :icon="{ type: 'svg', path: mdiUndo }" />

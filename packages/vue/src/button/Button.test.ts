@@ -1,4 +1,4 @@
-import { createThemeVariables } from '@rio-m3e/tokens';
+import { createColorScheme, createStaticColors, createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent, type Locator } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -234,5 +234,108 @@ describe('RioButton', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       expect(button.style.borderStartStartRadius).toBe('');
     }
+  });
+
+  describe('color', () => {
+    const SOURCE = '#6750a4';
+    const staticColors = { success: '#2e7d32' };
+    const theme = createThemeVariables({ sourceColor: SOURCE, staticColors });
+    const scheme = createColorScheme({ sourceColor: SOURCE });
+    const success = createStaticColors({ sourceColor: SOURCE }, staticColors).success!;
+    const rgb = (hex: string) =>
+      `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+    const NONE = 'rgba(0, 0, 0, 0)';
+
+    /** The button's container, content, and outline colors, rendered in the theme */
+    const paint = async (props: Record<string, unknown>) => {
+      const screen = await render(
+        defineComponent(() => () => h('div', { style: theme }, [h(Button, props, () => 'Save')])),
+      );
+      const style = getComputedStyle(screen.getByRole('button').element());
+      const colors = [style.backgroundColor, style.color, style.borderTopColor];
+      // A test that paints several buttons finds each alone.
+      screen.unmount();
+      return colors;
+    };
+
+    test.each([
+      ['filled', {}, rgb(scheme.error), rgb(scheme.onError), NONE],
+      ['tonal', {}, rgb(scheme.errorContainer), rgb(scheme.onErrorContainer), NONE],
+      ['outlined', {}, NONE, rgb(scheme.error), rgb(scheme.error)],
+      ['elevated', {}, rgb(scheme.surfaceContainerLow), rgb(scheme.error), NONE],
+      ['text', {}, NONE, rgb(scheme.error), NONE],
+      [
+        'filled',
+        { toggle: true },
+        rgb(scheme.surfaceContainer),
+        rgb(scheme.onSurfaceVariant),
+        NONE,
+      ],
+      ['filled', { toggle: true, selected: true }, rgb(scheme.error), rgb(scheme.onError), NONE],
+      ['tonal', { toggle: true }, rgb(scheme.errorContainer), rgb(scheme.onErrorContainer), NONE],
+      ['tonal', { toggle: true, selected: true }, rgb(scheme.error), rgb(scheme.onError), NONE],
+      ['outlined', { toggle: true }, NONE, rgb(scheme.error), rgb(scheme.error)],
+      ['outlined', { toggle: true, selected: true }, rgb(scheme.error), rgb(scheme.onError), NONE],
+      ['elevated', { toggle: true }, rgb(scheme.surfaceContainerLow), rgb(scheme.error), NONE],
+      ['elevated', { toggle: true, selected: true }, rgb(scheme.error), rgb(scheme.onError), NONE],
+    ] as const)(
+      '%s %o in error: %s, %s, outline %s',
+      async (variant, props, container, content, outline) => {
+        expect(await paint({ variant, color: 'error', ...props })).toEqual([
+          container,
+          content,
+          outline,
+        ]);
+      },
+    );
+
+    test("without one, the spec's colors", async () => {
+      expect(await paint({})).toEqual([rgb(scheme.primary), rgb(scheme.onPrimary), NONE]);
+      expect(await paint({ variant: 'tonal' })).toEqual([
+        rgb(scheme.secondaryContainer),
+        rgb(scheme.onSecondaryContainer),
+        NONE,
+      ]);
+      expect(await paint({ variant: 'outlined' })).toEqual([
+        NONE,
+        rgb(scheme.onSurfaceVariant),
+        rgb(scheme.outlineVariant),
+      ]);
+      expect(await paint({ variant: 'outlined', toggle: true, selected: true })).toEqual([
+        rgb(scheme.inverseSurface),
+        rgb(scheme.inverseOnSurface),
+        NONE,
+      ]);
+    });
+
+    test('a static color of the theme, by its name', async () => {
+      expect(await paint({ color: 'success' })).toEqual([
+        rgb(success.color),
+        rgb(success.onColor),
+        NONE,
+      ]);
+      expect(await paint({ color: 'success', variant: 'tonal' })).toEqual([
+        rgb(success.colorContainer),
+        rgb(success.onColorContainer),
+        NONE,
+      ]);
+    });
+
+    test("a color the theme doesn't have keeps the spec's", async () => {
+      expect(await paint({ color: 'warning' })).toEqual(await paint({}));
+    });
+
+    test('disabled looks the same in any color', async () => {
+      for (const [variant, props] of [
+        ['filled', {}],
+        ['outlined', {}],
+        ['outlined', { toggle: true, selected: true }],
+        ['text', {}],
+      ] as const) {
+        expect(await paint({ variant, color: 'error', disabled: true, ...props })).toEqual(
+          await paint({ variant, disabled: true, ...props }),
+        );
+      }
+    });
   });
 });

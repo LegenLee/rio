@@ -120,12 +120,13 @@ A connected group is as wide as the space it's given. The first group keeps one 
 | `variant`    | `'standard' \| 'connected'`                                            | `'standard'` |
 | `size`       | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'`               | `'small'`    |
 | `shape`      | `'round' \| 'square'`                                                  | `'round'`    |
+| `color`      | `AccentColor`, a color of the theme, as on the button                  | —            |
 | `selection`  | `'none' \| 'single' \| 'multiple'`                                     | `'none'`     |
 | `required`   | `boolean`                                                              | `false`      |
 | `modelValue` | a value (`single`), or an array of values (`multiple`), with `v-model` | —            |
 
 - Event: `update:modelValue`. The parent owns the selection.
-- **Buttons take the group's size and shape** unless they set their own. A button can still opt out, for the spec's hero moments.
+- **Buttons take the group's size, shape, and color** unless they set their own. A button can still opt out, for the spec's hero moments. The color is the button's ([its Colors section](button.md#colors)), which the group's buttons inherit from its root; a menu, dialog, or tooltip opened inside starts from the theme's colors again.
 - **Selection**: with `selection` set, every button with a `value` becomes a toggle whose state the group keeps; its own `toggle`, `selected`, and `update:selected` are ignored. `single` turns the previous button off; `multiple` toggles each value in and out of an array. `required` keeps the last selected button on. Buttons without a `value` stay plain buttons. Selected buttons set `aria-pressed`. A link button (`href`) can't be selected: its `value` is ignored, and a click follows the link.
 - The root is a `<div role="group">`. It isn't focusable.
 - A button may sit in a `RioTooltip`, as in a toolbar of icon buttons. The group looks through the tooltip's wrapper: the button counts for the arrow keys, the pressed widths, and a connected group's ends.

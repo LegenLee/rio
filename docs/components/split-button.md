@@ -135,6 +135,7 @@ The soft-disabled buttons stay focusable. Press Tab to reach them.
 | `label`        | `string`                                                 | —          |
 | `variant`      | `'filled' \| 'tonal' \| 'outlined' \| 'elevated'`        | `'filled'` |
 | `size`         | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'` | `'small'`  |
+| `color`        | `AccentColor`, a color of the theme, as on the button    | —          |
 | `open`         | `boolean`, with `v-model:open`                           | `false`    |
 | `popup`        | `'menu' \| 'listbox' \| 'tree' \| 'grid' \| 'dialog'`    | `'menu'`   |
 | `disabled`     | `boolean`                                                | `false`    |
@@ -147,6 +148,7 @@ The soft-disabled buttons stay focusable. Press Tab to reach them.
 - The leading button is named by its label text. `label` names it when it has only an icon, and is ignored when there is label text, so the visible label stays its name (WCAG 2.5.3, Label in Name).
 - The trailing button is named by `menuLabel`, and carries `aria-haspopup` (from `popup`) and `aria-expanded` (from `open`), which is the spec's "extra state".
 - The component exposes the two `<button>` elements as `leading` and `trailing` (through a template ref in Vue). Attributes on the component go to the root, so the elements are how the app reaches the buttons.
+- **`color` takes a color of the theme in place of the spec's**, for both buttons, as on the button ([its Colors section](button.md#colors)). It goes on the root, which both buttons inherit it from.
 - `disabled` and `softDisabled` apply to both buttons, with the same meaning as on the button. `type` applies to the leading button only; the trailing button is always `type="button"`, so opening the menu never submits a form.
 
 ### The menu

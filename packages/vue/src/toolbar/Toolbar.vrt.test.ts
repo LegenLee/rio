@@ -31,13 +31,13 @@ describe('RioToolbar', () => {
   test.each(SCHEMES)('docked and floating, standard and vibrant, %s', async (scheme) => {
     const gallery = await renderGallery(scheme, () => [
       [toolbar({}, { inlineSize: '480px' })],
-      [toolbar({ color: 'vibrant' }, { inlineSize: '480px' })],
-      [toolbar({ variant: 'floating' }), toolbar({ variant: 'floating', color: 'vibrant' })],
+      [toolbar({ variant: 'vibrant' }, { inlineSize: '480px' })],
+      [toolbar({ type: 'floating' }), toolbar({ type: 'floating', variant: 'vibrant' })],
       [
-        toolbar({ variant: 'floating', flat: true }),
-        toolbar({ variant: 'floating', orientation: 'vertical' }),
-        toolbar({ variant: 'floating', orientation: 'vertical', color: 'vibrant' }),
-        h(Toolbar, { 'aria-label': 'Share', variant: 'floating' }, () => [
+        toolbar({ type: 'floating', flat: true }),
+        toolbar({ type: 'floating', orientation: 'vertical' }),
+        toolbar({ type: 'floating', orientation: 'vertical', variant: 'vibrant' }),
+        h(Toolbar, { 'aria-label': 'Share', type: 'floating' }, () => [
           h(IconButton, { label: 'Share', variant: 'standard' }, () =>
             icon(mdiShareVariantOutline),
           ),

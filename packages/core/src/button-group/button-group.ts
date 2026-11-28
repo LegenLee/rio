@@ -1,3 +1,4 @@
+import { accentStyle, type AccentColor } from '../accent/accent';
 import type { ButtonShape, ButtonSize } from '../button/button';
 import type { PartAttrs, PartNode } from '../parts';
 import { resolveProps } from '../utils/object';
@@ -28,6 +29,8 @@ export interface ButtonGroupProps {
   size?: ButtonSize;
   /** The shape of every button in the group that doesn't set its own. Defaults to `'round'`. */
   shape?: ButtonShape;
+  /** The theme color of every button in the group that doesn't set its own, as on the button. */
+  color?: AccentColor;
   /**
    * Turns buttons that have a `value` into toggle buttons whose selection the group keeps.
    * Defaults to `'none'`, where every button acts on its own.
@@ -45,7 +48,7 @@ export const buttonGroupDefaults = {
   shape: 'round',
   selection: 'none',
   required: false,
-} satisfies Omit<Required<ButtonGroupProps>, 'selected'>;
+} satisfies Omit<Required<ButtonGroupProps>, 'color' | 'selected'>;
 
 export interface ButtonGroupOptions {
   /** Returns the current prop values. The adapter owns the state. */
@@ -103,6 +106,8 @@ export function createButtonGroup(options: ButtonGroupOptions): ButtonGroupApi {
           'data-variant': p.variant,
           'data-size': p.size,
           'data-shape': p.shape,
+          // The buttons inherit it, unless they set their own.
+          style: accentStyle(p.color),
         };
       },
     },

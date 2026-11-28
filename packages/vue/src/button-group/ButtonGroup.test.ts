@@ -1,4 +1,4 @@
-import { createThemeVariables } from '@rio-m3e/tokens';
+import { createColorScheme, createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -9,6 +9,9 @@ import Tooltip from '../tooltip/Tooltip.vue';
 import ButtonGroup from './ButtonGroup.vue';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
+const scheme = createColorScheme({ sourceColor: '#6750a4' });
+const rgb = (hex: string) =>
+  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 
 /**
  * Renders a group in a container of the given width. `themed` adds the theme's variables, which
@@ -382,6 +385,42 @@ describe('RioButtonGroup', () => {
       expect(width(one!)).toBeLessThan(before[0]!);
       release(two!);
       await vi.waitFor(() => expect([one!, two!, six!].map(width)).toEqual(before));
+    });
+  });
+
+  describe('color', () => {
+    const background = (el: Element) => getComputedStyle(el).backgroundColor;
+
+    test('its buttons take it, unless they set their own', async () => {
+      const screen = await renderGroup(
+        { color: 'error' },
+        () => [
+          h(Button, null, () => 'Own'),
+          h(Button, { color: 'tertiary' }, () => 'Set'),
+          h(IconButton, { label: 'Icon' }, () => '+'),
+        ],
+        { themed: true },
+      );
+      const [own, set, icon] = screen.getByRole('button').elements();
+      expect([own!, set!, icon!].map(background)).toEqual([
+        rgb(scheme.error),
+        rgb(scheme.tertiary),
+        rgb(scheme.error),
+      ]);
+    });
+
+    test("buttons in a menu, dialog, or tooltip opened inside keep the theme's colors", async () => {
+      const screen = await renderGroup(
+        { color: 'error' },
+        () => [
+          h(Button, null, () => 'Outside'),
+          h('div', { popover: 'manual' }, [h(Button, null, () => 'Inside')]),
+        ],
+        { themed: true },
+      );
+      (document.querySelector('[popover]') as HTMLElement).showPopover();
+      const inside = screen.getByRole('button', { name: 'Inside' }).element();
+      expect(background(inside)).toBe(rgb(scheme.primary));
     });
   });
 });

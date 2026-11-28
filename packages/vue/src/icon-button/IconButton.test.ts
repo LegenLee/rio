@@ -1,6 +1,8 @@
+import { createColorScheme, createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
+import { defineComponent, h } from 'vue';
 import IconButton from './IconButton.vue';
 
 const icon = { slots: { default: () => '♡' } };
@@ -110,5 +112,38 @@ describe('RioIconButton', () => {
       '48px',
       '48px',
     ]);
+  });
+
+  describe('color', () => {
+    const SOURCE = '#6750a4';
+    const theme = createThemeVariables({ sourceColor: SOURCE });
+    const scheme = createColorScheme({ sourceColor: SOURCE });
+    const rgb = (hex: string) =>
+      `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+    /** The icon color of a standard icon button in error, rendered in the theme */
+    const iconColor = async (props: Record<string, unknown>) => {
+      const screen = await render(
+        defineComponent(
+          () => () =>
+            h('div', { style: theme }, [
+              h(
+                IconButton,
+                { label: 'Go', variant: 'standard', color: 'error', ...props },
+                () => '♡',
+              ),
+            ]),
+        ),
+      );
+      const color = getComputedStyle(screen.getByRole('button').element()).color;
+      screen.unmount();
+      return color;
+    };
+
+    test('a standard icon button takes it, and a toggle only when selected', async () => {
+      expect(await iconColor({})).toBe(rgb(scheme.error));
+      // Without a container, the icon's color is what tells a selected toggle from one that isn't.
+      expect(await iconColor({ toggle: true })).toBe(rgb(scheme.onSurfaceVariant));
+      expect(await iconColor({ toggle: true, selected: true })).toBe(rgb(scheme.error));
+    });
   });
 });

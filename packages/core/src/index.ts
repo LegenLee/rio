@@ -1,3 +1,5 @@
+// By name: `accentStyle` is the components' own, for their root parts.
+export type { AccentColor } from './accent/accent';
 export * from './app-bar/app-bar';
 export * from './app-bar/interaction';
 export * from './button-group/button-group';
