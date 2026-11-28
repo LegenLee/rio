@@ -11,6 +11,7 @@ export { default as RioDatePicker } from './date-picker/DatePicker.vue';
 export { default as RioDatePickerDialog } from './date-picker/DatePickerDialog.vue';
 export { default as RioDateRangePickerDialog } from './date-picker/DateRangePickerDialog.vue';
 export { default as RioDialog } from './dialog/Dialog.vue';
+export { default as RioFab } from './fab/Fab.vue';
 export { default as RioIcon } from './icon/Icon.vue';
 export { iconsKey, useIconOfAlias, type RioIconValue, type RioIcons } from './icon/icons';
 export { default as RioIconButton } from './icon-button/IconButton.vue';
