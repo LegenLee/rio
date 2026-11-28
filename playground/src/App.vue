@@ -52,6 +52,7 @@ import {
   ICON_BUTTON_VARIANTS,
   ICON_BUTTON_WIDTHS,
   SPLIT_BUTTON_VARIANTS,
+  type AccentColor,
   type ButtonShape,
   type ButtonSize,
   type ButtonVariant,
@@ -135,6 +136,10 @@ const sliders = reactive({
   vertical: 30,
 });
 const buttonShape = ref<ButtonShape>('round');
+const BUTTON_COLORS = ['primary', 'secondary', 'tertiary', 'error', 'success'] as const;
+const buttonColor = ref<AccentColor | 'spec'>('spec');
+// `spec` leaves `color` unset, for the spec's colors.
+const accent = computed(() => (buttonColor.value === 'spec' ? undefined : buttonColor.value));
 // Text buttons can't toggle.
 const TOGGLE_VARIANTS = BUTTON_VARIANTS.filter((v) => v !== 'text');
 // Bound rather than written in the template: vue-tsc 3.3.14 misreads a `//` in a component's static
@@ -370,6 +375,12 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           <RioSelectOption value="round">Round</RioSelectOption>
           <RioSelectOption value="square">Square</RioSelectOption>
         </RioSelect>
+        <RioSelect v-model="buttonColor" label="Color">
+          <RioSelectOption value="spec">The spec's</RioSelectOption>
+          <RioSelectOption v-for="color in BUTTON_COLORS" :key="color" :value="color">
+            {{ color }}
+          </RioSelectOption>
+        </RioSelect>
       </div>
       <div v-for="variant in BUTTON_VARIANTS" :key="variant" class="controls">
         <RioButton
@@ -378,6 +389,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           :variant="variant"
           :size="size"
           :shape="buttonShape"
+          :color="accent"
         >
           <template v-if="size === 'small'" #icon>★</template>
           {{ variant }} {{ size }}
@@ -391,6 +403,7 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           toggle
           :variant="variant"
           :shape="buttonShape"
+          :color="accent"
         >
           {{ variant }} toggle: {{ toggles[variant] ? 'on' : 'off' }}
         </RioButton>
@@ -865,9 +878,9 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
     </section>
 
     <section class="buttons toolbars">
-      <div v-for="color in ['standard', 'vibrant'] as const" :key="color" class="controls">
-        <code class="row-label">{{ color }}</code>
-        <RioToolbar :aria-label="`Formatting, ${color}`" variant="floating" :color="color">
+      <div v-for="variant in ['standard', 'vibrant'] as const" :key="variant" class="controls">
+        <code class="row-label">{{ variant }}</code>
+        <RioToolbar :aria-label="`Formatting, ${variant}`" type="floating" :variant="variant">
           <RioIconButton label="Bold" variant="tonal" toggle :selected="true">
             <RioIcon :icon="{ type: 'svg', path: mdiFormatBold }" />
           </RioIconButton>
@@ -879,10 +892,10 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
           </RioIconButton>
         </RioToolbar>
         <RioToolbar
-          :aria-label="`Alignment, ${color}`"
-          variant="floating"
+          :aria-label="`Alignment, ${variant}`"
+          type="floating"
           orientation="vertical"
-          :color="color"
+          :variant="variant"
         >
           <RioIconButton label="Left" variant="standard">
             <RioIcon :icon="{ type: 'svg', path: mdiFormatAlignLeft }" />

@@ -9,7 +9,7 @@ const last = ref('');
 </script>
 
 <template>
-  <RioToolbar aria-label="Photo" variant="floating">
+  <RioToolbar aria-label="Photo" type="floating">
     <RioIconButton label="Share" variant="standard" @click="last = 'Share'">
       <RioIcon :icon="{ type: 'svg', path: mdiShareVariantOutline }" />
     </RioIconButton>

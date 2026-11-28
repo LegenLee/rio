@@ -73,9 +73,16 @@ describe('parts', () => {
     }
   });
 
+  test('a color sets the accent variables on the root, which both buttons inherit', () => {
+    const { parts } = setup({ color: 'tertiary' }).button;
+    expect(parts.root().style).toContain('--rio-accent: var(--rio-color-tertiary)');
+    expect(parts.leading().style).toBeUndefined();
+    expect(parts.trailing().style).toBeUndefined();
+  });
+
   test('the inner parts carry their classes', () => {
     const { parts } = setup().button;
-    expect(parts.root()).toEqual({ class: 'rio-split-button' });
+    expect(parts.root()).toEqual({ class: 'rio-split-button', style: undefined });
     expect(parts.touch()).toEqual({
       class: 'rio-button__touch rio-touch-target',
       'aria-hidden': 'true',

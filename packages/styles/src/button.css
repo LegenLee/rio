@@ -6,6 +6,12 @@
  * element carries `data-variant`, `data-size`, `data-shape`, and, for toggle buttons,
  * `data-selected`, which `createButton` from `@rio-m3e/core` sets.
  *
+ * Colors: the spec's primary and secondary roles go through the accent variables
+ * (`base/accent.css`), which a `color` prop sets on the button or on a group around it. Without
+ * them, the spec's roles are the fallbacks. With them, an outlined button's content and outline,
+ * and a standard icon button's content, take the accent too, where the spec has neutral ones
+ * (Rio's choice). A standard toggle keeps the neutral content until selected, as its only cue.
+ *
  * Variant, size, shape, and toggle rules sit inside `:where()`, so they add no specificity. The
  * disabled and pressed rules always win, and apps can override any of them with a single class.
  */
@@ -28,8 +34,8 @@
   --_radius: var(--_round);
 
   /* Color: filled, the default */
-  --_container: var(--rio-color-primary);
-  --_content: var(--rio-color-on-primary);
+  --_container: var(--rio-accent, var(--rio-color-primary));
+  --_content: var(--rio-on-accent, var(--rio-color-on-primary));
   --_outline: transparent;
   --_elevation: var(--rio-elevation-level0);
   --_hover-elevation: var(--rio-elevation-level1);
@@ -142,48 +148,59 @@
 /* Variants */
 
 .rio-button:where([data-variant='tonal']) {
-  --_container: var(--rio-color-secondary-container);
-  --_content: var(--rio-color-on-secondary-container);
+  --_container: var(--rio-accent-container, var(--rio-color-secondary-container));
+  --_content: var(--rio-on-accent-container, var(--rio-color-on-secondary-container));
 }
 
 .rio-button:where([data-variant='outlined']) {
   --_container: transparent;
-  --_content: var(--rio-color-on-surface-variant);
-  --_outline: var(--rio-color-outline-variant);
+  --_content: var(--rio-accent, var(--rio-color-on-surface-variant));
+  --_outline: var(--rio-accent, var(--rio-color-outline-variant));
   --_hover-elevation: var(--rio-elevation-level0);
 }
 
 .rio-button:where([data-variant='elevated']) {
   --_container: var(--rio-color-surface-container-low);
-  --_content: var(--rio-color-primary);
+  --_content: var(--rio-accent, var(--rio-color-primary));
   --_elevation: var(--rio-elevation-level1);
   --_hover-elevation: var(--rio-elevation-level2);
 }
 
 .rio-button:where([data-variant='text']) {
   --_container: transparent;
-  --_content: var(--rio-color-primary);
+  --_content: var(--rio-accent, var(--rio-color-primary));
   --_hover-elevation: var(--rio-elevation-level0);
 }
+
+/*
+ * A container whose color the buttons should follow, as a toolbar, sets the `--rio-button-*-color`
+ * variables, which its buttons inherit. A button's own accent comes before them.
+ */
 
 /* Icon buttons only (see icon-button.css): no container, like text, but it can toggle */
 .rio-button:where([data-variant='standard']) {
   --_container: transparent;
-  --_content: var(--rio-button-standard-content-color, var(--rio-color-on-surface-variant));
+  --_content: var(
+    --rio-accent,
+    var(--rio-button-standard-content-color, var(--rio-color-on-surface-variant))
+  );
 }
 
-/*
- * Toggle buttons: unselected and selected colors, where they differ from the defaults above.
- * A container whose color the buttons should follow, as a toolbar, sets the `--rio-button-*-color`
- * variables, which its buttons inherit.
- */
+/* Toggle buttons: unselected and selected colors, where they differ from the defaults above */
 
 .rio-button:where([data-variant='tonal'][data-selected='false']) {
   --_container: var(
-    --rio-button-tonal-toggle-container-color,
-    var(--rio-color-secondary-container)
+    --rio-accent-container,
+    var(--rio-button-tonal-toggle-container-color, var(--rio-color-secondary-container))
   );
-  --_content: var(--rio-button-tonal-toggle-content-color, var(--rio-color-on-secondary-container));
+  --_content: var(
+    --rio-on-accent-container,
+    var(--rio-button-tonal-toggle-content-color, var(--rio-color-on-secondary-container))
+  );
+}
+
+.rio-button:where([data-variant='standard'][data-selected='false']) {
+  --_content: var(--rio-button-standard-content-color, var(--rio-color-on-surface-variant));
 }
 
 .rio-button:where([data-variant='filled'][data-selected='false']) {
@@ -192,23 +209,29 @@
 }
 
 .rio-button:where([data-variant='tonal'][data-selected='true']) {
-  --_container: var(--rio-button-tonal-selected-container-color, var(--rio-color-secondary));
-  --_content: var(--rio-button-tonal-selected-content-color, var(--rio-color-on-secondary));
+  --_container: var(
+    --rio-accent,
+    var(--rio-button-tonal-selected-container-color, var(--rio-color-secondary))
+  );
+  --_content: var(
+    --rio-on-accent,
+    var(--rio-button-tonal-selected-content-color, var(--rio-color-on-secondary))
+  );
 }
 
 .rio-button:where([data-variant='outlined'][data-selected='true']) {
-  --_container: var(--rio-color-inverse-surface);
-  --_content: var(--rio-color-inverse-on-surface);
+  --_container: var(--rio-accent, var(--rio-color-inverse-surface));
+  --_content: var(--rio-on-accent, var(--rio-color-inverse-on-surface));
   --_outline: transparent;
 }
 
 .rio-button:where([data-variant='elevated'][data-selected='true']) {
-  --_container: var(--rio-color-primary);
-  --_content: var(--rio-color-on-primary);
+  --_container: var(--rio-accent, var(--rio-color-primary));
+  --_content: var(--rio-on-accent, var(--rio-color-on-primary));
 }
 
 .rio-button:where([data-variant='standard'][data-selected='true']) {
-  --_content: var(--rio-color-primary);
+  --_content: var(--rio-accent, var(--rio-color-primary));
 }
 
 /* Interaction: hover lifts one level, pressing returns to rest and morphs the corners */
@@ -244,6 +267,13 @@
     [data-variant='standard']
   ) {
   --_container: transparent;
+}
+
+/* The spec's outline, whatever the accent */
+.rio-button:is(:disabled, [aria-disabled='true']):where(
+    [data-variant='outlined']:not([data-selected='true'])
+  ) {
+  --_outline: var(--rio-color-outline-variant);
 }
 
 .rio-button:is(:disabled, [aria-disabled='true']):where(

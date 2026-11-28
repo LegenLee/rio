@@ -1,0 +1,15 @@
+/*
+ * The accent variables, for the stylesheets that draw a component's `color`: `--rio-accent`,
+ * `--rio-on-accent`, `--rio-accent-container`, and `--rio-on-accent-container`, the four roles of
+ * a color of the theme. Core writes them in a component's root `style` (`accentStyle`), the
+ * elements inside inherit them, and a stylesheet reads them with the spec's roles as fallbacks.
+ *
+ * Menus, dialogs, and tooltips opened inside a colored component start from the theme's colors.
+ * The rule adds no specificity, so a `color` on the overlay itself still wins.
+ */
+:where([popover], dialog) {
+  --rio-accent: initial;
+  --rio-on-accent: initial;
+  --rio-accent-container: initial;
+  --rio-on-accent-container: initial;
+}

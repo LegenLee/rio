@@ -66,6 +66,9 @@ packages/
         spring.ts           spring math and driver, used by other primitives
       spring-property/
         spring-property.ts  springs a value toward a CSS target per state
+    accent/
+      accent.ts             AccentColor, and accentStyle, core's own: a component's `color` as the accent variables (see Core output)
+      accent.test.ts
     app-bar/
       app-bar.ts            small and flexible app bars: props, parts, the headline's heading level
       interaction.ts        whether content is scrolled under it (DOM, tested through the Vue component)
@@ -320,7 +323,11 @@ How `core` hands a component's markup to the adapters. The stylesheets depend on
 - **Bundles are HTML attributes**, as `setAttribute` would take them:
   - Names are HTML attribute names: `class`, `tabindex`, `aria-pressed`, `data-variant`. Never a framework's spelling, such as `className` or `tabIndex`.
   - Values are strings, or `undefined` to leave the attribute out. Boolean HTML attributes, such as `disabled`, are `''` when on and `undefined` when off. ARIA states are `'true'` and `'false'`.
-  - `style` carries only Rio's own custom properties, as `name: value` declarations separated by `;` (the time picker's `--rio-time-picker-angle`), for values the stylesheet can't select on.
+  - `style` carries only Rio's own custom properties, as `name: value` declarations separated by `;` (the time picker's `--rio-time-picker-angle`, the accent variables below), for values the stylesheet can't select on.
+- **A component's `color` reaches the stylesheet as four accent variables.** `accentStyle` (`accent/accent.ts`, not exported) writes `--rio-accent`, `--rio-on-accent`, `--rio-accent-container`, and `--rio-on-accent-container` in the root's `style`, each the named color's role in the theme. Only the theme's names get there: `primary`, `secondary`, `tertiary`, `error`, or a static color's.
+  - A stylesheet draws the roles the spec gives as primary or secondary through them, with the spec's role as the fallback: `var(--rio-accent, var(--rio-color-primary))` for the main color, `var(--rio-accent-container, var(--rio-color-secondary-container))` for a container. Neutral roles, as a surface container, and the disabled colors stay the spec's, and so does a role that tells one state from another, as an unselected standard toggle's icon, which would otherwise look selected. A name the theme doesn't have leaves the spec's colors, as its variable is undefined.
+  - The elements inside inherit them, so a group's color reaches its buttons, and one with a `color` of its own sets them again. A variable a container sets for the components inside it, as the toolbar's `--rio-button-*-color`, comes after the accent in the fallback, so a component's own color wins over it. Such a container sets the four back to `initial` on itself, so an accent from outside it doesn't win over its colors: the nearer one wins.
+  - `base/accent.css` sets the four back to `initial` in popovers and dialogs, so an overlay opened inside a colored component starts from the theme's colors. A component importing a stylesheet that reads them imports it too, as `vue/src/stylesheets.test.ts` checks.
 - **State attributes are written by how many states they have.** Stylesheets select on these, so the spelling is part of the contract, and primitives follow it too.
   - Two states (on or off): present as `''`, or absent. `data-pressed`, `data-dragging`, `data-icon`, `data-ripple`, `data-corner-morph`.
   - Three states (doesn't apply, off, on): absent, `'false'`, or `'true'`, like `aria-pressed`. `data-selected` is absent on a button that isn't a toggle and `'false'` on a toggle that is off, which the filled toggle needs for its own off colors.

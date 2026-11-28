@@ -14,7 +14,7 @@ const tools = [
 
 <template>
   <!-- Up and down move along a vertical toolbar -->
-  <RioToolbar aria-label="Tools" variant="floating" orientation="vertical" color="vibrant">
+  <RioToolbar aria-label="Tools" type="floating" orientation="vertical" variant="vibrant">
     <RioIconButton
       v-for="item in tools"
       :key="item.value"

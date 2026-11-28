@@ -17,7 +17,7 @@ interface Props extends Omit<ButtonGroupProps, 'selected'> {
 }
 
 // No defaults here: core fills them in.
-const { variant, size, shape, selection, required, modelValue } = defineProps<Props>();
+const { variant, size, shape, color, selection, required, modelValue } = defineProps<Props>();
 const emit = defineEmits<{ 'update:modelValue': [selected: ButtonGroupSelected] }>();
 defineSlots<{
   /** `RioButton`s and `RioIconButton`s. They take the group's size and shape unless they set their own. */
@@ -31,6 +31,7 @@ const group = createButtonGroup({
       variant,
       size,
       shape,
+      color,
       selection,
       required,
       selected: modelValue,

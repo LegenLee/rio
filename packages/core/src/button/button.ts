@@ -1,3 +1,4 @@
+import { accentStyle, type AccentColor } from '../accent/accent';
 import type { ButtonGroupValue } from '../button-group/button-group';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { disabledAttrs, isBlocked } from '../utils/disabled';
@@ -20,6 +21,12 @@ export interface ButtonProps {
   size?: ButtonSize;
   /** Defaults to `'round'`. */
   shape?: ButtonShape;
+  /**
+   * The theme color its accent takes, in place of the spec's: `'error'`, `'tertiary'`, or a static
+   * color of the theme. Without it, the button keeps the spec's colors, or the color of a button
+   * group around it.
+   */
+  color?: AccentColor;
   /**
    * Makes it a toggle button, which reports `selected` changes. The spec has no toggle for text
    * buttons, so `toggle` is ignored on them.
@@ -58,7 +65,7 @@ export const buttonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Omit<Required<ButtonProps>, 'value' | 'href'>;
+} satisfies Omit<Required<ButtonProps>, 'color' | 'value' | 'href'>;
 
 /** What the adapter has to put in the button, which only the adapter can see. */
 export interface ButtonContent {
@@ -133,6 +140,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
             'data-variant': p.variant,
             'data-size': p.size,
             'data-shape': p.shape,
+            style: accentStyle(p.color),
           };
         }
         const toggle = isToggle(p);
@@ -145,6 +153,7 @@ export function createButton<E extends CancelableEvent = MouseEvent>(
           'data-size': p.size,
           'data-shape': p.shape,
           'data-selected': toggle ? String(p.selected) : undefined,
+          style: accentStyle(p.color),
         };
       },
       touch: () => ({ class: 'rio-button__touch rio-touch-target', 'aria-hidden': 'true' }),

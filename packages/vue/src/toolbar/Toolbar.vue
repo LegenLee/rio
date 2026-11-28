@@ -4,7 +4,7 @@ import '@rio-m3e/styles/toolbar.css';
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
 
 // No defaults here: core fills them in.
-const { variant, color, orientation, flat } = defineProps<ToolbarProps>();
+const { type, variant, orientation, flat } = defineProps<ToolbarProps>();
 defineSlots<{
   /** The items: buttons, icon buttons, text fields, or anything else. */
   default?: () => unknown;
@@ -12,8 +12,7 @@ defineSlots<{
 
 const toolbar = createToolbar({
   // `satisfies` fails the build if a prop added to ToolbarProps is missing here.
-  props: () =>
-    ({ variant, color, orientation, flat }) satisfies Record<keyof ToolbarProps, unknown>,
+  props: () => ({ type, variant, orientation, flat }) satisfies Record<keyof ToolbarProps, unknown>,
 });
 
 const root = useTemplateRef<HTMLElement>('root');

@@ -205,10 +205,11 @@ describe('RioButton', () => {
     ['an unselected toggle', { toggle: true, selected: false }, false],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'large, square, tonal, and a submit button',
-      { variant: 'tonal', size: 'large', shape: 'square', type: 'submit' },
+      'large, square, tonal, in error, and a submit button',
+      { variant: 'tonal', size: 'large', shape: 'square', color: 'error', type: 'submit' },
       true,
     ],
+    ['a link in a static color', { href: '/settings', color: 'success' }, false],
     ['a text button asked to toggle', { variant: 'text', toggle: true }, false],
     ['disabled, with an icon', { disabled: true }, true],
     ['soft-disabled', { softDisabled: true }, false],
@@ -269,13 +270,14 @@ describe('RioIconButton', () => {
     ['an unselected toggle', { label: 'Go', toggle: true }, true],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'extra large, wide, square, outlined, and a reset button',
+      'extra large, wide, square, outlined, tertiary, and a reset button',
       {
         label: 'Go',
         variant: 'outlined',
         size: 'xlarge',
         width: 'wide',
         shape: 'square',
+        color: 'tertiary',
         type: 'reset',
       },
       false,
@@ -667,7 +669,11 @@ describe('RioButtonGroup', () => {
       { variant: 'connected', shape: 'square', selection: 'single' },
       'A',
     ],
-    ['a large, multi-select group', { size: 'large', selection: 'multiple' }, ['A']],
+    [
+      'a large, multi-select group in error',
+      { size: 'large', color: 'error', selection: 'multiple' },
+      ['A'],
+    ],
   ])('%s', async (_, props, selected) => {
     const screen = await render(ButtonGroup, {
       props: { ...props, modelValue: selected },
@@ -712,10 +718,10 @@ describe('RioAppBar', () => {
 describe('RioToolbar', () => {
   test.each<[string, ToolbarProps]>([
     ['a docked toolbar', {}],
-    ['a vibrant floating toolbar', { variant: 'floating', color: 'vibrant' }],
+    ['a vibrant floating toolbar', { type: 'floating', variant: 'vibrant' }],
     [
       'a vertical, flat floating toolbar',
-      { variant: 'floating', orientation: 'vertical', flat: true },
+      { type: 'floating', orientation: 'vertical', flat: true },
     ],
   ])('%s', async (_, props) => {
     const screen = await render(Toolbar, {
@@ -738,8 +744,15 @@ describe('RioSplitButton', () => {
     ['open', { menuLabel: 'More', open: true }, labelOnly],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'extra large, tonal, opening a dialog, and a submit button',
-      { menuLabel: 'More', variant: 'tonal', size: 'xlarge', popup: 'dialog', type: 'submit' },
+      'extra large, tonal, in error, opening a dialog, and a submit button',
+      {
+        menuLabel: 'More',
+        variant: 'tonal',
+        size: 'xlarge',
+        color: 'error',
+        popup: 'dialog',
+        type: 'submit',
+      },
       both,
     ],
     ['disabled', { menuLabel: 'More', disabled: true }, labelOnly],

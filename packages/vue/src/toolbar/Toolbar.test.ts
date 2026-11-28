@@ -84,7 +84,7 @@ describe('RioToolbar', () => {
   });
 
   test('a vertical floating toolbar says so, and takes up and down', async () => {
-    const { toolbar, named } = await setup({ variant: 'floating', orientation: 'vertical' });
+    const { toolbar, named } = await setup({ type: 'floating', orientation: 'vertical' });
     expect(toolbar.getAttribute('aria-orientation')).toBe('vertical');
     named('Bold').focus();
     await userEvent.keyboard('{ArrowDown}');
@@ -192,7 +192,7 @@ describe('RioToolbar', () => {
     });
 
     test('floating: as large as its items, 8px around them, 4px between, round, a shadow', async () => {
-      const { toolbar, named } = await setup({ variant: 'floating' });
+      const { toolbar, named } = await setup({ type: 'floating' });
       const style = getComputedStyle(toolbar);
       const box = toolbar.getBoundingClientRect();
       expect(box.height).toBe(64);
@@ -206,10 +206,10 @@ describe('RioToolbar', () => {
     });
 
     test('flat takes the shadow off; vertical is 64px wide', async () => {
-      const flat = await setup({ variant: 'floating', flat: true });
+      const flat = await setup({ type: 'floating', flat: true });
       expect(getComputedStyle(flat.toolbar).boxShadow).toBe('none');
       flat.screen.unmount();
-      const vertical = await setup({ variant: 'floating', orientation: 'vertical' });
+      const vertical = await setup({ type: 'floating', orientation: 'vertical' });
       expect(vertical.toolbar.getBoundingClientRect().width).toBe(64);
       expect(getComputedStyle(vertical.toolbar).flexDirection).toBe('column');
     });
@@ -231,7 +231,7 @@ describe('RioToolbar', () => {
     };
 
     test('standard: a tonal toggle is the toolbar’s color until selected', async () => {
-      const { toolbar, named } = await setup({ variant: 'floating' }, toggles);
+      const { toolbar, named } = await setup({ type: 'floating' }, toggles);
       expect(colors(toolbar)).toEqual([rgb(scheme.surfaceContainer), rgb(scheme.onSurfaceVariant)]);
       expect(getComputedStyle(named('Bold')).color).toBe(rgb(scheme.onSurfaceVariant));
       expect(colors(named('Italic'))).toEqual([
@@ -245,7 +245,7 @@ describe('RioToolbar', () => {
     });
 
     test('vibrant: primary container, and the buttons follow it', async () => {
-      const { toolbar, named } = await setup({ variant: 'floating', color: 'vibrant' }, toggles);
+      const { toolbar, named } = await setup({ type: 'floating', variant: 'vibrant' }, toggles);
       expect(colors(toolbar)).toEqual([
         rgb(scheme.primaryContainer),
         rgb(scheme.onPrimaryContainer),
@@ -261,8 +261,53 @@ describe('RioToolbar', () => {
       ]);
     });
 
+    test("a button's own color comes before the toolbar's", async () => {
+      const { named } = await setup({ type: 'floating', variant: 'vibrant' }, () => [
+        h(IconButton, { label: 'Bold', variant: 'standard', color: 'error' }, () =>
+          icon(mdiFormatBold),
+        ),
+        h(IconButton, { label: 'Italic', variant: 'tonal', toggle: true, color: 'error' }, () =>
+          icon(mdiFormatItalic),
+        ),
+      ]);
+      expect(getComputedStyle(named('Bold')).color).toBe(rgb(scheme.error));
+      expect(colors(named('Italic'))).toEqual([
+        rgb(scheme.errorContainer),
+        rgb(scheme.onErrorContainer),
+      ]);
+    });
+
+    test('an accent from outside stops at the toolbar', async () => {
+      const accent = {
+        '--rio-accent': 'var(--rio-color-error)',
+        '--rio-on-accent': 'var(--rio-color-on-error)',
+        '--rio-accent-container': 'var(--rio-color-error-container)',
+        '--rio-on-accent-container': 'var(--rio-color-on-error-container)',
+      };
+      const screen = await render(
+        defineComponent(
+          () => () =>
+            h('div', { style: { ...theme, ...accent } }, [
+              h(
+                Toolbar,
+                { 'aria-label': 'Formatting', type: 'floating', variant: 'vibrant' },
+                () => [
+                  h(IconButton, { label: 'Bold', variant: 'standard' }, () => icon(mdiFormatBold)),
+                  h(IconButton, { label: 'Italic', variant: 'standard', color: 'error' }, () =>
+                    icon(mdiFormatItalic),
+                  ),
+                ],
+              ),
+            ]),
+        ),
+      );
+      const named = (name: string) => screen.getByRole('button', { name }).element();
+      expect(getComputedStyle(named('Bold')).color).toBe(rgb(scheme.onPrimaryContainer));
+      expect(getComputedStyle(named('Italic')).color).toBe(rgb(scheme.error));
+    });
+
     test('buttons in an overlay open inside it keep their own colors', async () => {
-      const { named } = await setup({ color: 'vibrant' }, () => [
+      const { named } = await setup({ variant: 'vibrant' }, () => [
         h('div', { popover: 'manual', 'data-testid': 'popover' }, [
           h(IconButton, { label: 'Inside', variant: 'standard' }, () => icon(mdiFormatBold)),
         ]),

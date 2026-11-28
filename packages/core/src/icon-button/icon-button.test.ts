@@ -37,6 +37,12 @@ describe('createIconButton', () => {
     expect(parts.icon()).toEqual({ class: 'rio-button__icon', 'aria-hidden': 'true' });
   });
 
+  test('a color sets the accent variables on the root, as on the button', () => {
+    expect(setup({ color: 'error' }).button.parts.root().style).toContain(
+      '--rio-on-accent: var(--rio-color-on-error)',
+    );
+  });
+
   test('every variant can toggle, the standard one included', () => {
     const { button, onChange } = setup({ variant: 'standard', toggle: true });
     expect(button.parts.root()['aria-pressed']).toBe('false');
