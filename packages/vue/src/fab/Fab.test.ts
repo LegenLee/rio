@@ -1,6 +1,11 @@
 import { mdiPencilOutline } from '@mdi/js';
 import type { FabProps } from '@rio-m3e/core';
-import { attachTheme } from '@rio-m3e/tokens';
+import {
+  attachTheme,
+  createColorScheme,
+  createStaticColors,
+  createThemeVariables,
+} from '@rio-m3e/tokens';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -134,19 +139,71 @@ describe('RioFab', () => {
     await vi.waitFor(() => expect(span('label')[1]! < span('icon')[0]!).toBe(true));
   });
 
-  test.each([
-    ['primary-container', 'primary-container', 'on-primary-container'],
-    ['secondary-container', 'secondary-container', 'on-secondary-container'],
-    ['tertiary-container', 'tertiary-container', 'on-tertiary-container'],
-    ['primary', 'primary', 'on-primary'],
-    ['secondary', 'secondary', 'on-secondary'],
-    ['tertiary', 'tertiary', 'on-tertiary'],
-  ])('%s: on %s, in %s', async (color, container, content) => {
-    withTheme();
-    const { root } = await setup({ color });
-    const style = getComputedStyle(root);
-    expect(style.backgroundColor).toBe(computed('color', `var(--rio-color-${container})`));
-    expect(style.color).toBe(computed('color', `var(--rio-color-${content})`));
+  describe('color', () => {
+    const SOURCE = '#6750a4';
+    const staticColors = { success: '#2e7d32' };
+    const theme = createThemeVariables({ sourceColor: SOURCE, staticColors });
+    const scheme = createColorScheme({ sourceColor: SOURCE });
+    const success = createStaticColors({ sourceColor: SOURCE }, staticColors).success!;
+    const rgb = (hex: string) =>
+      `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+
+    /** The FAB's container and content colors, rendered in the theme */
+    const paint = async (props: Record<string, unknown>) => {
+      const screen = await render(
+        defineComponent(
+          () => () => h('div', { style: theme }, [h(Fab, { label: 'Compose', ...props })]),
+        ),
+      );
+      const style = getComputedStyle(screen.getByRole('button').element());
+      const colors = [style.backgroundColor, style.color];
+      screen.unmount();
+      return colors;
+    };
+
+    test.each([
+      ['primary container', {}, scheme.primaryContainer, scheme.onPrimaryContainer],
+      [
+        'secondary container',
+        { color: 'secondary' },
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ],
+      [
+        'tertiary container',
+        { color: 'tertiary' },
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ],
+      ['primary', { variant: 'filled' }, scheme.primary, scheme.onPrimary],
+      [
+        'secondary',
+        { variant: 'filled', color: 'secondary' },
+        scheme.secondary,
+        scheme.onSecondary,
+      ],
+      ['tertiary', { variant: 'filled', color: 'tertiary' }, scheme.tertiary, scheme.onTertiary],
+    ])("the spec's %s", async (_, props, container, content) => {
+      expect(await paint(props)).toEqual([rgb(container), rgb(content)]);
+    });
+
+    test('error, or a static color of the theme, by its name', async () => {
+      expect(await paint({ color: 'error' })).toEqual([
+        rgb(scheme.errorContainer),
+        rgb(scheme.onErrorContainer),
+      ]);
+      expect(await paint({ color: 'success', variant: 'filled' })).toEqual([
+        rgb(success.color),
+        rgb(success.onColor),
+      ]);
+    });
+
+    test("a color the theme doesn't have keeps primary's", async () => {
+      expect(await paint({ color: 'warning' })).toEqual(await paint({}));
+      expect(await paint({ color: 'warning', variant: 'filled' })).toEqual(
+        await paint({ variant: 'filled' }),
+      );
+    });
   });
 
   test('rests at level 3, and rises to level 4 on hover', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createFab, FAB_COLORS, FAB_SIZES, type FabContent, type FabProps } from './fab';
+import { createFab, FAB_SIZES, FAB_VARIANTS, type FabContent, type FabProps } from './fab';
 
 const setup = (props: Partial<FabProps> = {}, content: FabContent | undefined = { icon: true }) => {
   const onClick = vi.fn();
@@ -12,44 +12,48 @@ const setup = (props: Partial<FabProps> = {}, content: FabContent | undefined = 
 };
 
 describe('createFab', () => {
-  test('the spec’s three sizes and six color styles, primary container first', () => {
+  test('the spec’s three sizes, and its color styles as two variants of a color', () => {
     expect(FAB_SIZES).toEqual(['small', 'medium', 'large']);
-    expect(FAB_COLORS).toEqual([
-      'primary-container',
-      'secondary-container',
-      'tertiary-container',
-      'primary',
-      'secondary',
-      'tertiary',
-    ]);
+    expect(FAB_VARIANTS).toEqual(['tonal', 'filled']);
   });
 
-  test('defaults to a small FAB in primary container, its icon only, named by its label', () => {
+  test('defaults to a small tonal FAB in primary container, its icon only, named by its label', () => {
     const { fab } = setup();
     expect(fab.parts.root()).toEqual({
       class: 'rio-fab rio-state-layer rio-focus-ring',
       type: 'button',
       'aria-label': 'Compose',
       'data-size': 'small',
-      'data-color': 'primary-container',
+      'data-variant': 'tonal',
       'data-extended': undefined,
       'data-icon': '',
+      style: undefined,
     });
     expect(fab.showsIcon()).toBe(true);
     expect(fab.showsLabel()).toBe(false);
   });
 
   test('extended, it shows its label beside the icon, still named by it', () => {
-    const { fab } = setup({ extended: true, size: 'large', color: 'tertiary', type: 'submit' });
+    const { fab } = setup({ extended: true, size: 'large', type: 'submit' });
     expect(fab.parts.root()).toMatchObject({
       type: 'submit',
       'aria-label': 'Compose',
       'data-size': 'large',
-      'data-color': 'tertiary',
       'data-extended': '',
       'data-icon': '',
     });
     expect(fab.showsLabel()).toBe(true);
+  });
+
+  test('a color of the theme, filled or on its container, through the accent variables', () => {
+    const { fab } = setup({ color: 'tertiary', variant: 'filled' });
+    expect(fab.parts.root()).toMatchObject({
+      'data-variant': 'filled',
+      style:
+        '--rio-accent: var(--rio-color-tertiary); --rio-on-accent: var(--rio-color-on-tertiary); ' +
+        '--rio-accent-container: var(--rio-color-tertiary-container); ' +
+        '--rio-on-accent-container: var(--rio-color-on-tertiary-container)',
+    });
   });
 
   test('without an icon, it shows its label whatever `extended` says', () => {

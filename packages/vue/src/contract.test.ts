@@ -312,8 +312,15 @@ describe('RioFab', () => {
     ['without an icon, its label showing', { label: 'Go' }, false],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'large, tertiary, extended, and a reset button',
-      { label: 'Go', size: 'large', color: 'tertiary', extended: true, type: 'reset' },
+      'large, filled, tertiary, extended, and a reset button',
+      {
+        label: 'Go',
+        size: 'large',
+        variant: 'filled',
+        color: 'tertiary',
+        extended: true,
+        type: 'reset',
+      },
       true,
     ],
     ['a link', { label: 'Go', href: '/go' }, true],

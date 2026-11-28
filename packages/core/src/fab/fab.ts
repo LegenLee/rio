@@ -1,27 +1,21 @@
 // The floating action button (M3 Expressive): the screen's most important action, as an icon, or
 // extended with its label beside it. Props, parts, and the click.
 
+import { accentStyle, type AccentColor } from '../accent/accent';
 import type { CancelableEvent, PartAttrs, PartNode } from '../parts';
 import { linkAttrs } from '../utils/link';
 import { resolveProps } from '../utils/object';
 
-/**
- * M3E FAB sizes: 56, 80, and 96px, for the FAB and the extended FAB alike. `small` is the spec's
- * FAB and small extended FAB, not the 40dp small FAB, which M3E no longer recommends.
- */
+/** FAB sizes: 56, 80, and 96px, for the FAB and the extended FAB alike. */
 export const FAB_SIZES = ['small', 'medium', 'large'] as const;
 export type FabSize = (typeof FAB_SIZES)[number];
 
-/** M3E FAB color styles: a container color, with its on-color for the icon and the label. */
-export const FAB_COLORS = [
-  'primary-container',
-  'secondary-container',
-  'tertiary-container',
-  'primary',
-  'secondary',
-  'tertiary',
-] as const;
-export type FabColor = (typeof FAB_COLORS)[number];
+/**
+ * How the FAB takes its color: `tonal`, on the color's container, or `filled`, on the color
+ * itself. With `color`, they make the color styles: primary container is `tonal` and `primary`.
+ */
+export const FAB_VARIANTS = ['tonal', 'filled'] as const;
+export type FabVariant = (typeof FAB_VARIANTS)[number];
 
 export interface FabProps {
   /**
@@ -31,8 +25,13 @@ export interface FabProps {
   label: string;
   /** Defaults to `'small'`, 56px. */
   size?: FabSize;
-  /** Defaults to `'primary-container'`, the spec's default. */
-  color?: FabColor;
+  /** Defaults to `'tonal'`. */
+  variant?: FabVariant;
+  /**
+   * The theme color it takes: `'secondary'`, `'tertiary'`, `'error'`, or a static color of the
+   * theme. Without it, primary.
+   */
+  color?: AccentColor;
   /**
    * Shows the label beside the icon, as an extended FAB. Turned off, the FAB shrinks back to its
    * icon, as when the content scrolls. A FAB without an icon always shows its label.
@@ -46,10 +45,10 @@ export interface FabProps {
 
 export const fabDefaults = {
   size: 'small',
-  color: 'primary-container',
+  variant: 'tonal',
   extended: false,
   type: 'button',
-} satisfies Omit<Required<FabProps>, 'label' | 'href'>;
+} satisfies Omit<Required<FabProps>, 'label' | 'color' | 'href'>;
 
 /** What the adapter has to put in the FAB, which only the adapter can see. */
 export interface FabContent {
@@ -118,14 +117,15 @@ export function createFab<E extends CancelableEvent = MouseEvent>(
         const p = props();
         return {
           class: 'rio-fab rio-state-layer rio-focus-ring',
-          // There's no disabled FAB: the spec shows none where its action isn't available.
+          // There's no disabled FAB.
           ...(isLink() ? linkAttrs(p) : { type: p.type }),
           // The label names it while it shows only its icon, and while extended alike.
           'aria-label': p.label,
           'data-size': p.size,
-          'data-color': p.color,
+          'data-variant': p.variant,
           'data-extended': showsLabel() ? '' : undefined,
           'data-icon': showsIcon() ? '' : undefined,
+          style: accentStyle(p.color),
         };
       },
       // The icon only decorates; the label names the FAB.

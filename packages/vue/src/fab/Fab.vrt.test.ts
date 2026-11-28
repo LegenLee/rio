@@ -1,5 +1,5 @@
 import { mdiPencilOutline } from '@mdi/js';
-import { FAB_COLORS, FAB_SIZES } from '@rio-m3e/core';
+import { FAB_SIZES } from '@rio-m3e/core';
 import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { h } from 'vue';
@@ -14,7 +14,12 @@ describe('RioFab', () => {
       FAB_SIZES.map((size) => h(Fab, { label: 'Compose', size }, pencil)),
       FAB_SIZES.map((size) => h(Fab, { label: 'Compose', size, extended: true }, pencil)),
       [h(Fab, { label: 'Compose', extended: true })],
-      FAB_COLORS.map((color) => h(Fab, { label: 'Compose', color }, pencil)),
+      // The spec's color styles: primary, secondary, and tertiary, on their containers or filled
+      ...(['tonal', 'filled'] as const).map((variant) =>
+        (['primary', 'secondary', 'tertiary'] as const).map((color) =>
+          h(Fab, { label: 'Compose', variant, color }, pencil),
+        ),
+      ),
     ]);
     await expect.element(gallery).toMatchScreenshot(`variants-${scheme}`);
   });

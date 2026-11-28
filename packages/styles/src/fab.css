@@ -1,11 +1,15 @@
 /*
  * M3E floating action button: the FAB, the medium FAB, and the large FAB, and each one extended,
- * with its label beside the icon. `createFab` from `@rio-m3e/core` sets `data-size`, `data-color`,
- * `data-extended` while the label shows, and `data-icon` when there is an icon.
+ * with its label beside the icon. `createFab` from `@rio-m3e/core` sets `data-size`,
+ * `data-variant`, `data-extended` while the label shows, and `data-icon` when there is an icon.
+ *
+ * Colors: a `tonal` FAB takes the accent's container and on-container, a `filled` one the accent
+ * and on-accent (`base/accent.css`), which a `color` prop sets. Without them, primary's roles are
+ * the fallbacks. The state layer takes the content color.
  *
  * Values come from the spec's token tables (`md.comp.fab.*`, `md.comp.extended-fab.*`), read on
- * m3.material.io. Size and color rules sit inside `:where()`, so they add no specificity, and apps
- * can override any of them with a single class.
+ * m3.material.io. Size and variant rules sit inside `:where()`, so they add no specificity, and
+ * apps can override any of them with a single class.
  */
 
 .rio-fab {
@@ -19,9 +23,9 @@
   --_font: var(--rio-typescale-title-medium);
   --_tracking: var(--rio-typescale-title-medium-tracking);
 
-  /* Color: primary container, the default */
-  --_container: var(--rio-color-primary-container);
-  --_content: var(--rio-color-on-primary-container);
+  /* Variant: tonal, the default */
+  --_container: var(--rio-accent-container, var(--rio-color-primary-container));
+  --_content: var(--rio-on-accent-container, var(--rio-color-on-primary-container));
 
   display: inline-flex;
   align-items: center;
@@ -75,31 +79,11 @@
   --_tracking: var(--rio-typescale-headline-small-tracking);
 }
 
-/* Color styles: the state layer takes the content color, as the spec asks. */
+/* Variants */
 
-.rio-fab:where([data-color='secondary-container']) {
-  --_container: var(--rio-color-secondary-container);
-  --_content: var(--rio-color-on-secondary-container);
-}
-
-.rio-fab:where([data-color='tertiary-container']) {
-  --_container: var(--rio-color-tertiary-container);
-  --_content: var(--rio-color-on-tertiary-container);
-}
-
-.rio-fab:where([data-color='primary']) {
-  --_container: var(--rio-color-primary);
-  --_content: var(--rio-color-on-primary);
-}
-
-.rio-fab:where([data-color='secondary']) {
-  --_container: var(--rio-color-secondary);
-  --_content: var(--rio-color-on-secondary);
-}
-
-.rio-fab:where([data-color='tertiary']) {
-  --_container: var(--rio-color-tertiary);
-  --_content: var(--rio-color-on-tertiary);
+.rio-fab:where([data-variant='filled']) {
+  --_container: var(--rio-accent, var(--rio-color-primary));
+  --_content: var(--rio-on-accent, var(--rio-color-on-primary));
 }
 
 /* Interaction: hover lifts it a level, from 3 to 4; a press brings it back. */

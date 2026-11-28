@@ -47,7 +47,7 @@ import {
 import {
   BUTTON_SIZES,
   BUTTON_VARIANTS,
-  FAB_COLORS,
+  FAB_VARIANTS,
   FAB_SIZES,
   ICON_BUTTON_VARIANTS,
   ICON_BUTTON_WIDTHS,
@@ -868,9 +868,17 @@ const SPATIAL: MotionToken[] = ['fast-spatial', 'default-spatial', 'slow-spatial
         </RioFab>
       </div>
       <div class="controls">
-        <RioFab v-for="color in FAB_COLORS" :key="color" :label="color" :color="color">
-          <RioIcon :icon="{ type: 'svg', path: mdiPencilOutline }" />
-        </RioFab>
+        <template v-for="variant in FAB_VARIANTS" :key="variant">
+          <RioFab
+            v-for="color in ['primary', 'secondary', 'tertiary', 'error']"
+            :key="color"
+            :label="`${variant} ${color}`"
+            :variant="variant"
+            :color="color"
+          >
+            <RioIcon :icon="{ type: 'svg', path: mdiPencilOutline }" />
+          </RioFab>
+        </template>
         <RioButton variant="tonal" @click="fabExtended = !fabExtended">
           {{ fabExtended ? 'Shrink' : 'Extend' }}
         </RioButton>

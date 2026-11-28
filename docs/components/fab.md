@@ -59,8 +59,8 @@ import Tooltip from './demos/fab/Tooltip.vue';
 ### Variants and configurations
 
 - Three variants by size: the FAB, the medium FAB (new in M3 Expressive), and the large FAB. The extended FAB comes in the same three sizes: small, medium, and large.
-- "The small FAB is still available, but no longer recommended." The baseline extended FAB is "no longer recommended in the M3 expressive update. Use a small extended FAB." Surface color styles are no longer recommended either.
-- "FAB variants are based on size, not color." Six color styles: primary container (the default), secondary container, tertiary container, primary, secondary, and tertiary. M3 Expressive renamed the earlier primary, secondary, and tertiary styles to the container names, "to match the actual color roles used", and added new primary, secondary, and tertiary styles.
+- "The small FAB is still available, but no longer recommended." The baseline extended FAB is "no longer recommended in the M3 expressive update"; the small extended FAB replaces it. Surface color styles are no longer recommended either.
+- "FAB variants are based on size, not color". Six color styles: primary container (the default), secondary container, tertiary container, primary, secondary, and tertiary. M3 Expressive renamed the earlier primary, secondary, and tertiary styles to the container names, "to match the actual color roles used", and added new primary, secondary, and tertiary styles.
 - For the web, the spec lists the expressive FAB and extended FAB as unavailable.
 
 ### Anatomy and measurements
@@ -75,7 +75,7 @@ The FAB: container and icon. The extended FAB: container, label text, and icon (
 
 - The small size is the spec's FAB and small extended FAB. The 40dp small FAB is the one no longer recommended.
 - "The extended FAB container is a rounded rectangle that hugs its contents. The extended FAB grows and shrinks with text length."
-- "Extended FABs should have margins of 16dp."
+- "Extended FABs should have margins of 16dp".
 
 ### Colors
 
@@ -87,8 +87,6 @@ The FAB: container and icon. The extended FAB: container, label text, and icon (
 | Primary             | primary             | on primary                   |
 | Secondary           | secondary           | on secondary                 |
 | Tertiary            | tertiary            | on tertiary                  |
-
-- "Make sure the state layer color is the same as the icon color."
 
 ### States and elevation
 
@@ -103,16 +101,16 @@ The FAB: container and icon. The extended FAB: container, label text, and icon (
 
 - "FABs remain in place on scroll. Extended FABs can collapse into a FAB on scroll and expand on reaching the bottom of the view." The FAB and the extended FAB "can transform into each other depending on available space and layout".
 - "When a FAB animates on screen, it expands outward from a central point." It "can expand and adapt to any shape using a container transform transition pattern", and "can also transition into a FAB menu".
-- "Don't disable the FAB. If the action represented in the FAB is unavailable, the FAB shouldn't appear."
 - Keyboard: Tab focuses it; Space or Enter "perform the default action".
 - "The accessibility label should describe the action that the button is performing, such as Compose a new message." For the extended FAB, "the accessibility label must include the same first word as the visible label", and "both the visible label and icon should be treated as one focusable element".
-- "Ensure the icon has a minimum 3:1 contrast ratio with the container."
 
 ## Recommendations
 
 - Use one FAB, or one extended FAB, per screen, for its most important, constructive action, such as create, favorite, share, or start a process. Don't use it for minor, destructive, or unclear actions, or for controls that belong in a toolbar.
 - The medium FAB is "most recommended" and works best in compact and medium windows; the FAB suits compact windows with other actions on screen; the large FAB suits expanded and larger windows. For the extended FAB, the large size suits a compact window with one prominent action, and medium or large suit larger windows.
 - Place it in the lower trailing corner in compact and medium windows, or for the extended FAB, at the bottom, centered or at the trailing edge. In expanded windows, consider the upper left, as in a navigation rail. Don't put it on cards or inside other containers, nor an extended FAB over a toolbar; floating toolbars "can be paired with FABs, but not extended FABs".
+- "Don't disable the FAB. If the action represented in the FAB is unavailable, the FAB shouldn't appear."
+- "Make sure the state layer color is the same as the icon color." "Ensure the icon has a minimum 3:1 contrast ratio with the container."
 - Use a clear, filled icon, such as add, message, or edit. "When hovering over a FAB on web products, FABs should display a tooltip with an accompanying icon text label"; consider one on focus too. The extended FAB doesn't need one.
 - Use the extended FAB when a label helps; keep it to one or two words, and don't wrap or truncate it.
 - Give the FAB an early place in the focus order. Don't let it hide another element's focus indicator completely.
@@ -132,19 +130,21 @@ The FAB: container and icon. The extended FAB: container, label text, and icon (
 </RioFab>
 ```
 
-| Prop       | Type                                                                                                             | Default               |
-| ---------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `label`    | `string`, required                                                                                               | —                     |
-| `size`     | `'small' \| 'medium' \| 'large'`                                                                                 | `'small'`             |
-| `color`    | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary'` | `'primary-container'` |
-| `extended` | `boolean`                                                                                                        | `false`               |
-| `type`     | `'button' \| 'submit' \| 'reset'`                                                                                | `'button'`            |
-| `href`     | `string`, which makes it a link                                                                                  | —                     |
+| Prop       | Type                                                                          | Default    |
+| ---------- | ----------------------------------------------------------------------------- | ---------- |
+| `label`    | `string`, required                                                            | —          |
+| `size`     | `'small' \| 'medium' \| 'large'`                                              | `'small'`  |
+| `variant`  | `'tonal' \| 'filled'`                                                         | `'tonal'`  |
+| `color`    | `'primary' \| 'secondary' \| 'tertiary' \| 'error'`, or a static color's name | primary    |
+| `extended` | `boolean`                                                                     | `false`    |
+| `type`     | `'button' \| 'submit' \| 'reset'`                                             | `'button'` |
+| `href`     | `string`, which makes it a link                                               | —          |
 
 - Events: `click`. The default slot is the icon, hidden from assistive technology. **Rio ships no icons**; apps bring their own.
 - **`label` names the action, and is the label an extended FAB shows.** It is the FAB's `aria-label` whether the label shows or not, so the name stays the same as the FAB extends and shrinks; the visible label is hidden from assistive technology rather than read twice. A longer name, such as "Compose a new message", goes in `aria-label` on the FAB, which replaces it; start it with the visible label's first word, as the spec asks.
+- **The spec's six color styles are a `color` and a `variant`** (Rio's choice: `color` names a color of the theme, as on the buttons, and `variant` how the FAB takes it, as a button's variant does; the spec's own FAB variants are its sizes, `size` here). `tonal`, the default, puts it on the color's container: primary container, secondary container, or tertiary container. `filled` puts it on the color itself: primary, secondary, or tertiary. `color` takes `'error'` and the theme's static colors too, as `'success'`, beyond the spec's six; a name the theme doesn't have leaves primary's roles.
 - **`extended` shows the label beside the icon**, and turning it off shrinks the FAB back to its icon, as on scroll. Without an icon, the label always shows: a FAB needs an icon to shrink to.
-- **No `disabled`** (Rio's choice): the spec says not to disable a FAB but to leave it out, so render it only while its action is available, as with `v-if`.
+- **No `disabled`** (Rio's choice): the recommendation is not to disable a FAB but to leave it out, so render it only while its action is available, as with `v-if`.
 - **For the tooltip the guidelines ask for**, wrap a FAB that shows only its icon in a [`RioTooltip`](tooltip.md) with the same text as `label`, as for an icon button.
 - **`href` makes it a link**: an `<a>` that looks the same, named by `label`. `type` doesn't apply to it.
 - **Where it sits is the app's**: position it in the corner, 16px in, as with `position: fixed`, or in a navigation rail.
@@ -152,7 +152,7 @@ The FAB: container and icon. The extended FAB: container, label text, and icon (
 
 ### Motion
 
-- **Extending and shrinking**, as Compose's extended FABs with `expanded`: the width moves on `fast-spatial`, the label's room growing or shrinking with the space before it, and the label fades on `fast-effects`. Under reduced motion, the width changes at once and the fade stays.
+- **Extending and shrinking** (Rio's choice, as Compose's extended FABs with `expanded`): the width moves on `fast-spatial`, the label's room growing or shrinking with the space before it, and the label fades on `fast-effects`. Under reduced motion, the width changes at once and the fade stays.
 - Hovering lifts it from level 3 to level 4 on `fast-effects`.
 
 ### Values and their sources

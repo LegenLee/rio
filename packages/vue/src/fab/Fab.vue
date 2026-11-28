@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { createFab, type FabProps } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/accent.css';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
@@ -7,7 +8,7 @@ import '@rio-m3e/styles/fab.css';
 import { vRipple } from '../ripple/ripple';
 
 // No defaults here: core fills them in.
-const { label, size, color, extended, type, href } = defineProps<FabProps>();
+const { label, size, variant, color, extended, type, href } = defineProps<FabProps>();
 const emit = defineEmits<{ click: [event: MouseEvent] }>();
 const slots = defineSlots<{
   /** The icon. Hidden from assistive technology; `label` names the FAB. */
@@ -17,7 +18,10 @@ const slots = defineSlots<{
 // `satisfies` fails the build if a prop added to FabProps is missing here.
 const fab = createFab({
   props: () =>
-    ({ label, size, color, extended, type, href }) satisfies Record<keyof FabProps, unknown>,
+    ({ label, size, variant, color, extended, type, href }) satisfies Record<
+      keyof FabProps,
+      unknown
+    >,
   content: () => ({ icon: !!slots.default }),
   onClick: (event) => emit('click', event),
 });
