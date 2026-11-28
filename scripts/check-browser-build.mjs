@@ -1,7 +1,7 @@
 // Loads the browser build of `@rio-m3e/vue` the way a page without a bundler does, from plain
 // files: once as an ES module through an import map, once as scripts that set globals. Each page
 // writes its components in its HTML, registers them with `RioComponents`, and fails on any error,
-// a missing stylesheet or theme, or a component that doesn't respond.
+// a missing stylesheet or theme, a component that doesn't respond, or core and tokens out of reach.
 // Build first: `pnpm build && pnpm test:browser-build`.
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -134,6 +134,14 @@ try {
         }
         if (button.radius === '0px') fail('the button is square: no stylesheet');
       }
+
+      // Core and tokens, under their own names
+      const namespaces = await tab.evaluate(() => ({
+        compact: window.RioVue.core?.breakpointQuery?.('compact'),
+        css: typeof window.RioVue.tokens?.createThemeCss,
+      }));
+      if (namespaces.compact !== '(width < 600px)') fail('RioVue.core.breakpointQuery is missing');
+      if (namespaces.css !== 'function') fail('RioVue.tokens.createThemeCss is missing');
 
       await tab.getByRole('button', { name: 'Pressed 0' }).click();
       await tab.getByRole('switch', { name: 'Wi-Fi' }).click();
