@@ -1,6 +1,6 @@
 # Rio Foundations: M3E Core Principles
 
-This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, typography, and interaction states. Every section separates three kinds of statements:
+This document summarizes the Material 3 Expressive (M3E) foundations that Rio follows: two ways to express hierarchy, motion, shape, typography, interaction states, added colors, and breakpoints. Every section separates three kinds of statements:
 
 - **Spec**: token values and normative definitions from Google. This means the token tables on m3.material.io and the tokens generated from the same source for Material Web and Jetpack Compose.
 - **Recommendations**: guidance prose on m3.material.io, such as dos, don'ts, and "should". Rio's components follow it where it applies, but it doesn't change Rio's defaults by itself.
@@ -489,11 +489,44 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - **The source color is a seed, not the primary color**: the variant takes its hue and sets the chroma, as 32 for tonal-spot in light, so even `#ffffff` makes a colored primary. `keyColors.primary` keeps a color's own chroma, though its roles still take the variant's tones; color fidelity, which would match them to the color, is not yet in Rio.
 - **No baseline scheme** (Rio's choice). `sourceColor: '#6750a4'` makes a scheme from that color, which matches the baseline's fixed values in few roles.
 - `createStaticColors` and `staticColorVars` in `@rio-m3e/tokens` give the same colors and names outside a theme.
+- **A component's `color`** (Rio's choice: the spec's component tokens give each part a role, and Compose takes any colors instead, as `ButtonDefaults.buttonColors(containerColor = …)`): `color="error"`, `"tertiary"`, or a static color's name, as `"success"`, puts that color's four roles where the component has the primary or secondary ones, the main color for the main color and the container for the container. A filled button in error is error and on-error, a tonal one error container and on-error container. Neutral roles, as an elevated button's surface container, and the disabled colors stay the spec's. The buttons, icon buttons, split buttons, and button groups take it so far ([button.md](components/button.md)).
+- **Through four variables**: `--rio-accent`, `--rio-on-accent`, `--rio-accent-container`, and `--rio-on-accent-container`, which the component sets on itself from `color`. The elements inside inherit them, so a button group's color reaches its buttons; a menu, dialog, or tooltip opened inside starts from the theme's colors again. A toolbar stops an accent from outside it, so its own colors reach its buttons. A name the theme doesn't have leaves the spec's colors.
 
 #### Not yet
 
 - **Color fidelity**: MCU's 2025 color spec has no fidelity variant, so the tones follow the variant's rules, not the input colors' own.
 - **Custom color roles**, from a palette's tones and contrast rules of the app's own.
+
+## 8. Change layouts at breakpoints
+
+### Spec
+
+- "A breakpoint (previously window size class) is the window size at which a layout needs to change to match available space, device conventions, and ergonomics. These apply to Android and web."
+
+| Breakpoint  | Width       | Common devices                                                                     |
+| ----------- | ----------- | ---------------------------------------------------------------------------------- |
+| Compact     | Under 600dp | Phone in portrait                                                                  |
+| Medium      | 600–839dp   | Tablet in portrait, foldable in portrait (unfolded)                                |
+| Expanded    | 840–1199dp  | Phone in landscape, tablet in landscape, foldable in landscape (unfolded), desktop |
+| Large       | 1200–1599dp | Desktop                                                                            |
+| Extra-large | 1600dp+     | Desktop, ultra-wide monitors                                                       |
+
+- "On Android, compact, medium, and expanded breakpoints are also available for height."
+
+### Recommendations
+
+- "Products should automatically adapt to any breakpoint". "Design for breakpoints instead of specific devices", since the window changes with multi-window modes, unfolding, and orientation.
+- Panes: one in a compact window; one in a medium window, or two for "low-density content with clear actions"; one or two, two recommended, in expanded and large windows; up to three in extra-large ones.
+- Across breakpoints, decide what to reveal, divide, resize, reposition, or swap. Swap only components that are "functionally equivalent", for "a functional and ergonomic purpose": the navigation bar in a compact window for a navigation rail in medium and expanded ones, a "Basic or full-screen dialog" in a compact window for a "Basic dialog", and a bottom sheet for a menu.
+- "Across all breakpoints, adjust margins and type styles to keep text between 40–60 characters per line."
+
+### In Rio
+
+- **`BREAKPOINT_WIDTHS` in `@rio-m3e/core`** gives where each breakpoint starts, in CSS px for the spec's dp: `compact` 0, `medium` 600, `expanded` 840, `large` 1200, `extra-large` 1600. `BREAKPOINTS` lists them narrowest first, and `breakpointQuery('medium')` gives the media query for one, `'(600px <= width < 840px)'`, for `matchMedia`.
+- **The width is the window's**: what a media query measures, not the width of the element a component sits in.
+- **Stylesheets write the width itself**, as `@media (min-width: 600px)`: CSS can't read a variable in a media query, so Rio writes no `--rio-*` variable for the breakpoints. A test in `@rio-m3e/styles` checks that every width a stylesheet's media query compares to is a breakpoint's.
+- Where Rio uses them: the adaptive dialog is full-screen in a compact window ([dialog.md](components/dialog.md)), and a docked toolbar spreads its items across a compact window ([toolbar.md](components/toolbar.md)).
+- **Height breakpoints are not in Rio**, as the spec gives them to Android only.
 
 ## Implementation status
 
@@ -501,6 +534,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | -------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Color roles (2025 spec, light and dark)            | `tokens`                | Done: `createColorScheme`, `attachTheme`, `createThemeCss`                                                                                                              |
 | Static colors and key colors                       | `tokens`                | Done: `staticColors` and `keyColors` in the theme, `createStaticColors`, `staticColorVars`. See section 7.                                                              |
+| A component's color                                | `core`, `styles`, `vue` | Started: `color` on the buttons, icon buttons, split buttons, and button groups; `AccentColor`, `base/accent.css`. See section 7.                                       |
 | Elevation levels and web shadows                   | `tokens`                | Done: `elevationVar`, `createElevationVariables`. Also included in the theme variables (`attachTheme`, `createThemeCss`).                                               |
 | Scrim (32%)                                        | `tokens`                | To do                                                                                                                                                                   |
 | Motion curves (official conversion table)          | `tokens`                | Done: `motionVar`, `createMotionVariables`, `getMotionCurve`. Also included in the theme variables, with the scheme chosen by `motion`.                                 |
@@ -516,6 +550,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 | State layer and focus ring CSS                     | `styles`                | Done: `base/state-layer.css`, `base/focus-ring.css`.                                                                                                                    |
 | Ripple (pressed)                                   | `core`, `styles`, `vue` | Done: `attachRipple`, `base/ripple.css`, `v-ripple`.                                                                                                                    |
 | Reduced motion                                     | `styles`                | Done: `base/reduced-motion.css`. Spatial motion is instant, and effects fades stay.                                                                                     |
+| Breakpoints                                        | `core`                  | Done: `BREAKPOINTS`, `BREAKPOINT_WIDTHS`, `breakpointQuery`. See section 8.                                                                                             |
 
 ## Sources
 
@@ -534,6 +569,7 @@ There are six states: enabled, disabled, hover, focused, pressed, and dragged.
 - [States – State layers](https://m3.material.io/foundations/interaction/states/state-layers)
 - [States – Applying states](https://m3.material.io/foundations/interaction/states/applying-states)
 - [Gestures](https://m3.material.io/foundations/interaction/gestures)
+- [Breakpoints – Overview](https://m3.material.io/foundations/layout/breakpoints/overview) (section 8)
 
 ### Spec token values, generated per platform
 

@@ -24,6 +24,7 @@ export const icons: RioIcons = {
     menu: 'keyboard_arrow_down',
     check: 'check',
     submenu: 'arrow_right',
+    close: 'close',
   },
   resolve: (name) => ({ type: 'ligature', name, className: 'material-symbols-outlined' }),
 };

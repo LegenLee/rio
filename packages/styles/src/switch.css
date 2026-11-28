@@ -59,6 +59,9 @@
   --_state-layer: var(--rio-color-on-surface);
 
   position: relative;
+  /* Keeps the input's z-index inside, rather than over what the page stacks above the switch, such
+     as a sticky app bar, where the input would take the presses. */
+  isolation: isolate;
   display: inline-flex;
   flex: none;
   box-sizing: border-box;

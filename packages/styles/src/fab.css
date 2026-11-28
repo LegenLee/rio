@@ -1,0 +1,151 @@
+/*
+ * M3E floating action button: the FAB, the medium FAB, and the large FAB, and each one extended,
+ * with its label beside the icon. `createFab` from `@rio-m3e/core` sets `data-size`,
+ * `data-variant`, `data-extended` while the label shows, and `data-icon` when there is an icon.
+ *
+ * Colors: a `tonal` FAB takes the accent's container and on-container, a `filled` one the accent
+ * and on-accent (`base/accent.css`), which a `color` prop sets. Without them, primary's roles are
+ * the fallbacks. The state layer takes the content color.
+ *
+ * Values come from the spec's token tables (`md.comp.fab.*`, `md.comp.extended-fab.*`), read on
+ * m3.material.io. Size and variant rules sit inside `:where()`, so they add no specificity, and
+ * apps can override any of them with a single class.
+ */
+
+.rio-fab {
+  /* Size: small, 56px, the default */
+  --_size: 56px;
+  --_icon-size: 24px;
+  --_radius: var(--rio-shape-corner-large);
+  /* Extended: the space at either end, and between the icon and the label */
+  --_padding: 16px;
+  --_gap: 8px;
+  --_font: var(--rio-typescale-title-medium);
+  --_tracking: var(--rio-typescale-title-medium-tracking);
+
+  /* Variant: tonal, the default */
+  --_container: var(--rio-accent-container, var(--rio-color-primary-container));
+  --_content: var(--rio-on-accent-container, var(--rio-color-on-primary-container));
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-inline-size: var(--_size);
+  block-size: var(--_size);
+  /* With its icon only, the FAB is square, the icon in the middle; the border takes its share. */
+  padding-block: 0;
+  padding-inline: calc((var(--_size) - var(--_icon-size)) / 2 - 1px);
+  /* Transparent, but forced-colors mode paints it, which keeps the FAB's edge visible. */
+  border: 1px solid transparent;
+  border-radius: var(--_radius);
+  background-color: var(--_container);
+  box-shadow: var(--rio-elevation-level3);
+  color: var(--_content);
+  font: var(--_font);
+  letter-spacing: var(--_tracking);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--rio-motion-fast-effects),
+    color var(--rio-motion-fast-effects),
+    box-shadow var(--rio-motion-fast-effects),
+    padding-inline var(--rio-motion-fast-spatial);
+}
+
+/* Sizes */
+
+.rio-fab:where([data-size='medium']) {
+  --_size: 80px;
+  --_icon-size: 28px;
+  --_radius: var(--rio-shape-corner-large-increased);
+  --_padding: 26px;
+  --_gap: 12px;
+  --_font: var(--rio-typescale-title-large);
+  --_tracking: var(--rio-typescale-title-large-tracking);
+}
+
+.rio-fab:where([data-size='large']) {
+  --_size: 96px;
+  --_icon-size: 36px;
+  --_radius: var(--rio-shape-corner-extra-large);
+  --_padding: 28px;
+  --_gap: 16px;
+  --_font: var(--rio-typescale-headline-small);
+  --_tracking: var(--rio-typescale-headline-small-tracking);
+}
+
+/* Variants */
+
+.rio-fab:where([data-variant='filled']) {
+  --_container: var(--rio-accent, var(--rio-color-primary));
+  --_content: var(--rio-on-accent, var(--rio-color-on-primary));
+}
+
+/* Interaction: hover lifts it a level, from 3 to 4; a press brings it back. */
+
+@media (hover: hover) {
+  .rio-fab:hover {
+    box-shadow: var(--rio-elevation-level4);
+  }
+}
+
+.rio-fab[data-pressed] {
+  box-shadow: var(--rio-elevation-level3);
+}
+
+/* The state layer (::before) and the ripple (::after) cover the border too, in any load order. */
+.rio-fab[data-size]::before,
+.rio-fab[data-size]::after {
+  inset: -1px;
+}
+
+/* Extended: the label's room grows from nothing to the label, as the FAB widens from its icon. */
+
+.rio-fab[data-extended] {
+  padding-inline: calc(var(--_padding) - 1px);
+}
+
+.rio-fab__icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--_icon-size);
+  block-size: var(--_icon-size);
+  font-size: var(--_icon-size);
+}
+
+.rio-fab__icon > :is(svg, img, :where(.rio-icon)) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* A column of the label's width, or of none; the size between them animates, as `auto` can't. */
+.rio-fab__label {
+  display: grid;
+  grid-template-columns: 0fr;
+  margin-inline-start: 0;
+  opacity: 0;
+  transition:
+    grid-template-columns var(--rio-motion-fast-spatial),
+    margin-inline-start var(--rio-motion-fast-spatial),
+    opacity var(--rio-motion-fast-effects);
+}
+
+.rio-fab[data-extended] .rio-fab__label {
+  grid-template-columns: 1fr;
+  opacity: 1;
+}
+
+.rio-fab[data-extended][data-icon] .rio-fab__label {
+  margin-inline-start: var(--_gap);
+}
+
+/* Cut off by its room, without wrapping, while it grows or shrinks. */
+.rio-fab__text {
+  min-inline-size: 0;
+  overflow: hidden;
+}

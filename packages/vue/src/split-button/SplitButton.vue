@@ -5,6 +5,7 @@ import {
   type SplitButtonMenuIconHandle,
   type SplitButtonProps,
 } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/accent.css';
 import '@rio-m3e/styles/base/direction.css';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
@@ -18,7 +19,7 @@ import { vCornerMorph } from '../corner-morph/corner-morph';
 import RioIcon from '../icon/Icon.vue';
 
 // No defaults here: core fills them in.
-const { menuLabel, label, variant, size, open, popup, disabled, softDisabled, type } =
+const { menuLabel, label, variant, size, color, open, popup, disabled, softDisabled, type } =
   defineProps<SplitButtonProps>();
 const emit = defineEmits<{
   /** A click on the leading button. */
@@ -46,6 +47,7 @@ const sb = createSplitButton({
       label,
       variant,
       size,
+      color,
       open,
       popup,
       disabled,

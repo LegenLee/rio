@@ -7,6 +7,7 @@
 ## Examples
 
 <script setup>
+import Colors from './demos/button/Colors.vue';
 import Disabled from './demos/button/Disabled.vue';
 import Icon from './demos/button/Icon.vue';
 import Link from './demos/button/Link.vue';
@@ -56,6 +57,16 @@ Press and hold to see the corners spring toward the pressed shape.
 
 ::: details Code
 <<< ./demos/button/Toggle.vue
+:::
+
+### Colors
+
+`color` takes another color of the theme in place of the spec's: here error, for an action that destroys something, and tertiary.
+
+<Demo><Colors /></Demo>
+
+::: details Code
+<<< ./demos/button/Colors.vue
 :::
 
 ### Link
@@ -154,27 +165,48 @@ Toggle buttons replace those colors:
 <RioButton v-model:selected="bold" toggle>Bold</RioButton>
 
 <RioButton href="/settings" variant="text">Settings</RioButton>
+
+<RioButton color="error" @click="remove">Delete</RioButton>
 ```
 
-| Prop           | Type                                                        | Default    |
-| -------------- | ----------------------------------------------------------- | ---------- |
-| `variant`      | `'filled' \| 'tonal' \| 'outlined' \| 'elevated' \| 'text'` | `'filled'` |
-| `size`         | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'`    | `'small'`  |
-| `shape`        | `'round' \| 'square'`                                       | `'round'`  |
-| `toggle`       | `boolean`                                                   | `false`    |
-| `selected`     | `boolean`, with `v-model:selected`                          | `false`    |
-| `disabled`     | `boolean`                                                   | `false`    |
-| `softDisabled` | `boolean`                                                   | `false`    |
-| `type`         | `'button' \| 'submit' \| 'reset'`                           | `'button'` |
-| `value`        | `string \| number`, for button groups                       | —          |
-| `href`         | `string`, which makes it a link                             | —          |
+| Prop           | Type                                                                                         | Default    |
+| -------------- | -------------------------------------------------------------------------------------------- | ---------- |
+| `variant`      | `'filled' \| 'tonal' \| 'outlined' \| 'elevated' \| 'text'`                                  | `'filled'` |
+| `size`         | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'`                                     | `'small'`  |
+| `shape`        | `'round' \| 'square'`                                                                        | `'round'`  |
+| `color`        | `AccentColor`: `'primary' \| 'secondary' \| 'tertiary' \| 'error'`, or a static color's name | —          |
+| `toggle`       | `boolean`                                                                                    | `false`    |
+| `selected`     | `boolean`, with `v-model:selected`                                                           | `false`    |
+| `disabled`     | `boolean`                                                                                    | `false`    |
+| `softDisabled` | `boolean`                                                                                    | `false`    |
+| `type`         | `'button' \| 'submit' \| 'reset'`                                                            | `'button'` |
+| `value`        | `string \| number`, for button groups                                                        | —          |
+| `href`         | `string`, which makes it a link                                                              | —          |
 
 - Events: `click` (only when not blocked), and `update:selected` (toggle buttons).
 - Slots: the default slot is the label, and `icon` is a leading icon. The icon is hidden from assistive technology, so the label must stand on its own.
 - The root is a native `<button>`, or an `<a>` with `href` (see [Links](#links)), with the ripple (`v-ripple`), the state layer, and the focus ring.
 - `type` defaults to `'button'`, so a button inside a form doesn't submit it by accident.
 - `toggle` on a text button is ignored, because the spec has no tokens for it. A toggle button sets `aria-pressed`.
-- Inside a [button group](button-group.md), `size` and `shape` default to the group's. In a group that keeps a selection, a button with a `value` is a toggle whose state the group owns.
+- Inside a [button group](button-group.md), `size`, `shape`, and `color` default to the group's. In a group that keeps a selection, a button with a `value` is a toggle whose state the group owns.
+
+### Colors
+
+**`color` takes a color of the theme in place of the spec's** (Rio's choice; section 7 of [foundations.md](../foundations.md)): `'error'`, `'tertiary'`, `'primary'`, `'secondary'`, or the name of a static color the theme adds, as `'success'`. Without it, the button keeps the spec's colors above. With it, the color's main role takes the place of primary and secondary, and its container the place of secondary container:
+
+| Variant  | Container             | Label and icon     | Outline | Toggle unselected: container / content             | Toggle selected  |
+| -------- | --------------------- | ------------------ | ------- | -------------------------------------------------- | ---------------- |
+| filled   | color                 | on-color           | —       | surface-container / on-surface-variant, the spec's | color / on-color |
+| tonal    | color-container       | on-color-container | —       | color-container / on-color-container               | color / on-color |
+| outlined | —                     | color              | color   | — / color, with a color outline                    | color / on-color |
+| elevated | surface-container-low | color              | —       | surface-container-low / color                      | color / on-color |
+| text     | —                     | color              | —       | —                                                  | —                |
+
+- **An outlined button's label and outline take the color too** (Rio's choice), where the spec has neutral on-surface-variant and outline-variant, so an outlined button in error reads as one. Its selected toggle takes the color in place of the inverse surface.
+- **Neutral roles stay the spec's**: an elevated button's surface container, and an unselected filled toggle. Disabled buttons look the same in any color.
+- **A name the theme doesn't have**, as `'success'` without that static color, leaves the spec's colors. Another role of the theme, as `'surface'`, has only some of the four roles and mixes with the spec's colors, so give only the names above.
+- **Inside a toolbar**, a button's own `color` comes before the colors the toolbar gives its buttons ([toolbar.md](toolbar.md)).
+- The color goes on the root's `style` as four variables, `--rio-accent`, `--rio-on-accent`, `--rio-accent-container`, and `--rio-on-accent-container`, which `button.css` reads with the spec's roles as fallbacks. An app's own `style` on the button sits next to them.
 
 ### Disabled: two props
 

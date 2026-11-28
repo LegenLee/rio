@@ -35,6 +35,25 @@ describe('RioButton', () => {
     await expect.element(gallery).toMatchScreenshot(`states-${scheme}`);
   });
 
+  // Error and tertiary in place of the spec's colors; the disabled row looks as it does without.
+  test.each(SCHEMES)('colors, %s', async (scheme) => {
+    const gallery = await renderGallery(scheme, () => [
+      ...(['error', 'tertiary'] as const).map((color) =>
+        BUTTON_VARIANTS.map((variant) => h(Button, { variant, color }, () => 'Label')),
+      ),
+      TOGGLE_VARIANTS.map((variant) =>
+        h(Button, { variant, color: 'error', toggle: true }, () => 'Off'),
+      ),
+      TOGGLE_VARIANTS.map((variant) =>
+        h(Button, { variant, color: 'error', toggle: true, selected: true }, () => 'On'),
+      ),
+      BUTTON_VARIANTS.map((variant) =>
+        h(Button, { variant, color: 'error', disabled: true }, () => 'Disabled'),
+      ),
+    ]);
+    await expect.element(gallery).toMatchScreenshot(`colors-${scheme}`);
+  });
+
   // A link looks like the button it stands in for: no underline, no link color.
   test('links', async () => {
     const gallery = await renderGallery('light', () => [

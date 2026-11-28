@@ -193,7 +193,7 @@ It takes `min`, `max`, `isDateDisabled`, `locale`, `firstDayOfWeek`, and `messag
 - **A dialog the app opens with its own button** (Rio's choice), as the spec's range picker is modal; there is no field and no docked range picker. The app shows the range wherever it likes.
 - **Two values, each a date as the date picker's** (Rio's choice): `v-model:start` and `v-model:end`, which change together on OK. OK with only a start sets it, and leaves the end empty.
 - **Choosing a range** (Rio's choice, as Compose's `DateRangePicker` does): a press starts the range; the next, on that day or a later one, ends it, and on an earlier one starts it there instead. With both ends chosen, a press starts a new range. The same day twice is a range of one day.
-- **A basic dialog, 360 × 568px, in any window** (Rio's choice: the spec shows a full-screen picker, which waits for full-screen dialogs, as [dialog.md](dialog.md) says; the 568px is Compose's height for the modal date picker). Its header is the date picker dialog's, with the title, the headline, and the mode button; Cancel and OK sit below the months, as in the spec's drawing.
+- **A basic dialog, 360 × 568px, in any window** (Rio's choice: the spec shows a full-screen picker, not built yet, as below; the 568px is Compose's height for the modal date picker). Its header is the date picker dialog's, with the title, the headline, and the mode button; Cancel and OK sit below the months, as in the spec's drawing.
 - **The months lie one under another**, each under its name, and scroll; the weekdays stay above them. The dialog opens with the start's month at the top, or today's. It renders the three months before and the year after, and a year more as the months scroll near either end, as far as `min` and `max`, or 1900 to 2100 and further to take in the range (Rio's choice). Months added above leave those in view where they were.
 - **Keys** work as in the date picker's calendar, from month to month: Page Up and Page Down go to the same date a month away, rendering more months on the way. **Enter chooses the day, and confirms the range when the day ends it** (Rio's choice: the spec's table has Enter close the calendar and save the date).
 - Each month is a grid named by the month, as "August 2026", that takes more than one selection; the range's ends and the days between them are its selected cells (`aria-selected`; Rio's choice). The weekdays above are hidden from assistive technology, as each day's name says its weekday. The headline, announced as it changes, says the range so far, as "Aug 17 – Aug 23", with "Start date" or "End date" for an end not chosen yet, as Compose's headline does; the message table writes the range as each language does, such as 8월 17일 ~ 8월 23일.
@@ -213,7 +213,7 @@ Every text, the format, the names of months and days, and the first day of the w
 
 ### Not yet
 
-- The full-screen pickers for compact windows, for a date and for a range, which wait for full-screen dialogs ([dialog.md](dialog.md)).
+- The full-screen pickers for compact windows, for a date and for a range, as full-screen dialogs ([dialog.md](dialog.md)).
 - Months the range picker scrolled far from stay rendered: a long scroll keeps hundreds of months of days in the page.
 - A range picker on the page, as a field or docked: the spec has none.
 - Swiping between months in the modal picker.

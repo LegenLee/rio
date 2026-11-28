@@ -2,15 +2,18 @@ import type { PartAttrs, PartNode } from '../parts';
 import { resolveProps } from '../utils/object';
 
 /**
- * M3E toolbar variants. A docked toolbar spans the width of the window, at its bottom; a floating
+ * M3E toolbar types. A docked toolbar spans the width of the window, at its bottom; a floating
  * toolbar is only as large as its items, and floats above the content.
  */
-export const TOOLBAR_VARIANTS = ['docked', 'floating'] as const;
-export type ToolbarVariant = (typeof TOOLBAR_VARIANTS)[number];
+export const TOOLBAR_TYPES = ['docked', 'floating'] as const;
+export type ToolbarType = (typeof TOOLBAR_TYPES)[number];
 
-/** The toolbar's colors: standard, low emphasis, or vibrant, to draw attention to its controls. */
-export const TOOLBAR_COLORS = ['standard', 'vibrant'] as const;
-export type ToolbarColor = (typeof TOOLBAR_COLORS)[number];
+/**
+ * The toolbar's color variants, as the menu's: standard, low emphasis, or vibrant, to draw
+ * attention to its controls.
+ */
+export const TOOLBAR_VARIANTS = ['standard', 'vibrant'] as const;
+export type ToolbarVariant = (typeof TOOLBAR_VARIANTS)[number];
 
 /** How a floating toolbar lays out its items. A docked toolbar is always horizontal. */
 export const TOOLBAR_ORIENTATIONS = ['horizontal', 'vertical'] as const;
@@ -18,9 +21,9 @@ export type ToolbarOrientation = (typeof TOOLBAR_ORIENTATIONS)[number];
 
 export interface ToolbarProps {
   /** Defaults to `'docked'`. */
-  variant?: ToolbarVariant;
+  type?: ToolbarType;
   /** Defaults to `'standard'`. */
-  color?: ToolbarColor;
+  variant?: ToolbarVariant;
   /** A floating toolbar's layout. Defaults to `'horizontal'`; a docked toolbar ignores it. */
   orientation?: ToolbarOrientation;
   /** Takes a floating toolbar's shadow off, as on a background distinct from it. */
@@ -28,8 +31,8 @@ export interface ToolbarProps {
 }
 
 export const toolbarDefaults = {
-  variant: 'docked',
-  color: 'standard',
+  type: 'docked',
+  variant: 'standard',
   orientation: 'horizontal',
   flat: false,
 } satisfies Required<ToolbarProps>;
@@ -61,7 +64,7 @@ export function createToolbar(options: ToolbarOptions): ToolbarApi {
   const props = () => resolveProps(toolbarDefaults, options.props());
   const orientation = (): ToolbarOrientation => {
     const p = props();
-    return p.variant === 'floating' ? p.orientation : 'horizontal';
+    return p.type === 'floating' ? p.orientation : 'horizontal';
   };
 
   return {
@@ -74,10 +77,10 @@ export function createToolbar(options: ToolbarOptions): ToolbarApi {
           role: 'toolbar',
           // A toolbar is horizontal unless it says otherwise.
           'aria-orientation': vertical ? 'vertical' : undefined,
+          'data-type': p.type,
           'data-variant': p.variant,
-          'data-color': p.color,
           'data-orientation': orientation(),
-          'data-flat': p.variant === 'floating' && p.flat ? '' : undefined,
+          'data-flat': p.type === 'floating' && p.flat ? '' : undefined,
         };
       },
     },

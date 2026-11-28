@@ -1,5 +1,5 @@
 import { BUTTON_SIZES, type SplitButtonProps } from '@rio-m3e/core';
-import { createThemeVariables } from '@rio-m3e/tokens';
+import { createColorScheme, createThemeVariables } from '@rio-m3e/tokens';
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-vue';
@@ -7,6 +7,9 @@ import { defineComponent, h, ref } from 'vue';
 import SplitButton from './SplitButton.vue';
 
 const theme = createThemeVariables({ sourceColor: '#6750a4' });
+const scheme = createColorScheme({ sourceColor: '#6750a4' });
+const rgb = (hex: string) =>
+  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 const chevron = () => h('svg', { viewBox: '0 0 24 24' }, [h('path', { d: 'M7 10l5 5 5-5z' })]);
 
 /**
@@ -347,6 +350,17 @@ describe('RioSplitButton', () => {
           theme['--rio-state-pressed-state-layer-opacity'],
         ),
       );
+    });
+  });
+
+  describe('color', () => {
+    test('both halves take it, next to the style the app gives the root', async () => {
+      const screen = await renderSplit({ color: 'error', variant: 'tonal' }, { themed: true });
+      const { leading, trailing } = halves(screen);
+      for (const half of [leading, trailing]) {
+        expect(getComputedStyle(half).backgroundColor).toBe(rgb(scheme.errorContainer));
+        expect(getComputedStyle(half).color).toBe(rgb(scheme.onErrorContainer));
+      }
     });
   });
 });

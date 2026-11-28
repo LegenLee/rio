@@ -1,3 +1,5 @@
+// By name: `accentStyle` is the components' own, for their root parts.
+export type { AccentColor } from './accent/accent';
 export * from './app-bar/app-bar';
 export * from './app-bar/interaction';
 export * from './button-group/button-group';
@@ -12,8 +14,10 @@ export * from './date-picker/date-range-picker';
 export * from './date-picker/interaction';
 export * from './dialog/dialog';
 export * from './dialog/interaction';
+export * from './fab/fab';
 export * from './icon/icon';
 export * from './icon-button/icon-button';
+export * from './layout/breakpoints';
 export * from './list/interaction';
 export * from './list/list';
 export * from './locale/locale';

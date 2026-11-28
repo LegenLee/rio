@@ -1,4 +1,4 @@
-import { mdiRestore } from '@mdi/js';
+import { mdiClose, mdiRestore } from '@mdi/js';
 import { describe, expect, test, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { defineComponent, h, reactive, type VNode } from 'vue';
@@ -10,6 +10,21 @@ const actions = (confirm: string) => () => [
   h(Button, { variant: 'text' }, () => 'Cancel'),
   h(Button, { variant: 'text' }, () => confirm),
 ];
+
+/** A full-screen dialog with `lines` paragraphs of content */
+const fullScreen = (open: boolean, lines: number) =>
+  h(
+    Dialog,
+    { variant: 'full-screen', headline: 'New event', open },
+    {
+      'close-icon': () => icon(mdiClose),
+      default: () =>
+        Array.from({ length: lines }, (_, index) =>
+          h('p', { style: { margin: 0, lineHeight: '48px' } }, `Guest ${index + 1}`),
+        ),
+      actions: () => h(Button, { variant: 'text' }, () => 'Save'),
+    },
+  );
 
 const DIALOGS: [string, (open: boolean) => VNode][] = [
   [
@@ -54,6 +69,8 @@ const DIALOGS: [string, (open: boolean) => VNode][] = [
         },
       ),
   ],
+  ['full-screen', (open) => fullScreen(open, 3)],
+  ['full-screen-scrolling', (open) => fullScreen(open, 16)],
 ];
 
 /**
@@ -81,7 +98,9 @@ describe('RioDialog', () => {
         expect(shown).not.toBeNull();
         return shown!;
       });
-      if (name === 'scrolling') root.querySelector('.rio-dialog__content')!.scrollTop = 120;
+      if (name.endsWith('scrolling')) {
+        root.querySelector('.rio-dialog__content')!.scrollTop = 120;
+      }
       await vi.waitFor(() => expect(document.getAnimations()).toHaveLength(0));
       (document.activeElement as HTMLElement | null)?.blur();
       await expect.element(gallery).toMatchScreenshot(`${name}-${scheme}`);

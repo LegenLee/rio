@@ -64,7 +64,7 @@ Development status: early. Before 1.0, any minor version may break the API.
 ### v0.7 (Layouts)
 
 - [x] App bar
-- [ ] FABs
+- [x] FABs
 - [ ] Navigation drawer + Bottom Navigation bar
 - [ ] Navigation Button (rail)
 - [ ] Cards

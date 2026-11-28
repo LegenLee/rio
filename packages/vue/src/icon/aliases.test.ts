@@ -9,6 +9,7 @@ import InputChip from '../chip/InputChip.vue';
 import DatePicker from '../date-picker/DatePicker.vue';
 import DatePickerDialog from '../date-picker/DatePickerDialog.vue';
 import DateRangePickerDialog from '../date-picker/DateRangePickerDialog.vue';
+import Dialog from '../dialog/Dialog.vue';
 import Menu from '../menu/Menu.vue';
 import MenuItem from '../menu/MenuItem.vue';
 import SubMenu from '../menu/SubMenu.vue';
@@ -43,6 +44,20 @@ const drawn = (icons: RioIcons, in_: Element) =>
     )?.[0];
   });
 
+/** What the icons drawn in an element are: their paths, or their ligatures */
+const drawnValues = (in_: Element) =>
+  [...in_.querySelectorAll('.rio-icon')].map(
+    (icon) =>
+      icon.querySelector('path')?.getAttribute('d') ??
+      icon.firstElementChild?.getAttribute('data-ligature'),
+  );
+
+/** The path or the ligature registered for an alias */
+const valueOf = (icons: RioIcons, alias: string) => {
+  const value = icons.aliases![alias as keyof typeof icons.aliases];
+  return typeof value === 'string' ? value : (value as { path: string }).path;
+};
+
 /** A dialog that opens once it is in the page, as a dialog the app opens does */
 const opened = (dialog: Component, props: Record<string, unknown>) =>
   defineComponent(() => {
@@ -59,6 +74,7 @@ const opened = (dialog: Component, props: Record<string, unknown>) =>
 const DateDialog = opened(DatePickerDialog, { locale: 'en-US', modelValue: '2026-11-27' });
 const RangeDialog = opened(DateRangePickerDialog, { locale: 'en-US' });
 const TimeDialog = opened(TimePickerDialog, { locale: 'en-US', modelValue: '07:30' });
+const FullScreenDialog = opened(Dialog, { variant: 'full-screen', headline: 'New event' });
 
 /** A menu, open, with a submenu */
 const WithSubmenu = defineComponent(() => {
@@ -148,6 +164,14 @@ describe.each([
     const dialog = () => container.querySelector('dialog')!;
     await vi.waitFor(() => expect(dialog().open).toBe(true));
     expect(drawn(icons, dialog())).toEqual(['keyboard']);
+  });
+
+  test('a full-screen dialog’s close button', async () => {
+    const container = await mount(icons, () => h(FullScreenDialog));
+    const dismiss = () => container.querySelector('.rio-dialog__dismiss');
+    await vi.waitFor(() => expect(dismiss()).not.toBeNull());
+    // `close` is the same icon as `remove`, so it is told by its value.
+    expect(drawnValues(dismiss()!)).toEqual([valueOf(icons, 'close')]);
   });
 
   test('an item’s arrow to its submenu', async () => {

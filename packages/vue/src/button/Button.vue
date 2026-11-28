@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { createButton, type ButtonProps } from '@rio-m3e/core';
+import '@rio-m3e/styles/base/accent.css';
 import '@rio-m3e/styles/base/focus-ring.css';
 import '@rio-m3e/styles/base/reduced-motion.css';
 import '@rio-m3e/styles/base/state-layer.css';
@@ -11,7 +12,7 @@ import { vCornerMorph } from '../corner-morph/corner-morph';
 
 // No defaults here: core fills them in, after a surrounding button group has filled in its size
 // and shape.
-const { variant, size, shape, toggle, selected, disabled, softDisabled, type, value, href } =
+const { variant, size, shape, color, toggle, selected, disabled, softDisabled, type, value, href } =
   defineProps<ButtonProps>();
 const emit = defineEmits<{
   click: [event: MouseEvent];
@@ -31,6 +32,7 @@ const item = useButtonGroupItem(
       variant,
       size,
       shape,
+      color,
       toggle,
       selected,
       disabled,

@@ -95,6 +95,12 @@ export interface ChipMessages {
   remove: string;
 }
 
+/** The dismissing button of a full-screen or adaptive dialog: the close button, or Cancel. */
+export interface DialogMessages {
+  close: string;
+  cancel: string;
+}
+
 /** The range slider's inputs, as assistive technology names them inside the app's group. */
 export interface SliderMessages {
   rangeStart: string;
@@ -104,6 +110,7 @@ export interface SliderMessages {
 export interface RioMessages {
   chip: ChipMessages;
   datePicker: DatePickerMessages;
+  dialog: DialogMessages;
   slider: SliderMessages;
   timePicker: TimePickerMessages;
 }

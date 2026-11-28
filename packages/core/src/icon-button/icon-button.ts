@@ -1,3 +1,4 @@
+import type { AccentColor } from '../accent/accent';
 import type { ButtonGroupValue } from '../button-group/button-group';
 import {
   createButton,
@@ -29,6 +30,8 @@ export interface IconButtonProps {
   width?: IconButtonWidth;
   /** Defaults to `'round'`. */
   shape?: ButtonShape;
+  /** The theme color its accent takes, in place of the spec's, as on the button. */
+  color?: AccentColor;
   /** Makes it a toggle button, which reports `selected` changes. All four variants can toggle. */
   toggle?: boolean;
   /** Whether a toggle button is on. */
@@ -55,7 +58,7 @@ export const iconButtonDefaults = {
   disabled: false,
   softDisabled: false,
   type: 'button',
-} satisfies Omit<Required<IconButtonProps>, 'label' | 'value' | 'href'>;
+} satisfies Omit<Required<IconButtonProps>, 'label' | 'color' | 'value' | 'href'>;
 
 /** What the adapter has to put in the icon button, which only the adapter can see. */
 export interface IconButtonContent {

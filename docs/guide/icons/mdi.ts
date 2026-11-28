@@ -32,5 +32,6 @@ export const icons: RioIcons = {
     menu: svg(mdiChevronDown),
     check: svg(mdiCheck),
     submenu: svg(mdiMenuRight),
+    close: svg(mdiClose),
   },
 };

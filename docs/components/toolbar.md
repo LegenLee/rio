@@ -102,18 +102,19 @@ The icon buttons the spec pairs with each: standard, "Filled button (Primary, On
 
 ```vue
 <RioToolbar aria-label="Message">…</RioToolbar>
-<RioToolbar aria-label="Formatting" variant="floating" color="vibrant">…</RioToolbar>
-<RioToolbar aria-label="Tools" variant="floating" orientation="vertical" flat>…</RioToolbar>
+<RioToolbar aria-label="Formatting" type="floating" variant="vibrant">…</RioToolbar>
+<RioToolbar aria-label="Tools" type="floating" orientation="vertical" flat>…</RioToolbar>
 ```
 
 | Prop          | Type                         | Default        |
 | ------------- | ---------------------------- | -------------- |
-| `variant`     | `'docked' \| 'floating'`     | `'docked'`     |
-| `color`       | `'standard' \| 'vibrant'`    | `'standard'`   |
+| `type`        | `'docked' \| 'floating'`     | `'docked'`     |
+| `variant`     | `'standard' \| 'vibrant'`    | `'standard'`   |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` |
 | `flat`        | `boolean`                    | `false`        |
 
 - **Name it** with `aria-label` or `aria-labelledby`, which go to the root, a `role="toolbar"`, with `aria-orientation="vertical"` when vertical. The `default` slot holds the items: buttons, icon buttons, text fields, a menu, or anything else.
+- **`type`** is the spec's docked or floating toolbar, and **`variant`** its standard or vibrant colors, named as the menu's are (Rio's choice: `color` is kept for the color a component takes from the theme, as on the buttons).
 - **`orientation`** is the floating toolbar's; a docked toolbar is always horizontal. **`flat`** takes a floating toolbar's shadow off.
 
 ### Keyboard
@@ -125,14 +126,14 @@ The icon buttons the spec pairs with each: standard, "Filled button (Primary, On
 
 ### Layout and colors
 
-- **Docked**: the width it is given. In a compact window, narrower than 600px, its items spread across it, at least 4dp apart, as the spec's "evenly spaced" and Compose's public `BottomAppBarDefaults.FlexibleHorizontalArrangement`; in a wider one, they gather in the middle 32dp apart, the spec's default, as Compose's `FlexibleFixedHorizontalArrangement`. The width is the window's, as a docked toolbar spans it.
+- **Docked**: the width it is given. In a compact window, narrower than 600px, the spec's compact breakpoint (section 8 of [foundations.md](../foundations.md)), its items spread across it, at least 4dp apart, as the spec's "evenly spaced" and Compose's public `BottomAppBarDefaults.FlexibleHorizontalArrangement`; in a wider one, they gather in the middle 32dp apart, the spec's default, as Compose's `FlexibleFixedHorizontalArrangement`. The width is the window's, as a docked toolbar spans it.
 - **Floating**: only as large as its items, with the spec's level 3 shadow. Compose's public `FloatingToolbarDefaults.ContainerExpandedElevation` is level 0, with a note to read it from the token, which says level 3.
 - **Where it sits is the app's** (Rio's choice): a docked toolbar at the bottom of the window, as with `position: fixed`, and a floating one at least 16dp, or 24dp when vertical, from the window's edges.
-- **The buttons inside follow its colors**, the spec's above: the toolbar sets `--rio-button-standard-content-color`, `--rio-button-tonal-toggle-container-color` and `--rio-button-tonal-toggle-content-color`, and `--rio-button-tonal-selected-container-color` and `--rio-button-tonal-selected-content-color`, which `button.css` reads. A menu, dialog, or tooltip opened inside the toolbar sets them back.
+- **The buttons inside follow its colors**, the spec's above: the toolbar sets `--rio-button-standard-content-color`, `--rio-button-tonal-toggle-container-color` and `--rio-button-tonal-toggle-content-color`, and `--rio-button-tonal-selected-container-color` and `--rio-button-tonal-selected-content-color`, which `button.css` reads. A menu, dialog, or tooltip opened inside the toolbar sets them back, and a button's own `color` comes before them ([button.md](button.md#colors)). A `color` set outside the toolbar, as on a button group around it, stops at the toolbar.
 
 ### Not yet
 
-- **A FAB beside the floating toolbar**, 8dp away, in secondary container (standard) or tertiary container (vibrant), with the FABs.
+- **A [FAB](fab.md) beside the floating toolbar**, 8dp away, in secondary container (standard) or tertiary container (vibrant), as part of the toolbar. An app can place a `RioFab` beside it.
 - **Scrolling**: hiding the toolbar as the page scrolls, or collapsing a floating toolbar into a single action.
 - **Overflowing**: moving the trailing items into a menu as the window narrows. An app puts its own menu in the toolbar, as in the example above.
 - **The bottom app bar**, which the spec no longer recommends.
@@ -143,5 +144,6 @@ The icon buttons the spec pairs with each: standard, "Filled button (Primary, On
 - [M3 Toolbars – Specs](https://m3.material.io/components/toolbars/specs), and the token data it loads (`/_dsm/data/dsdb-m3/2026-11-19_06-20-01/TOKEN_TABLE.2956a7939bf0879c.json`, `md.comp.toolbar.*`)
 - [M3 Toolbars – Guidelines](https://m3.material.io/components/toolbars/guidelines)
 - [M3 Toolbars – Accessibility](https://m3.material.io/components/toolbars/accessibility)
+- [M3 Breakpoints – Overview](https://m3.material.io/foundations/layout/breakpoints/overview): compact, under 600dp
 - [WAI-ARIA Authoring Practices – Toolbar Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/)
 - Compose Material3 @ androidx `079e2e3`: [`FloatingToolbar.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/FloatingToolbar.kt) (`FloatingToolbarDefaults`), [`AppBar.kt`](https://github.com/androidx/androidx/blob/079e2e3f562935f1dd9a6c8efc5bc6095534fda8/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt) (`BottomAppBarDefaults`)

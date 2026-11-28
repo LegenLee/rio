@@ -35,6 +35,10 @@ export const ko: RioMessages = {
     invalidRange: '시작일 이후의 종료일을 선택하세요',
     startRequired: '시작일을 입력하세요',
   },
+  dialog: {
+    close: '닫기',
+    cancel: '취소',
+  },
   slider: {
     rangeStart: '최솟값',
     rangeEnd: '최댓값',

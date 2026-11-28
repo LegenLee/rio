@@ -1,10 +1,10 @@
 /*
  * M3E toolbar: a container of buttons, icon buttons, text fields, or other items. It carries
- * `data-variant` (docked or floating), `data-color` (standard or vibrant), `data-orientation`, and
+ * `data-type` (docked or floating), `data-variant` (standard or vibrant), `data-orientation`, and
  * a floating toolbar's `data-flat`, which `createToolbar` from `@rio-m3e/core` sets. The arrow keys
  * are JavaScript (`attachToolbar`).
  *
- * Values come from the spec's toolbar tokens (`md.comp.toolbar.*`). Variant and color rules sit
+ * Values come from the spec's toolbar tokens (`md.comp.toolbar.*`). Type and variant rules sit
  * inside `:where()`, so an app's single class overrides them.
  */
 
@@ -19,6 +19,13 @@
   --rio-button-tonal-selected-container-color: var(--rio-color-secondary-container);
   --rio-button-tonal-selected-content-color: var(--rio-color-on-secondary-container);
 
+  /* An accent from outside stops here, so the toolbar's colors reach its buttons; a button or
+     group inside with its own `color` sets it again (`base/accent.css`). */
+  --rio-accent: initial;
+  --rio-on-accent: initial;
+  --rio-accent-container: initial;
+  --rio-on-accent-container: initial;
+
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -26,7 +33,7 @@
   color: var(--_content);
 }
 
-.rio-toolbar:where([data-color='vibrant']) {
+.rio-toolbar:where([data-variant='vibrant']) {
   --_container: var(--rio-color-primary-container);
   --_content: var(--rio-color-on-primary-container);
   --rio-button-standard-content-color: var(--_content);
@@ -48,7 +55,7 @@
  * 600px, its items spread across it, at least 4px apart; in a wider one they gather in the middle,
  * 32px apart.
  */
-.rio-toolbar:where([data-variant='docked']) {
+.rio-toolbar:where([data-type='docked']) {
   justify-content: space-between;
   gap: 4px;
   block-size: 64px;
@@ -56,15 +63,16 @@
   border-radius: var(--rio-shape-corner-none);
 }
 
+/* From the medium breakpoint up (`BREAKPOINT_WIDTHS` in `@rio-m3e/core`) */
 @media (min-width: 600px) {
-  .rio-toolbar:where([data-variant='docked']) {
+  .rio-toolbar:where([data-type='docked']) {
     justify-content: center;
     gap: 32px;
   }
 }
 
 /* Floating: only as large as its items, fully rounded, with a shadow */
-.rio-toolbar:where([data-variant='floating']) {
+.rio-toolbar:where([data-type='floating']) {
   display: inline-flex;
   gap: 4px;
   block-size: 64px;
@@ -73,7 +81,7 @@
   box-shadow: var(--rio-elevation-level3);
 }
 
-.rio-toolbar:where([data-variant='floating'][data-orientation='vertical']) {
+.rio-toolbar:where([data-type='floating'][data-orientation='vertical']) {
   flex-direction: column;
   inline-size: 64px;
   block-size: auto;

@@ -44,6 +44,7 @@ These docs register the [Material Design Icons below](#with-material-design-icon
 | `menu`     | A split button's menu button (`menu-icon`): an expand icon pointing down, not the menu (hamburger) icon | `keyboard_arrow_down` | <RioIcon alias="menu" /> `mdiChevronDown`           |
 | `check`    | A selected filter chip's checkmark (`selected-icon`)                                                    | `check`               | <RioIcon alias="check" /> `mdiCheck`                |
 | `submenu`  | A menu item's arrow to its submenu (`RioSubMenu`'s `trailing-icon`)                                     | `arrow_right`         | <RioIcon alias="submenu" /> `mdiMenuRight`          |
+| `close`    | A full-screen dialog's close button (`RioDialog`'s `close-icon`)                                        | `close`               | <RioIcon alias="close" /> `mdiClose`                |
 
 ### With Material Design Icons
 

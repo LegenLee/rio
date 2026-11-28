@@ -161,6 +161,7 @@ The container is as tall as the button of the same size. Its width is the icon s
 | `size`         | `'xsmall' \| 'small' \| 'medium' \| 'large' \| 'xlarge'` | `'small'`   |
 | `width`        | `'narrow' \| 'default' \| 'wide'`                        | `'default'` |
 | `shape`        | `'round' \| 'square'`                                    | `'round'`   |
+| `color`        | `AccentColor`, a color of the theme, as on the button    | —           |
 | `toggle`       | `boolean`                                                | `false`     |
 | `selected`     | `boolean`, with `v-model:selected`                       | `false`     |
 | `disabled`     | `boolean`                                                | `false`     |
@@ -175,7 +176,8 @@ The container is as tall as the button of the same size. Its width is the icon s
 - **For the tooltip the spec asks for on hover**, wrap the icon button in a [`RioTooltip`](tooltip.md) with the same text as `label`. The tooltip then shows for mouse and keyboard users, and screen readers don't read the text twice.
 - **The default is filled**, as the spec says. Material Web's `<md-icon-button>` and Compose's `IconButton` are the standard style, with filled, tonal, and outlined as separate components, so code ported from them should set `variant="standard"`.
 - Everything else works as on the button: a native `<button>` with the ripple, the state layer, and the focus ring; `type` defaults to `'button'`; a toggle sets `aria-pressed`; and `disabled` and `softDisabled` are the same two props. See [button.md](button.md) for the `softDisabled` deviation note.
-- Inside a [button group](button-group.md), `size` and `shape` default to the group's, and a group that keeps a selection owns the state of icon buttons with a `value`, including which icon they show.
+- **`color` takes a color of the theme in place of the spec's**, as on the button ([its Colors section](button.md#colors)): `'error'`, `'tertiary'`, or a static color's name. A standard icon button's icon takes the color too, where the spec has on-surface-variant (Rio's choice, as the outlined button's label), and a selected toggle's in place of primary. An unselected standard toggle keeps the spec's on-surface-variant, since without a container its icon's color is what tells it from a selected one.
+- Inside a [button group](button-group.md), `size`, `shape`, and `color` default to the group's, and a group that keeps a selection owns the state of icon buttons with a `value`, including which icon they show.
 - **`href` makes it a link**, as on the button: an `<a>` named by `label`, followed with Enter, which works with a router's `custom` slot and keeps no `href` while disabled. A link can't toggle, so it always shows the default slot's icon. See [the button's Links section](button.md#links).
 
 ### Built on the button

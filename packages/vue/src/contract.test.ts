@@ -41,10 +41,12 @@ import {
   initialDatePickerState,
   messagesFor,
   dialogSkeleton,
+  fullScreenDialogSkeleton,
   createButton,
   createButtonGroup,
   createCheckbox,
   createDialog,
+  createFab,
   createIconButton,
   createMenu,
   createMenuDivider,
@@ -97,6 +99,8 @@ import {
   createToolbar,
   createTooltip,
   createSplitButton,
+  fabLinkSkeleton,
+  fabSkeleton,
   iconButtonLinkSkeleton,
   iconButtonSkeleton,
   menuDividerSkeleton,
@@ -118,6 +122,7 @@ import {
   type CheckboxProps,
   type DialogContent,
   type DialogProps,
+  type FabProps,
   type IconButtonProps,
   type MenuItemContent,
   type MenuItemProps,
@@ -142,7 +147,7 @@ import {
 import { expectSkeleton, findPart } from '@rio-m3e/testing';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { render } from 'vitest-browser-vue';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { createApp, defineComponent, h, type VNode } from 'vue';
 import ButtonGroup from './button-group/ButtonGroup.vue';
 import Button from './button/Button.vue';
@@ -155,6 +160,7 @@ import DatePickerDialog from './date-picker/DatePickerDialog.vue';
 import DateRangeCalendar from './date-picker/DateRangeCalendar.vue';
 import DateRangePickerDialog from './date-picker/DateRangePickerDialog.vue';
 import Dialog from './dialog/Dialog.vue';
+import Fab from './fab/Fab.vue';
 import IconButton from './icon-button/IconButton.vue';
 import List from './list/List.vue';
 import ListItem from './list/ListItem.vue';
@@ -199,10 +205,11 @@ describe('RioButton', () => {
     ['an unselected toggle', { toggle: true, selected: false }, false],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'large, square, tonal, and a submit button',
-      { variant: 'tonal', size: 'large', shape: 'square', type: 'submit' },
+      'large, square, tonal, in error, and a submit button',
+      { variant: 'tonal', size: 'large', shape: 'square', color: 'error', type: 'submit' },
       true,
     ],
+    ['a link in a static color', { href: '/settings', color: 'success' }, false],
     ['a text button asked to toggle', { variant: 'text', toggle: true }, false],
     ['disabled, with an icon', { disabled: true }, true],
     ['soft-disabled', { softDisabled: true }, false],
@@ -263,13 +270,14 @@ describe('RioIconButton', () => {
     ['an unselected toggle', { label: 'Go', toggle: true }, true],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'extra large, wide, square, outlined, and a reset button',
+      'extra large, wide, square, outlined, tertiary, and a reset button',
       {
         label: 'Go',
         variant: 'outlined',
         size: 'xlarge',
         width: 'wide',
         shape: 'square',
+        color: 'tertiary',
         type: 'reset',
       },
       false,
@@ -294,6 +302,35 @@ describe('RioIconButton', () => {
     // Which icon fills the icon part is core's call too.
     const icon = findPart(rootOf(screen), skeleton, 'icon', api);
     expect(icon?.textContent).toBe(api.showsSelectedIcon() ? '♥' : '♡');
+  });
+});
+
+describe('RioFab', () => {
+  test.each<[string, FabProps, boolean]>([
+    ['a FAB with its icon only', { label: 'Go' }, true],
+    ['extended, with an icon', { label: 'Go', extended: true }, true],
+    ['without an icon, its label showing', { label: 'Go' }, false],
+    // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
+    [
+      'large, filled, tertiary, extended, and a reset button',
+      {
+        label: 'Go',
+        size: 'large',
+        variant: 'filled',
+        color: 'tertiary',
+        extended: true,
+        type: 'reset',
+      },
+      true,
+    ],
+    ['a link', { label: 'Go', href: '/go' }, true],
+  ])('%s', async (_, props, icon) => {
+    const screen = await render(Fab, { props, slots: icon ? { default: () => '✎' } : {} });
+    const api = createFab({ props: () => props, content: () => ({ icon }), onClick: noop });
+    const skeleton = api.isLink() ? fabLinkSkeleton : fabSkeleton;
+    expectSkeleton(rootOf(screen), skeleton, api);
+    // The text part holds the label.
+    expect(findPart(rootOf(screen), skeleton, 'text', api)?.textContent).toBe('Go');
   });
 });
 
@@ -639,7 +676,11 @@ describe('RioButtonGroup', () => {
       { variant: 'connected', shape: 'square', selection: 'single' },
       'A',
     ],
-    ['a large, multi-select group', { size: 'large', selection: 'multiple' }, ['A']],
+    [
+      'a large, multi-select group in error',
+      { size: 'large', color: 'error', selection: 'multiple' },
+      ['A'],
+    ],
   ])('%s', async (_, props, selected) => {
     const screen = await render(ButtonGroup, {
       props: { ...props, modelValue: selected },
@@ -684,10 +725,10 @@ describe('RioAppBar', () => {
 describe('RioToolbar', () => {
   test.each<[string, ToolbarProps]>([
     ['a docked toolbar', {}],
-    ['a vibrant floating toolbar', { variant: 'floating', color: 'vibrant' }],
+    ['a vibrant floating toolbar', { type: 'floating', variant: 'vibrant' }],
     [
       'a vertical, flat floating toolbar',
-      { variant: 'floating', orientation: 'vertical', flat: true },
+      { type: 'floating', orientation: 'vertical', flat: true },
     ],
   ])('%s', async (_, props) => {
     const screen = await render(Toolbar, {
@@ -710,8 +751,15 @@ describe('RioSplitButton', () => {
     ['open', { menuLabel: 'More', open: true }, labelOnly],
     // Every non-boolean prop away from its default, so a prop the adapter fails to pass on shows up.
     [
-      'extra large, tonal, opening a dialog, and a submit button',
-      { menuLabel: 'More', variant: 'tonal', size: 'xlarge', popup: 'dialog', type: 'submit' },
+      'extra large, tonal, in error, opening a dialog, and a submit button',
+      {
+        menuLabel: 'More',
+        variant: 'tonal',
+        size: 'xlarge',
+        color: 'error',
+        popup: 'dialog',
+        type: 'submit',
+      },
       both,
     ],
     ['disabled', { menuLabel: 'More', disabled: true }, labelOnly],
@@ -919,7 +967,7 @@ describe('RioTooltip', () => {
 });
 
 describe('RioDialog', () => {
-  test.each<[string, DialogProps & { headline?: string }, DialogContent]>([
+  test.each<[string, DialogProps & { headline?: string }, DialogContent, compact?: boolean]>([
     ['with its content only', {}, { icon: false, headline: false, actions: false }],
     // Every prop away from its default, with every slot
     [
@@ -932,7 +980,32 @@ describe('RioDialog', () => {
       { headline: 'Discard draft?' },
       { icon: false, headline: true, actions: true },
     ],
-  ])('%s', async (_, props, content) => {
+    [
+      'a full-screen dialog with a headline and the confirming button',
+      { variant: 'full-screen', headline: 'New event' },
+      { icon: false, headline: true, actions: true },
+    ],
+    [
+      'a full-screen dialog with its content only',
+      { variant: 'full-screen' },
+      { icon: false, headline: false, actions: false },
+    ],
+    [
+      'an adaptive dialog in a wider window, with its Cancel button only',
+      { variant: 'adaptive', headline: 'New event' },
+      { icon: false, headline: true, actions: false },
+    ],
+    [
+      'an adaptive dialog in a compact window',
+      { variant: 'adaptive', headline: 'New event' },
+      { icon: true, headline: true, actions: true },
+      true,
+    ],
+  ])('%s', async (_, props, content, compact = false) => {
+    if (compact) {
+      await page.viewport(412, 720);
+      onTestFinished(() => page.viewport(1280, 720));
+    }
     const screen = await render(Dialog, {
       props,
       slots: {
@@ -953,10 +1026,12 @@ describe('RioDialog', () => {
       props: () => props,
       content: () => content,
       ids: { headline: `${id}-headline`, content: `${id}-content` },
+      compact: () => compact,
     });
-    expectSkeleton(root, dialogSkeleton, api);
+    expect(api.skeleton()).toBe(api.fullScreen() ? fullScreenDialogSkeleton : dialogSkeleton);
+    expectSkeleton(root, api.skeleton(), api);
     if (content.headline) {
-      expect(findPart(root, dialogSkeleton, 'headline', api)?.textContent).toBe(props.headline);
+      expect(findPart(root, api.skeleton(), 'headline', api)?.textContent).toBe(props.headline);
     }
   });
 });
